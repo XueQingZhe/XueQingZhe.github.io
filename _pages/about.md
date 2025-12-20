@@ -13,9 +13,9 @@ profile:
     <p>Unity · Unreal Engine</p>
 
 news: true # includes a list of news items
+latest_posts: true   # ← 显示最新博客（可选）
 selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
-news: true
 nav_order: 1
 ---
 
@@ -45,4 +45,10 @@ nav_order: 1
 - 🎨 项目实践经验与问题解决
 - 🚀 技术成长历程
 
+## 联系方式
+
+- 📧 **邮箱**：[1215422936@qq.com](mailto:1215422936@qq.com)
+- 💻 **GitHub**：[@XueQingZhe](https://github.com/XueQingZhe)
+- 📝 **知乎**：[我的知乎主页](https://www.zhihu.com/people/93-66-30-25)
+- ☕ **爱发电**：[支持我的创作](https://afdian.com/a/AtristForMyDream)
 欢迎与我交流！

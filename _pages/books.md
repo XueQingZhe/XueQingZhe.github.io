@@ -1,12 +1,10 @@
 ---
-layout: book-shelf
-title: bookshelf
-permalink: /books/
-nav: true
-collection: books
-nav_order: 4
-
----
+##layout: book-shelf
+#title: bookshelf
+#permalink: /books/
+#nav: true
+#collection: books
+#nav_order: 4
 layout: page
 title: books
 permalink: /books/

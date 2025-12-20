@@ -45,7 +45,7 @@ ninja.data = [{
             window.location.href = "/cv/";
           },
         },{id: "news-开始了ta学习计划-建立了个人技术博客和作品集网站",
-          title: '🚀开始了TA学习计划！建立了个人技术博客和作品集网站。 ```',
+          title: '🚀开始了TA学习计划！建立了个人技术博客和作品集网站。',
           description: "",
           section: "News",},{
         id: 'social-email',

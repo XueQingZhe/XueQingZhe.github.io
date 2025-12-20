@@ -17,8 +17,3 @@ nav_order: 5
 - Unity URP 渲染管线详解
 - 卡通渲染实现指南
 - PBR 工作流完整教程
----
-
-For now, this page is assumed to be a static description of your courses. You can convert it to a collection similar to `_projects/` so that you can have a dedicated page for each course.
-
-Organize your courses by years, topics, or universities, however you like!

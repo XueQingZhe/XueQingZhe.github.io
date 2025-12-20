@@ -2,10 +2,10 @@
 layout: page
 title: projects
 permalink: /projects/
-description: A growing collection of your cool projects.
+description: 我的技术作品集
 nav: true
 nav_order: 3
-display_categories: [work, fun]
+display_categories: [rendering, demo]
 horizontal: false
 ---
 

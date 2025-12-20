@@ -15,6 +15,8 @@ profile:
 news: true # includes a list of news items
 selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
+
+nav_order: 1
 ---
 
 你好！我是**吟处雪轻遮**，一名正在学习技术美术（Technical Artist）的开发者。

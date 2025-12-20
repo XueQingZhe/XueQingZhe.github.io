@@ -5,7 +5,7 @@ permalink: /
 subtitle: Technical Artist | Shader Developer
 
 profile:
-  align: right
+  align: left
   image: prof_pic.jpg
   image_circular: true
   more_info: >
@@ -13,12 +13,15 @@ profile:
     <p>Unity · Unreal Engine</p>
 
 news: true # includes a list of news items
-# 侧边栏配置
-sidebar:
-  # 显示最新 news
-  - title: "<i class='fas fa-newspaper'></i> 最新动态"
-    nav: news  # 使用 news 导航
-    limit: 5   # 显示最近5条
+# news_scrollable: true
+# news_limit: 5
+
+# latest_posts:
+#   enabled: true
+#   scrollable: true
+#   limit: 3
+
+selected_papers: false
 
 social: true
 latest_posts: true   # ← 显示最新博客（可选）

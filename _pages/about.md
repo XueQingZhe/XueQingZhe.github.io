@@ -13,10 +13,23 @@ profile:
     <p>Unity · Unreal Engine</p>
 
 news: true # includes a list of news items
+news_scrollable: true
+news_limit: 5
+
+latest_posts:
+  enabled: true
+  scrollable: true
+  limit: 3
+
+selected_papers: false
+
+social: true
 latest_posts: true   # ← 显示最新博客（可选）
 selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
 nav_order: 1
+
+
 ---
 
 你好！我是**吟处雪轻遮**，一名正在学习技术美术（Technical Artist）的开发者。

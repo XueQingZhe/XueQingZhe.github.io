@@ -6,7 +6,7 @@ subtitle: Technical Artist | Shader Developer
 
 profile:
   align: right
-  image: https://github.com/XueQingZhe.png
+  image: prof_pic.jpg
   image_circular: true
   more_info: >
     <p>专注实时渲染技术</p>

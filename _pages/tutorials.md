@@ -5,7 +5,7 @@ title: tutorials
 description: 技术分享与教程
 nav: true
 nav_order: 5
-
+---
 ## 🎓 教程列表
 
 ### 即将更新

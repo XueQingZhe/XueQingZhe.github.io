@@ -5,7 +5,7 @@ permalink: /
 subtitle: Technical Artist | Shader Developer
 
 profile:
-  align: left
+  align: right
   image: prof_pic.jpg
   image_circular: true
   more_info: >
@@ -13,7 +13,7 @@ profile:
     <p>Unity · Unreal Engine</p>
 
 news: true # includes a list of news items
-# news_scrollable: true
+news_scrollable: true
 # news_limit: 5
 
 # latest_posts:

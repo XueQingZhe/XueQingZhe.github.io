@@ -23,9 +23,9 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/projects/";
           },
-        },{id: "nav-bookshelf",
-          title: "bookshelf",
-          description: "",
+        },{id: "nav-books",
+          title: "books",
+          description: "推荐的TA学习资源与技术书籍",
           section: "Navigation",
           handler: () => {
             window.location.href = "/books/";

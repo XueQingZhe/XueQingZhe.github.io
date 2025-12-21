@@ -3,13 +3,12 @@ layout: post
 title: Lv.1 Unity主线：Built-in Shader结构速览
 date: 2025-12-21 
 description: Built-in Shader结构速览
-tags: [shader, rendering, unity]
-categories: [TAMonth01]
+tags: shader, rendering, unity
+categories: TAMonth01
 #tags: formatting code
 #categories: sample-posts
 featured: true
-toc:
-  sidebar: left
+
 ---
 
 ````markdown

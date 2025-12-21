@@ -220,7 +220,13 @@ defaults:
       path: "assets"
     values:
       sitemap: false
-
+  # - scope:
+  #     path: ""
+  #     type: "posts"
+  #   values:
+  #     layout: post
+  #     images:
+  #       photoswipe: true
 sass:
   style: compressed
 

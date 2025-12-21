@@ -95,44 +95,73 @@ layout: default
   {% endif %}
 </div>
 <!-- Auto enable Medium Zoom for images -->
+<!-- Viewer.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+
+<!-- Viewer.js Script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+
+<!-- Initialize Viewer.js -->
 <script>
 (function() {
   'use strict';
   
   document.addEventListener('DOMContentLoaded', function() {
-    // 检查 Medium Zoom 是否可用
-    if (typeof mediumZoom !== 'undefined') {
-      // 使用 Medium Zoom
-      mediumZoom('.post-content img:not([width]):not([style])', {
-        margin: 24,
-        background: 'rgba(0, 0, 0, 0.9)',
-        scrollOffset: 0
-      });
-      console.log('Medium Zoom enabled');
-    } else {
-      // 如果没有 Medium Zoom，手动添加点击事件
-      const images = document.querySelectorAll('.post-content img:not([width]):not([style])');
-      images.forEach(function(img) {
-        img.style.cursor = 'zoom-in';
-        img.addEventListener('click', function() {
-          // 简单的全屏显示
-          const overlay = document.createElement('div');
-          overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
-          
-          const enlargedImg = document.createElement('img');
-          enlargedImg.src = this.src;
-          enlargedImg.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;';
-          
-          overlay.appendChild(enlargedImg);
-          document.body.appendChild(overlay);
-          
-          overlay.addEventListener('click', function() {
-            document.body.removeChild(overlay);
-          });
-        });
-      });
-      console.log('Manual zoom enabled for', images.length, 'images');
-    }
+    const images = document.querySelectorAll('.post-content img:not([width]):not([style])');
+    
+    if (images.length === 0) return;
+    
+    images.forEach(function(img) {
+      img.style.cursor = 'zoom-in';
+    });
+    
+    const gallery = document.querySelector('.post-content');
+    
+    const viewer = new Viewer(gallery, {
+      filter: function(image) {
+        return !image.hasAttribute('width') && !image.hasAttribute('style');
+      },
+      inline: false,
+      button: true,
+      navbar: true,
+      title: true,
+      toolbar: {
+        zoomIn: true,
+        zoomOut: true,
+        oneToOne: true,
+        reset: true,
+        prev: true,
+        play: false,
+        next: true,
+        rotateLeft: true,
+        rotateRight: true,
+        flipHorizontal: true,
+        flipVertical: true
+      },
+      tooltip: true,
+      movable: true,
+      zoomable: true,
+      rotatable: true,
+      scalable: true,
+      transition: true,
+      fullscreen: true,
+      keyboard: true,
+      minZoomRatio: 0.1,
+      maxZoomRatio: 10,
+      backdrop: true
+    });
+    
+    console.log('Viewer.js initialized:', images.length, 'images');
   });
 })();
 </script>
+
+<style>
+.viewer-backdrop {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+}
+
+.viewer-canvas > img {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+}
+</style>

@@ -44,7 +44,18 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/cv/";
           },
-        },{id: "post-lv-1-unity主线-built-in-shader结构速览",
+        },{id: "post-lv-1-数学支线-3blue1brown线性代数",
+        
+          title: "Lv.1 数学支线 3Blue1Brown线性代数",
+        
+        description: "3Blue1Brown线性代数简记",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.1-%E6%95%B0%E5%AD%A6%E6%94%AF%E7%BA%BF-3Blue1Brown%E7%BA%BF%E6%80%A7%E4%BB%A3%E6%95%B0/";
+          
+        },
+      },{id: "post-lv-1-unity主线-built-in-shader结构速览",
         
           title: "Lv.1 Unity主线：Built-in Shader结构速览",
         

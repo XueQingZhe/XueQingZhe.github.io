@@ -3,4 +3,13 @@
   max-width: 75%;
   display: block;
   margin: 1em auto;
+  cursor: zoom-in;
+}
+/* Spotlight 图片悬停效果 */
+.post-content a.spotlight img {
+  transition: opacity 0.3s;
+}
+
+.post-content a.spotlight img:hover {
+  opacity: 0.9;
 }

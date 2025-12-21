@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2025-12-21T09:05:22+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">Lv.1 Unity主线：Built-in Shader结构速览</title><link href="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/" rel="alternate" type="text/html" title="Lv.1 Unity主线：Built-in Shader结构速览"/><published>2025-12-21T00:00:00+00:00</published><updated>2025-12-21T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2025/Lv.1%20Unity%E4%B8%BB%E7%BA%BF%EF%BC%9ABuilt-in%20Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/"><![CDATA[<h1 id="基本结构">基本结构</h1> <p><img src="/assets/img/TAMonth01/Pasted image 20251203164844.png" alt="图片"/></p> <h1 id="subshader-tags">SubShader Tags</h1> <h2 id="render-type">Render Type</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203170938.png" alt="图片"/></p> <h2 id="queue">Queue</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203171204.png" alt="图片"/></p> <h2 id="lod">LOD</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2025-12-21T09:12:29+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">Lv.1 Unity主线：Built-in Shader结构速览</title><link href="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/" rel="alternate" type="text/html" title="Lv.1 Unity主线：Built-in Shader结构速览"/><published>2025-12-21T00:00:00+00:00</published><updated>2025-12-21T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2025/Lv.1%20Unity%E4%B8%BB%E7%BA%BF%EF%BC%9ABuilt-in%20Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/"><![CDATA[<h1 id="基本结构">基本结构</h1> <p><img src="/assets/img/TAMonth01/Pasted image 20251203164844.png" alt="图片"/></p> <h1 id="subshader-tags">SubShader Tags</h1> <h2 id="render-type">Render Type</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203170938.png" alt="图片"/></p> <h2 id="queue">Queue</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203171204.png" alt="图片"/></p> <h2 id="lod">LOD</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
 4
@@ -332,222 +332,437 @@
 <span class="n">ColorMask</span> <span class="n">R</span>     <span class="c1">// 只写红色</span>
 <span class="n">ColorMask</span> <span class="n">RG</span>    <span class="c1">// 写红色和绿色</span>
 <span class="n">ColorMask</span> <span class="n">BA</span>    <span class="c1">// 写蓝色和Alpha</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>应用场景：</strong></p> <pre><code class="language-C">// 只写深度，不写颜色（透明物体预处理）
-Pass
-{
-    ZWrite On
-    ColorMask 0  // 不写任何颜色
-}
+</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>应用场景：</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+</pre></td><td class="rouge-code"><pre><span class="c1">// 只写深度，不写颜色（透明物体预处理）</span>
+<span class="n">Pass</span>
+<span class="p">{</span>
+    <span class="n">ZWrite</span> <span class="n">On</span>
+    <span class="n">ColorMask</span> <span class="mi">0</span>  <span class="c1">// 不写任何颜色</span>
+<span class="p">}</span>
 
-// 只写Alpha通道
-Pass
-{
-    ColorMask A
-    CGPROGRAM
-    fixed4 frag() : SV_Target
-    {
-        return fixed4(0, 0, 0, _Alpha);
-    }
-    ENDCG
-}
+<span class="c1">// 只写Alpha通道</span>
+<span class="n">Pass</span>
+<span class="p">{</span>
+    <span class="n">ColorMask</span> <span class="n">A</span>
+    <span class="n">CGPROGRAM</span>
+    <span class="n">fixed4</span> <span class="n">frag</span><span class="p">()</span> <span class="o">:</span> <span class="n">SV_Target</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">fixed4</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">_Alpha</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">ENDCG</span>
+<span class="p">}</span>
 
-// 模板缓冲配合使用
-Pass
-{
-    ColorMask 0  // 不写颜色
+<span class="c1">// 模板缓冲配合使用</span>
+<span class="n">Pass</span>
+<span class="p">{</span>
+    <span class="n">ColorMask</span> <span class="mi">0</span>  <span class="c1">// 不写颜色</span>
     
-    Stencil
-    {
-        Ref 1
-        Comp Always
-        Pass Replace
-    }
-}
-</code></pre> <h2 id="offset深度偏移">Offset（深度偏移）</h2> <pre><code class="language-C">Offset Factor, Units
-</code></pre> <p><strong>作用：</strong></p> <ul> <li>调整深度值，避免Z-Fighting（深度冲突）</li> <li><code class="language-plaintext highlighter-rouge">Factor</code>：基于多边形斜率的偏移</li> <li><code class="language-plaintext highlighter-rouge">Units</code>：固定单位偏移</li> </ul> <p><strong>应用场景：</strong></p> <pre><code class="language-C">// 贴花（Decal）
-Pass
-{
-    Offset -1, -1  // 向相机方向偏移，避免Z-Fighting
+    <span class="n">Stencil</span>
+    <span class="p">{</span>
+        <span class="n">Ref</span> <span class="mi">1</span>
+        <span class="n">Comp</span> <span class="n">Always</span>
+        <span class="n">Pass</span> <span class="n">Replace</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="offset深度偏移">Offset（深度偏移）</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="n">Offset</span> <span class="n">Factor</span><span class="p">,</span> <span class="n">Units</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>作用：</strong></p> <ul> <li>调整深度值，避免Z-Fighting（深度冲突）</li> <li><code class="language-plaintext highlighter-rouge">Factor</code>：基于多边形斜率的偏移</li> <li><code class="language-plaintext highlighter-rouge">Units</code>：固定单位偏移</li> </ul> <p><strong>应用场景：</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="c1">// 贴花（Decal）</span>
+<span class="n">Pass</span>
+<span class="p">{</span>
+    <span class="n">Offset</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1">// 向相机方向偏移，避免Z-Fighting</span>
     
-    CGPROGRAM
-    // 渲染贴花
-    ENDCG
-}
+    <span class="n">CGPROGRAM</span>
+    <span class="c1">// 渲染贴花</span>
+    <span class="n">ENDCG</span>
+<span class="p">}</span>
 
-// 描边效果
-Pass
-{
-    Cull Front
-    Offset 1, 1  // 向后偏移
+<span class="c1">// 描边效果</span>
+<span class="n">Pass</span>
+<span class="p">{</span>
+    <span class="n">Cull</span> <span class="n">Front</span>
+    <span class="n">Offset</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>  <span class="c1">// 向后偏移</span>
     
-    CGPROGRAM
-    // 渲染背面作为描边
-    ENDCG
-}
-</code></pre> <h2 id="stencil模板缓冲">Stencil（模板缓冲）</h2> <pre><code class="language-C">Stencil
-{
-    Ref [_RefValue]         // 参考值（0-255）
-    ReadMask [_ReadMask]    // 读取遮罩（默认255）
-    WriteMask [_WriteMask]  // 写入遮罩（默认255）
+    <span class="n">CGPROGRAM</span>
+    <span class="c1">// 渲染背面作为描边</span>
+    <span class="n">ENDCG</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="stencil模板缓冲">Stencil（模板缓冲）</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="n">Stencil</span>
+<span class="p">{</span>
+    <span class="n">Ref</span> <span class="p">[</span><span class="n">_RefValue</span><span class="p">]</span>         <span class="c1">// 参考值（0-255）</span>
+    <span class="n">ReadMask</span> <span class="p">[</span><span class="n">_ReadMask</span><span class="p">]</span>    <span class="c1">// 读取遮罩（默认255）</span>
+    <span class="n">WriteMask</span> <span class="p">[</span><span class="n">_WriteMask</span><span class="p">]</span>  <span class="c1">// 写入遮罩（默认255）</span>
     
-    Comp [comparison]       // 比较函数
-    Pass [stencilOp]        // 测试通过时的操作
-    Fail [stencilOp]        // 测试失败时的操作
-    ZFail [stencilOp]       // 深度测试失败时的操作
-}
-</code></pre> <p><strong>比较函数（Comp）：</strong></p> <ul> <li><code class="language-plaintext highlighter-rouge">Never</code> - 永不通过</li> <li><code class="language-plaintext highlighter-rouge">Less</code> - 小于</li> <li><code class="language-plaintext highlighter-rouge">Equal</code> - 等于</li> <li><code class="language-plaintext highlighter-rouge">LEqual</code> - 小于等于</li> <li><code class="language-plaintext highlighter-rouge">Greater</code> - 大于</li> <li><code class="language-plaintext highlighter-rouge">NotEqual</code> - 不等于</li> <li><code class="language-plaintext highlighter-rouge">GEqual</code> - 大于等于</li> <li><code class="language-plaintext highlighter-rouge">Always</code> - 总是通过</li> </ul> <p><strong>操作（Pass/Fail/ZFail）：</strong></p> <ul> <li><code class="language-plaintext highlighter-rouge">Keep</code> - 保持不变</li> <li><code class="language-plaintext highlighter-rouge">Zero</code> - 设为0</li> <li><code class="language-plaintext highlighter-rouge">Replace</code> - 替换为Ref值</li> <li><code class="language-plaintext highlighter-rouge">IncrSat</code> - 加1（饱和，最大255）</li> <li><code class="language-plaintext highlighter-rouge">DecrSat</code> - 减1（饱和，最小0）</li> <li><code class="language-plaintext highlighter-rouge">Invert</code> - 按位取反</li> <li><code class="language-plaintext highlighter-rouge">IncrWrap</code> - 加1（循环）</li> <li><code class="language-plaintext highlighter-rouge">DecrWrap</code> - 减1（循环）</li> </ul> <p><strong>实际应用：遮罩效果</strong></p> <pre><code class="language-C">// 示例1：遮罩与被遮罩物体
+    <span class="n">Comp</span> <span class="p">[</span><span class="n">comparison</span><span class="p">]</span>       <span class="c1">// 比较函数</span>
+    <span class="n">Pass</span> <span class="p">[</span><span class="n">stencilOp</span><span class="p">]</span>        <span class="c1">// 测试通过时的操作</span>
+    <span class="n">Fail</span> <span class="p">[</span><span class="n">stencilOp</span><span class="p">]</span>        <span class="c1">// 测试失败时的操作</span>
+    <span class="n">ZFail</span> <span class="p">[</span><span class="n">stencilOp</span><span class="p">]</span>       <span class="c1">// 深度测试失败时的操作</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>比较函数（Comp）：</strong></p> <ul> <li><code class="language-plaintext highlighter-rouge">Never</code> - 永不通过</li> <li><code class="language-plaintext highlighter-rouge">Less</code> - 小于</li> <li><code class="language-plaintext highlighter-rouge">Equal</code> - 等于</li> <li><code class="language-plaintext highlighter-rouge">LEqual</code> - 小于等于</li> <li><code class="language-plaintext highlighter-rouge">Greater</code> - 大于</li> <li><code class="language-plaintext highlighter-rouge">NotEqual</code> - 不等于</li> <li><code class="language-plaintext highlighter-rouge">GEqual</code> - 大于等于</li> <li><code class="language-plaintext highlighter-rouge">Always</code> - 总是通过</li> </ul> <p><strong>操作（Pass/Fail/ZFail）：</strong></p> <ul> <li><code class="language-plaintext highlighter-rouge">Keep</code> - 保持不变</li> <li><code class="language-plaintext highlighter-rouge">Zero</code> - 设为0</li> <li><code class="language-plaintext highlighter-rouge">Replace</code> - 替换为Ref值</li> <li><code class="language-plaintext highlighter-rouge">IncrSat</code> - 加1（饱和，最大255）</li> <li><code class="language-plaintext highlighter-rouge">DecrSat</code> - 减1（饱和，最小0）</li> <li><code class="language-plaintext highlighter-rouge">Invert</code> - 按位取反</li> <li><code class="language-plaintext highlighter-rouge">IncrWrap</code> - 加1（循环）</li> <li><code class="language-plaintext highlighter-rouge">DecrWrap</code> - 减1（循环）</li> </ul> <p><strong>实际应用：遮罩效果</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+</pre></td><td class="rouge-code"><pre><span class="c1">// 示例1：遮罩与被遮罩物体</span>
 
-// 遮罩物体（写入模板值）
-Shader "Custom/StencilMask"
-{
-    SubShader
-    {
-        Tags { "Queue"="Geometry-1" }  // 先渲染
+<span class="c1">// 遮罩物体（写入模板值）</span>
+<span class="n">Shader</span> <span class="s">"Custom/StencilMask"</span>
+<span class="p">{</span>
+    <span class="n">SubShader</span>
+    <span class="p">{</span>
+        <span class="n">Tags</span> <span class="p">{</span> <span class="s">"Queue"</span><span class="o">=</span><span class="s">"Geometry-1"</span> <span class="p">}</span>  <span class="c1">// 先渲染</span>
         
-        Pass
-        {
-            ZWrite Off
-            ColorMask 0  // 不写颜色
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">ZWrite</span> <span class="n">Off</span>
+            <span class="n">ColorMask</span> <span class="mi">0</span>  <span class="c1">// 不写颜色</span>
             
-            Stencil
-            {
-                Ref 1
-                Comp Always
-                Pass Replace  // 写入模板值1
-            }
+            <span class="n">Stencil</span>
+            <span class="p">{</span>
+                <span class="n">Ref</span> <span class="mi">1</span>
+                <span class="n">Comp</span> <span class="n">Always</span>
+                <span class="n">Pass</span> <span class="n">Replace</span>  <span class="c1">// 写入模板值1</span>
+            <span class="p">}</span>
             
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            
-            float4 frag() : SV_Target
-            {
-                return 0;
-            }
-            ENDCG
-        }
-    }
-}
+            <span class="n">CGPROGRAM</span>
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>            
+            <span class="n">float4</span> <span class="n">frag</span><span class="p">()</span> <span class="o">:</span> <span class="n">SV_Target</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">ENDCG</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-// 被遮罩物体（只在遮罩内显示）
-Shader "Custom/StencilObject"
-{
-    SubShader
-    {
-        Tags { "Queue"="Geometry" }
+<span class="c1">// 被遮罩物体（只在遮罩内显示）</span>
+<span class="n">Shader</span> <span class="s">"Custom/StencilObject"</span>
+<span class="p">{</span>
+    <span class="n">SubShader</span>
+    <span class="p">{</span>
+        <span class="n">Tags</span> <span class="p">{</span> <span class="s">"Queue"</span><span class="o">=</span><span class="s">"Geometry"</span> <span class="p">}</span>
         
-        Pass
-        {
-            Stencil
-            {
-                Ref 1
-                Comp Equal  // 只在模板值等于1的地方渲染
-            }
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">Stencil</span>
+            <span class="p">{</span>
+                <span class="n">Ref</span> <span class="mi">1</span>
+                <span class="n">Comp</span> <span class="n">Equal</span>  <span class="c1">// 只在模板值等于1的地方渲染</span>
+            <span class="p">}</span>
             
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            
-            fixed4 frag() : SV_Target
-            {
-                return fixed4(1, 0, 0, 1);
-            }
-            ENDCG
-        }
-    }
-}
-</code></pre> <p><strong>示例2：描边效果</strong></p> <pre><code class="language-C">SubShader
-{
-    // Pass 1: 写入模板
-    Pass
-    {
-        Stencil
-        {
-            Ref 1
-            Comp Always
-            Pass Replace
-        }
+            <span class="n">CGPROGRAM</span>
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>            
+            <span class="n">fixed4</span> <span class="n">frag</span><span class="p">()</span> <span class="o">:</span> <span class="n">SV_Target</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="n">fixed4</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">ENDCG</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>示例2：描边效果</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+</pre></td><td class="rouge-code"><pre><span class="n">SubShader</span>
+<span class="p">{</span>
+    <span class="c1">// Pass 1: 写入模板</span>
+    <span class="n">Pass</span>
+    <span class="p">{</span>
+        <span class="n">Stencil</span>
+        <span class="p">{</span>
+            <span class="n">Ref</span> <span class="mi">1</span>
+            <span class="n">Comp</span> <span class="n">Always</span>
+            <span class="n">Pass</span> <span class="n">Replace</span>
+        <span class="p">}</span>
         
-        CGPROGRAM
-        // 正常渲染物体
-        ENDCG
-    }
+        <span class="n">CGPROGRAM</span>
+        <span class="c1">// 正常渲染物体</span>
+        <span class="n">ENDCG</span>
+    <span class="p">}</span>
     
-    // Pass 2: 描边（只在物体外部）
-    Pass
-    {
-        Cull Front
+    <span class="c1">// Pass 2: 描边（只在物体外部）</span>
+    <span class="n">Pass</span>
+    <span class="p">{</span>
+        <span class="n">Cull</span> <span class="n">Front</span>
         
-        Stencil
-        {
-            Ref 1
-            Comp NotEqual  // 不等于1的地方（物体外部）
-        }
+        <span class="n">Stencil</span>
+        <span class="p">{</span>
+            <span class="n">Ref</span> <span class="mi">1</span>
+            <span class="n">Comp</span> <span class="n">NotEqual</span>  <span class="c1">// 不等于1的地方（物体外部）</span>
+        <span class="p">}</span>
         
-        CGPROGRAM
-        // 放大并渲染描边
-        v.vertex.xyz += v.normal * _OutlineWidth;
-        ENDCG
-    }
-}
-</code></pre> <p><strong>示例3：传送门效果</strong></p> <pre><code class="language-C">// 传送门遮罩
-Shader "Custom/PortalMask"
-{
-    SubShader
-    {
-        Pass
-        {
-            ZWrite Off
-            ColorMask 0
+        <span class="n">CGPROGRAM</span>
+        <span class="c1">// 放大并渲染描边</span>
+        <span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">.</span><span class="n">xyz</span> <span class="o">+=</span> <span class="n">v</span><span class="p">.</span><span class="n">normal</span> <span class="o">*</span> <span class="n">_OutlineWidth</span><span class="p">;</span>
+        <span class="n">ENDCG</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>示例3：传送门效果</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+</pre></td><td class="rouge-code"><pre><span class="c1">// 传送门遮罩</span>
+<span class="n">Shader</span> <span class="s">"Custom/PortalMask"</span>
+<span class="p">{</span>
+    <span class="n">SubShader</span>
+    <span class="p">{</span>
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">ZWrite</span> <span class="n">Off</span>
+            <span class="n">ColorMask</span> <span class="mi">0</span>
             
-            Stencil
-            {
-                Ref 1
-                Comp Always
-                Pass Replace
-            }
-        }
-    }
-}
+            <span class="n">Stencil</span>
+            <span class="p">{</span>
+                <span class="n">Ref</span> <span class="mi">1</span>
+                <span class="n">Comp</span> <span class="n">Always</span>
+                <span class="n">Pass</span> <span class="n">Replace</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
 
-// 传送门另一侧的场景
-Shader "Custom/PortalView"
-{
-    SubShader
-    {
-        Pass
-        {
-            Stencil
-            {
-                Ref 1
-                Comp Equal
-            }
+<span class="c1">// 传送门另一侧的场景</span>
+<span class="n">Shader</span> <span class="s">"Custom/PortalView"</span>
+<span class="p">{</span>
+    <span class="n">SubShader</span>
+    <span class="p">{</span>
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">Stencil</span>
+            <span class="p">{</span>
+                <span class="n">Ref</span> <span class="mi">1</span>
+                <span class="n">Comp</span> <span class="n">Equal</span>
+            <span class="p">}</span>
             
-            CGPROGRAM
-            // 渲染另一个场景
-            ENDCG
-        }
-    }
-}
-</code></pre> <h2 id="alphatomaskalpha转遮罩">AlphaToMask（Alpha转遮罩）</h2> <pre><code class="language-C">AlphaToMask On   // 开启（MSAA时有效）
-AlphaToMask Off  // 关闭（默认）
-</code></pre> <p><strong>作用：</strong></p> <ul> <li>将Alpha值转换为覆盖遮罩</li> <li>用于抗锯齿（需要开启MSAA）</li> <li>适合植被等Alpha Test物体</li> </ul> <p><strong>应用场景：</strong></p> <pre><code class="language-C">// 树叶Shader（更好的边缘）
-Pass
-{
-    AlphaToMask On
+            <span class="n">CGPROGRAM</span>
+            <span class="c1">// 渲染另一个场景</span>
+            <span class="n">ENDCG</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="alphatomaskalpha转遮罩">AlphaToMask（Alpha转遮罩）</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="n">AlphaToMask</span> <span class="n">On</span>   <span class="c1">// 开启（MSAA时有效）</span>
+<span class="n">AlphaToMask</span> <span class="n">Off</span>  <span class="c1">// 关闭（默认）</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>作用：</strong></p> <ul> <li>将Alpha值转换为覆盖遮罩</li> <li>用于抗锯齿（需要开启MSAA）</li> <li>适合植被等Alpha Test物体</li> </ul> <p><strong>应用场景：</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="rouge-code"><pre><span class="c1">// 树叶Shader（更好的边缘）</span>
+<span class="n">Pass</span>
+<span class="p">{</span>
+    <span class="n">AlphaToMask</span> <span class="n">On</span>
     
-    CGPROGRAM
-    fixed4 frag() : SV_Target
-    {
-        fixed4 col = tex2D(_MainTex, i.uv);
-        clip(col.a - _Cutoff);
-        return col;
-    }
-    ENDCG
-}
-</code></pre> <h2 id="conservative保守光栅化">Conservative（保守光栅化）</h2> <pre><code class="language-C">Conservative True   // 开启保守光栅化
-Conservative False  // 关闭（默认）
-</code></pre> <p><strong>作用：</strong></p> <ul> <li>高级功能，确保三角形完全覆盖的像素都被渲染</li> <li>需要硬件支持</li> </ul> <h2 id="常见组合总结">常见组合总结</h2> <table> <thead> <tr> <th>效果类型</th> <th>Cull</th> <th>ZTest</th> <th>ZWrite</th> <th>Blend</th> </tr> </thead> <tbody> <tr> <td>不透明物体</td> <td>Back</td> <td>LEqual</td> <td>On</td> <td>Off</td> </tr> <tr> <td>标准透明</td> <td>Back</td> <td>LEqual</td> <td>Off</td> <td>SrcAlpha OneMinusSrcAlpha</td> </tr> <tr> <td>加法粒子</td> <td>Off</td> <td>LEqual</td> <td>Off</td> <td>One One</td> </tr> <tr> <td>描边</td> <td>Front</td> <td>LEqual</td> <td>On</td> <td>Off</td> </tr> <tr> <td>UI</td> <td>Off</td> <td>Always</td> <td>Off</td> <td>SrcAlpha OneMinusSrcAlpha</td> </tr> <tr> <td>天空盒</td> <td>Front</td> <td>LEqual</td> <td>Off</td> <td>Off</td> </tr> <tr> <td>X光透视</td> <td>Back</td> <td>Greater</td> <td>Off</td> <td>SrcAlpha OneMinusSrcAlpha</td> </tr> </tbody> </table> <h2 id="target">target</h2> <p><strong><em>Shader Model版本，可以省略。Unity会使用默认值：target 2.5</em></strong></p> <h3 id="语法">语法</h3> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+    <span class="n">CGPROGRAM</span>
+    <span class="n">fixed4</span> <span class="n">frag</span><span class="p">()</span> <span class="o">:</span> <span class="n">SV_Target</span>
+    <span class="p">{</span>
+        <span class="n">fixed4</span> <span class="n">col</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">uv</span><span class="p">);</span>
+        <span class="n">clip</span><span class="p">(</span><span class="n">col</span><span class="p">.</span><span class="n">a</span> <span class="o">-</span> <span class="n">_Cutoff</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">col</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">ENDCG</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="conservative保守光栅化">Conservative（保守光栅化）</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="n">Conservative</span> <span class="n">True</span>   <span class="c1">// 开启保守光栅化</span>
+<span class="n">Conservative</span> <span class="n">False</span>  <span class="c1">// 关闭（默认）</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>作用：</strong></p> <ul> <li>高级功能，确保三角形完全覆盖的像素都被渲染</li> <li>需要硬件支持</li> </ul> <h2 id="常见组合总结">常见组合总结</h2> <table> <thead> <tr> <th>效果类型</th> <th>Cull</th> <th>ZTest</th> <th>ZWrite</th> <th>Blend</th> </tr> </thead> <tbody> <tr> <td>不透明物体</td> <td>Back</td> <td>LEqual</td> <td>On</td> <td>Off</td> </tr> <tr> <td>标准透明</td> <td>Back</td> <td>LEqual</td> <td>Off</td> <td>SrcAlpha OneMinusSrcAlpha</td> </tr> <tr> <td>加法粒子</td> <td>Off</td> <td>LEqual</td> <td>Off</td> <td>One One</td> </tr> <tr> <td>描边</td> <td>Front</td> <td>LEqual</td> <td>On</td> <td>Off</td> </tr> <tr> <td>UI</td> <td>Off</td> <td>Always</td> <td>Off</td> <td>SrcAlpha OneMinusSrcAlpha</td> </tr> <tr> <td>天空盒</td> <td>Front</td> <td>LEqual</td> <td>Off</td> <td>Off</td> </tr> <tr> <td>X光透视</td> <td>Back</td> <td>Greater</td> <td>Off</td> <td>SrcAlpha OneMinusSrcAlpha</td> </tr> </tbody> </table> <h2 id="target">target</h2> <p><strong><em>Shader Model版本，可以省略。Unity会使用默认值：target 2.5</em></strong></p> <h3 id="语法">语法</h3> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
 4

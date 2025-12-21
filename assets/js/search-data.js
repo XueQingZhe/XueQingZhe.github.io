@@ -44,7 +44,18 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/cv/";
           },
-        },{id: "news-开始了ta学习计划-建立了个人技术博客和作品集网站",
+        },{id: "post-lv-1-unity主线-built-in-shader结构速览",
+        
+          title: "Lv.1 Unity主线：Built-in Shader结构速览",
+        
+        description: "Built-in Shader结构速览",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/";
+          
+        },
+      },{id: "news-开始了ta学习计划-建立了个人技术博客和作品集网站",
           title: '🚀开始了TA学习计划！建立了个人技术博客和作品集网站。',
           description: "",
           section: "News",},{

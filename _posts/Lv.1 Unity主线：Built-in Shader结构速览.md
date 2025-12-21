@@ -12,6 +12,7 @@ toc:
   sidebar: left
 ---
 
+````markdown
 # 基本结构
 ![图片](/assets/img/TAMonth01/Pasted image 20251203164844.png)
 # SubShader Tags
@@ -876,3 +877,5 @@ public class MRTExample : MonoBehaviour
 |**⏱️ 时间/累加计算**|`float`|避免精度损失|`float time`|
 |**📏 大范围距离**|`float`|可能很大|`float distance`|
 |**📐 复杂数学函数**|`float`|sin/cos/exp等|`float sine`|
+
+````

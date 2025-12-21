@@ -1,97 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2025-12-21T08:13:54+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">Lv.1 Unity主线：Built-in Shader结构速览</title><link href="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/" rel="alternate" type="text/html" title="Lv.1 Unity主线：Built-in Shader结构速览"/><published>2025-12-21T00:00:00+00:00</published><updated>2025-12-21T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2025/Lv.1%20Unity%E4%B8%BB%E7%BA%BF%EF%BC%9ABuilt-in%20Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/"><![CDATA[<div class="language-markdown highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gh"># 基本结构</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203164844.png)
-<span class="gh"># SubShader Tags</span>
-<span class="gu">## Render Type</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203170938.png)
-<span class="gu">## Queue</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203171204.png)
-<span class="gu">## LOD</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">SubShader</span>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2025-12-21T08:20:36+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">Lv.1 Unity主线：Built-in Shader结构速览</title><link href="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/" rel="alternate" type="text/html" title="Lv.1 Unity主线：Built-in Shader结构速览"/><published>2025-12-21T00:00:00+00:00</published><updated>2025-12-21T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2025/Lv.1%20Unity%E4%B8%BB%E7%BA%BF%EF%BC%9ABuilt-in%20Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Built-in-Shader%E7%BB%93%E6%9E%84%E9%80%9F%E8%A7%88/"><![CDATA[<h1 id="基本结构">基本结构</h1> <p><img src="/assets/img/TAMonth01/Pasted image 20251203164844.png" alt="图片"/></p> <h1 id="subshader-tags">SubShader Tags</h1> <h2 id="render-type">Render Type</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203170938.png" alt="图片"/></p> <h2 id="queue">Queue</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203171204.png" alt="图片"/></p> <h2 id="lod">LOD</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SubShader</span>
 <span class="p">{</span>
     <span class="n">LOD</span> <span class="mi">300</span>  <span class="c1">// ← 这就是LOD关键字</span>
     <span class="n">Pass</span> <span class="p">{</span> <span class="p">}</span>
 <span class="p">}</span>
-<span class="p">```</span>
-
-<span class="p">```</span><span class="nl">c
-</span><span class="c1">// C#代码中设置 Shader.globalMaximumLOD = 200;</span>
+</code></pre></div></div> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// C#代码中设置 Shader.globalMaximumLOD = 200;</span>
 <span class="c1">// 只使用LOD&lt;=200的SubShader </span>
-<span class="p">```</span>
- 
-<span class="gs">**选择规则：**</span> 
-如果设置 Shader.globalMaximumLOD = 200 
-SubShader LOD 300 ← 跳过（超过限制）
-SubShader LOD 200 ← ✅ 使用这个 
-SubShader LOD 100 ← 不会用到（因为已经找到合适的） 
-
-Unity内置Shader的LOD标准
-<span class="gu">### Unity官方推荐的LOD值</span>
-
-| LOD值 | 质量等级 | 示例Shader                        |
-| ---- | ---- | ------------------------------- |
-| 600+ | 最高质量 | 物理基础渲染 + 曲面细分                   |
-| 500  | 非常高  | VertexLit + 所有像素光               |
-| 300  | 高    | Diffuse + Specular + Normal Map |
-| 200  | 中    | Diffuse + Specular              |
-| 150  | 中低   | Diffuse + 简化光照                  |
-| 100  | 低    | Vertex Lit（顶点光照）                |
-| 50   | 最低   | 无光照                             |
-<span class="gs">**Unity内置Shader的LOD值：**</span>
-<span class="p">```</span><span class="nl">
-</span>Standard Shader          = 300
+</code></pre></div></div> <p><strong>选择规则：</strong> 如果设置 Shader.globalMaximumLOD = 200 SubShader LOD 300 ← 跳过（超过限制） SubShader LOD 200 ← ✅ 使用这个 SubShader LOD 100 ← 不会用到（因为已经找到合适的）</p> <p>Unity内置Shader的LOD标准</p> <h3 id="unity官方推荐的lod值">Unity官方推荐的LOD值</h3> <p>| LOD值 | 质量等级 | 示例Shader | | —- | —- | ——————————- | | 600+ | 最高质量 | 物理基础渲染 + 曲面细分 | | 500 | 非常高 | VertexLit + 所有像素光 | | 300 | 高 | Diffuse + Specular + Normal Map | | 200 | 中 | Diffuse + Specular | | 150 | 中低 | Diffuse + 简化光照 | | 100 | 低 | Vertex Lit（顶点光照） | | 50 | 最低 | 无光照 | <strong>Unity内置Shader的LOD值：</strong></p> <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Standard Shader          = 300
 Bumped Specular          = 300
 Bumped Diffuse           = 200
 Diffuse                  = 200
 Specular                 = 200
 VertexLit                = 100
 Unlit                    = 100
-<span class="p">```</span>
-<span class="gu">## IgnoreProjector</span>
-<span class="gs">**忽略投影**</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">Tags</span> <span class="p">{</span> <span class="s">"IgnoreProjector"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
-<span class="p">```</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203171336.png)
-<span class="gu">## ForceNoShadowCasting</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">Tags</span> <span class="p">{</span> <span class="s">"ForceNoShadowCasting"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
-<span class="p">```</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203171503.png)
-<span class="gu">## DisableBatching</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">Tags</span> <span class="p">{</span> <span class="s">"DisableBatching"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
-<span class="p">```</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203171712.png)
-<span class="gu">## PreviewType</span>
-<span class="ges">***细节面板预览形状***</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">Tags</span> <span class="p">{</span> <span class="s">"PreviewType"</span><span class="o">=</span><span class="s">"Plane"</span> <span class="p">}</span>
-<span class="p">```</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203172058.png)
-
-<span class="gu">## CanUseSpriteAtlas</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">Tags</span> <span class="p">{</span> <span class="s">"CanUseSpriteAtlas"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
-<span class="p">```</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203172147.png)
-<span class="gh"># Pass Tags</span>
-<span class="gu">## LightMode</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203172447.png)
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203172705.png)
-<span class="gu">## RequireOptions</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203172836.png)
-<span class="gu">## PassFlags</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203173126.png)
-<span class="gh"># Pass keyworld</span>
-<span class="gu">## Cull</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203173822.png)
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203174026.png)
-
-<span class="gu">## ZTest</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203173840.png)
-<span class="p">```</span><span class="nl">c
-</span><span class="c1">// 普通物体（默认）</span>
+</code></pre></div></div> <h2 id="ignoreprojector">IgnoreProjector</h2> <p><strong>忽略投影</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Tags</span> <span class="p">{</span> <span class="s">"IgnoreProjector"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
+</code></pre></div></div> <p><img src="/assets/img/TAMonth01/Pasted image 20251203171336.png" alt="图片"/></p> <h2 id="forcenoshadowcasting">ForceNoShadowCasting</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Tags</span> <span class="p">{</span> <span class="s">"ForceNoShadowCasting"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
+</code></pre></div></div> <p><img src="/assets/img/TAMonth01/Pasted image 20251203171503.png" alt="图片"/></p> <h2 id="disablebatching">DisableBatching</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Tags</span> <span class="p">{</span> <span class="s">"DisableBatching"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
+</code></pre></div></div> <p><img src="/assets/img/TAMonth01/Pasted image 20251203171712.png" alt="图片"/></p> <h2 id="previewtype">PreviewType</h2> <p><strong><em>细节面板预览形状</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Tags</span> <span class="p">{</span> <span class="s">"PreviewType"</span><span class="o">=</span><span class="s">"Plane"</span> <span class="p">}</span>
+</code></pre></div></div> <p><img src="/assets/img/TAMonth01/Pasted image 20251203172058.png" alt="图片"/></p> <h2 id="canusespriteatlas">CanUseSpriteAtlas</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Tags</span> <span class="p">{</span> <span class="s">"CanUseSpriteAtlas"</span><span class="o">=</span><span class="s">"True"</span> <span class="p">}</span>
+</code></pre></div></div> <p><img src="/assets/img/TAMonth01/Pasted image 20251203172147.png" alt="图片"/></p> <h1 id="pass-tags">Pass Tags</h1> <h2 id="lightmode">LightMode</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203172447.png" alt="图片"/> <img src="/assets/img/TAMonth01/Pasted image 20251203172705.png" alt="图片"/></p> <h2 id="requireoptions">RequireOptions</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203172836.png" alt="图片"/></p> <h2 id="passflags">PassFlags</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203173126.png" alt="图片"/></p> <h1 id="pass-keyworld">Pass keyworld</h1> <h2 id="cull">Cull</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203173822.png" alt="图片"/> <img src="/assets/img/TAMonth01/Pasted image 20251203174026.png" alt="图片"/></p> <h2 id="ztest">ZTest</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203173840.png" alt="图片"/></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 普通物体（默认）</span>
 <span class="n">Pass</span>
 <span class="p">{</span>
     <span class="n">ZTest</span> <span class="n">LEqual</span>  <span class="c1">// 近的覆盖远的</span>
@@ -134,44 +60,14 @@ Unlit                    = 100
     <span class="c1">// 放大模型，渲染边缘</span>
     <span class="n">ENDCG</span>
 <span class="p">}</span>
-<span class="p">```</span>
-<span class="gu">## ZWrite</span>
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203173855.png)
-<span class="p">![</span><span class="nv">图片</span><span class="p">](</span><span class="sx">/assets/img/TAMonth01/Pasted</span> image 20251203173944.png)<span class="sb">
-
-
-</span><span class="gu">## Blend 混合模式</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="c1">// 基础语法</span>
+</code></pre></div></div> <h2 id="zwrite">ZWrite</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251203173855.png" alt="图片"/> <img src="/assets/img/TAMonth01/Pasted image 20251203173944.png" alt="图片"/></p> <h2 id="blend-混合模式">Blend 混合模式</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 基础语法</span>
 <span class="n">Blend</span> <span class="n">SrcFactor</span> <span class="n">DstFactor</span>
 <span class="n">Blend</span> <span class="n">SrcFactor</span> <span class="n">DstFactor</span><span class="p">,</span> <span class="n">SrcFactorA</span> <span class="n">DstFactorA</span>  <span class="c1">// 分别控制RGB和Alpha</span>
 
 <span class="c1">// 高级语法</span>
 <span class="n">BlendOp</span> <span class="n">Add</span><span class="o">/</span><span class="n">Sub</span><span class="o">/</span><span class="n">RevSub</span><span class="o">/</span><span class="n">Min</span><span class="o">/</span><span class="n">Max</span>  <span class="c1">// 混合操作</span>
-<span class="p">```</span>
-
-<span class="gs">**混合因子：**</span>
-
-| 因子 | 含义 |
-|------|------|
-| <span class="sb">`One`</span> | 1 |
-| <span class="sb">`Zero`</span> | 0 |
-| <span class="sb">`SrcColor`</span> | 源颜色 |
-| <span class="sb">`SrcAlpha`</span> | 源Alpha |
-| <span class="sb">`DstColor`</span> | 目标颜色 |
-| <span class="sb">`DstAlpha`</span> | 目标Alpha |
-| <span class="sb">`OneMinusSrcColor`</span> | 1 - 源颜色 |
-| <span class="sb">`OneMinusSrcAlpha`</span> | 1 - 源Alpha |
-| <span class="sb">`OneMinusDstColor`</span> | 1 - 目标颜色 |
-| <span class="sb">`OneMinusDstAlpha`</span> | 1 - 目标Alpha |
-
-<span class="gs">**混合公式：**</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="err">最终颜色</span> <span class="o">=</span> <span class="p">(</span><span class="err">源颜色</span> <span class="o">*</span> <span class="n">SrcFactor</span><span class="p">)</span> <span class="n">BlendOp</span> <span class="p">(</span><span class="err">目标颜色</span> <span class="o">*</span> <span class="n">DstFactor</span><span class="p">)</span>
-<span class="p">```</span>
-<span class="gs">**常用混合模式**</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="c1">// 1. 标准Alpha混合（透明）⭐⭐⭐⭐⭐</span>
+</code></pre></div></div> <p><strong>混合因子：</strong></p> <table> <thead> <tr> <th>因子</th> <th>含义</th> </tr> </thead> <tbody> <tr> <td><code class="language-plaintext highlighter-rouge">One</code></td> <td>1</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">Zero</code></td> <td>0</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SrcColor</code></td> <td>源颜色</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SrcAlpha</code></td> <td>源Alpha</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">DstColor</code></td> <td>目标颜色</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">DstAlpha</code></td> <td>目标Alpha</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">OneMinusSrcColor</code></td> <td>1 - 源颜色</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">OneMinusSrcAlpha</code></td> <td>1 - 源Alpha</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">OneMinusDstColor</code></td> <td>1 - 目标颜色</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">OneMinusDstAlpha</code></td> <td>1 - 目标Alpha</td> </tr> </tbody> </table> <p><strong>混合公式：</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">最终颜色</span> <span class="o">=</span> <span class="p">(</span><span class="err">源颜色</span> <span class="o">*</span> <span class="n">SrcFactor</span><span class="p">)</span> <span class="n">BlendOp</span> <span class="p">(</span><span class="err">目标颜色</span> <span class="o">*</span> <span class="n">DstFactor</span><span class="p">)</span>
+</code></pre></div></div> <p><strong>常用混合模式</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 1. 标准Alpha混合（透明）⭐⭐⭐⭐⭐</span>
 <span class="n">Blend</span> <span class="n">SrcAlpha</span> <span class="n">OneMinusSrcAlpha</span>
 <span class="c1">// 最终 = 源颜色 * 源Alpha + 目标颜色 * (1 - 源Alpha)</span>
 
@@ -222,10 +118,7 @@ Unlit                    = 100
 <span class="c1">// 9. 线性减淡（Screen）</span>
 <span class="n">Blend</span> <span class="n">OneMinusDstColor</span> <span class="n">One</span>
 <span class="n">Blend</span> <span class="n">One</span> <span class="n">OneMinusSrcColor</span>
-<span class="p">```</span>
-<span class="gs">**实际应用示例：**</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="c1">// 火焰粒子（加法混合）</span>
+</code></pre></div></div> <p><strong>实际应用示例：</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 火焰粒子（加法混合）</span>
 <span class="n">Pass</span>
 <span class="p">{</span>
     <span class="n">ZWrite</span> <span class="n">Off</span>
@@ -270,11 +163,7 @@ Unlit                    = 100
     <span class="p">}</span>
     <span class="n">ENDCG</span>
 <span class="p">}</span>
-<span class="p">```</span>
-
-<span class="gu">## ColorMask(颜色遮罩)</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">ColorMask</span> <span class="n">RGB</span>   <span class="c1">// 写入RGB（默认）</span>
+</code></pre></div></div> <h2 id="colormask颜色遮罩">ColorMask(颜色遮罩)</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ColorMask</span> <span class="n">RGB</span>   <span class="c1">// 写入RGB（默认）</span>
 <span class="n">ColorMask</span> <span class="n">A</span>     <span class="c1">// 只写入Alpha</span>
 <span class="n">ColorMask</span> <span class="mi">0</span>     <span class="c1">// 不写入任何颜色</span>
 <span class="n">ColorMask</span> <span class="n">RGBA</span>  <span class="c1">// 写入所有通道</span>
@@ -283,10 +172,7 @@ Unlit                    = 100
 <span class="n">ColorMask</span> <span class="n">R</span>     <span class="c1">// 只写红色</span>
 <span class="n">ColorMask</span> <span class="n">RG</span>    <span class="c1">// 写红色和绿色</span>
 <span class="n">ColorMask</span> <span class="n">BA</span>    <span class="c1">// 写蓝色和Alpha</span>
-<span class="p">```</span>
-<span class="gs">**应用场景：**</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">// 只写深度，不写颜色（透明物体预处理）
+</code></pre></div></div> <p><strong>应用场景：</strong></p> <pre><code class="language-C">// 只写深度，不写颜色（透明物体预处理）
 Pass
 {
     ZWrite On
@@ -316,23 +202,9 @@ Pass
         Comp Always
         Pass Replace
     }
-}</span>
-<span class="p">```</span>
-
-<span class="gu">## Offset（深度偏移）</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">Offset Factor, Units</span>
-<span class="p">```</span>
-
-<span class="gs">**作用：**</span>
-<span class="p">
--</span> 调整深度值，避免Z-Fighting（深度冲突）
-<span class="p">-</span> <span class="sb">`Factor`</span>：基于多边形斜率的偏移
-<span class="p">-</span> <span class="sb">`Units`</span>：固定单位偏移
-
-<span class="gs">**应用场景：**</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">// 贴花（Decal）
+}
+</code></pre> <h2 id="offset深度偏移">Offset（深度偏移）</h2> <pre><code class="language-C">Offset Factor, Units
+</code></pre> <p><strong>作用：</strong></p> <ul> <li>调整深度值，避免Z-Fighting（深度冲突）</li> <li><code class="language-plaintext highlighter-rouge">Factor</code>：基于多边形斜率的偏移</li> <li><code class="language-plaintext highlighter-rouge">Units</code>：固定单位偏移</li> </ul> <p><strong>应用场景：</strong></p> <pre><code class="language-C">// 贴花（Decal）
 Pass
 {
     Offset -1, -1  // 向相机方向偏移，避免Z-Fighting
@@ -351,12 +223,8 @@ Pass
     CGPROGRAM
     // 渲染背面作为描边
     ENDCG
-}</span>
-<span class="p">```</span>
-
-<span class="gu">##  Stencil（模板缓冲）</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">Stencil
+}
+</code></pre> <h2 id="stencil模板缓冲">Stencil（模板缓冲）</h2> <pre><code class="language-C">Stencil
 {
     Ref [_RefValue]         // 参考值（0-255）
     ReadMask [_ReadMask]    // 读取遮罩（默认255）
@@ -366,35 +234,8 @@ Pass
     Pass [stencilOp]        // 测试通过时的操作
     Fail [stencilOp]        // 测试失败时的操作
     ZFail [stencilOp]       // 深度测试失败时的操作
-}</span>
-<span class="p">```</span>
-
-<span class="gs">**比较函数（Comp）：**</span>
-<span class="p">
--</span> <span class="sb">`Never`</span> - 永不通过
-<span class="p">-</span> <span class="sb">`Less`</span> - 小于
-<span class="p">-</span> <span class="sb">`Equal`</span> - 等于
-<span class="p">-</span> <span class="sb">`LEqual`</span> - 小于等于
-<span class="p">-</span> <span class="sb">`Greater`</span> - 大于
-<span class="p">-</span> <span class="sb">`NotEqual`</span> - 不等于
-<span class="p">-</span> <span class="sb">`GEqual`</span> - 大于等于
-<span class="p">-</span> <span class="sb">`Always`</span> - 总是通过
-
-<span class="gs">**操作（Pass/Fail/ZFail）：**</span>
-<span class="p">
--</span> <span class="sb">`Keep`</span> - 保持不变
-<span class="p">-</span> <span class="sb">`Zero`</span> - 设为0
-<span class="p">-</span> <span class="sb">`Replace`</span> - 替换为Ref值
-<span class="p">-</span> <span class="sb">`IncrSat`</span> - 加1（饱和，最大255）
-<span class="p">-</span> <span class="sb">`DecrSat`</span> - 减1（饱和，最小0）
-<span class="p">-</span> <span class="sb">`Invert`</span> - 按位取反
-<span class="p">-</span> <span class="sb">`IncrWrap`</span> - 加1（循环）
-<span class="p">-</span> <span class="sb">`DecrWrap`</span> - 减1（循环）
-
-<span class="gs">**实际应用：遮罩效果**</span>
-
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">// 示例1：遮罩与被遮罩物体
+}
+</code></pre> <p><strong>比较函数（Comp）：</strong></p> <ul> <li><code class="language-plaintext highlighter-rouge">Never</code> - 永不通过</li> <li><code class="language-plaintext highlighter-rouge">Less</code> - 小于</li> <li><code class="language-plaintext highlighter-rouge">Equal</code> - 等于</li> <li><code class="language-plaintext highlighter-rouge">LEqual</code> - 小于等于</li> <li><code class="language-plaintext highlighter-rouge">Greater</code> - 大于</li> <li><code class="language-plaintext highlighter-rouge">NotEqual</code> - 不等于</li> <li><code class="language-plaintext highlighter-rouge">GEqual</code> - 大于等于</li> <li><code class="language-plaintext highlighter-rouge">Always</code> - 总是通过</li> </ul> <p><strong>操作（Pass/Fail/ZFail）：</strong></p> <ul> <li><code class="language-plaintext highlighter-rouge">Keep</code> - 保持不变</li> <li><code class="language-plaintext highlighter-rouge">Zero</code> - 设为0</li> <li><code class="language-plaintext highlighter-rouge">Replace</code> - 替换为Ref值</li> <li><code class="language-plaintext highlighter-rouge">IncrSat</code> - 加1（饱和，最大255）</li> <li><code class="language-plaintext highlighter-rouge">DecrSat</code> - 减1（饱和，最小0）</li> <li><code class="language-plaintext highlighter-rouge">Invert</code> - 按位取反</li> <li><code class="language-plaintext highlighter-rouge">IncrWrap</code> - 加1（循环）</li> <li><code class="language-plaintext highlighter-rouge">DecrWrap</code> - 减1（循环）</li> </ul> <p><strong>实际应用：遮罩效果</strong></p> <pre><code class="language-C">// 示例1：遮罩与被遮罩物体
 
 // 遮罩物体（写入模板值）
 Shader "Custom/StencilMask"
@@ -454,12 +295,8 @@ Shader "Custom/StencilObject"
             ENDCG
         }
     }
-}</span>
-<span class="p">```</span>
-
-<span class="gs">**示例2：描边效果**</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">SubShader
+}
+</code></pre> <p><strong>示例2：描边效果</strong></p> <pre><code class="language-C">SubShader
 {
     // Pass 1: 写入模板
     Pass
@@ -492,12 +329,8 @@ Shader "Custom/StencilObject"
         v.vertex.xyz += v.normal * _OutlineWidth;
         ENDCG
     }
-}</span>
-<span class="p">```</span>
-
-<span class="gs">**示例3：传送门效果**</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">// 传送门遮罩
+}
+</code></pre> <p><strong>示例3：传送门效果</strong></p> <pre><code class="language-C">// 传送门遮罩
 Shader "Custom/PortalMask"
 {
     SubShader
@@ -535,25 +368,10 @@ Shader "Custom/PortalView"
             ENDCG
         }
     }
-}</span>
-<span class="p">```</span>
-
-<span class="gu">## AlphaToMask（Alpha转遮罩）</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">AlphaToMask On   // 开启（MSAA时有效）
-AlphaToMask Off  // 关闭（默认）</span>
-<span class="p">```</span>
-
-<span class="gs">**作用：**</span>
-<span class="p">
--</span> 将Alpha值转换为覆盖遮罩
-<span class="p">-</span> 用于抗锯齿（需要开启MSAA）
-<span class="p">-</span> 适合植被等Alpha Test物体
-
-<span class="gs">**应用场景：**</span>
-
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">// 树叶Shader（更好的边缘）
+}
+</code></pre> <h2 id="alphatomaskalpha转遮罩">AlphaToMask（Alpha转遮罩）</h2> <pre><code class="language-C">AlphaToMask On   // 开启（MSAA时有效）
+AlphaToMask Off  // 关闭（默认）
+</code></pre> <p><strong>作用：</strong></p> <ul> <li>将Alpha值转换为覆盖遮罩</li> <li>用于抗锯齿（需要开启MSAA）</li> <li>适合植被等Alpha Test物体</li> </ul> <p><strong>应用场景：</strong></p> <pre><code class="language-C">// 树叶Shader（更好的边缘）
 Pass
 {
     AlphaToMask On
@@ -566,59 +384,18 @@ Pass
         return col;
     }
     ENDCG
-}</span>
-<span class="p">```</span>
-
-<span class="gu">##  Conservative（保守光栅化）</span>
-<span class="p">```</span><span class="nl">C
-</span><span class="sb">Conservative True   // 开启保守光栅化
-Conservative False  // 关闭（默认）</span>
-<span class="p">```</span>
-
-<span class="gs">**作用：**</span>
-<span class="p">
--</span> 高级功能，确保三角形完全覆盖的像素都被渲染
-<span class="p">-</span> 需要硬件支持
-<span class="gu">## 常见组合总结</span>
-
-| 效果类型  | Cull  | ZTest   | ZWrite | Blend                     |
-| ----- | ----- | ------- | ------ | ------------------------- |
-| 不透明物体 | Back  | LEqual  | On     | Off                       |
-| 标准透明  | Back  | LEqual  | Off    | SrcAlpha OneMinusSrcAlpha |
-| 加法粒子  | Off   | LEqual  | Off    | One One                   |
-| 描边    | Front | LEqual  | On     | Off                       |
-| UI    | Off   | Always  | Off    | SrcAlpha OneMinusSrcAlpha |
-| 天空盒   | Front | LEqual  | Off    | Off                       |
-| X光透视  | Back  | Greater | Off    | SrcAlpha OneMinusSrcAlpha |
-<span class="gu">## target </span>
-<span class="ges">***Shader Model版本，可以省略。Unity会使用默认值：target 2.5***</span>
-<span class="gu">### 语法：</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="cp">#pragma target 2.0  // 指定最低Shader Model版本
+}
+</code></pre> <h2 id="conservative保守光栅化">Conservative（保守光栅化）</h2> <pre><code class="language-C">Conservative True   // 开启保守光栅化
+Conservative False  // 关闭（默认）
+</code></pre> <p><strong>作用：</strong></p> <ul> <li>高级功能，确保三角形完全覆盖的像素都被渲染</li> <li>需要硬件支持 <h2 id="常见组合总结">常见组合总结</h2> </li> </ul> <p>| 效果类型 | Cull | ZTest | ZWrite | Blend | | —– | —– | ——- | —— | ————————- | | 不透明物体 | Back | LEqual | On | Off | | 标准透明 | Back | LEqual | Off | SrcAlpha OneMinusSrcAlpha | | 加法粒子 | Off | LEqual | Off | One One | | 描边 | Front | LEqual | On | Off | | UI | Off | Always | Off | SrcAlpha OneMinusSrcAlpha | | 天空盒 | Front | LEqual | Off | Off | | X光透视 | Back | Greater | Off | SrcAlpha OneMinusSrcAlpha |</p> <h2 id="target">target</h2> <p><strong><em>Shader Model版本，可以省略。Unity会使用默认值：target 2.5</em></strong></p> <h3 id="语法">语法：</h3> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#pragma target 2.0  // 指定最低Shader Model版本
 #pragma target 2.5
 #pragma target 3.0
 #pragma target 3.5
 #pragma target 4.0
 #pragma target 4.5
 #pragma target 5.0
-#pragma target 6.0</span>
-<span class="p">```</span>
-<span class="gu">### Unity的Shader Model版本对照</span>
-
-| Unity Target        | Shader Model | 对应年代 | 平台支持              | 关键功能                |
-| ------------------- | ------------ | ---- | ----------------- | ------------------- |
-| <span class="gs">**2.0**</span>             | SM 2.0       | 2004 | 所有平台              | 基础着色器               |
-| <span class="gs">**2.5**</span>             | SM 2.0扩展     | 2005 | PC, Console       | 更多指令                |
-| <span class="gs">**3.0**</span>             | SM 3.0       | 2006 | PC, Console, 高端移动 | MRT, 更多插值器          |
-| <span class="gs">**3.5**</span> (GL ES 3.0) | SM 3.0+      | 2012 | 现代移动              | MRT, Compute Shader |
-| <span class="gs">**4.0**</span>             | SM 4.0       | 2008 | DX10+             | 几何着色器               |
-| <span class="gs">**4.5**</span>             | SM 4.5       | 2009 | DX11+             | 曲面细分                |
-| <span class="gs">**5.0**</span>             | SM 5.0       | 2011 | DX11+             | 完整Compute Shader    |
-| <span class="gs">**6.0**</span>             | SM 6.0       | 2018 | DX12, Vulkan      | 光线追踪、Mesh Shader    |
-<span class="gh"># 顶点/片元着色器</span>
-<span class="gu">## 结构体</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="k">struct</span> <span class="n">appdata</span>
+#pragma target 6.0
+</span></code></pre></div></div> <h3 id="unity的shader-model版本对照">Unity的Shader Model版本对照</h3> <p>| Unity Target | Shader Model | 对应年代 | 平台支持 | 关键功能 | | ——————- | ———— | —- | —————– | ——————- | | <strong>2.0</strong> | SM 2.0 | 2004 | 所有平台 | 基础着色器 | | <strong>2.5</strong> | SM 2.0扩展 | 2005 | PC, Console | 更多指令 | | <strong>3.0</strong> | SM 3.0 | 2006 | PC, Console, 高端移动 | MRT, 更多插值器 | | <strong>3.5</strong> (GL ES 3.0) | SM 3.0+ | 2012 | 现代移动 | MRT, Compute Shader | | <strong>4.0</strong> | SM 4.0 | 2008 | DX10+ | 几何着色器 | | <strong>4.5</strong> | SM 4.5 | 2009 | DX11+ | 曲面细分 | | <strong>5.0</strong> | SM 5.0 | 2011 | DX11+ | 完整Compute Shader | | <strong>6.0</strong> | SM 6.0 | 2018 | DX12, Vulkan | 光线追踪、Mesh Shader |</p> <h1 id="顶点片元着色器">顶点/片元着色器</h1> <h2 id="结构体">结构体</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">struct</span> <span class="n">appdata</span>
 <span class="p">{</span>
     <span class="n">float4</span> <span class="n">vertex</span> <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>   <span class="c1">// 顶点位置</span>
     <span class="n">float3</span> <span class="n">normal</span> <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>     <span class="c1">// 法线</span>
@@ -627,72 +404,11 @@ Conservative False  // 关闭（默认）</span>
     <span class="n">float2</span> <span class="n">uv1</span> <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>     <span class="c1">// UV1（光照贴图）</span>
     <span class="n">float4</span> <span class="n">color</span> <span class="o">:</span> <span class="n">COLOR</span><span class="p">;</span>       <span class="c1">// 顶点颜色</span>
 <span class="p">};</span>
-<span class="p">```</span>
-<span class="gs">**完整的顶点输入语义列表：**</span>
-
-| 语义              | 含义                   | 数据类型          |
-| --------------- | -------------------- | ------------- |
-| <span class="sb">`POSITION`</span>      | 顶点位置（模型空间）           | float4        |
-| <span class="sb">`NORMAL`</span>        | 法线（模型空间）             | float3        |
-| <span class="sb">`TANGENT`</span>       | 切线（模型空间）             | float4        |
-| <span class="sb">`TEXCOORD0`</span>     | 第一套UV                | float2/float4 |
-| <span class="sb">`TEXCOORD1`</span>     | 第二套UV（光照贴图）          | float2/float4 |
-| <span class="sb">`TEXCOORD2`</span>     | 第三套UV                | float2/float4 |
-| <span class="sb">`TEXCOORD3`</span>     | 第四套UV                | float2/float4 |
-| <span class="sb">`COLOR`</span>         | 顶点颜色                 | float4        |
-| <span class="sb">`SV_VertexID`</span>   | 顶点ID                 | uint          |
-| <span class="sb">`SV_InstanceID`</span> | 实例ID（GPU Instancing） | uint          |
-
-<span class="gu">## TEXCOORD的数量限制 </span>
-<span class="gu">### 不同Shader Model的支持</span>
-Shader Model 2.0：
-<span class="p">-</span> 最多8个TEXCOORD（0-7）
-<span class="p">-</span> 每个最多float4
-<span class="p">-</span> 总共32个float Shader Model
-<span class="p">-</span> 3.0：
-<span class="p">-</span> 最多10个TEXCOORD（0-9） 
-<span class="p">-</span> 每个最多float4 
-<span class="p">-</span> 总共40个float Shader Model 
-<span class="p">-</span> 4.0+：
-<span class="p">-</span> 最多16个插值器 - 使用不同的命名（但TEXCOORD仍然有效） 
-Unity默认：
-<span class="gh">#pragma target 2.5 </span>
-<span class="p">-</span> 支持10个TEXCOORD（0-9） 
-如果需要更多：
-<span class="gh">#pragma target 3.0 或更高</span>
-<span class="gu">### **完整支持表**</span>
-
-|Shader Model|TEXCOORD数量|每个类型|总float数|Unity target|
-|---|---|---|---|---|
-|SM 2.0|8 (0-7)|float4|32|target 2.0|
-|SM 2.5|10 (0-9)|float4|40|target 2.5（默认）|
-|SM 3.0|10 (0-9)|float4|40|target 3.0|
-|SM 4.0+|16|float4|64|target 4.0+|
-<span class="gh"># 片元输出语义</span>
-
-<span class="p">```</span><span class="nl">c
-</span><span class="n">fixed4</span> <span class="nf">frag</span><span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>  <span class="c1">// ← 输出到渲染目标</span>
+</code></pre></div></div> <p><strong>完整的顶点输入语义列表：</strong></p> <table> <thead> <tr> <th>语义</th> <th>含义</th> <th>数据类型</th> </tr> </thead> <tbody> <tr> <td><code class="language-plaintext highlighter-rouge">POSITION</code></td> <td>顶点位置（模型空间）</td> <td>float4</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">NORMAL</code></td> <td>法线（模型空间）</td> <td>float3</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">TANGENT</code></td> <td>切线（模型空间）</td> <td>float4</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">TEXCOORD0</code></td> <td>第一套UV</td> <td>float2/float4</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">TEXCOORD1</code></td> <td>第二套UV（光照贴图）</td> <td>float2/float4</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">TEXCOORD2</code></td> <td>第三套UV</td> <td>float2/float4</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">TEXCOORD3</code></td> <td>第四套UV</td> <td>float2/float4</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">COLOR</code></td> <td>顶点颜色</td> <td>float4</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SV_VertexID</code></td> <td>顶点ID</td> <td>uint</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SV_InstanceID</code></td> <td>实例ID（GPU Instancing）</td> <td>uint</td> </tr> </tbody> </table> <h2 id="texcoord的数量限制">TEXCOORD的数量限制</h2> <h3 id="不同shader-model的支持">不同Shader Model的支持</h3> <p>Shader Model 2.0：</p> <ul> <li>最多8个TEXCOORD（0-7）</li> <li>每个最多float4</li> <li>总共32个float Shader Model</li> <li>3.0：</li> <li>最多10个TEXCOORD（0-9）</li> <li>每个最多float4</li> <li>总共40个float Shader Model</li> <li>4.0+：</li> <li>最多16个插值器 - 使用不同的命名（但TEXCOORD仍然有效） Unity默认： #pragma target 2.5</li> <li>支持10个TEXCOORD（0-9） 如果需要更多： #pragma target 3.0 或更高 <h3 id="完整支持表"><strong>完整支持表</strong></h3> </li> </ul> <p>|Shader Model|TEXCOORD数量|每个类型|总float数|Unity target| |—|—|—|—|—| |SM 2.0|8 (0-7)|float4|32|target 2.0| |SM 2.5|10 (0-9)|float4|40|target 2.5（默认）| |SM 3.0|10 (0-9)|float4|40|target 3.0| |SM 4.0+|16|float4|64|target 4.0+|</p> <h1 id="片元输出语义">片元输出语义</h1> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">fixed4</span> <span class="nf">frag</span><span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>  <span class="c1">// ← 输出到渲染目标</span>
 <span class="p">{</span>
     <span class="k">return</span> <span class="n">fixed4</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>  <span class="c1">// 输出红色</span>
 <span class="err">}</span>
-<span class="p">```</span>
-<span class="gs">**常用输出语义：**</span>
-<span class="ges">***这里语义主要是声明在Struct中的，片元后面默认就SV_Target或者说是SV_Target0，如果多输出的话就可以不写***</span>
-
-|语义|含义|用途|
-|---|---|---|
-|<span class="sb">`SV_Target`</span>|渲染目标0|输出颜色到屏幕|
-|<span class="sb">`SV_Target0`</span>|渲染目标0|同上（明确写0）|
-|<span class="sb">`SV_Target1`</span>|渲染目标1|多渲染目标（MRT）|
-|<span class="sb">`SV_Target2`</span>|渲染目标2|MRT|
-|<span class="sb">`SV_Target3`</span>|渲染目标3|MRT|
-|<span class="sb">`SV_Depth`</span>|深度值|自定义深度|
-|<span class="sb">`COLOR`</span>|颜色（旧版）|被SV_Target取代|
-
-<span class="gh"># 延迟管线</span>
-<span class="ges">***多输出是使用延迟管线，先输出各个图，然后一起计算光照***</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="c1">// 必须用结构体 + MRT（但还是一个Pass！）</span>
+</code></pre></div></div> <p><strong>常用输出语义：</strong> <strong><em>这里语义主要是声明在Struct中的，片元后面默认就SV_Target或者说是SV_Target0，如果多输出的话就可以不写</em></strong></p> <table> <thead> <tr> <th>语义</th> <th>含义</th> <th>用途</th> </tr> </thead> <tbody> <tr> <td><code class="language-plaintext highlighter-rouge">SV_Target</code></td> <td>渲染目标0</td> <td>输出颜色到屏幕</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SV_Target0</code></td> <td>渲染目标0</td> <td>同上（明确写0）</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SV_Target1</code></td> <td>渲染目标1</td> <td>多渲染目标（MRT）</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SV_Target2</code></td> <td>渲染目标2</td> <td>MRT</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SV_Target3</code></td> <td>渲染目标3</td> <td>MRT</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">SV_Depth</code></td> <td>深度值</td> <td>自定义深度</td> </tr> <tr> <td><code class="language-plaintext highlighter-rouge">COLOR</code></td> <td>颜色（旧版）</td> <td>被SV_Target取代</td> </tr> </tbody> </table> <h1 id="延迟管线">延迟管线</h1> <p><strong><em>多输出是使用延迟管线，先输出各个图，然后一起计算光照</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 必须用结构体 + MRT（但还是一个Pass！）</span>
 <span class="k">struct</span> <span class="n">GBufferOutput</span>
 <span class="p">{</span>
     <span class="n">fixed4</span> <span class="n">albedo</span> <span class="o">:</span> <span class="n">SV_Target0</span><span class="p">;</span>
@@ -710,11 +426,7 @@ Unity默认：
     <span class="n">o</span><span class="p">.</span><span class="n">emission</span> <span class="o">=</span> <span class="n">_Emission</span><span class="p">;</span>
     <span class="k">return</span> <span class="n">o</span><span class="p">;</span>  <span class="c1">// 同时输出4个值，只调用一次！</span>
 <span class="p">}</span>
-<span class="p">```</span>
-
-<span class="gu">### 实现方法参考</span>
-<span class="p">```</span><span class="nl">c
-</span><span class="n">SubShader</span>
+</code></pre></div></div> <h3 id="实现方法参考">实现方法参考</h3> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">SubShader</span>
 <span class="p">{</span>
     <span class="n">Pass</span>
     <span class="p">{</span>
@@ -773,14 +485,7 @@ Unity默认：
 <span class="c1">// - 只执行一次frag函数</span>
 <span class="c1">// - GPU硬件支持，非常高效</span>
 <span class="c1">// - 这就是延迟渲染的基础</span>
-<span class="p">```</span>
-<span class="p">
----
-</span>
-<span class="gu">## C#端如何接收多渲染目标</span>
-
-<span class="p">```</span><span class="nl">csharp
-</span><span class="k">using</span> <span class="nn">UnityEngine</span><span class="p">;</span>
+</code></pre></div></div> <hr/> <h2 id="c端如何接收多渲染目标">C#端如何接收多渲染目标</h2> <div class="language-csharp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">using</span> <span class="nn">UnityEngine</span><span class="p">;</span>
 
 <span class="k">public</span> <span class="k">class</span> <span class="nc">MRTExample</span> <span class="p">:</span> <span class="n">MonoBehaviour</span>
 <span class="p">{</span>
@@ -828,39 +533,4 @@ Unity默认：
         <span class="n">GUI</span><span class="p">.</span><span class="nf">DrawTexture</span><span class="p">(</span><span class="k">new</span> <span class="nf">Rect</span><span class="p">(</span><span class="m">512</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">256</span><span class="p">,</span> <span class="m">256</span><span class="p">),</span> <span class="n">rt2</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span>
-<span class="p">```</span>
-
-<span class="gh"># 数据类型快速参考表</span>
-
-<span class="gu">### **一、精度类型对比**</span>
-
-| 精度类型      | 位数  | 范围        | 精度      | 桌面性能    | 移动性能 | 跨平台一致性 | <span class="gs">**推荐度**</span>   |
-| --------- | --- | --------- | ------- | ------- | ---- | ------ | --------- |
-| <span class="gs">**half**</span>  | 16位 | ±60000    | ~0.001  | 等于float | ⭐⭐⭐  | ⭐⭐⭐⭐   | ✅ <span class="gs">**主力**</span>  |
-| <span class="gs">**float**</span> | 32位 | ±3.4×10³⁸ | ~7位有效数字 | float   | ⭐    | ⭐⭐⭐⭐⭐  | ✅ <span class="gs">**必要时**</span> |
-| <span class="gs">**fixed**</span> | 11位 | [-2, 2]   | ~0.004  | 等于float | ⭐⭐⭐  | ⭐⭐     | ❌ <span class="gs">**避免**</span>  |
-<span class="p">
----
-</span>
-<span class="gu">### **二、常用数据类型精度选择**</span>
-
-|数据类型|推荐精度|原因|示例|
-|---|---|---|---|
-|<span class="gs">**🎨 颜色（RGB/RGBA）**</span>|<span class="sb">`half4`</span>|精度足够，跨平台一致|<span class="sb">`half4 color`</span>|
-|<span class="gs">**📐 法线**</span>|<span class="sb">`half3`</span>|归一化向量，精度足够|<span class="sb">`half3 normal`</span>|
-|<span class="gs">**📐 切线/副切线**</span>|<span class="sb">`half3`</span>|同法线|<span class="sb">`half3 tangent`</span>|
-|<span class="gs">**🗺️ UV坐标**</span>|<span class="sb">`half2`</span>|通常小范围|<span class="sb">`half2 uv`</span>|
-|<span class="gs">**💡 光照方向**</span>|<span class="sb">`half3`</span>|归一化向量|<span class="sb">`half3 lightDir`</span>|
-|<span class="gs">**👁️ 视线方向**</span>|<span class="sb">`half3`</span>|归一化向量|<span class="sb">`half3 viewDir`</span>|
-|<span class="gs">**✖️ 点积结果（NdotL等）**</span>|<span class="sb">`half`</span>|[-1,1]范围|<span class="sb">`half ndotl`</span>|
-|<span class="gs">**🎚️ PBR系数（金属度/粗糙度）**</span>|<span class="sb">`half`</span>|[0,1]范围|<span class="sb">`half metallic`</span>|
-|<span class="gs">**🎭 遮罩/Alpha**</span>|<span class="sb">`half`</span>|[0,1]范围|<span class="sb">`half mask`</span>|
-|<span class="gs">**📦 纹理采样结果**</span>|<span class="sb">`half4`</span>|直接返回half|<span class="sb">`half4 tex2D(...)`</span>|
-|<span class="gs">**🌍 世界空间坐标**</span>|<span class="sb">`float3`</span>|可能很大（几千米）|<span class="sb">`float3 worldPos`</span>|
-|<span class="gs">**📍 裁剪空间位置**</span>|<span class="sb">`float4`</span>|<span class="gs">**必须**</span>（SV_POSITION）|<span class="sb">`float4 pos`</span>|
-|<span class="gs">**🔢 矩阵**</span>|<span class="sb">`float4x4`</span>|精度要求高|<span class="sb">`float4x4 matrix`</span>|
-|<span class="gs">**⏱️ 时间/累加计算**</span>|<span class="sb">`float`</span>|避免精度损失|<span class="sb">`float time`</span>|
-|<span class="gs">**📏 大范围距离**</span>|<span class="sb">`float`</span>|可能很大|<span class="sb">`float distance`</span>|
-|<span class="gs">**📐 复杂数学函数**</span>|<span class="sb">`float`</span>|sin/cos/exp等|<span class="sb">`float sine`</span>|
-
-</code></pre></div></div>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader,"/><category term="rendering,"/><category term="unity"/><summary type="html"><![CDATA[Built-in Shader结构速览]]></summary></entry></feed>
+</code></pre></div></div> <h1 id="数据类型快速参考表">数据类型快速参考表</h1> <h3 id="一精度类型对比"><strong>一、精度类型对比</strong></h3> <table> <thead> <tr> <th>精度类型</th> <th>位数</th> <th>范围</th> <th>精度</th> <th>桌面性能</th> <th>移动性能</th> <th>跨平台一致性</th> <th><strong>推荐度</strong></th> </tr> </thead> <tbody> <tr> <td><strong>half</strong></td> <td>16位</td> <td>±60000</td> <td>~0.001</td> <td>等于float</td> <td>⭐⭐⭐</td> <td>⭐⭐⭐⭐</td> <td>✅ <strong>主力</strong></td> </tr> <tr> <td><strong>float</strong></td> <td>32位</td> <td>±3.4×10³⁸</td> <td>~7位有效数字</td> <td>float</td> <td>⭐</td> <td>⭐⭐⭐⭐⭐</td> <td>✅ <strong>必要时</strong></td> </tr> <tr> <td><strong>fixed</strong></td> <td>11位</td> <td>[-2, 2]</td> <td>~0.004</td> <td>等于float</td> <td>⭐⭐⭐</td> <td>⭐⭐</td> <td>❌ <strong>避免</strong></td> </tr> </tbody> </table> <hr/> <h3 id="二常用数据类型精度选择"><strong>二、常用数据类型精度选择</strong></h3> <table> <thead> <tr> <th>数据类型</th> <th>推荐精度</th> <th>原因</th> <th>示例</th> </tr> </thead> <tbody> <tr> <td><strong>🎨 颜色（RGB/RGBA）</strong></td> <td><code class="language-plaintext highlighter-rouge">half4</code></td> <td>精度足够，跨平台一致</td> <td><code class="language-plaintext highlighter-rouge">half4 color</code></td> </tr> <tr> <td><strong>📐 法线</strong></td> <td><code class="language-plaintext highlighter-rouge">half3</code></td> <td>归一化向量，精度足够</td> <td><code class="language-plaintext highlighter-rouge">half3 normal</code></td> </tr> <tr> <td><strong>📐 切线/副切线</strong></td> <td><code class="language-plaintext highlighter-rouge">half3</code></td> <td>同法线</td> <td><code class="language-plaintext highlighter-rouge">half3 tangent</code></td> </tr> <tr> <td><strong>🗺️ UV坐标</strong></td> <td><code class="language-plaintext highlighter-rouge">half2</code></td> <td>通常小范围</td> <td><code class="language-plaintext highlighter-rouge">half2 uv</code></td> </tr> <tr> <td><strong>💡 光照方向</strong></td> <td><code class="language-plaintext highlighter-rouge">half3</code></td> <td>归一化向量</td> <td><code class="language-plaintext highlighter-rouge">half3 lightDir</code></td> </tr> <tr> <td><strong>👁️ 视线方向</strong></td> <td><code class="language-plaintext highlighter-rouge">half3</code></td> <td>归一化向量</td> <td><code class="language-plaintext highlighter-rouge">half3 viewDir</code></td> </tr> <tr> <td><strong>✖️ 点积结果（NdotL等）</strong></td> <td><code class="language-plaintext highlighter-rouge">half</code></td> <td>[-1,1]范围</td> <td><code class="language-plaintext highlighter-rouge">half ndotl</code></td> </tr> <tr> <td><strong>🎚️ PBR系数（金属度/粗糙度）</strong></td> <td><code class="language-plaintext highlighter-rouge">half</code></td> <td>[0,1]范围</td> <td><code class="language-plaintext highlighter-rouge">half metallic</code></td> </tr> <tr> <td><strong>🎭 遮罩/Alpha</strong></td> <td><code class="language-plaintext highlighter-rouge">half</code></td> <td>[0,1]范围</td> <td><code class="language-plaintext highlighter-rouge">half mask</code></td> </tr> <tr> <td><strong>📦 纹理采样结果</strong></td> <td><code class="language-plaintext highlighter-rouge">half4</code></td> <td>直接返回half</td> <td><code class="language-plaintext highlighter-rouge">half4 tex2D(...)</code></td> </tr> <tr> <td><strong>🌍 世界空间坐标</strong></td> <td><code class="language-plaintext highlighter-rouge">float3</code></td> <td>可能很大（几千米）</td> <td><code class="language-plaintext highlighter-rouge">float3 worldPos</code></td> </tr> <tr> <td><strong>📍 裁剪空间位置</strong></td> <td><code class="language-plaintext highlighter-rouge">float4</code></td> <td><strong>必须</strong>（SV_POSITION）</td> <td><code class="language-plaintext highlighter-rouge">float4 pos</code></td> </tr> <tr> <td><strong>🔢 矩阵</strong></td> <td><code class="language-plaintext highlighter-rouge">float4x4</code></td> <td>精度要求高</td> <td><code class="language-plaintext highlighter-rouge">float4x4 matrix</code></td> </tr> <tr> <td><strong>⏱️ 时间/累加计算</strong></td> <td><code class="language-plaintext highlighter-rouge">float</code></td> <td>避免精度损失</td> <td><code class="language-plaintext highlighter-rouge">float time</code></td> </tr> <tr> <td><strong>📏 大范围距离</strong></td> <td><code class="language-plaintext highlighter-rouge">float</code></td> <td>可能很大</td> <td><code class="language-plaintext highlighter-rouge">float distance</code></td> </tr> <tr> <td><strong>📐 复杂数学函数</strong></td> <td><code class="language-plaintext highlighter-rouge">float</code></td> <td>sin/cos/exp等</td> <td><code class="language-plaintext highlighter-rouge">float sine</code></td> </tr> </tbody> </table>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader,"/><category term="rendering,"/><category term="unity"/><summary type="html"><![CDATA[Built-in Shader结构速览]]></summary></entry></feed>

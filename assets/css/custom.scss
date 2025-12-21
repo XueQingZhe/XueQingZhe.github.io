@@ -1,0 +1,6 @@
+/* 只控制 Markdown 自动生成的图片大小 */
+.post-content img:not([width]):not([style]) {
+  max-width: 60%;
+  display: block;
+  margin: 1em auto;
+}

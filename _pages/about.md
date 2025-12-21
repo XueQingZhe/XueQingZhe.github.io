@@ -11,20 +11,18 @@ profile:
   more_info: >
     <p>专注实时渲染技术</p>
     <p>Unity · Unreal Engine</p>
-
+announcements:
+  enabled: true # includes a list of news items
+  scrollable: true # adds a vertical scroll bar if there are more than 3 news items
+  limit: 5 # leave blank to include all the news in the `_news` folder
 news: true # includes a list of news items
-news_scrollable: true
-# news_limit: 5
 
-# latest_posts:
-#   enabled: true
-#   scrollable: true
-#   limit: 3
-
-selected_papers: false
+latest_posts:
+  enabled: true
+  scrollable: true # adds a vertical scroll bar if there are more than 3 new posts items
+  limit: 3 # leave blank to include all the blog posts
 
 social: true
-latest_posts: true   # ← 显示最新博客（可选）
 selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
 nav_order: 1

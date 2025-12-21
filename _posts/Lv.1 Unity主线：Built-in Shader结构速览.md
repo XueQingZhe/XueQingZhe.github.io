@@ -5,9 +5,13 @@ date: 2025-12-21
 description: Built-in Shader结构速览
 tags: [shader, rendering, unity]
 categories: [TAMonth01]
+#tags: formatting code
+#categories: sample-posts
+featured: true
 toc:
   sidebar: left
 ---
+
 # 基本结构
 ![图片](/assets/img/TAMonth01/Pasted image 20251203164844.png)
 # SubShader Tags

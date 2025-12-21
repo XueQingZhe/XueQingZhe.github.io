@@ -139,32 +139,46 @@ layout: default
 
 <!-- Auto convert images to Spotlight -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  // 只在启用了 spotlight 的文章中运行
-  {% if page.images.spotlight %}
+(function() {
+  'use strict';
   
-  // 选择所有 Markdown 生成的图片
-  const images = document.querySelectorAll('.post-content img:not([width]):not([style])');
-  
-  images.forEach(function(img) {
-    // 创建 <a> 标签包裹
-    const link = document.createElement('a');
-    link.className = 'spotlight';
-    link.href = img.src;
+  document.addEventListener('DOMContentLoaded', function() {
+    {% if page.images.spotlight %}
     
-    // 复制 img 的属性
-    link.setAttribute('data-description', img.alt || '');
+    const selector = '.post-content img:not([width]):not([style]):not([data-spotlight-converted])';
+    const images = document.querySelectorAll(selector);
     
-    // 用 <a> 包裹 <img>
-    img.parentNode.insertBefore(link, img);
-    link.appendChild(img);
+    if (images.length === 0) {
+      console.log('Spotlight: No images to convert');
+      return;
+    }
     
-    // 添加光标样式
-    img.style.cursor = 'zoom-in';
+    images.forEach(function(img) {
+      if (img.parentElement.classList.contains('spotlight')) {
+        return;
+      }
+      
+      const link = document.createElement('a');
+      link.className = 'spotlight';
+      link.href = img.src;
+      
+      if (img.alt) {
+        link.setAttribute('data-description', img.alt);
+      }
+      
+      img.setAttribute('data-spotlight-converted', 'true');
+      
+      // 强制设置样式（防止被覆盖）
+      img.style.cssText = 'max-width: 75% !important; display: block !important; margin: 1em auto !important; cursor: zoom-in !important;';
+      
+      const parent = img.parentNode;
+      parent.insertBefore(link, img);
+      link.appendChild(img);
+    });
+    
+    console.log('Spotlight: Converted', images.length, 'images');
+    
+    {% endif %}
   });
-  
-  console.log('Spotlight: Converted', images.length, 'images');
-  
-  {% endif %}
-});
+})();
 </script>

@@ -1,15 +1,25 @@
-/* 只控制 Markdown 自动生成的图片大小 */
-.post-content img:not([width]):not([style]) {
-  max-width: 75%;
-  display: block;
-  margin: 1em auto;
-  cursor: zoom-in;
+/* 强制控制图片大小 */
+.post-content img:not([width]):not([style]),
+.post-content a.spotlight > img {
+  max-width: 75% !important;
+  display: block !important;
+  margin: 1em auto !important;
+  height: auto !important;
 }
-/* Spotlight 图片悬停效果 */
-.post-content a.spotlight img {
+
+.post-content a.spotlight > img {
+  cursor: zoom-in !important;
   transition: opacity 0.3s;
 }
 
-.post-content a.spotlight img:hover {
+.post-content a.spotlight > img:hover {
   opacity: 0.9;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .post-content img:not([width]):not([style]),
+  .post-content a.spotlight > img {
+    max-width: 100% !important;
+  }
 }

@@ -1,0 +1,874 @@
+---
+layout: post
+title: Lv.1 Unity主线：Built-in Shader结构速览
+date: 2025-12-21 
+description: Built-in Shader结构速览
+tags: [shader, rendering, unity]
+categories: [TAMonth01]
+toc:
+  sidebar: left
+---
+# 基本结构
+![图片](/assets/img/TAMonth01/Pasted image 20251203164844.png)
+# SubShader Tags
+## Render Type
+![图片](/assets/img/TAMonth01/Pasted image 20251203170938.png)
+## Queue
+![图片](/assets/img/TAMonth01/Pasted image 20251203171204.png)
+## LOD
+```c
+SubShader
+{
+    LOD 300  // ← 这就是LOD关键字
+    Pass { }
+}
+```
+
+```c
+// C#代码中设置 Shader.globalMaximumLOD = 200;
+// 只使用LOD<=200的SubShader 
+```
+ 
+**选择规则：** 
+如果设置 Shader.globalMaximumLOD = 200 
+SubShader LOD 300 ← 跳过（超过限制）
+SubShader LOD 200 ← ✅ 使用这个 
+SubShader LOD 100 ← 不会用到（因为已经找到合适的） 
+
+Unity内置Shader的LOD标准
+### Unity官方推荐的LOD值
+
+| LOD值 | 质量等级 | 示例Shader                        |
+| ---- | ---- | ------------------------------- |
+| 600+ | 最高质量 | 物理基础渲染 + 曲面细分                   |
+| 500  | 非常高  | VertexLit + 所有像素光               |
+| 300  | 高    | Diffuse + Specular + Normal Map |
+| 200  | 中    | Diffuse + Specular              |
+| 150  | 中低   | Diffuse + 简化光照                  |
+| 100  | 低    | Vertex Lit（顶点光照）                |
+| 50   | 最低   | 无光照                             |
+**Unity内置Shader的LOD值：**
+```
+Standard Shader          = 300
+Bumped Specular          = 300
+Bumped Diffuse           = 200
+Diffuse                  = 200
+Specular                 = 200
+VertexLit                = 100
+Unlit                    = 100
+```
+## IgnoreProjector
+**忽略投影**
+```c
+Tags { "IgnoreProjector"="True" }
+```
+![图片](/assets/img/TAMonth01/Pasted image 20251203171336.png)
+## ForceNoShadowCasting
+```c
+Tags { "ForceNoShadowCasting"="True" }
+```
+![图片](/assets/img/TAMonth01/Pasted image 20251203171503.png)
+## DisableBatching
+```c
+Tags { "DisableBatching"="True" }
+```
+![图片](/assets/img/TAMonth01/Pasted image 20251203171712.png)
+## PreviewType
+***细节面板预览形状***
+```c
+Tags { "PreviewType"="Plane" }
+```
+![图片](/assets/img/TAMonth01/Pasted image 20251203172058.png)
+
+## CanUseSpriteAtlas
+```c
+Tags { "CanUseSpriteAtlas"="True" }
+```
+![图片](/assets/img/TAMonth01/Pasted image 20251203172147.png)
+# Pass Tags
+## LightMode
+![图片](/assets/img/TAMonth01/Pasted image 20251203172447.png)
+![图片](/assets/img/TAMonth01/Pasted image 20251203172705.png)
+## RequireOptions
+![图片](/assets/img/TAMonth01/Pasted image 20251203172836.png)
+## PassFlags
+![图片](/assets/img/TAMonth01/Pasted image 20251203173126.png)
+# Pass keyworld
+## Cull
+![图片](/assets/img/TAMonth01/Pasted image 20251203173822.png)
+![图片](/assets/img/TAMonth01/Pasted image 20251203174026.png)
+
+## ZTest
+![图片](/assets/img/TAMonth01/Pasted image 20251203173840.png)
+```c
+// 普通物体（默认）
+Pass
+{
+    ZTest LEqual  // 近的覆盖远的
+}
+
+// 透视效果（X光）
+Pass
+{
+    ZTest Greater  // 只显示被遮挡的部分
+    
+    CGPROGRAM
+    fixed4 frag() : SV_Target
+    {
+        return fixed4(1, 0, 0, 0.5);  // 半透明红色
+    }
+    ENDCG
+}
+
+// UI/屏幕空间效果
+Pass
+{
+    ZTest Always  // 忽略深度，总是显示
+}
+
+// 描边效果（两个Pass）
+// Pass 1: 正常渲染
+Pass
+{
+    ZTest LEqual
+    CGPROGRAM
+    // 正常渲染
+    ENDCG
+}
+
+// Pass 2: 描边
+Pass
+{
+    ZTest Greater  // 只渲染被遮挡的部分作为描边
+    CGPROGRAM
+    // 放大模型，渲染边缘
+    ENDCG
+}
+```
+## ZWrite
+![图片](/assets/img/TAMonth01/Pasted image 20251203173855.png)
+![图片](/assets/img/TAMonth01/Pasted image 20251203173944.png)
+
+
+## Blend 混合模式
+```c
+// 基础语法
+Blend SrcFactor DstFactor
+Blend SrcFactor DstFactor, SrcFactorA DstFactorA  // 分别控制RGB和Alpha
+
+// 高级语法
+BlendOp Add/Sub/RevSub/Min/Max  // 混合操作
+```
+
+**混合因子：**
+
+| 因子 | 含义 |
+|------|------|
+| `One` | 1 |
+| `Zero` | 0 |
+| `SrcColor` | 源颜色 |
+| `SrcAlpha` | 源Alpha |
+| `DstColor` | 目标颜色 |
+| `DstAlpha` | 目标Alpha |
+| `OneMinusSrcColor` | 1 - 源颜色 |
+| `OneMinusSrcAlpha` | 1 - 源Alpha |
+| `OneMinusDstColor` | 1 - 目标颜色 |
+| `OneMinusDstAlpha` | 1 - 目标Alpha |
+
+**混合公式：**
+```c
+最终颜色 = (源颜色 * SrcFactor) BlendOp (目标颜色 * DstFactor)
+```
+**常用混合模式**
+```c
+// 1. 标准Alpha混合（透明）⭐⭐⭐⭐⭐
+Blend SrcAlpha OneMinusSrcAlpha
+// 最终 = 源颜色 * 源Alpha + 目标颜色 * (1 - 源Alpha)
+
+// 2. 加法混合（发光、粒子）⭐⭐⭐⭐⭐
+Blend One One
+// 最终 = 源颜色 + 目标颜色
+
+Blend SrcAlpha One  // 柔和的加法
+// 最终 = 源颜色 * 源Alpha + 目标颜色
+
+// 3. 乘法混合（阴影、滤镜）⭐⭐⭐
+Blend DstColor Zero
+// 最终 = 目标颜色 * 源颜色
+
+Blend Zero SrcColor  // 等价写法
+// 最终 = 源颜色 * 目标颜色
+
+// 4. 正片叠底（Photoshop的Multiply）
+Blend DstColor SrcColor
+// 最终 = 源颜色 * 目标颜色 + 目标颜色 * 源颜色
+
+// 5. 减法混合⭐⭐
+BlendOp Sub
+Blend One One
+// 最终 = 源颜色 - 目标颜色
+
+BlendOp RevSub
+Blend One One
+// 最终 = 目标颜色 - 源颜色
+
+// 6. 最小值/最大值
+BlendOp Min
+Blend One One
+// 最终 = min(源颜色, 目标颜色)
+
+BlendOp Max
+Blend One One
+// 最终 = max(源颜色, 目标颜色)
+
+// 7. 预乘Alpha
+Blend One OneMinusSrcAlpha
+// 用于已经预乘了Alpha的纹理
+
+// 8. 柔光（Soft Additive）
+Blend OneMinusDstColor One
+// 亮处更亮，暗处影响小
+
+// 9. 线性减淡（Screen）
+Blend OneMinusDstColor One
+Blend One OneMinusSrcColor
+```
+**实际应用示例：**
+```c
+// 火焰粒子（加法混合）
+Pass
+{
+    ZWrite Off
+    Blend SrcAlpha One  // 柔和加法
+    
+    CGPROGRAM
+    fixed4 frag() : SV_Target
+    {
+        fixed4 col = tex2D(_MainTex, i.uv);
+        col.rgb *= _TintColor.rgb * 2;  // 增强亮度
+        return col;
+    }
+    ENDCG
+}
+
+// 玻璃（标准透明）
+Pass
+{
+    ZWrite Off
+    Blend SrcAlpha OneMinusSrcAlpha
+    
+    CGPROGRAM
+    fixed4 frag() : SV_Target
+    {
+        fixed4 col = tex2D(_MainTex, i.uv);
+        col.a = 0.3;  // 30%透明度
+        return col;
+    }
+    ENDCG
+}
+
+// 阴影投射（乘法混合）
+Pass
+{
+    ZWrite Off
+    Blend DstColor Zero  // 正片叠底
+    
+    CGPROGRAM
+    fixed4 frag() : SV_Target
+    {
+        return fixed4(0.5, 0.5, 0.5, 1);  // 50%变暗
+    }
+    ENDCG
+}
+```
+
+## ColorMask(颜色遮罩)
+```c
+ColorMask RGB   // 写入RGB（默认）
+ColorMask A     // 只写入Alpha
+ColorMask 0     // 不写入任何颜色
+ColorMask RGBA  // 写入所有通道
+
+// 组合使用
+ColorMask R     // 只写红色
+ColorMask RG    // 写红色和绿色
+ColorMask BA    // 写蓝色和Alpha
+```
+**应用场景：**
+```C
+// 只写深度，不写颜色（透明物体预处理）
+Pass
+{
+    ZWrite On
+    ColorMask 0  // 不写任何颜色
+}
+
+// 只写Alpha通道
+Pass
+{
+    ColorMask A
+    CGPROGRAM
+    fixed4 frag() : SV_Target
+    {
+        return fixed4(0, 0, 0, _Alpha);
+    }
+    ENDCG
+}
+
+// 模板缓冲配合使用
+Pass
+{
+    ColorMask 0  // 不写颜色
+    
+    Stencil
+    {
+        Ref 1
+        Comp Always
+        Pass Replace
+    }
+}
+```
+
+## Offset（深度偏移）
+```C
+Offset Factor, Units
+```
+
+**作用：**
+
+- 调整深度值，避免Z-Fighting（深度冲突）
+- `Factor`：基于多边形斜率的偏移
+- `Units`：固定单位偏移
+
+**应用场景：**
+```C
+// 贴花（Decal）
+Pass
+{
+    Offset -1, -1  // 向相机方向偏移，避免Z-Fighting
+    
+    CGPROGRAM
+    // 渲染贴花
+    ENDCG
+}
+
+// 描边效果
+Pass
+{
+    Cull Front
+    Offset 1, 1  // 向后偏移
+    
+    CGPROGRAM
+    // 渲染背面作为描边
+    ENDCG
+}
+```
+
+##  Stencil（模板缓冲）
+```C
+Stencil
+{
+    Ref [_RefValue]         // 参考值（0-255）
+    ReadMask [_ReadMask]    // 读取遮罩（默认255）
+    WriteMask [_WriteMask]  // 写入遮罩（默认255）
+    
+    Comp [comparison]       // 比较函数
+    Pass [stencilOp]        // 测试通过时的操作
+    Fail [stencilOp]        // 测试失败时的操作
+    ZFail [stencilOp]       // 深度测试失败时的操作
+}
+```
+
+**比较函数（Comp）：**
+
+- `Never` - 永不通过
+- `Less` - 小于
+- `Equal` - 等于
+- `LEqual` - 小于等于
+- `Greater` - 大于
+- `NotEqual` - 不等于
+- `GEqual` - 大于等于
+- `Always` - 总是通过
+
+**操作（Pass/Fail/ZFail）：**
+
+- `Keep` - 保持不变
+- `Zero` - 设为0
+- `Replace` - 替换为Ref值
+- `IncrSat` - 加1（饱和，最大255）
+- `DecrSat` - 减1（饱和，最小0）
+- `Invert` - 按位取反
+- `IncrWrap` - 加1（循环）
+- `DecrWrap` - 减1（循环）
+
+**实际应用：遮罩效果**
+
+```C
+// 示例1：遮罩与被遮罩物体
+
+// 遮罩物体（写入模板值）
+Shader "Custom/StencilMask"
+{
+    SubShader
+    {
+        Tags { "Queue"="Geometry-1" }  // 先渲染
+        
+        Pass
+        {
+            ZWrite Off
+            ColorMask 0  // 不写颜色
+            
+            Stencil
+            {
+                Ref 1
+                Comp Always
+                Pass Replace  // 写入模板值1
+            }
+            
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            
+            float4 frag() : SV_Target
+            {
+                return 0;
+            }
+            ENDCG
+        }
+    }
+}
+
+// 被遮罩物体（只在遮罩内显示）
+Shader "Custom/StencilObject"
+{
+    SubShader
+    {
+        Tags { "Queue"="Geometry" }
+        
+        Pass
+        {
+            Stencil
+            {
+                Ref 1
+                Comp Equal  // 只在模板值等于1的地方渲染
+            }
+            
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            
+            fixed4 frag() : SV_Target
+            {
+                return fixed4(1, 0, 0, 1);
+            }
+            ENDCG
+        }
+    }
+}
+```
+
+**示例2：描边效果**
+```C
+SubShader
+{
+    // Pass 1: 写入模板
+    Pass
+    {
+        Stencil
+        {
+            Ref 1
+            Comp Always
+            Pass Replace
+        }
+        
+        CGPROGRAM
+        // 正常渲染物体
+        ENDCG
+    }
+    
+    // Pass 2: 描边（只在物体外部）
+    Pass
+    {
+        Cull Front
+        
+        Stencil
+        {
+            Ref 1
+            Comp NotEqual  // 不等于1的地方（物体外部）
+        }
+        
+        CGPROGRAM
+        // 放大并渲染描边
+        v.vertex.xyz += v.normal * _OutlineWidth;
+        ENDCG
+    }
+}
+```
+
+**示例3：传送门效果**
+```C
+// 传送门遮罩
+Shader "Custom/PortalMask"
+{
+    SubShader
+    {
+        Pass
+        {
+            ZWrite Off
+            ColorMask 0
+            
+            Stencil
+            {
+                Ref 1
+                Comp Always
+                Pass Replace
+            }
+        }
+    }
+}
+
+// 传送门另一侧的场景
+Shader "Custom/PortalView"
+{
+    SubShader
+    {
+        Pass
+        {
+            Stencil
+            {
+                Ref 1
+                Comp Equal
+            }
+            
+            CGPROGRAM
+            // 渲染另一个场景
+            ENDCG
+        }
+    }
+}
+```
+
+## AlphaToMask（Alpha转遮罩）
+```C
+AlphaToMask On   // 开启（MSAA时有效）
+AlphaToMask Off  // 关闭（默认）
+```
+
+**作用：**
+
+- 将Alpha值转换为覆盖遮罩
+- 用于抗锯齿（需要开启MSAA）
+- 适合植被等Alpha Test物体
+
+**应用场景：**
+
+```C
+// 树叶Shader（更好的边缘）
+Pass
+{
+    AlphaToMask On
+    
+    CGPROGRAM
+    fixed4 frag() : SV_Target
+    {
+        fixed4 col = tex2D(_MainTex, i.uv);
+        clip(col.a - _Cutoff);
+        return col;
+    }
+    ENDCG
+}
+```
+
+##  Conservative（保守光栅化）
+```C
+Conservative True   // 开启保守光栅化
+Conservative False  // 关闭（默认）
+```
+
+**作用：**
+
+- 高级功能，确保三角形完全覆盖的像素都被渲染
+- 需要硬件支持
+## 常见组合总结
+
+| 效果类型  | Cull  | ZTest   | ZWrite | Blend                     |
+| ----- | ----- | ------- | ------ | ------------------------- |
+| 不透明物体 | Back  | LEqual  | On     | Off                       |
+| 标准透明  | Back  | LEqual  | Off    | SrcAlpha OneMinusSrcAlpha |
+| 加法粒子  | Off   | LEqual  | Off    | One One                   |
+| 描边    | Front | LEqual  | On     | Off                       |
+| UI    | Off   | Always  | Off    | SrcAlpha OneMinusSrcAlpha |
+| 天空盒   | Front | LEqual  | Off    | Off                       |
+| X光透视  | Back  | Greater | Off    | SrcAlpha OneMinusSrcAlpha |
+## target 
+***Shader Model版本，可以省略。Unity会使用默认值：target 2.5***
+### 语法：
+```c
+#pragma target 2.0  // 指定最低Shader Model版本
+#pragma target 2.5
+#pragma target 3.0
+#pragma target 3.5
+#pragma target 4.0
+#pragma target 4.5
+#pragma target 5.0
+#pragma target 6.0
+```
+### Unity的Shader Model版本对照
+
+| Unity Target        | Shader Model | 对应年代 | 平台支持              | 关键功能                |
+| ------------------- | ------------ | ---- | ----------------- | ------------------- |
+| **2.0**             | SM 2.0       | 2004 | 所有平台              | 基础着色器               |
+| **2.5**             | SM 2.0扩展     | 2005 | PC, Console       | 更多指令                |
+| **3.0**             | SM 3.0       | 2006 | PC, Console, 高端移动 | MRT, 更多插值器          |
+| **3.5** (GL ES 3.0) | SM 3.0+      | 2012 | 现代移动              | MRT, Compute Shader |
+| **4.0**             | SM 4.0       | 2008 | DX10+             | 几何着色器               |
+| **4.5**             | SM 4.5       | 2009 | DX11+             | 曲面细分                |
+| **5.0**             | SM 5.0       | 2011 | DX11+             | 完整Compute Shader    |
+| **6.0**             | SM 6.0       | 2018 | DX12, Vulkan      | 光线追踪、Mesh Shader    |
+# 顶点/片元着色器
+## 结构体
+```c
+struct appdata
+{
+    float4 vertex : POSITION;   // 顶点位置
+    float3 normal : NORMAL;     // 法线
+    float4 tangent : TANGENT;   // 切线
+    float2 uv : TEXCOORD0;      // UV0
+    float2 uv1 : TEXCOORD1;     // UV1（光照贴图）
+    float4 color : COLOR;       // 顶点颜色
+};
+```
+**完整的顶点输入语义列表：**
+
+| 语义              | 含义                   | 数据类型          |
+| --------------- | -------------------- | ------------- |
+| `POSITION`      | 顶点位置（模型空间）           | float4        |
+| `NORMAL`        | 法线（模型空间）             | float3        |
+| `TANGENT`       | 切线（模型空间）             | float4        |
+| `TEXCOORD0`     | 第一套UV                | float2/float4 |
+| `TEXCOORD1`     | 第二套UV（光照贴图）          | float2/float4 |
+| `TEXCOORD2`     | 第三套UV                | float2/float4 |
+| `TEXCOORD3`     | 第四套UV                | float2/float4 |
+| `COLOR`         | 顶点颜色                 | float4        |
+| `SV_VertexID`   | 顶点ID                 | uint          |
+| `SV_InstanceID` | 实例ID（GPU Instancing） | uint          |
+
+## TEXCOORD的数量限制 
+### 不同Shader Model的支持
+Shader Model 2.0：
+- 最多8个TEXCOORD（0-7）
+- 每个最多float4
+- 总共32个float Shader Model
+- 3.0：
+- 最多10个TEXCOORD（0-9） 
+- 每个最多float4 
+- 总共40个float Shader Model 
+- 4.0+：
+- 最多16个插值器 - 使用不同的命名（但TEXCOORD仍然有效） 
+Unity默认：
+#pragma target 2.5 
+- 支持10个TEXCOORD（0-9） 
+如果需要更多：
+#pragma target 3.0 或更高
+### **完整支持表**
+
+|Shader Model|TEXCOORD数量|每个类型|总float数|Unity target|
+|---|---|---|---|---|
+|SM 2.0|8 (0-7)|float4|32|target 2.0|
+|SM 2.5|10 (0-9)|float4|40|target 2.5（默认）|
+|SM 3.0|10 (0-9)|float4|40|target 3.0|
+|SM 4.0+|16|float4|64|target 4.0+|
+# 片元输出语义
+
+```c
+fixed4 frag(v2f i) : SV_Target  // ← 输出到渲染目标
+{
+    return fixed4(1, 0, 0, 1);  // 输出红色
+}
+```
+**常用输出语义：**
+***这里语义主要是声明在Struct中的，片元后面默认就SV_Target或者说是SV_Target0，如果多输出的话就可以不写***
+
+|语义|含义|用途|
+|---|---|---|
+|`SV_Target`|渲染目标0|输出颜色到屏幕|
+|`SV_Target0`|渲染目标0|同上（明确写0）|
+|`SV_Target1`|渲染目标1|多渲染目标（MRT）|
+|`SV_Target2`|渲染目标2|MRT|
+|`SV_Target3`|渲染目标3|MRT|
+|`SV_Depth`|深度值|自定义深度|
+|`COLOR`|颜色（旧版）|被SV_Target取代|
+
+# 延迟管线
+***多输出是使用延迟管线，先输出各个图，然后一起计算光照***
+```c
+// 必须用结构体 + MRT（但还是一个Pass！）
+struct GBufferOutput
+{
+    fixed4 albedo : SV_Target0;
+    fixed4 specular : SV_Target1;
+    fixed4 normal : SV_Target2;
+    fixed4 emission : SV_Target3;
+};
+
+GBufferOutput frag(v2f i)
+{
+    GBufferOutput o;
+    o.albedo = tex2D(_MainTex, i.uv);
+    o.specular = tex2D(_SpecMap, i.uv);
+    o.normal = UnpackNormal(tex2D(_BumpMap, i.uv));
+    o.emission = _Emission;
+    return o;  // 同时输出4个值，只调用一次！
+}
+```
+
+### 实现方法参考
+```c
+SubShader
+{
+    Pass
+    {
+        CGPROGRAM
+        #pragma vertex vert
+        #pragma fragment frag
+        #pragma target 3.0  // MRT需要SM3.0+
+        
+        sampler2D _MainTex;
+        
+        struct v2f
+        {
+            float4 pos : SV_POSITION;
+            float2 uv : TEXCOORD0;
+            float3 normal : TEXCOORD1;
+            float depth : TEXCOORD2;
+        };
+        
+        v2f vert(appdata_base v)
+        {
+            v2f o;
+            o.pos = UnityObjectToClipPos(v.vertex);
+            o.uv = v.texcoord;
+            o.normal = UnityObjectToWorldNormal(v.normal);
+            o.depth = o.pos.z;
+            return o;
+        }
+        
+        // 定义多输出结构体
+        struct FragOutput
+        {
+            fixed4 albedo : SV_Target0;  // 输出到RT0
+            fixed4 normal : SV_Target1;  // 输出到RT1
+            fixed4 depth : SV_Target2;   // 输出到RT2
+        };
+        
+        // 一次frag调用，同时输出3个值
+        FragOutput frag(v2f i)
+        {
+            FragOutput o;
+            
+            // 同时计算所有数据
+            o.albedo = tex2D(_MainTex, i.uv);
+            o.normal = fixed4(normalize(i.normal) * 0.5 + 0.5, 1);
+            o.depth = fixed4(i.depth, i.depth, i.depth, 1);
+            
+            // 一次return，同时输出到3个RT
+            return o;
+        }
+        ENDCG
+    }
+}
+
+// 优点：
+// - 只执行一次顶点着色器
+// - 只执行一次frag函数
+// - GPU硬件支持，非常高效
+// - 这就是延迟渲染的基础
+```
+
+---
+
+## C#端如何接收多渲染目标
+
+```csharp
+using UnityEngine;
+
+public class MRTExample : MonoBehaviour
+{
+    public Shader mrtShader;
+    private Material mrtMaterial;
+    
+    private RenderTexture rt0;  // Albedo
+    private RenderTexture rt1;  // Normal
+    private RenderTexture rt2;  // Depth
+    
+    void Start()
+    {
+        // 创建3个RenderTexture
+        rt0 = new RenderTexture(512, 512, 0);
+        rt1 = new RenderTexture(512, 512, 0);
+        rt2 = new RenderTexture(512, 512, 0);
+        
+        mrtMaterial = new Material(mrtShader);
+    }
+    
+    void OnRenderImage(RenderTexture source, RenderTexture destination)
+    {
+        // 设置多渲染目标（MRT）
+        RenderBuffer[] colorBuffers = new RenderBuffer[3];
+        colorBuffers[0] = rt0.colorBuffer;  // SV_Target0
+        colorBuffers[1] = rt1.colorBuffer;  // SV_Target1
+        colorBuffers[2] = rt2.colorBuffer;  // SV_Target2
+        
+        // 一次Graphics.Blit，同时输出到3个RT
+        Graphics.SetRenderTarget(colorBuffers, rt0.depthBuffer);
+        Graphics.Blit(source, mrtMaterial);
+        
+        // 现在rt0、rt1、rt2都已经填充了数据
+        // 只调用了一次frag函数！
+        
+        // 显示结果
+        Graphics.Blit(rt0, destination);  // 显示Albedo
+    }
+    
+    // 调试：显示3个RT
+    void OnGUI()
+    {
+        GUI.DrawTexture(new Rect(0, 0, 256, 256), rt0);
+        GUI.DrawTexture(new Rect(256, 0, 256, 256), rt1);
+        GUI.DrawTexture(new Rect(512, 0, 256, 256), rt2);
+    }
+}
+```
+
+# 数据类型快速参考表
+
+### **一、精度类型对比**
+
+| 精度类型      | 位数  | 范围        | 精度      | 桌面性能    | 移动性能 | 跨平台一致性 | **推荐度**   |
+| --------- | --- | --------- | ------- | ------- | ---- | ------ | --------- |
+| **half**  | 16位 | ±60000    | ~0.001  | 等于float | ⭐⭐⭐  | ⭐⭐⭐⭐   | ✅ **主力**  |
+| **float** | 32位 | ±3.4×10³⁸ | ~7位有效数字 | float   | ⭐    | ⭐⭐⭐⭐⭐  | ✅ **必要时** |
+| **fixed** | 11位 | [-2, 2]   | ~0.004  | 等于float | ⭐⭐⭐  | ⭐⭐     | ❌ **避免**  |
+
+---
+
+### **二、常用数据类型精度选择**
+
+|数据类型|推荐精度|原因|示例|
+|---|---|---|---|
+|**🎨 颜色（RGB/RGBA）**|`half4`|精度足够，跨平台一致|`half4 color`|
+|**📐 法线**|`half3`|归一化向量，精度足够|`half3 normal`|
+|**📐 切线/副切线**|`half3`|同法线|`half3 tangent`|
+|**🗺️ UV坐标**|`half2`|通常小范围|`half2 uv`|
+|**💡 光照方向**|`half3`|归一化向量|`half3 lightDir`|
+|**👁️ 视线方向**|`half3`|归一化向量|`half3 viewDir`|
+|**✖️ 点积结果（NdotL等）**|`half`|[-1,1]范围|`half ndotl`|
+|**🎚️ PBR系数（金属度/粗糙度）**|`half`|[0,1]范围|`half metallic`|
+|**🎭 遮罩/Alpha**|`half`|[0,1]范围|`half mask`|
+|**📦 纹理采样结果**|`half4`|直接返回half|`half4 tex2D(...)`|
+|**🌍 世界空间坐标**|`float3`|可能很大（几千米）|`float3 worldPos`|
+|**📍 裁剪空间位置**|`float4`|**必须**（SV_POSITION）|`float4 pos`|
+|**🔢 矩阵**|`float4x4`|精度要求高|`float4x4 matrix`|
+|**⏱️ 时间/累加计算**|`float`|避免精度损失|`float time`|
+|**📏 大范围距离**|`float`|可能很大|`float distance`|
+|**📐 复杂数学函数**|`float`|sin/cos/exp等|`float sine`|

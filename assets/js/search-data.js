@@ -44,11 +44,11 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/cv/";
           },
-        },{id: "post-lv-2-unity主线-镜面反射光照模型phong和blinn-phong",
+        },{id: "post-镜面反射光照模型phong和blinn-phong",
         
-          title: "Lv.2 unity主线：镜面反射光照模型phong和blinn Phong",
+          title: "镜面反射光照模型Phong和Blinn-Phong",
         
-        description: "",
+        description: "镜面反射光照模型Phong和Blinn-Phong",
         section: "Posts",
         handler: () => {
           
@@ -64,6 +64,28 @@ ninja.data = [{
         handler: () => {
           
             window.location.href = "/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E6%B3%95%E7%BA%BF/";
+          
+        },
+      },{id: "post-lv-2-unity主线-添加阴影",
+        
+          title: "Lv.2 Unity主线： 添加阴影",
+        
+        description: "如何添加阴影",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E9%98%B4%E5%BD%B1/";
+          
+        },
+      },{id: "post-lv-1-unity主线-unity函数常用速查",
+        
+          title: "Lv.1 Unity主线：Unity函数常用速查",
+        
+        description: "Unity函数常用速查",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Unity%E5%87%BD%E6%95%B0%E5%B8%B8%E7%94%A8%E9%80%9F%E6%9F%A5/";
           
         },
       },{id: "post-blinn-phong-半程向量-halfway-vector-可视化",

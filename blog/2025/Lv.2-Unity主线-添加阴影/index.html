@@ -19,7 +19,7 @@
 #include</span> <span class="cpf">"Lighting.cginc"</span><span class="cp">
 </span><span class="c1">// 阴影宏定义在这里</span>
 <span class="cp">#include</span> <span class="cpf">"AutoLight.cginc"</span><span class="c1">             </span><span class="cp">
-</span></pre></td> </tr></tbody></table></code></pre></div></div> <h2 id="appdata结构体声明要求">appdata结构体声明要求</h2> <p><strong><em>之前写的物体空间的顶点posOS必须换成vertex。原因在下面将</em></strong> ![[Pasted image 20251210192805.png]]</p> <h2 id="v2f结构体声明要求">v2f结构体声明要求</h2> <p><strong><em>这里在结构体中声明阴影数据，注意括号中的顺序号</em></strong> ![[Pasted image 20251208225718.png]]</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+</span></pre></td> </tr></tbody></table></code></pre></div></div> <h2 id="appdata结构体声明要求">appdata结构体声明要求</h2> <p><strong><em>之前写的物体空间的顶点posOS必须换成vertex。原因在下面将</em></strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251210192805.png" alt="图片"></p> <h2 id="v2f结构体声明要求">v2f结构体声明要求</h2> <p><strong><em>这里在结构体中声明阴影数据，注意括号中的顺序号</em></strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251208225718.png" alt="图片"></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
 <td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
@@ -28,12 +28,12 @@
 <span class="o">----</span>
 <span class="c1">// 阴影坐标声明（自动处理多个变体）</span>
 <span class="n">UNITY_SHADOW_COORDS</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>这里需要额外说明一点，裁剪空间下的顶点位置，必须命名为pos.同时这也是这是物体空间的顶点posOS必须换成vertex的原因。AutoLight.cginc文件下Unity阴影函数里面固定的，其他名称会报错</em></strong> ![[Pasted image 20251210193016.png]]</p> <h2 id="顶点着色器">顶点着色器</h2> <p><strong><em>阴影数据处理，直接系统函数</em></strong> ![[Pasted image 20251208230152.png]]</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>这里需要额外说明一点，裁剪空间下的顶点位置，必须命名为pos.同时这也是这是物体空间的顶点posOS必须换成vertex的原因。AutoLight.cginc文件下Unity阴影函数里面固定的，其他名称会报错</em></strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251210193016.png" alt="图片"></p> <h2 id="顶点着色器">顶点着色器</h2> <p><strong><em>阴影数据处理，直接系统函数</em></strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251208230152.png" alt="图片"></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
 <td class="rouge-gutter gl"><pre class="lineno">1
 2
 </pre></td> <td class="rouge-code"><pre><span class="c1">//传输阴影数据（关键！）</span>
 <span class="n">TRANSFER_SHADOW</span><span class="p">(</span><span class="n">o</span><span class="p">);</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <h2 id="片元着色器">片元着色器</h2> <p><strong><em>计算阴影衰减，输出结果和diffuse乘法计算就行，注意不要和环境光相乘</em></strong> <strong>这里需要说明一点，阴影在Shader中分为两个内容，一个是接收其它的阴影，一个是投射自己的阴影</strong> ![[Pasted image 20251208230218.png]]</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h2 id="片元着色器">片元着色器</h2> <p><strong><em>计算阴影衰减，输出结果和diffuse乘法计算就行，注意不要和环境光相乘</em></strong> <strong>这里需要说明一点，阴影在Shader中分为两个内容，一个是接收其它的阴影，一个是投射自己的阴影</strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251208230218.png" alt="图片"></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
 <td class="rouge-gutter gl"><pre class="lineno">1
 2
 </pre></td> <td class="rouge-code"><pre><span class="err"> </span><span class="c1">// 计算阴影衰减（自动处理所有阴影类型）</span>
@@ -121,7 +121,7 @@
             <span class="n">ENDCG</span>
         <span class="p">}</span>
       
-</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong>如果不想写这个Pass，可以直接在末尾加上 FallBack “Diffuse”，但是没有自己写性能好</strong> ![[Pasted image 20251208232844.png]]</p> <h1 id="代码参考">代码参考</h1> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong>如果不想写这个Pass，可以直接在末尾加上 FallBack “Diffuse”，但是没有自己写性能好</strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251208232844.png" alt="图片"></p> <h1 id="代码参考">代码参考</h1> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
 <td class="rouge-gutter gl"><pre class="lineno">1
 2
 3

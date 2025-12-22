@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blinn-Phong 半程向量可视化</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .canvas-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            cursor: crosshair;
+        }
+        .description {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .control-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            text-align: right;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 300px;
+        }
+        .value-display {
+            display: inline-block;
+            width: 60px;
+            text-align: left;
+            margin-left: 10px;
+            font-family: monospace;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border: 1px solid #333;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .model-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .model-card h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .formula {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blinn-Phong 半程向量（Halfway Vector）可视化</h1>
+
+    <div class="canvas-container">
+        <h2>图1: 半程向量的几何意义</h2>
+        <canvas id="canvas1" width="800" height="500"></canvas>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FF6B6B;"></div>
+                <span>L (光线方向)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ECDC4;"></div>
+                <span>V (视线方向)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FFE66D;"></div>
+                <span>H (半程向量)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #95E1D3;"></div>
+                <span>N (法线)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #A8E6CF;"></div>
+                <span>R (反射向量)</span>
+            </div>
+        </div>
+        <div class="description">
+            <strong>核心观察：</strong> H 是 L 和 V 的角平分线。当 N 接近 H 时，说明反射光 R 接近视线 V，应该看到高光。
+            <br><strong>拖动鼠标</strong>改变视线方向 V，观察 H 如何变化。
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>法线角度 (N):</label>
+            <input type="range" id="normalAngle" min="-90" max="90" value="0" step="5">
+            <span class="value-display" id="normalAngleValue">0°</span>
+        </div>
+        <div class="control-group">
+            <label>光线角度 (L):</label>
+            <input type="range" id="lightAngle" min="-180" max="180" value="-45" step="5">
+            <span class="value-display" id="lightAngleValue">-45°</span>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <h2>图2: Phong vs Blinn-Phong 对比</h2>
+        <canvas id="canvas2" width="800" height="400"></canvas>
+        <div class="description">
+            <strong>左侧：Phong</strong> - 计算 R·V (反射向量与视线的夹角)
+            <br><strong>右侧：Blinn-Phong</strong> - 计算 N·H (法线与半程向量的夹角)
+            <br>两者在数学上近似等价，但 Blinn-Phong 计算更简单、更稳定。
+        </div>
+    </div>
+
+    <div class="comparison">
+        <div class="model-card">
+            <h3>Phong 模型</h3>
+            <div class="formula">
+                specular = (R·V)^α<br>
+                R = reflect(-L, N)
+            </div>
+            <ul>
+                <li>需要计算反射向量 R</li>
+                <li>R = 2(N·L)N - L</li>
+                <li>约 8 个 ALU 操作</li>
+                <li>R·V 可能为负值</li>
+            </ul>
+        </div>
+        <div class="model-card">
+            <h3>Blinn-Phong 模型</h3>
+            <div class="formula">
+                specular = (N·H)^α'<br>
+                H = normalize(L + V)
+            </div>
+            <ul>
+                <li>计算半程向量 H</li>
+                <li>只需向量加法 + 归一化</li>
+                <li>约 6 个 ALU 操作</li>
+                <li>N·H 总是非负</li>
+                <li><strong>性能提升 20-30%</strong></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <h2>图3: 高光强度对比</h2>
+        <canvas id="canvas3" width="800" height="300"></canvas>
+        <div class="controls">
+            <div class="control-group">
+                <label>Shininess:</label>
+                <input type="range" id="shininess" min="1" max="256" value="32" step="1">
+                <span class="value-display" id="shininessValue">32</span>
+            </div>
+        </div>
+        <div class="description">
+            <strong>红色：Phong (shininess = α)</strong>
+            <br><strong>蓝色：Blinn-Phong (shininess = 4α)</strong>
+            <br>要达到相似的视觉效果，Blinn-Phong 需要约 4 倍的 shininess 值。
+        </div>
+    </div>
+
+    <script>
+        // Canvas 1: 半程向量几何可视化
+        const canvas1 = document.getElementById('canvas1');
+        const ctx1 = canvas1.getContext('2d');
+        
+        let viewAngle = 45; // 视线角度
+        
+        function drawVector(ctx, x, y, angle, length, color, label, thickness = 3) {
+            const endX = x + Math.cos(angle) * length;
+            const endY = y - Math.sin(angle) * length;
+            
+            // 画箭头线
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = thickness;
+            ctx.stroke();
+            
+            // 画箭头头部
+            const arrowSize = 12;
+            const arrowAngle = Math.PI / 6;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle - arrowAngle),
+                endY + arrowSize * Math.sin(angle - arrowAngle)
+            );
+            ctx.lineTo(
+                endX - arrowSize * Math.cos(angle + arrowAngle),
+                endY + arrowSize * Math.sin(angle + arrowAngle)
+            );
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            // 标签
+            ctx.font = 'bold 18px Arial';
+            ctx.fillStyle = color;
+            ctx.fillText(label, endX + 10, endY - 10);
+        }
+        
+        function drawSurface(ctx, centerX, centerY) {
+            ctx.beginPath();
+            ctx.moveTo(centerX - 200, centerY);
+            ctx.lineTo(centerX + 200, centerY);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // 表面标记
+            for (let i = -3; i <= 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX + i * 50, centerY);
+                ctx.lineTo(centerX + i * 50 + 10, centerY + 10);
+                ctx.strokeStyle = '#666';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+        
+        function drawAngleArc(ctx, x, y, fromAngle, toAngle, radius, color, label) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, -toAngle, -fromAngle, true);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 角度标签
+            const midAngle = (fromAngle + toAngle) / 2;
+            const labelX = x + Math.cos(midAngle) * (radius + 20);
+            const labelY = y - Math.sin(midAngle) * (radius + 20);
+            ctx.font = '14px Arial';
+            ctx.fillStyle = color;
+            ctx.fillText(label, labelX, labelY);
+        }
+        
+        function drawCanvas1() {
+            ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+            
+            const centerX = canvas1.width / 2;
+            const centerY = canvas1.height / 2 + 50;
+            const vectorLength = 120;
+            
+            // 获取角度
+            const normalAngle = parseFloat(document.getElementById('normalAngle').value) * Math.PI / 180;
+            const lightAngle = parseFloat(document.getElementById('lightAngle').value) * Math.PI / 180;
+            const viewAngleRad = viewAngle * Math.PI / 180;
+            
+            // 绘制表面
+            drawSurface(ctx1, centerX, centerY);
+            
+            // 计算反射向量 R = 2(N·L)N - L
+            const Lx = Math.cos(lightAngle);
+            const Ly = Math.sin(lightAngle);
+            const Nx = Math.cos(normalAngle);
+            const Ny = Math.sin(normalAngle);
+            const NdotL = Nx * Lx + Ny * Ly;
+            const Rx = 2 * NdotL * Nx - Lx;
+            const Ry = 2 * NdotL * Ny - Ly;
+            const reflectAngle = Math.atan2(Ry, Rx);
+            
+            // 计算半程向量 H
+            const Vx = Math.cos(viewAngleRad);
+            const Vy = Math.sin(viewAngleRad);
+            const Hx = Lx + Vx;
+            const Hy = Ly + Vy;
+            const halfwayAngle = Math.atan2(Hy, Hx);
+            
+            // 绘制向量
+            drawVector(ctx1, centerX, centerY, normalAngle, vectorLength, '#95E1D3', 'N', 4);
+            drawVector(ctx1, centerX, centerY, lightAngle, vectorLength, '#FF6B6B', 'L', 3);
+            drawVector(ctx1, centerX, centerY, viewAngleRad, vectorLength, '#4ECDC4', 'V', 3);
+            drawVector(ctx1, centerX, centerY, halfwayAngle, vectorLength * 0.9, '#FFE66D', 'H', 4);
+            drawVector(ctx1, centerX, centerY, reflectAngle, vectorLength * 0.85, '#A8E6CF', 'R', 2);
+            
+            // 绘制角度标记
+            if (Math.abs(lightAngle - halfwayAngle) > 0.05) {
+                drawAngleArc(ctx1, centerX, centerY, lightAngle, halfwayAngle, 50, '#FF6B6B', '');
+            }
+            if (Math.abs(halfwayAngle - viewAngleRad) > 0.05) {
+                drawAngleArc(ctx1, centerX, centerY, halfwayAngle, viewAngleRad, 50, '#4ECDC4', '');
+            }
+            if (Math.abs(normalAngle - halfwayAngle) > 0.05) {
+                drawAngleArc(ctx1, centerX, centerY, normalAngle, halfwayAngle, 70, '#FFE66D', 'N·H');
+            }
+            
+            // 显示计算结果
+            const NdotH = Math.cos(normalAngle) * Math.cos(halfwayAngle) + 
+                          Math.sin(normalAngle) * Math.sin(halfwayAngle);
+            const RdotV = Math.cos(reflectAngle) * Math.cos(viewAngleRad) + 
+                          Math.sin(reflectAngle) * Math.sin(viewAngleRad);
+            
+            ctx1.font = '16px Arial';
+            ctx1.fillStyle = '#333';
+            ctx1.fillText(`N·H = ${NdotH.toFixed(3)}`, 20, 30);
+            ctx1.fillText(`R·V = ${RdotV.toFixed(3)}`, 20, 55);
+            ctx1.fillText(`H 是 L 和 V 的角平分线`, 20, 80);
+        }
+        
+        // Canvas 2: Phong vs Blinn-Phong 对比
+        const canvas2 = document.getElementById('canvas2');
+        const ctx2 = canvas2.getContext('2d');
+        
+        function drawCanvas2() {
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            
+            const leftX = canvas2.width / 4;
+            const rightX = canvas2.width * 3 / 4;
+            const centerY = canvas2.height / 2;
+            const vectorLength = 100;
+            
+            const normalAngle = parseFloat(document.getElementById('normalAngle').value) * Math.PI / 180;
+            const lightAngle = parseFloat(document.getElementById('lightAngle').value) * Math.PI / 180;
+            const viewAngleRad = viewAngle * Math.PI / 180;
+            
+            // 左侧：Phong
+            ctx2.font = 'bold 20px Arial';
+            ctx2.fillStyle = '#333';
+            ctx2.fillText('Phong: 比较 R 和 V', leftX - 80, 30);
+            
+            drawSurface(ctx2, leftX, centerY);
+            drawVector(ctx2, leftX, centerY, normalAngle, vectorLength, '#95E1D3', 'N', 3);
+            drawVector(ctx2, leftX, centerY, lightAngle, vectorLength, '#FF6B6B', 'L', 3);
+            drawVector(ctx2, leftX, centerY, viewAngleRad, vectorLength, '#4ECDC4', 'V', 3);
+            
+            // 计算并绘制反射向量
+            const Lx = Math.cos(lightAngle);
+            const Ly = Math.sin(lightAngle);
+            const Nx = Math.cos(normalAngle);
+            const Ny = Math.sin(normalAngle);
+            const NdotL = Nx * Lx + Ny * Ly;
+            const Rx = 2 * NdotL * Nx - Lx;
+            const Ry = 2 * NdotL * Ny - Ly;
+            const reflectAngle = Math.atan2(Ry, Rx);
+            
+            drawVector(ctx2, leftX, centerY, reflectAngle, vectorLength, '#A8E6CF', 'R', 3);
+            
+            // 右侧：Blinn-Phong
+            ctx2.fillText('Blinn-Phong: 比较 N 和 H', rightX - 100, 30);
+            
+            drawSurface(ctx2, rightX, centerY);
+            drawVector(ctx2, rightX, centerY, normalAngle, vectorLength, '#95E1D3', 'N', 3);
+            drawVector(ctx2, rightX, centerY, lightAngle, vectorLength, '#FF6B6B', 'L', 3);
+            drawVector(ctx2, rightX, centerY, viewAngleRad, vectorLength, '#4ECDC4', 'V', 3);
+            
+            // 计算并绘制半程向量
+            const Vx = Math.cos(viewAngleRad);
+            const Vy = Math.sin(viewAngleRad);
+            const Hx = Lx + Vx;
+            const Hy = Ly + Vy;
+            const halfwayAngle = Math.atan2(Hy, Hx);
+            
+            drawVector(ctx2, rightX, centerY, halfwayAngle, vectorLength, '#FFE66D', 'H', 3);
+        }
+        
+        // Canvas 3: 高光强度曲线对比
+        const canvas3 = document.getElementById('canvas3');
+        const ctx3 = canvas3.getContext('2d');
+        
+        function drawCanvas3() {
+            ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
+            
+            const shininess = parseFloat(document.getElementById('shininess').value);
+            const padding = 60;
+            const width = canvas3.width - 2 * padding;
+            const height = canvas3.height - 2 * padding;
+            
+            // 绘制坐标轴
+            ctx3.beginPath();
+            ctx3.moveTo(padding, padding);
+            ctx3.lineTo(padding, canvas3.height - padding);
+            ctx3.lineTo(canvas3.width - padding, canvas3.height - padding);
+            ctx3.strokeStyle = '#333';
+            ctx3.lineWidth = 2;
+            ctx3.stroke();
+            
+            // 标签
+            ctx3.font = '14px Arial';
+            ctx3.fillStyle = '#333';
+            ctx3.fillText('高光强度', 10, 30);
+            ctx3.fillText('角度差异', canvas3.width / 2 - 30, canvas3.height - 10);
+            
+            // 绘制 Phong 曲线 (R·V)^shininess
+            ctx3.beginPath();
+            ctx3.strokeStyle = '#FF6B6B';
+            ctx3.lineWidth = 3;
+            for (let i = 0; i <= width; i++) {
+                const angle = (i / width) * Math.PI / 2;  // 0 到 90 度
+                const cosAngle = Math.cos(angle);
+                const value = Math.pow(Math.max(0, cosAngle), shininess);
+                const x = padding + i;
+                const y = canvas3.height - padding - value * height;
+                if (i === 0) ctx3.moveTo(x, y);
+                else ctx3.lineTo(x, y);
+            }
+            ctx3.stroke();
+            
+            // 绘制 Blinn-Phong 曲线 (N·H)^(4*shininess)
+            ctx3.beginPath();
+            ctx3.strokeStyle = '#4ECDC4';
+            ctx3.lineWidth = 3;
+            for (let i = 0; i <= width; i++) {
+                const angle = (i / width) * Math.PI / 2;
+                const cosAngle = Math.cos(angle);
+                const value = Math.pow(Math.max(0, cosAngle), shininess * 4);
+                const x = padding + i;
+                const y = canvas3.height - padding - value * height;
+                if (i === 0) ctx3.moveTo(x, y);
+                else ctx3.lineTo(x, y);
+            }
+            ctx3.stroke();
+            
+            // 图例
+            ctx3.fillStyle = '#FF6B6B';
+            ctx3.fillRect(canvas3.width - 250, 20, 30, 15);
+            ctx3.fillStyle = '#333';
+            ctx3.fillText(`Phong (α=${shininess})`, canvas3.width - 210, 32);
+            
+            ctx3.fillStyle = '#4ECDC4';
+            ctx3.fillRect(canvas3.width - 250, 45, 30, 15);
+            ctx3.fillStyle = '#333';
+            ctx3.fillText(`Blinn-Phong (α=${shininess * 4})`, canvas3.width - 210, 57);
+        }
+        
+        // 事件监听
+        canvas1.addEventListener('mousemove', (e) => {
+            const rect = canvas1.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = canvas1.width / 2;
+            const centerY = canvas1.height / 2 + 50;
+            
+            viewAngle = Math.atan2(centerY - y, x - centerX) * 180 / Math.PI;
+            drawCanvas1();
+            drawCanvas2();
+        });
+        
+        document.getElementById('normalAngle').addEventListener('input', (e) => {
+            document.getElementById('normalAngleValue').textContent = e.target.value + '°';
+            drawCanvas1();
+            drawCanvas2();
+        });
+        
+        document.getElementById('lightAngle').addEventListener('input', (e) => {
+            document.getElementById('lightAngleValue').textContent = e.target.value + '°';
+            drawCanvas1();
+            drawCanvas2();
+        });
+        
+        document.getElementById('shininess').addEventListener('input', (e) => {
+            document.getElementById('shininessValue').textContent = e.target.value;
+            drawCanvas3();
+        });
+        
+        // 初始绘制
+        drawCanvas1();
+        drawCanvas2();
+        drawCanvas3();
+    </script>
+</body>
+</html>

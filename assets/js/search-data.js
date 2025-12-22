@@ -44,7 +44,40 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/cv/";
           },
-        },{id: "post-lv-1-数学支线-3blue1brown线性代数",
+        },{id: "post-lv-2-unity主线-镜面反射光照模型phong和blinn-phong",
+        
+          title: "Lv.2 unity主线：镜面反射光照模型phong和blinn Phong",
+        
+        description: "",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E9%95%9C%E9%9D%A2%E5%8F%8D%E5%B0%84%E5%85%89%E7%85%A7%E6%A8%A1%E5%9E%8BPhong%E5%92%8CBlinn-Phong/";
+          
+        },
+      },{id: "post-lv-2-unity主线-添加法线",
+        
+          title: "Lv.2 Unity主线：添加法线",
+        
+        description: "如何添加法线",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E6%B3%95%E7%BA%BF/";
+          
+        },
+      },{id: "post-blinn-phong-半程向量-halfway-vector-可视化",
+        
+          title: "Blinn-Phong 半程向量（Halfway Vector）可视化",
+        
+        description: "Blinn-Phong 半程向量（Halfway Vector）可视化",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Blinn-Phong-%E5%8D%8A%E7%A8%8B%E5%90%91%E9%87%8F-Halfway-Vector-%E5%8F%AF%E8%A7%86%E5%8C%96/";
+          
+        },
+      },{id: "post-lv-1-数学支线-3blue1brown线性代数",
         
           title: "Lv.1 数学支线 3Blue1Brown线性代数",
         

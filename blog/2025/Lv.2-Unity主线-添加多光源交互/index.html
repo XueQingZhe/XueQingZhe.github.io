@@ -20,7 +20,7 @@
 3
 </pre></td> <td class="rouge-code"><pre><span class="cp">#include</span> <span class="cpf">"UnityCG.cginc"</span><span class="cp">
 #include</span> <span class="cpf">"Lighting.cginc"</span><span class="cp">
-#include</span> <span class="cpf">"AutoLight.cginc"</span><span class="c1">            </span><span class="cp">
+#include</span> <span class="cpf">"AutoLight.cginc"</span><span class="c1">            </span><span class="cp">
 </span></pre></td> </tr></tbody></table></code></pre></div></div> <h3 id="阴影和光照衰减函数">阴影和光照衰减函数</h3> <p><strong><em>对于ForwardBasePass处理阴影的时候是使用SHADOW_ATTENUATION(i)，多光源投射的阴影是另外的函数</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
 <td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -49,8 +49,8 @@
 </span></pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>带阴影指令实际上是给这里使用的，也就是点光的照射阴影，如果不使用fullshadows那么怎么调都是没有的</em></strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251210192136.png" alt="图片"> <strong><em>相当于额外的光照阴影</em></strong></p> <h3 id="关键字">关键字</h3> <p><strong><em>光照叠加使用加法混合</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
 <td class="rouge-gutter gl"><pre class="lineno">1
 2
-</pre></td> <td class="rouge-code"><pre><span class="n">Blend</span> <span class="n">One</span> <span class="n">One</span> <span class="err"> </span><span class="c1">// 加法混合是关键</span>
-<span class="n">ZWrite</span> <span class="n">Off</span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 避免深度冲突</span>
+</pre></td> <td class="rouge-code"><pre><span class="n">Blend</span> <span class="n">One</span> <span class="n">One</span>  <span class="c1">// 加法混合是关键</span>
+<span class="n">ZWrite</span> <span class="n">Off</span>     <span class="c1">// 避免深度冲突</span>
 </pre></td> </tr></tbody></table></code></pre></div></div> <h3 id="光源判断">光源判断</h3> <p><strong><em>使用宏判断</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
 <td class="rouge-gutter gl"><pre class="lineno">1
 2
@@ -74,7 +74,7 @@
 </pre></td> <td class="rouge-code"><pre><span class="c1">//平行光源向量</span>
 <span class="n">half3</span> <span class="n">light_dir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
 <span class="c1">//点光源向量</span>
-<span class="n">half3</span> <span class="n">light_dir_point</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">i</span><span class="p">.</span><span class="n">pos_world</span><span class="p">);</span> <span class="err"> </span> 
+<span class="n">half3</span> <span class="n">light_dir_point</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">i</span><span class="p">.</span><span class="n">pos_world</span><span class="p">);</span>   
 <span class="c1">//_WorldSpaceLightPos0.w可以判断光源类型</span>
 <span class="n">light_dir</span> <span class="o">=</span> <span class="n">lerp</span><span class="p">(</span><span class="n">light_dir</span><span class="p">,</span> <span class="n">light_dir_point</span><span class="p">,</span> <span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">w</span><span class="p">);</span> 
 </pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>如果想要手动控制衰减，可以判断分类即可，一般不推荐</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
@@ -88,10 +88,10 @@
 8
 9
 </pre></td> <td class="rouge-code"><pre><span class="cp">#if defined (DIRECTIONAL)
-</span><span class="n">half3</span> <span class="n">light_dir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span> <span class="err"> </span> <span class="c1">//主光源向量</span>
+</span><span class="n">half3</span> <span class="n">light_dir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>   <span class="c1">//主光源向量</span>
 <span class="n">half</span> <span class="n">attuenation</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
 <span class="cp">#elif defined (POINT)
-</span><span class="n">half3</span> <span class="n">light_dir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">i</span><span class="p">.</span><span class="n">pos_world</span><span class="p">);</span> <span class="err"> </span> <span class="c1">//主光源向量</span>
+</span><span class="n">half3</span> <span class="n">light_dir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">i</span><span class="p">.</span><span class="n">pos_world</span><span class="p">);</span>   <span class="c1">//主光源向量</span>
 <span class="n">half</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">length</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">i</span><span class="p">.</span><span class="n">pos_world</span><span class="p">);</span>
 <span class="n">half</span> <span class="n">range</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="n">unity_WorldToLight</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">];</span><span class="c1">//获取点光源的range属性</span>
 <span class="n">half</span> <span class="n">attuenation</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">((</span><span class="n">range</span> <span class="o">-</span> <span class="n">distance</span><span class="p">)</span><span class="o">/</span><span class="n">range</span><span class="p">);</span><span class="c1">//光照衰减系数，平行光无衰减</span>
@@ -437,298 +437,298 @@
 
 <span class="p">{</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="n">Properties</span>
-<span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">_MainTex</span> <span class="p">(</span><span class="s">"Texture"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span> <span class="o">=</span> <span class="s">"white"</span> <span class="p">{}</span>
+    <span class="n">Properties</span>
+    <span class="p">{</span>
+        <span class="n">_MainTex</span> <span class="p">(</span><span class="s">"Texture"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span> <span class="o">=</span> <span class="s">"white"</span> <span class="p">{}</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="n">SubShader</span>
-<span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Tags</span> <span class="p">{</span> <span class="s">"RenderType"</span><span class="o">=</span><span class="s">"Opaque"</span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">LOD</span> <span class="mi">100</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">CGINCLUDE</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"UnityCG.cginc"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">sampler2D</span> <span class="n">_MainTex</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">_MainTex_ST</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">ENDCG</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Pass</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Name</span> <span class="s">"Deferred"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Tags</span> <span class="p">{</span> <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"Deferred"</span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">CGPROGRAM</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">vertex</span> <span class="n">vert</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">fragment</span> <span class="n">frag</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">exclude_renderers</span> <span class="n">nomrt</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">target</span> <span class="mi">3</span><span class="p">.</span><span class="mi">0</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"UnityCG.cginc"</span>
+    <span class="p">}</span>
+    <span class="n">SubShader</span>
+    <span class="p">{</span>
+        <span class="n">Tags</span> <span class="p">{</span> <span class="s">"RenderType"</span><span class="o">=</span><span class="s">"Opaque"</span> <span class="p">}</span>
+        <span class="n">LOD</span> <span class="mi">100</span>
+        <span class="n">CGINCLUDE</span>
+        <span class="cp">#include</span> <span class="cpf">"UnityCG.cginc"</span><span class="cp">
+</span>        <span class="n">sampler2D</span> <span class="n">_MainTex</span><span class="p">;</span>
+        <span class="n">float4</span> <span class="n">_MainTex_ST</span><span class="p">;</span>
+        <span class="n">ENDCG</span>
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">Name</span> <span class="s">"Deferred"</span>
+            <span class="n">Tags</span> <span class="p">{</span> <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"Deferred"</span> <span class="p">}</span>
+            <span class="n">CGPROGRAM</span>
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>            <span class="cp">#pragma exclude_renderers nomrt
+</span>            <span class="cp">#pragma target 3.0
+</span>            <span class="cp">#include</span> <span class="cpf">"UnityCG.cginc"</span><span class="cp">
+</span>
+            <span class="k">struct</span> <span class="n">appdata</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">appdata</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">vertex</span> <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">uv</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normal</span> <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
+            <span class="p">};</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">vertex</span> <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float2</span> <span class="n">uv</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normal</span> <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
+            <span class="k">struct</span> <span class="n">v2f</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">pos</span> <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">uv</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>
+            <span class="p">};</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">v2f</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">pos</span> <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float2</span> <span class="n">uv</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
+            <span class="k">struct</span> <span class="n">GBuffer</span>
+            <span class="p">{</span>
+                <span class="n">half4</span> <span class="n">diffuse</span> <span class="o">:</span> <span class="n">SV_Target0</span><span class="p">;</span>
+                <span class="n">half4</span> <span class="n">spec</span> <span class="o">:</span> <span class="n">SV_Target1</span><span class="p">;</span>
+                <span class="n">half4</span> <span class="n">normal</span> <span class="o">:</span> <span class="n">SV_Target2</span><span class="p">;</span>
+                <span class="n">half4</span> <span class="n">emission</span> <span class="o">:</span> <span class="n">SV_Target3</span><span class="p">;</span>
+            <span class="p">};</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">GBuffer</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">half4</span> <span class="n">diffuse</span> <span class="o">:</span> <span class="n">SV_Target0</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">half4</span> <span class="n">spec</span> <span class="o">:</span> <span class="n">SV_Target1</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">half4</span> <span class="n">normal</span> <span class="o">:</span> <span class="n">SV_Target2</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">half4</span> <span class="n">emission</span> <span class="o">:</span> <span class="n">SV_Target3</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
+            <span class="n">v2f</span> <span class="n">vert</span><span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">UnityObjectToClipPos</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">uv</span> <span class="o">=</span> <span class="n">TRANSFORM_TEX</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">uv</span><span class="p">,</span> <span class="n">_MainTex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldNormal</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">normal</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
+            <span class="p">}</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">vert</span><span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">UnityObjectToClipPos</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">uv</span> <span class="o">=</span> <span class="n">TRANSFORM_TEX</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">uv</span><span class="p">,</span> <span class="n">_MainTex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldNormal</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">normal</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+            <span class="n">GBuffer</span> <span class="n">frag</span><span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">fixed4</span> <span class="n">albedo</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">uv</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">normalWS</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">GBuffer</span> <span class="n">frag</span><span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed4</span> <span class="n">albedo</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">uv</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">normalWS</span><span class="p">);</span>
+                <span class="n">GBuffer</span> <span class="n">output</span><span class="p">;</span>
+                <span class="n">output</span><span class="p">.</span><span class="n">diffuse</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="n">albedo</span><span class="p">.</span><span class="n">rgb</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">);</span>
+                <span class="n">output</span><span class="p">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">);</span>
+                <span class="n">output</span><span class="p">.</span><span class="n">normal</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="n">normalWS</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">);</span>
+                <span class="n">output</span><span class="p">.</span><span class="n">emission</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">output</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">ENDCG</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">GBuffer</span> <span class="n">output</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">output</span><span class="p">.</span><span class="n">diffuse</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="n">albedo</span><span class="p">.</span><span class="n">rgb</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">output</span><span class="p">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">output</span><span class="p">.</span><span class="n">normal</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="n">normalWS</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">output</span><span class="p">.</span><span class="n">emission</span> <span class="o">=</span> <span class="n">half4</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">return</span> <span class="n">output</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">ENDCG</span>
+        <span class="p">}</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+           <span class="n">Name</span> <span class="s">"Forward"</span>
+           <span class="n">Tags</span><span class="p">{</span>
+            <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"ForwardBase"</span>
+           <span class="p">}</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Pass</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span><span class="n">Name</span> <span class="s">"Forward"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span><span class="n">Tags</span><span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"ForwardBase"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span><span class="p">}</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">CGPROGRAM</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">vertex</span> <span class="n">vert</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">fragment</span> <span class="n">frag</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// make fog work</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">multi_compile_fwdbase</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"UnityCG.cginc"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"Lighting.cginc"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"AutoLight.cginc"</span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 阴影宏定义在这里</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">appdata</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">vertex</span> <span class="err"> </span> <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float2</span> <span class="n">uv</span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normal</span> <span class="err"> </span> <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">tangent</span>  <span class="o">:</span> <span class="n">TANGENT</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
-
-  
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">v2f</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">pos</span> <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float2</span> <span class="n">texcoord</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">posWS</span> <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">:</span><span class="n">TEXCOORD2</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">tangentWS</span><span class="o">:</span> <span class="n">TEXCOORD3</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 阴影坐标声明（自动处理多个变体）</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">UNITY_SHADOW_COORDS</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">//sampler2D _MainTex;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">//float4 _MainTex_ST;</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">vert</span> <span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">UnityObjectToClipPos</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">texcoord</span> <span class="o">=</span> <span class="n">TRANSFORM_TEX</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">uv</span><span class="p">,</span> <span class="n">_MainTex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">posWS</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">unity_ObjectToWorld</span><span class="p">,</span> <span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldNormal</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">normal</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">tangentWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldDir</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">tangent</span><span class="p">);</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 传输阴影数据（关键！）</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">TRANSFER_SHADOW</span><span class="p">(</span><span class="n">o</span><span class="p">);</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+            <span class="n">CGPROGRAM</span>
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>            <span class="c1">// make fog work</span>
+            <span class="cp">#pragma multi_compile_fwdbase
+</span>
+            <span class="cp">#include</span> <span class="cpf">"UnityCG.cginc"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"Lighting.cginc"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"AutoLight.cginc"</span><span class="c1">             // 阴影宏定义在这里</span><span class="cp">
+</span>
+            <span class="k">struct</span> <span class="n">appdata</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">vertex</span>   <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">uv</span>       <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normal</span>   <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
+                <span class="n">float4</span> <span class="n">tangent</span>  <span class="o">:</span> <span class="n">TANGENT</span><span class="p">;</span>
+            <span class="p">};</span>
 
   
+            <span class="k">struct</span> <span class="n">v2f</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">pos</span> <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">texcoord</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">posWS</span> <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">:</span><span class="n">TEXCOORD2</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">tangentWS</span><span class="o">:</span> <span class="n">TEXCOORD3</span><span class="p">;</span>
+                <span class="c1">// 阴影坐标声明（自动处理多个变体）</span>
+                <span class="n">UNITY_SHADOW_COORDS</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="p">};</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed4</span> <span class="n">frag</span> <span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// sample the texture</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed4</span> <span class="n">col</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">texcoord</span><span class="p">);</span>
+            <span class="c1">//sampler2D _MainTex;</span>
+            <span class="c1">//float4 _MainTex_ST;</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">lightDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="kt">float</span> <span class="n">nol</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">normalWS</span><span class="p">,</span> <span class="n">lightDir</span><span class="p">),</span> <span class="mi">0</span><span class="p">);</span>
+            <span class="n">v2f</span> <span class="n">vert</span> <span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">UnityObjectToClipPos</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">texcoord</span> <span class="o">=</span> <span class="n">TRANSFORM_TEX</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">uv</span><span class="p">,</span> <span class="n">_MainTex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">posWS</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">unity_ObjectToWorld</span><span class="p">,</span> <span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldNormal</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">normal</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">tangentWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldDir</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">tangent</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 计算阴影衰减（自动处理所有阴影类型）</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed</span> <span class="n">shadow</span> <span class="o">=</span> <span class="n">SHADOW_ATTENUATION</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+                <span class="c1">// 传输阴影数据（关键！）</span>
+                <span class="n">TRANSFER_SHADOW</span><span class="p">(</span><span class="n">o</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed3</span> <span class="n">finalCol</span> <span class="o">=</span> <span class="n">col</span><span class="p">.</span><span class="n">rgb</span> <span class="o">*</span> <span class="n">nol</span> <span class="o">*</span> <span class="n">shadow</span> <span class="o">*</span> <span class="n">_LightColor0</span><span class="p">.</span><span class="n">rgb</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">return</span> <span class="n">fixed4</span><span class="p">(</span><span class="n">finalCol</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+                <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">ENDCG</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Pass</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Name</span><span class="s">"ForwadAdd"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Tags</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"ForwardAdd"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Blend</span> <span class="n">One</span> <span class="n">One</span> <span class="err"> </span><span class="c1">// 加法混合是关键！</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">ZWrite</span> <span class="n">Off</span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 避免深度冲突</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">CGPROGRAM</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">vertex</span> <span class="n">vert</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">fragment</span> <span class="n">frag</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 无阴影仅光源衰减需要的变体</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">//#pragma multi_compile_fwdadd</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 使用带阴影的编译指令</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">multi_compile_fwdadd_fullshadows</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"UnityCG.cginc"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"Lighting.cginc"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"AutoLight.cginc"</span>
+            <span class="p">}</span>
 
   
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">appdata</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">vertex</span> <span class="err"> </span><span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float2</span> <span class="n">uv</span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span><span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normal</span> <span class="err"> </span><span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">tangent</span> <span class="o">:</span> <span class="n">TANGENT</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
+            <span class="n">fixed4</span> <span class="n">frag</span> <span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
+            <span class="p">{</span>
+                <span class="c1">// sample the texture</span>
+                <span class="n">fixed4</span> <span class="n">col</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">texcoord</span><span class="p">);</span>
+
+                <span class="n">float3</span> <span class="n">lightDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">nol</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">normalWS</span><span class="p">,</span> <span class="n">lightDir</span><span class="p">),</span> <span class="mi">0</span><span class="p">);</span>
+
+                <span class="c1">// 计算阴影衰减（自动处理所有阴影类型）</span>
+                <span class="n">fixed</span> <span class="n">shadow</span> <span class="o">=</span> <span class="n">SHADOW_ATTENUATION</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+
+                <span class="n">fixed3</span> <span class="n">finalCol</span> <span class="o">=</span> <span class="n">col</span><span class="p">.</span><span class="n">rgb</span> <span class="o">*</span> <span class="n">nol</span> <span class="o">*</span> <span class="n">shadow</span> <span class="o">*</span> <span class="n">_LightColor0</span><span class="p">.</span><span class="n">rgb</span><span class="p">;</span>
+                <span class="k">return</span> <span class="n">fixed4</span><span class="p">(</span><span class="n">finalCol</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="n">ENDCG</span>
+
+        <span class="p">}</span>
+
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">Name</span><span class="s">"ForwadAdd"</span>
+            <span class="n">Tags</span>
+            <span class="p">{</span>
+                <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"ForwardAdd"</span>
+            <span class="p">}</span>
+
+            <span class="n">Blend</span> <span class="n">One</span> <span class="n">One</span>  <span class="c1">// 加法混合是关键！</span>
+            <span class="n">ZWrite</span> <span class="n">Off</span>     <span class="c1">// 避免深度冲突</span>
+
+            <span class="n">CGPROGRAM</span>
+
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>            <span class="c1">// 无阴影仅光源衰减需要的变体</span>
+            <span class="c1">//#pragma multi_compile_fwdadd</span>
+            <span class="c1">// 使用带阴影的编译指令</span>
+            <span class="cp">#pragma multi_compile_fwdadd_fullshadows
+</span>
+            <span class="cp">#include</span> <span class="cpf">"UnityCG.cginc"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"Lighting.cginc"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"AutoLight.cginc"</span><span class="cp">
+</span>
+  
+
+            <span class="k">struct</span> <span class="n">appdata</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">vertex</span>  <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">uv</span>      <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normal</span>  <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
+                <span class="n">float4</span> <span class="n">tangent</span> <span class="o">:</span> <span class="n">TANGENT</span><span class="p">;</span>
+            <span class="p">};</span>
 
   
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">v2f</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">pos</span>      <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float2</span> <span class="n">texcoord</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">posWS</span>    <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">:</span> <span class="n">TEXCOORD2</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">tangentWS</span><span class="o">:</span> <span class="n">TEXCOORD3</span><span class="p">;</span>
+            <span class="k">struct</span> <span class="n">v2f</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">pos</span>      <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">texcoord</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">posWS</span>    <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">:</span> <span class="n">TEXCOORD2</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">tangentWS</span><span class="o">:</span> <span class="n">TEXCOORD3</span><span class="p">;</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 阴影坐标声明（自动处理多个变体）</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">UNITY_SHADOW_COORDS</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
-
-  
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// sampler2D _MainTex;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// float4 _MainTex_ST;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">vert</span> <span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">UnityObjectToClipPos</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">texcoord</span> <span class="o">=</span> <span class="n">TRANSFORM_TEX</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">uv</span><span class="p">,</span> <span class="n">_MainTex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">posWS</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">unity_ObjectToWorld</span><span class="p">,</span> <span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldNormal</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">normal</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">o</span><span class="p">.</span><span class="n">tangentWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldDir</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">tangent</span><span class="p">);</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 传输阴影数据（关键！）</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">TRANSFER_SHADOW</span><span class="p">(</span><span class="n">o</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+                <span class="c1">// 阴影坐标声明（自动处理多个变体）</span>
+                <span class="n">UNITY_SHADOW_COORDS</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="p">};</span>
 
   
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed4</span> <span class="n">frag</span> <span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
+            <span class="c1">// sampler2D _MainTex;</span>
+            <span class="c1">// float4 _MainTex_ST;</span>
+            <span class="n">v2f</span> <span class="n">vert</span> <span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">UnityObjectToClipPos</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">texcoord</span> <span class="o">=</span> <span class="n">TRANSFORM_TEX</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">uv</span><span class="p">,</span> <span class="n">_MainTex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">posWS</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">unity_ObjectToWorld</span><span class="p">,</span> <span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldNormal</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">normal</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">tangentWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldDir</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">tangent</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// sample the texture</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed4</span> <span class="n">col</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">texcoord</span><span class="p">);</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 关键：附加光源的方向计算</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">ifdef</span> <span class="n">USING_DIRECTIONAL_LIGHT</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">lightDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="k">else</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">lightDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">i</span><span class="p">.</span><span class="n">posWS</span><span class="p">);</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">endif</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 计算阴影衰减（自动处理所有阴影类型）</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">//fixed shadow = SHADOW_ATTENUATION(i);</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="kt">float</span> <span class="n">nol</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">normalWS</span><span class="p">,</span> <span class="n">lightDir</span><span class="p">),</span> <span class="mi">0</span><span class="p">);</span>
-
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 阴影和衰减</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">UNITY_LIGHT_ATTENUATION</span><span class="p">(</span><span class="n">atten</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">posWS</span><span class="p">);</span>
+                <span class="c1">// 传输阴影数据（关键！）</span>
+                <span class="n">TRANSFER_SHADOW</span><span class="p">(</span><span class="n">o</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
+            <span class="p">}</span>
 
   
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed3</span> <span class="n">finalCol</span> <span class="o">=</span> <span class="n">col</span><span class="p">.</span><span class="n">rgb</span> <span class="o">*</span> <span class="n">nol</span> <span class="o">*</span> <span class="n">atten</span> <span class="o">*</span> <span class="n">_LightColor0</span><span class="p">.</span><span class="n">rgb</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">return</span> <span class="n">fixed4</span><span class="p">(</span><span class="n">finalCol</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+            <span class="n">fixed4</span> <span class="n">frag</span> <span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
+            <span class="p">{</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">ENDCG</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+                <span class="c1">// sample the texture</span>
+                <span class="n">fixed4</span> <span class="n">col</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">texcoord</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Pass</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
+                <span class="c1">// 关键：附加光源的方向计算</span>
+                <span class="cp">#ifdef USING_DIRECTIONAL_LIGHT
+</span>                    <span class="n">float3</span> <span class="n">lightDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
+                <span class="cp">#else
+</span>                    <span class="n">float3</span> <span class="n">lightDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span> <span class="o">-</span> <span class="n">i</span><span class="p">.</span><span class="n">posWS</span><span class="p">);</span>
+                <span class="cp">#endif
+</span>
+                <span class="c1">// 计算阴影衰减（自动处理所有阴影类型）</span>
+                <span class="c1">//fixed shadow = SHADOW_ATTENUATION(i);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Name</span><span class="s">"ShadowCaster"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">Tags</span><span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"ShadowCaster"</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+                <span class="kt">float</span> <span class="n">nol</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">dot</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">normalWS</span><span class="p">,</span> <span class="n">lightDir</span><span class="p">),</span> <span class="mi">0</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">CGPROGRAM</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">vertex</span> <span class="n">vert</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">fragment</span> <span class="n">frag</span>
+                <span class="c1">// 阴影和衰减</span>
+                <span class="n">UNITY_LIGHT_ATTENUATION</span><span class="p">(</span><span class="n">atten</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">posWS</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="c1">// 阴影投射需要的变体</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">pragma</span> <span class="n">multi_compile_shadowcaster</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err">#</span><span class="n">include</span> <span class="s">"UnityCG.cginc"</span>
+  
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">appdata</span>
+                <span class="n">fixed3</span> <span class="n">finalCol</span> <span class="o">=</span> <span class="n">col</span><span class="p">.</span><span class="n">rgb</span> <span class="o">*</span> <span class="n">nol</span> <span class="o">*</span> <span class="n">atten</span> <span class="o">*</span> <span class="n">_LightColor0</span><span class="p">.</span><span class="n">rgb</span><span class="p">;</span>
+                <span class="k">return</span> <span class="n">fixed4</span><span class="p">(</span><span class="n">finalCol</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float4</span> <span class="n">vertex</span> <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">float3</span> <span class="n">normal</span> <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
+            <span class="p">}</span>
+            <span class="n">ENDCG</span>
+        <span class="p">}</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">struct</span> <span class="n">v2f</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">V2F_SHADOW_CASTER</span><span class="p">;</span> <span class="err"> </span><span class="c1">// Unity预定义的结构</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">};</span>
+        <span class="n">Pass</span>
+        <span class="p">{</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">vert</span><span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
+            <span class="n">Name</span><span class="s">"ShadowCaster"</span>
+            <span class="n">Tags</span><span class="p">{</span>
+                <span class="s">"LightMode"</span> <span class="o">=</span> <span class="s">"ShadowCaster"</span>
+            <span class="p">}</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">TRANSFER_SHADOW_CASTER_NORMALOFFSET</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="err"> </span><span class="c1">// 转换到阴影空间</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
+            <span class="n">CGPROGRAM</span>
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>
+            <span class="c1">// 阴影投射需要的变体</span>
+            <span class="cp">#pragma multi_compile_shadowcaster
+</span>            <span class="cp">#include</span> <span class="cpf">"UnityCG.cginc"</span><span class="cp">
+</span>
+            <span class="k">struct</span> <span class="n">appdata</span>
 
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">fixed4</span> <span class="n">frag</span><span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">{</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">SHADOW_CASTER_FRAGMENT</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="err"> </span><span class="c1">// 写入阴影深度</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="n">ENDCG</span>
-<span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="p">}</span>
-<span class="err"> </span> <span class="err"> </span> <span class="n">FallBack</span> <span class="s">"Diffuse"</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">vertex</span> <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normal</span> <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
+            <span class="p">};</span>
+
+            <span class="k">struct</span> <span class="n">v2f</span>
+            <span class="p">{</span>
+                <span class="n">V2F_SHADOW_CASTER</span><span class="p">;</span>  <span class="c1">// Unity预定义的结构</span>
+            <span class="p">};</span>
+
+            <span class="n">v2f</span> <span class="n">vert</span><span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
+            <span class="p">{</span>
+
+                <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
+                <span class="n">TRANSFER_SHADOW_CASTER_NORMALOFFSET</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>  <span class="c1">// 转换到阴影空间</span>
+                <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="n">fixed4</span> <span class="n">frag</span><span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
+            <span class="p">{</span>
+                <span class="n">SHADOW_CASTER_FRAGMENT</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>  <span class="c1">// 写入阴影深度</span>
+            <span class="p">}</span>
+            <span class="n">ENDCG</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">FallBack</span> <span class="s">"Diffuse"</span>
 <span class="p">}</span>
 
 </pre></td> </tr></tbody></table></code></pre></div></div> </div> </article> <br> <hr> <br> <ul class="list-disc pl-8"></ul> <h2 class="text-3xl font-semibold mb-4 mt-12">Enjoy Reading This Article?</h2> <p class="mb-2">Here are some more articles you might like to read next:</p> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E7%8E%AF%E5%A2%83%E5%85%89/">Lv.2 Unity主线：添加环境光</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E9%95%9C%E9%9D%A2%E5%8F%8D%E5%B0%84%E5%85%89%E7%85%A7%E6%A8%A1%E5%9E%8BPhong%E5%92%8CBlinn-Phong/">镜面反射光照模型Phong和Blinn-Phong</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E6%B3%95%E7%BA%BF/">Lv.2 Unity主线：添加法线</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E9%98%B4%E5%BD%B1/">Lv.2 Unity主线： 添加阴影</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/Lv.1-Unity%E4%B8%BB%E7%BA%BF-Unity%E5%87%BD%E6%95%B0%E5%B8%B8%E7%94%A8%E9%80%9F%E6%9F%A5/">Lv.1 Unity主线：Unity函数常用速查</a> </li> </div> # # <script>

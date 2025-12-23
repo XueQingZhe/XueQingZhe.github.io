@@ -139,7 +139,12 @@ ninja.data = [{
       },{id: "news-开始了ta学习计划-建立了个人技术博客和作品集网站",
           title: '🚀开始了TA学习计划！建立了个人技术博客和作品集网站。',
           description: "",
-          section: "News",},{
+          section: "News",},{id: "projects-zzzrendering-xingjianya",
+          title: 'ZZZRendering-XingJianYa',
+          description: "with background image",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/1_project/";
+            },},{
         id: 'social-email',
         title: 'email',
         section: 'Socials',

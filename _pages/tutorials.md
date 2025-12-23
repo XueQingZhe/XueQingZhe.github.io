@@ -10,12 +10,12 @@ nav_order: 5
 # 🎓 教程列表
 
 <details>
-<summary>Blender-绝区零角色渲染</summary>
-
-- [第一章 Blender复刻和模型处理](/tutorials/ZZZRendering/01_Blender复刻和模型处理/)
-- [第二章 光照](/tutorials/graphics_intro/02_lighting/)
-- [第三章 渲染](/tutorials/graphics_intro/03_rendering/)
-
+  <summary>Blender-绝区零角色渲染</summary>
+  <ul>
+    <li><a href="/tutorials/ZZZRendering/01_Blender复刻和模型处理/">第一章 Blender复刻和模型处理</a></li>
+    <li><a href="/graphics_intro/02_lighting/">第二章 光照</a></li>
+    <li><a href="/graphics_intro/03_rendering/">第三章 渲染</a></li>
+  </ul>
 </details>
 
 

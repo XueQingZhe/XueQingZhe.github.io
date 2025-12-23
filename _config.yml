@@ -26,6 +26,10 @@ back_to_top: true # set to false to disable the back to top button
 
 enable_lightbox: true #开启图片放大
 
+collections:
+  tutorials:
+    output: true
+
 # -----------------------------------------------------------------------------
 # Theme
 # -----------------------------------------------------------------------------

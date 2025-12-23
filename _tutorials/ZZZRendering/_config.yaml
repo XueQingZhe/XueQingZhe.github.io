@@ -1,0 +1,6 @@
+title: 绝区零角色渲染-Blender
+description: Blender绝区零角色渲染实现
+chapters:
+  - 01_Blender复刻和模型处理.md
+  - 02_lighting.md
+  - 03_rendering.md

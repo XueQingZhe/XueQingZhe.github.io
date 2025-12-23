@@ -37,7 +37,29 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tutorials/";
           },
-        },{id: "post-镜面反射光照模型phong和blinn-phong",
+        },{id: "post-lv-2-unity主线-添加环境光",
+        
+          title: "Lv.2 Unity主线：添加环境光",
+        
+        description: "如何添加环境光",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E7%8E%AF%E5%A2%83%E5%85%89/";
+          
+        },
+      },{id: "post-lv-2-unity主线-添加多光源交互",
+        
+          title: "Lv.2 Unity主线：添加多光源交互",
+        
+        description: "如何多光源交互",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E5%A4%9A%E5%85%89%E6%BA%90%E4%BA%A4%E4%BA%92/";
+          
+        },
+      },{id: "post-镜面反射光照模型phong和blinn-phong",
         
           title: "镜面反射光照模型Phong和Blinn-Phong",
         

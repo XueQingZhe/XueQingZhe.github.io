@@ -146,7 +146,7 @@ ninja.data = [{
               window.location.href = "/projects/1_project/";
             },},{id: "tutorials-blender复刻和模型处理",
           title: 'Blender复刻和模型处理',
-          description: "",
+          description: "Blender复刻和模型处理",
           section: "Tutorials",handler: () => {
               window.location.href = "/tutorials/ZZZRendering/01_Blender%E5%A4%8D%E5%88%BB%E5%92%8C%E6%A8%A1%E5%9E%8B%E5%A4%84%E7%90%86/";
             },},{

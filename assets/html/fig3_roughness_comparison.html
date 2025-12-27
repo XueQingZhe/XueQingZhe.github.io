@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>不同Roughness的高光对比</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -15,74 +19,197 @@
             background: #f5f5f5;
             font-family: 'Arial', sans-serif;
         }
+        
         .container {
             background: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 1000px;
+            width: 100%;
+            max-width: 1200px;
         }
-        canvas {
-            border: 1px solid #ddd;
-            display: block;
-            margin: 20px auto;
-        }
+        
         h2 {
             text-align: center;
             color: #333;
-            margin-bottom: 10px;
+            margin: 0 0 10px 0;
+            font-size: clamp(18px, 3vw, 24px);
         }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: clamp(12px, 2vw, 14px);
+        }
+        
         .controls {
             text-align: center;
             margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
         }
+        
         .slider-container {
-            display: inline-block;
-            margin: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+        
+        .zoom-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
         input[type="range"] {
             width: 200px;
-            vertical-align: middle;
+            max-width: 40vw;
         }
+        
         .value-display {
-            display: inline-block;
-            width: 50px;
+            min-width: 50px;
             text-align: center;
             font-weight: bold;
             color: #2563eb;
+        }
+        
+        .canvas-wrapper {
+            width: 100%;
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            cursor: grab;
+        }
+        
+        canvas:active {
+            cursor: grabbing;
+        }
+        
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 5px;
+        }
+        
+        .info-box p {
+            margin: 5px 0;
+            font-size: clamp(11px, 2vw, 13px);
+        }
+        
+        .info-box strong {
+            font-size: clamp(12px, 2.5vw, 14px);
+        }
+        
+        button {
+            padding: 8px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #1d4ed8;
+        }
+        
+        button:active {
+            background: #1e40af;
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            input[type="range"] {
+                width: 100%;
+                max-width: 300px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>图3: 不同 Roughness 的高光对比</h2>
-        <p style="text-align: center; color: #666; margin-bottom: 20px;">
-            基于 GGX 法线分布函数 D(H) 的可视化
-        </p>
+        <h2>不同 Roughness 的高光对比</h2>
+        <p class="subtitle">基于 GGX 法线分布函数 D(H) 的可视化</p>
         
         <div class="controls">
             <div class="slider-container">
-                <label>Roughness: </label>
+                <label>Roughness:</label>
                 <input type="range" id="roughnessSlider" min="1" max="90" value="30" step="1">
                 <span class="value-display" id="roughnessValue">0.30</span>
             </div>
+            
+            <div class="zoom-container">
+                <label>缩放:</label>
+                <input type="range" id="zoomSlider" min="50" max="200" value="100" step="10">
+                <span class="value-display" id="zoomValue">100%</span>
+            </div>
+            
+            <button id="resetBtn">重置视图</button>
         </div>
         
-        <canvas id="canvas" width="900" height="450"></canvas>
+        <div class="canvas-wrapper" id="canvasWrapper">
+            <canvas id="canvas"></canvas>
+        </div>
         
-        <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 5px;">
-            <p style="margin: 5px 0; font-size: 14px;"><strong>观察要点：</strong></p>
-            <p style="margin: 5px 0; font-size: 13px;">• Roughness 越小，高光越集中、越亮（镜面反射）</p>
-            <p style="margin: 5px 0; font-size: 13px;">• Roughness 越大，高光越分散、越暗（漫反射）</p>
-            <p style="margin: 5px 0; font-size: 13px;">• 高光强度峰值：与 D(H) 在 θ_h = 0 处的值成正比</p>
+        <div class="info-box">
+            <p><strong>观察要点：</strong></p>
+            <p>• Roughness 越小，高光越集中、越亮（镜面反射）</p>
+            <p>• Roughness 越大，高光越分散、越暗（漫反射）</p>
+            <p>• 高光强度峰值：与 D(H) 在 θ_h = 0 处的值成正比</p>
+            <p style="margin-top: 10px; color: #666; font-size: 11px;">
+                💡 提示：在画布上拖动可以平移视图，使用缩放滑块可以调整大小
+            </p>
         </div>
     </div>
     
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        const canvasWrapper = document.getElementById('canvasWrapper');
         const roughnessSlider = document.getElementById('roughnessSlider');
         const roughnessValue = document.getElementById('roughnessValue');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // 基础尺寸
+        const BASE_WIDTH = 900;
+        const BASE_HEIGHT = 450;
+        let currentZoom = 1.0;
+        
+        // 拖动相关
+        let isDragging = false;
+        let startX, startY, scrollLeft, scrollTop;
+        
+        // 设置画布尺寸
+        function setCanvasSize() {
+            const zoom = parseFloat(zoomSlider.value) / 100;
+            currentZoom = zoom;
+            canvas.width = BASE_WIDTH * zoom;
+            canvas.height = BASE_HEIGHT * zoom;
+            ctx.scale(zoom, zoom);
+        }
         
         // GGX 法线分布函数
         function GGX_D(NdotH, roughness) {
@@ -166,7 +293,7 @@
                         
                         // 计算高光强度
                         const D = GGX_D(NdotH, roughness);
-                        const specular = Math.min(1, D * 0.3); // 缩放系数
+                        const specular = Math.min(1, D * 0.3);
                         
                         // 应用高光
                         const idx = (py * radius * 2 + px) * 4;
@@ -289,7 +416,10 @@
         }
         
         function draw() {
+            // 清除并重置变换
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(currentZoom, currentZoom);
             
             // 标题区域
             ctx.font = 'bold 14px Arial';
@@ -310,8 +440,74 @@
             drawInteractiveSphere();
         }
         
+        // 拖动功能
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX - canvasWrapper.offsetLeft;
+            startY = e.pageY - canvasWrapper.offsetTop;
+            scrollLeft = canvasWrapper.scrollLeft;
+            scrollTop = canvasWrapper.scrollTop;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - canvasWrapper.offsetLeft;
+            const y = e.pageY - canvasWrapper.offsetTop;
+            const walkX = (x - startX) * 1.5;
+            const walkY = (y - startY) * 1.5;
+            canvasWrapper.scrollLeft = scrollLeft - walkX;
+            canvasWrapper.scrollTop = scrollTop - walkY;
+        });
+        
+        // 触摸支持
+        let touchStartX, touchStartY;
+        canvas.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].pageX - canvasWrapper.offsetLeft;
+            touchStartY = e.touches[0].pageY - canvasWrapper.offsetTop;
+            scrollLeft = canvasWrapper.scrollLeft;
+            scrollTop = canvasWrapper.scrollTop;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const x = e.touches[0].pageX - canvasWrapper.offsetLeft;
+            const y = e.touches[0].pageY - canvasWrapper.offsetTop;
+            const walkX = (x - touchStartX) * 1.5;
+            const walkY = (y - touchStartY) * 1.5;
+            canvasWrapper.scrollLeft = scrollLeft - walkX;
+            canvasWrapper.scrollTop = scrollTop - walkY;
+        });
+        
+        // 事件监听
         roughnessSlider.addEventListener('input', draw);
         
+        zoomSlider.addEventListener('input', () => {
+            zoomValue.textContent = zoomSlider.value + '%';
+            setCanvasSize();
+            draw();
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            zoomSlider.value = 100;
+            zoomValue.textContent = '100%';
+            roughnessSlider.value = 30;
+            canvasWrapper.scrollLeft = 0;
+            canvasWrapper.scrollTop = 0;
+            setCanvasSize();
+            draw();
+        });
+        
+        // 初始化
+        setCanvasSize();
         draw();
     </script>
 </body>

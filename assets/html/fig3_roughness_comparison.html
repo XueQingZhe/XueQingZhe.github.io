@@ -265,19 +265,34 @@
             ctx.arc(x, y, radius, 0, Math.PI * 2);
             ctx.fill();
             
+            // 保存当前变换矩阵
+            ctx.save();
+            // 重置变换以使用像素坐标
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            
+            // 计算缩放后的实际像素坐标
+            const scaledX = x * currentZoom;
+            const scaledY = y * currentZoom;
+            const scaledRadius = radius * currentZoom;
+            
             // 计算高光
-            const imageData = ctx.getImageData(x - radius, y - radius, radius * 2, radius * 2);
+            const imageData = ctx.getImageData(
+                scaledX - scaledRadius, 
+                scaledY - scaledRadius, 
+                scaledRadius * 2, 
+                scaledRadius * 2
+            );
             const data = imageData.data;
             
-            for (let py = 0; py < radius * 2; py++) {
-                for (let px = 0; px < radius * 2; px++) {
-                    const dx = px - radius;
-                    const dy = py - radius;
+            for (let py = 0; py < scaledRadius * 2; py++) {
+                for (let px = 0; px < scaledRadius * 2; px++) {
+                    const dx = px - scaledRadius;
+                    const dy = py - scaledRadius;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     
-                    if (dist <= radius) {
-                        // 计算球面法线
-                        const nz = Math.sqrt(Math.max(0, radius * radius - dx * dx - dy * dy));
+                    if (dist <= scaledRadius) {
+                        // 计算球面法线（使用缩放后的半径）
+                        const nz = Math.sqrt(Math.max(0, scaledRadius * scaledRadius - dx * dx - dy * dy));
                         const len = Math.sqrt(dx * dx + dy * dy + nz * nz);
                         const N = {x: dx / len, y: dy / len, z: nz / len};
                         
@@ -296,7 +311,7 @@
                         const specular = Math.min(1, D * 0.3);
                         
                         // 应用高光
-                        const idx = (py * radius * 2 + px) * 4;
+                        const idx = (py * scaledRadius * 2 + px) * 4;
                         data[idx] = Math.min(255, data[idx] + specular * 255);
                         data[idx + 1] = Math.min(255, data[idx + 1] + specular * 255);
                         data[idx + 2] = Math.min(255, data[idx + 2] + specular * 200);
@@ -304,7 +319,10 @@
                 }
             }
             
-            ctx.putImageData(imageData, x - radius, y - radius);
+            ctx.putImageData(imageData, scaledX - scaledRadius, scaledY - scaledRadius);
+            
+            // 恢复变换
+            ctx.restore();
             
             // 边框
             ctx.strokeStyle = isInteractive ? '#2563eb' : '#999';

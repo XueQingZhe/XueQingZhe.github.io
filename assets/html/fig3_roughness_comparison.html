@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不同Roughness的高光对比</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f5f5f5;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 1000px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            display: block;
+            margin: 20px auto;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .slider-container {
+            display: inline-block;
+            margin: 0 20px;
+        }
+        input[type="range"] {
+            width: 200px;
+            vertical-align: middle;
+        }
+        .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>图3: 不同 Roughness 的高光对比</h2>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+            基于 GGX 法线分布函数 D(H) 的可视化
+        </p>
+        
+        <div class="controls">
+            <div class="slider-container">
+                <label>Roughness: </label>
+                <input type="range" id="roughnessSlider" min="1" max="90" value="30" step="1">
+                <span class="value-display" id="roughnessValue">0.30</span>
+            </div>
+        </div>
+        
+        <canvas id="canvas" width="900" height="450"></canvas>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #f9fafb; border-radius: 5px;">
+            <p style="margin: 5px 0; font-size: 14px;"><strong>观察要点：</strong></p>
+            <p style="margin: 5px 0; font-size: 13px;">• Roughness 越小，高光越集中、越亮（镜面反射）</p>
+            <p style="margin: 5px 0; font-size: 13px;">• Roughness 越大，高光越分散、越暗（漫反射）</p>
+            <p style="margin: 5px 0; font-size: 13px;">• 高光强度峰值：与 D(H) 在 θ_h = 0 处的值成正比</p>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const roughnessSlider = document.getElementById('roughnessSlider');
+        const roughnessValue = document.getElementById('roughnessValue');
+        
+        // GGX 法线分布函数
+        function GGX_D(NdotH, roughness) {
+            const a = roughness * roughness;
+            const a2 = a * a;
+            const NdotH2 = NdotH * NdotH;
+            const denom = NdotH2 * (a2 - 1.0) + 1.0;
+            return a2 / (Math.PI * denom * denom);
+        }
+        
+        // 绘制预设的5个球体
+        function drawPresetSpheres() {
+            const roughnessValues = [0.1, 0.3, 0.5, 0.7, 0.9];
+            const sphereRadius = 60;
+            const spacing = 180;
+            const startX = 90;
+            const y = 150;
+            
+            roughnessValues.forEach((r, i) => {
+                const x = startX + i * spacing;
+                drawSphere(x, y, sphereRadius, r, false);
+                
+                // 标签
+                ctx.font = 'bold 14px Arial';
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'center';
+                ctx.fillText(`r = ${r.toFixed(1)}`, x, y + sphereRadius + 25);
+            });
+        }
+        
+        // 绘制单个球体
+        function drawSphere(x, y, radius, roughness, isInteractive) {
+            // 光源方向（从左上方照射）
+            const lightX = -0.5;
+            const lightY = -0.7;
+            const lightZ = -0.5;
+            const lightLen = Math.sqrt(lightX*lightX + lightY*lightY + lightZ*lightZ);
+            const L = {x: lightX/lightLen, y: lightY/lightLen, z: lightZ/lightLen};
+            
+            // 视线方向（从正前方观察）
+            const V = {x: 0, y: 0, z: 1};
+            
+            // 创建渐变（基础球体）
+            const gradient = ctx.createRadialGradient(
+                x - radius * 0.3, y - radius * 0.3, radius * 0.1,
+                x, y, radius
+            );
+            gradient.addColorStop(0, '#888');
+            gradient.addColorStop(1, '#333');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 计算高光
+            const imageData = ctx.getImageData(x - radius, y - radius, radius * 2, radius * 2);
+            const data = imageData.data;
+            
+            for (let py = 0; py < radius * 2; py++) {
+                for (let px = 0; px < radius * 2; px++) {
+                    const dx = px - radius;
+                    const dy = py - radius;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist <= radius) {
+                        // 计算球面法线
+                        const nz = Math.sqrt(Math.max(0, radius * radius - dx * dx - dy * dy));
+                        const len = Math.sqrt(dx * dx + dy * dy + nz * nz);
+                        const N = {x: dx / len, y: dy / len, z: nz / len};
+                        
+                        // 计算半程向量
+                        const Hx = L.x + V.x;
+                        const Hy = L.y + V.y;
+                        const Hz = L.z + V.z;
+                        const Hlen = Math.sqrt(Hx*Hx + Hy*Hy + Hz*Hz);
+                        const H = {x: Hx/Hlen, y: Hy/Hlen, z: Hz/Hlen};
+                        
+                        // N·H
+                        const NdotH = Math.max(0, N.x * H.x + N.y * H.y + N.z * H.z);
+                        
+                        // 计算高光强度
+                        const D = GGX_D(NdotH, roughness);
+                        const specular = Math.min(1, D * 0.3); // 缩放系数
+                        
+                        // 应用高光
+                        const idx = (py * radius * 2 + px) * 4;
+                        data[idx] = Math.min(255, data[idx] + specular * 255);
+                        data[idx + 1] = Math.min(255, data[idx + 1] + specular * 255);
+                        data[idx + 2] = Math.min(255, data[idx + 2] + specular * 200);
+                    }
+                }
+            }
+            
+            ctx.putImageData(imageData, x - radius, y - radius);
+            
+            // 边框
+            ctx.strokeStyle = isInteractive ? '#2563eb' : '#999';
+            ctx.lineWidth = isInteractive ? 3 : 1;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        
+        // 绘制交互式球体和对比图
+        function drawInteractiveSphere() {
+            const roughness = parseFloat(roughnessSlider.value) / 100;
+            roughnessValue.textContent = roughness.toFixed(2);
+            
+            const sphereRadius = 70;
+            const x = 450;
+            const y = 370;
+            
+            // 标题
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = '#2563eb';
+            ctx.textAlign = 'center';
+            ctx.fillText('当前 Roughness 效果', x, 270);
+            
+            drawSphere(x, y, sphereRadius, roughness, true);
+            
+            // 绘制D(H)函数曲线对比
+            drawDFunctionComparison(roughness);
+        }
+        
+        // 绘制D(H)函数曲线
+        function drawDFunctionComparison(currentRoughness) {
+            const graphX = 620;
+            const graphY = 300;
+            const graphW = 250;
+            const graphH = 150;
+            
+            // 背景
+            ctx.fillStyle = '#f9fafb';
+            ctx.fillRect(graphX, graphY, graphW, graphH);
+            ctx.strokeStyle = '#d1d5db';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(graphX, graphY, graphW, graphH);
+            
+            // 标题
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'left';
+            ctx.fillText('D(H) vs θ_h', graphX + 10, graphY + 15);
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = '#666';
+            ctx.beginPath();
+            ctx.moveTo(graphX + 20, graphY + graphH - 20);
+            ctx.lineTo(graphX + graphW - 10, graphY + graphH - 20);
+            ctx.moveTo(graphX + 20, graphY + graphH - 20);
+            ctx.lineTo(graphX + 20, graphY + 20);
+            ctx.stroke();
+            
+            // 轴标签
+            ctx.font = '10px Arial';
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+            ctx.fillText('0', graphX + 20, graphY + graphH - 5);
+            ctx.fillText('π/2', graphX + graphW - 10, graphY + graphH - 5);
+            ctx.save();
+            ctx.translate(graphX + 8, graphY + 20);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('D(H)', 0, 0);
+            ctx.restore();
+            
+            // 绘制多条曲线
+            const roughnessValues = [0.1, 0.3, 0.5, 0.7, 0.9];
+            const colors = ['#dc2626', '#f59e0b', '#10b981', '#3b82f6', '#7c3aed'];
+            
+            roughnessValues.forEach((r, i) => {
+                ctx.strokeStyle = r === currentRoughness ? colors[i] : colors[i] + '40';
+                ctx.lineWidth = r === currentRoughness ? 3 : 1.5;
+                ctx.beginPath();
+                
+                for (let angle = 0; angle <= Math.PI / 2; angle += 0.01) {
+                    const NdotH = Math.cos(angle);
+                    const D = GGX_D(NdotH, r);
+                    const x = graphX + 20 + (angle / (Math.PI / 2)) * (graphW - 30);
+                    const y = graphY + graphH - 20 - Math.min(D / 10, 1) * (graphH - 40);
+                    
+                    if (angle === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            });
+            
+            // 图例
+            const legendX = graphX + 10;
+            let legendY = graphY + 35;
+            ctx.font = '9px Arial';
+            ctx.textAlign = 'left';
+            
+            roughnessValues.forEach((r, i) => {
+                ctx.fillStyle = colors[i];
+                ctx.fillRect(legendX, legendY, 12, 3);
+                ctx.fillStyle = r === currentRoughness ? colors[i] : '#999';
+                ctx.fillText(`r=${r.toFixed(1)}`, legendX + 16, legendY + 3);
+                legendY += 12;
+            });
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 标题区域
+            ctx.font = 'bold 14px Arial';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'center';
+            ctx.fillText('预设 Roughness 对比', 450, 30);
+            
+            drawPresetSpheres();
+            
+            // 分隔线
+            ctx.strokeStyle = '#d1d5db';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, 240);
+            ctx.lineTo(850, 240);
+            ctx.stroke();
+            
+            drawInteractiveSphere();
+        }
+        
+        roughnessSlider.addEventListener('input', draw);
+        
+        draw();
+    </script>
+</body>
+</html>

@@ -37,7 +37,29 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tutorials/";
           },
-        },{id: "post-lv-2-unity主线-添加环境光",
+        },{id: "post-理论支线-pbrspecular-ggx-速通",
+        
+          title: "理论支线：PBRSpecular - GGX 速通",
+        
+        description: "理论支线：PBRSpecular - GGX",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBRSpecular-GGX-%E9%80%9F%E9%80%9A/";
+          
+        },
+      },{id: "post-ggx-d-h-分布可视化",
+        
+          title: "GGX_D(H)分布可视化",
+        
+        description: "GGX_D(H)分布可视化",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96/";
+          
+        },
+      },{id: "post-lv-2-unity主线-添加环境光",
         
           title: "Lv.2 Unity主线：添加环境光",
         

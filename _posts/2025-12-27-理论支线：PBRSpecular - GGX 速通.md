@@ -29,7 +29,7 @@ $$ f_r(l, v) = \underbrace{f_{diff}}_{\text{漫反射}} + \underbrace{f_{spec}}_
 - **基于微表面理论** (Microfacet Theory)：表面由无数微小镜面组成
 - **使用真实物理参数**：金属度(Metallic)、粗糙度(Roughness)替代传统的高光参数
 
-![[Pasted image 20251227192945.png]]
+ ![图片](/assets/img/TAMonth01/Pasted image 20251227192945.png)
 
 # Specular BRDF
 
@@ -209,7 +209,7 @@ $$ p(m_x​,m_y​)=\frac{\gamma^2}{π(\gamma^2+m_x^2​+m_y^2​)^2} $$​
 **正确方法：** 用表面的高度变化！
 
 **因为是微观平面也就是微表面模型下，决定粗糙度与否的其实就是表面的高低起伏，也就是每一个微观平面与宏观平面所构成的斜率**
-![[ffb807b5-4259-4535-af3f-832a9eaf052a.png]]
+ ![图片](/assets/img/TAMonth01/ffb807b5-4259-4535-af3f-832a9eaf052a.png)
 
 想象用手摸一个粗糙表面： - 光滑 → 高度变化小 → 斜率小 - 粗糙 → 高度起伏大 → 斜率大
 **斜率定义：** 
@@ -682,7 +682,7 @@ $$G_1(l) = \frac{n \cdot l}{(n \cdot l) \cdot (1 - k) + k}$$
 $$G(l, v, h) = G_1(l) \cdot G_1(v)$$
 
 ## 最终结果解释
-![[Pasted image 20251227192921.png]]
+ ![图片](/assets/img/TAMonth01/Pasted image 20251227192921.png)
 这里用乘法表示交集意思是**满足光线能照射到**且**可视性遮蔽是可视的**
 Smith 的核心假设
 独立性假设： Shadowing 和 Masking 相互独立
@@ -706,7 +706,9 @@ $$ f_{spec}(l, v) = \frac{D(h) \cdot F(v, h) \cdot G(l, v, h)}{4 \cdot (n \cdot 
 
 **替换几何项**
 
-$$V(l,v,h)=\frac{G(l,v,h)}{4⋅(n⋅l)⋅(n⋅v)}$$**近似**​
+$$V(l,v,h)=\frac{G(l,v,h)}{4⋅(n⋅l)⋅(n⋅v)}$$
+
+**近似**​
 
 $$ F⋅V≈\frac{1}{LoH_2⋅(roughness+0.5)}$$​
 

@@ -254,7 +254,9 @@ float CalculateAttenuation(float3 worldPos)
 ![](/assets/img/TAMonth01/Pasted image 20260102192433.png)
 
 $\text{distanceAttenuation.x} = \frac{1}{R^2}$
+
 $\text{fadeDistance} = 0.64 \times R^2$
+
 $\text{distanceAttenuation.y} = \frac{-R^2}{0.64R^2 - R^2}$
 
 ```c

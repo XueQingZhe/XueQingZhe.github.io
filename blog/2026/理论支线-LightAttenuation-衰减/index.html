@@ -1,0 +1,326 @@
+<!DOCTYPE html> <html lang="zh-CN"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> 理论支线：LightAttenuation 衰减 | 吟处雪 轻遮 </title> <meta name="author" content="吟处雪 轻遮"> <meta name="description" content="理论支线：LightAttenuation 衰减"> <meta name="keywords" content="technical-artist, shader, rendering, unity, unreal-engine, pbr, toon-shading"> <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04"> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5"> <link defer rel="stylesheet" href="/assets/css/scholar-icons.css?62b2ac103a88034e6882a5be5f3e2772"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link defer href="/assets/css/bootstrap-toc.min.css?6f5af0bb9aab25d79b2448143cbeaa88" rel="stylesheet"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e"> <link rel="canonical" href="https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-LightAttenuation-%E8%A1%B0%E5%87%8F/"> <script src="/assets/js/theme.js?a81d82887dd692e91686b43de4542f18"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/spotlight.js@0.7.8/dist/css/spotlight.min.css" integrity="sha256-Dsvkx8BU8ntk9Iv+4sCkgHRynYSQQFP6gJfBN5STFLY=" crossorigin="anonymous"> </head> <body class="fixed-top-nav "> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">吟处雪</span> 轻遮 </a> <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse text-right" id="navbarNav"> <ul class="navbar-nav ml-auto flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">about </a> </li> <li class="nav-item active"> <a class="nav-link" href="/blog/">blog </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">projects </a> </li> <li class="nav-item "> <a class="nav-link" href="/books/">books </a> </li> <li class="nav-item "> <a class="nav-link" href="/tutorials/">tutorials </a> </li> <li class="nav-item"> <button id="search-toggle" title="Search" onclick="openSearchModal()"> <span class="nav-link">ctrl k <i class="ti ti-search"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" title="Change theme"> <i class="ti ti-sun-moon" id="light-toggle-system"></i> <i class="ti ti-moon-filled" id="light-toggle-dark"></i> <i class="ti ti-sun-filled" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="row"> <div class="col-sm-3"> <nav id="toc-sidebar" class="sticky-top"></nav> </div> <div class="col-sm-9"> <div class="post"> <header class="post-header"> <h1 class="post-title">理论支线：LightAttenuation 衰减</h1> <p class="post-meta"> Created on January 03, 2026 </p> <p class="post-tags"> <a href="/blog/2026"> <i class="fa-solid fa-calendar fa-sm"></i> 2026 </a>   ·   <a href="/blog/tag/shader-rendering"> <i class="fa-solid fa-hashtag fa-sm"></i> shader，rendering</a>   ·   <a href="/blog/category/tamonth01"> <i class="fa-solid fa-tag fa-sm"></i> TAMonth01</a> </p> </header> <article class="post-content"> <div id="markdown-content"> <h1 id="point-lights点光源">Point lights  点光源</h1> <h2 id="概述">概述</h2> <p>点光源的距离衰减控制了光照强度如何随距离变化。现代游戏引擎主要使用两种方法：</p> <ul> <li> <strong>经典三参数公式</strong>（已过时，仅用于教学）</li> <li> <strong>物理衰减 + 窗口函数</strong>（现代主流，Unity/UE使用） <h2 id="经典三参数衰减公式历史方法">经典三参数衰减公式（历史方法）</h2> <p>⚠️ <strong>注意：现代引擎（Unity URP/HDRP、Unreal Engine）已不再使用此公式。</strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020251231195524.png" alt=""> \(\begin{equation} F_{att} = \frac{1.0}{K_c + K_l * d + K_q * d^2} \end{equation}\)</p> <h2 id="常数项-k_c">常数项 $K_c$</h2> <p><strong>$K_c$ = 1.0</strong>，通常设置为 1.0 <strong>作用</strong>：防止分母为0，确保在距离为0时不会得到无穷大的亮度。</p> <blockquote> <p><strong>为什么是1.0？</strong></p> </blockquote> </li> </ul> <p><strong>当 d = 0 时：</strong> Fatt = 1.0 / (1.0 + 0 + 0) = 1.0 意味着在光源位置，衰减系数为1（没有衰减）</p> <p><strong>如果 $K_c &lt; 1$，比如 0.5：</strong> 当 d = 0 时： Fatt = 1.0 / 0.5 = 2.0 ❌ 这会让光源位置的亮度增强2倍，不符合物理！</p> <h2 id="线性项-k_l">线性项 $K_l$</h2> <p>典型值：0.09, 0.07, 0.045 等 Kl = 0.09 <strong>作用</strong>：提供<strong>中等距离</strong>的线性衰减。 <strong>效果</strong>： 距离 d = 5: 线性贡献 = 0.09 * 5 = 0.45</p> <h2 id="二次项-k_q">二次项 $K_q$</h2> <p>典型值：0.032, 0.017, 0.0075 等 Kq = 0.032 <strong>作用</strong>：提供<strong>远距离</strong>的快速衰减。 距离 d = 10: 二次贡献 = 0.032 * 10² = 3.2 距离 d = 20: 二次贡献 = 0.032 * 20² = 12.8 <strong>关键特性</strong>：</p> <ul> <li> <strong>距离小时</strong>：$d^2$ 很小，二次项贡献小</li> <li> <strong>距离大时</strong>：$d^2$ 急剧增大，二次项主导衰减</li> </ul> <h2 id="设计取值思路">设计取值思路</h2> <h3 id="方法1基于目标距离反推参数">方法1：基于目标距离反推参数</h3> <p><strong>核心思路</strong> <strong>先确定你想要的”光照范围”，然后反推参数。</strong></p> <p>假设你想要光源在距离 <code class="language-plaintext highlighter-rouge">d = 50</code> 时衰减到某个阈值（比如5%亮度），可以这样计算：</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td> <td class="rouge-code"><pre><span class="err">目标：在</span> <span class="n">d</span> <span class="o">=</span> <span class="mi">50</span> <span class="err">时，</span><span class="n">Fatt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mo">05</span>
+
+<span class="mi">0</span><span class="p">.</span><span class="mo">05</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Kc</span> <span class="o">+</span> <span class="n">Kl</span> <span class="o">*</span> <span class="mi">50</span> <span class="o">+</span> <span class="n">Kq</span> <span class="o">*</span> <span class="mi">50</span><span class="err">²</span><span class="p">)</span>
+<span class="mi">0</span><span class="p">.</span><span class="mo">05</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Kc</span> <span class="o">+</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span>
+
+<span class="err">反推：</span>
+<span class="n">Kc</span> <span class="o">+</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">20</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <p>但这是<strong>一个方程，三个未知数</strong>，所以需要额外约束。</p> <h4 id="常用约束条件">常用约束条件</h4> <h5 id="约束1固定-kc--10">约束1：固定 Kc = 1.0</h5> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td> <td class="rouge-code"><pre><span class="err">理由：保证在光源位置（</span><span class="n">d</span><span class="o">=</span><span class="mi">0</span><span class="err">）亮度为</span><span class="mi">100</span><span class="o">%</span>
+<span class="err">简化方程：</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">20</span>
+         <span class="err">→</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">19</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h5 id="约束2定义半强度距离">约束2：定义”半强度距离”</h5> <p>假设你希望在 <code class="language-plaintext highlighter-rouge">d = 13</code> 时亮度衰减到50%：</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td> <td class="rouge-code"><pre><span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">13</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span>
+<span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">13</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="mi">13</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">1</span>  <span class="p">...</span> <span class="p">(</span><span class="err">方程</span><span class="n">A</span><span class="p">)</span>
+
+<span class="err">同时满足范围约束：</span>
+<span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">19</span>  <span class="p">...</span> <span class="p">(</span><span class="err">方程</span><span class="n">B</span><span class="p">)</span>
+
+<span class="err">解这个二元一次方程组：</span>
+<span class="err">从</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">:</span> <span class="n">Kl</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span> <span class="o">/</span> <span class="mi">13</span>
+<span class="err">代入</span><span class="p">(</span><span class="n">B</span><span class="p">)</span><span class="o">:</span> <span class="mi">50</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span><span class="o">/</span><span class="mi">13</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">19</span>
+        <span class="p">...</span>
+<span class="err">得到：</span><span class="n">Kq</span> <span class="err">≈</span> <span class="mi">0</span><span class="p">.</span><span class="mi">44</span><span class="p">,</span> <span class="n">Kl</span> <span class="err">≈</span> <span class="mi">0</span><span class="p">.</span><span class="mi">35</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h3 id="方法2查表">方法2：查表</h3> <p>| 光照距离 | Kc | Kl | Kq | 用途场景 | | ——- | — | —– | —— | ——- | | <strong>7</strong> | 1.0 | 0.7 | 1.8 | 手电筒、小灯泡 | | <strong>13</strong> | 1.0 | 0.35 | 0.44 | 台灯、壁灯 | | <strong>20</strong> | 1.0 | 0.22 | 0.20 | 房间吊灯 | | <strong>32</strong> | 1.0 | 0.14 | 0.07 | 大厅灯光 | | <strong>50</strong> | 1.0 | 0.09 | 0.032 | 路灯 | | <strong>65</strong> | 1.0 | 0.07 | 0.017 | 广场灯 | | <strong>100</strong> | 1.0 | 0.045 | 0.0075 | 体育场灯光 | | <strong>160</strong> | 1.0 | 0.027 | 0.0028 | 大型场景 | | <strong>200</strong> | 1.0 | 0.022 | 0.0019 | 室外环境 | | <strong>325</strong> | 1.0 | 0.014 | 0.0007 | 超大场景 | | <strong>600</strong> | 1.0 | 0.007 | 0.0002 | 天空光 |</p> <h2 id="经典公式的问题">经典公式的问题</h2> <h3 id="-致命缺陷">❌ 致命缺陷</h3> <ol> <li> <strong>没有明确的Range参数</strong> <ul> <li>美术师无法直接控制”光照范围是多少米”</li> <li>只能通过调整三个晦涩的参数间接影响</li> <li>需要反复测试才能达到想要的效果</li> </ul> </li> <li> <strong>预设参数表太死板</strong> <ul> <li>表中没有的范围（如18米）需要手动计算</li> <li>参数之间相互耦合，改一个影响全部</li> <li>工作流程繁琐低效</li> </ul> </li> <li> <strong>无法做性能优化</strong> <ul> <li>理论上衰减永远不为0（延伸到无穷远）</li> <li>GPU无法提前剔除超出范围的光源</li> <li>即使距离1000米也要计算</li> </ul> </li> <li> <strong>无法做空间剔除</strong> <ul> <li>CPU端无法判断光源是否影响视锥体</li> <li>所有光源都要传给GPU处理</li> </ul> </li> </ol> <p><strong>这就是为什么现代引擎全部放弃了这个公式！</strong></p> <h2 id="基于物理的简化公式">基于物理的简化公式</h2> <h3 id="平方反比定律真实物理">平方反比定律（真实物理）</h3> <p>现实世界中，光照遵循：</p> \[I = \frac{I_0}{d^2}\] <p>其中：</p> <ul> <li>$I$ = 衰减后的光照强度</li> <li>$I_0$ = 光源初始强度</li> <li>$d$ = 距离光源的距离 也就是 <div class="language-c highlighter-rouge"> <div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td> <td class="rouge-code"><pre><span class="kt">float</span> <span class="n">distanceSqr</span> <span class="o">=</span> <span class="n">distance</span> <span class="o">*</span> <span class="n">distance</span><span class="p">;</span>
+<span class="kt">float</span> <span class="n">physicalAttenuation</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="n">max</span><span class="p">(</span><span class="n">distanceSqr</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span><span class="p">);</span>
+</pre></td> </tr></tbody></table></code></pre></div> </div> </li> </ul> <p>但游戏中直接用会有问题：</p> <ul> <li>在 <code class="language-plaintext highlighter-rouge">d=0</code> 处会无穷大</li> <li>没有艺术控制范围的能力 <h2 id="关联点光源生效半径">关联点光源生效半径</h2> <p>对于整个衰减公式中有一点没有说明，就是<strong>关联点光源的生效半径</strong>，<strong>最上面的经典三参数衰减公式随着时代更替，实际上游戏引擎现在根本不用！！</strong> 而是采用平方反比定律（真实物理）的衰减。可是当前物理公式不论各多远都会计算也就是无限接近于0，这会导致很多性能浪费，所以需要进行截断操作。</p> <h2 id="现代引擎实现物理衰减--窗口函数">现代引擎实现：物理衰减 + 窗口函数</h2> </li> </ul> <h3 id="设计哲学">设计哲学</h3> <p>现代引擎采用两阶段设计：</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td> <td class="rouge-code"><pre><span class="err">完整衰减</span> <span class="o">=</span> <span class="err">物理衰减</span> <span class="err">×</span> <span class="err">窗口函数（范围截断）</span>
+         <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">d</span><span class="err">²</span><span class="p">)</span>  <span class="err">×</span>  <span class="n">Window</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <p>优点： ✓ 基于物理，视觉真实 ✓ 有明确的Range参数（艺术控制） ✓ 可提前剔除（性能优化） ✓ 边界平滑过渡（无硬边）</p> <h3 id="窗口函数衰减截断">窗口函数（衰减截断）</h3> <p><strong>这里对范围进行截断，截断操作就是叫窗口函数或者衰减函数也行，最简单的线性窗口就是到了半径之后就是截断，但是会导致硬边</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> <td class="rouge-code"><pre><span class="kt">float</span> <span class="n">window</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">range</span><span class="p">);</span> 
+</pre></td> </tr></tbody></table></code></pre></div></div> <p>问题：在边界处导数不连续（有视觉”硬边”）</p> <p><strong>为了更加平滑的截断，在引擎中则是使用下方的窗口函数公式</strong></p> \[\text{Window}(d, R, n) = \left[\text{saturate}\left(1 - \left(\frac{d}{R}\right)^n\right)\right]^2\] <p>其中 d是距离，R是半径 <strong>图像如下</strong> <img src="/assets/img/TAMonth01/Pasted%20image%2020260101235434.png" alt=""> <strong>所以最终是窗口函数和物理衰减来进行混合,也就是$physicalAtten * windowAtten$</strong> <strong>在引擎中通常使用4次方来作为衰减，性能和效果比较合适，过小的话衰减过快，边界会很明显。过大衰减范围增加，计算量会增大</strong> \(\text{Window}(d, R, n) = \left[\text{saturate}\left(1 - \left(\frac{d}{R}\right)^4\right)\right]^2\) <strong>根据艺术需求：</strong></p> <ul> <li>卡通风格 → n=2（明确边界）</li> <li>写实风格 → n=6（柔和过渡）</li> <li>魔法效果 → n=8~10（力场感） <h3 id="衰减函数">衰减函数</h3> <div class="language-c highlighter-rouge"> <div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td> <td class="rouge-code"><pre><span class="c1">// 正确的衰减函数</span>
+<span class="kt">float</span> <span class="nf">CalculateAttenuation</span><span class="p">(</span><span class="n">float3</span> <span class="n">worldPos</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="c1">// 1. 距离平方</span>
+  <span class="n">float3</span> <span class="n">L</span> <span class="o">=</span> <span class="n">_LightPos</span> <span class="o">-</span> <span class="n">worldPos</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">distSqr</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">);</span>
+    
+  <span class="c1">// 2. 物理衰减</span>
+  <span class="kt">float</span> <span class="n">physicalAtten</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="n">max</span><span class="p">(</span><span class="n">distSqr</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span><span class="p">);</span>
+    
+  <span class="c1">// 3. 窗口函数（无分支）</span>
+  <span class="kt">float</span> <span class="n">rangeSqr</span> <span class="o">=</span> <span class="n">_LightRange</span> <span class="o">*</span> <span class="n">_LightRange</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">normDistSqr</span> <span class="o">=</span> <span class="n">distSqr</span> <span class="o">/</span> <span class="n">rangeSqr</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">normDistQuad</span> <span class="o">=</span> <span class="n">normDistSqr</span> <span class="o">*</span> <span class="n">normDistSqr</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">windowBase</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">normDistQuad</span><span class="p">);</span>
+  <span class="kt">float</span> <span class="n">windowAtten</span> <span class="o">=</span> <span class="n">windowBase</span> <span class="o">*</span> <span class="n">windowBase</span><span class="p">;</span>
+    
+  <span class="c1">// 4. 组合</span>
+  <span class="k">return</span> <span class="n">physicalAtten</span> <span class="o">*</span> <span class="n">windowAtten</span><span class="p">;</span>
+</pre></td> </tr></tbody></table></code></pre></div> </div> </li> </ul> <h3 id="unity实际使用的代码lightinghlsl">Unity实际使用的代码（Lighting.hlsl）</h3> <p><img src="/assets/img/TAMonth01/Pasted%20image%2020260102192433.png" alt=""></p> <p>$\text{distanceAttenuation.x} = \frac{1}{R^2}$ $\text{fadeDistance} = 0.64 \times R^2$ $\text{distanceAttenuation.y} = \frac{-R^2}{0.64R^2 - R^2}$</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td> <td class="rouge-code"><pre><span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="n">f</span> <span class="o">/</span> <span class="p">(</span><span class="n">lightRange</span> <span class="o">*</span> <span class="n">lightRange</span><span class="p">);</span>
+
+<span class="kt">float</span> <span class="n">lightRangeSqr</span> <span class="o">=</span> <span class="n">lightRange</span> <span class="o">*</span> <span class="n">lightRange</span><span class="p">;</span>
+<span class="kt">float</span> <span class="n">fadeDistance</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">8</span><span class="n">f</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mi">8</span><span class="n">f</span> <span class="o">*</span> <span class="n">lightRangeSqr</span><span class="p">;</span> <span class="c1">// 80% 的范围开始衰减 </span>
+<span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="o">-</span><span class="n">lightRangeSqr</span> <span class="o">/</span> <span class="p">(</span><span class="n">fadeDistance</span> <span class="o">-</span> <span class="n">lightRangeSqr</span><span class="p">);</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td> <td class="rouge-code"><pre><span class="kt">float</span> <span class="nf">DistanceAttenuation</span><span class="p">(</span><span class="kt">float</span> <span class="n">distanceSqr</span><span class="p">,</span> <span class="n">half2</span> <span class="n">distanceAttenuation</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">float</span> <span class="n">lightAtten</span> <span class="o">=</span> <span class="n">rcp</span><span class="p">(</span><span class="n">distanceSqr</span><span class="p">);</span> <span class="c1">// rcp(x) = 1/x</span>
+    
+    <span class="cp">#if SHADER_HINT_NICE_QUALITY
+</span>        <span class="c1">// 高质量：n=4</span>
+        <span class="n">half</span> <span class="n">factor</span> <span class="o">=</span> <span class="n">distanceSqr</span> <span class="o">*</span> <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+        <span class="n">half</span> <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="n">h</span> <span class="o">-</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">factor</span><span class="p">);</span>
+        <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">smoothFactor</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
+    <span class="cp">#else
+</span>        <span class="c1">// 标准质量：线性窗口（从80% range开始衰减）</span>
+        <span class="n">half</span> <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span>
+            <span class="n">distanceSqr</span> <span class="o">*</span> <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> 
+            <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">y</span>
+        <span class="p">);</span>
+    <span class="cp">#endif
+</span>    
+    <span class="k">return</span> <span class="n">lightAtten</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h2 id="完整对应表">完整对应表</h2> <p>| 数学符号 | Unity 代码 | 说明 | | ——————————– | —————————– | —————— | | $d$ | <code class="language-plaintext highlighter-rouge">distance</code> | 距离（通常不直接计算，避免sqrt） | | $d^2$ | <code class="language-plaintext highlighter-rouge">distanceSqr</code> | 距离平方 | | $R$ | <code class="language-plaintext highlighter-rouge">lightRange</code> | 光源范围 | | $R^2$ | <code class="language-plaintext highlighter-rouge">rangeSqr</code> | 范围平方 | | $\frac{1}{R^2}$ | <code class="language-plaintext highlighter-rouge">distanceAttenuation.x</code> | CPU预计算 | | $\frac{d^2}{R^2}$ | <code class="language-plaintext highlighter-rouge">factor</code> | 归一化距离平方 | | $\left(\frac{d^2}{R^2}\right)^2$ | <code class="language-plaintext highlighter-rouge">factor * factor</code> | 四次方项（用平方表示） | | $\left(\frac{d^2}{R^2}\right)^2$ | <code class="language-plaintext highlighter-rouge">1.0h - factor * factor</code> | 窗口函数基础 | | $\text{saturate}(…)$ | <code class="language-plaintext highlighter-rouge">saturate(...)</code> | 钳制到[0,1] | | $[…]^2$ | <code class="language-plaintext highlighter-rouge">smoothFactor * smoothFactor</code> | 最后平方 |</p> <h1 id="spotlight-聚光灯">Spotlight 聚光灯</h1> <h2 id="基本概念">基本概念</h2> <p><strong>聚光灯 = 点光源 + 方向限制 + 角度衰减</strong> 点光源：向所有方向发光 聚光灯：只向一个锥形区域发光 <img src="/assets/img/TAMonth01/Pasted%20image%2020260102221850.png" alt=""> 从图中可以看到：</p> <table> <thead> <tr> <th>参数</th> <th>说明</th> <th>图中标注</th> </tr> </thead> <tbody> <tr> <td><strong>LightDir</strong></td> <td>从<strong>片元指向光源</strong>的向量</td> <td>蓝色线（从fragment到light）</td> </tr> <tr> <td><strong>SpotDir</strong></td> <td>聚光灯照射的方向（某个轴归一化）</td> <td>红色线（从light向下）</td> </tr> <tr> <td><strong>Phi (φ)</strong></td> <td>外锥角（Outer Cone）</td> <td>蓝色锥体边缘</td> </tr> <tr> <td><strong>Theta (θ)</strong></td> <td>LightDir 和 SpotDir 的夹角</td> <td>绿色标注</td> </tr> </tbody> </table> <h2 id="核心判断逻辑">核心判断逻辑</h2> <blockquote> <p><strong>片元是否在聚光灯照射范围内？</strong></p> </blockquote> <p><strong><em>只要片元的光向量夹角小于等于椎体角度的一半就行，但是直接使用角度需要使用反三角函数计算量很大，而角度最大也就是$\frac{\pi}{2}$,这表示cos肯定是正数1~0，角度越大cos越小，使用cos来比较更好的办法，这和相机的裁剪原理也是类似</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td> <td class="rouge-code"><pre><span class="c1">// 计算夹角的余弦值</span>
+<span class="kt">float</span> <span class="n">cosTheta</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">normalize</span><span class="p">(</span><span class="n">LightDir</span><span class="p">),</span> <span class="n">normalize</span><span class="p">(</span><span class="o">-</span><span class="n">SpotDir</span><span class="p">));</span>
+
+<span class="c1">// 判断是否在锥内</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">cosTheta</span> <span class="o">&gt;</span> <span class="n">cos</span><span class="p">(</span><span class="n">Phi</span><span class="p">))</span> <span class="p">{</span>
+    <span class="c1">// 在聚光灯照射范围内</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// 在聚光灯外，不受光照影响</span>
+<span class="p">}</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h2 id="衰减组成">衰减组成</h2> <p><strong>聚光灯衰减 = 距离衰减（和点光源相同）+ 角度衰减</strong></p> <h3 id="距离衰减">距离衰减</h3> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td> <td class="rouge-code"><pre><span class="kt">float</span> <span class="nf">DistanceAttenuation</span><span class="p">(</span><span class="kt">float</span> <span class="n">distanceSqr</span><span class="p">,</span> <span class="n">half2</span> <span class="n">distanceAttenuation</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">float</span> <span class="n">lightAtten</span> <span class="o">=</span> <span class="n">rcp</span><span class="p">(</span><span class="n">distanceSqr</span><span class="p">);</span>  <span class="c1">// 1/d²</span>
+    
+    <span class="n">half</span> <span class="n">factor</span> <span class="o">=</span> <span class="n">distanceSqr</span> <span class="o">*</span> <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
+    <span class="n">half</span> <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="n">h</span> <span class="o">-</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">factor</span><span class="p">);</span>
+    <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">smoothFactor</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
+    
+    <span class="k">return</span> <span class="n">lightAtten</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h3 id="角度衰减">角度衰减</h3> <blockquote> <p><strong>聚光灯的形状是怎样？</strong></p> </blockquote> <p><strong>在中心区域应该会被完全照亮，然后再向边缘衰减，并非和点光源一样的直接衰减，所以我们需要在这个范围内构建衰减</strong> Unity 使用<strong>两个角度</strong>来实现平滑过渡： InnerAngle (内锥角)：完全照亮区域 OuterAngle (外锥角)：光照边界</p> <p>线性插值的基本思路 我们想要一个函数，满足：</p> <p>  \(f(\theta) =\begin{cases} 1.0 &amp; \text{if } \theta \leq \phi_{\text{inner}} \\ \text{线性递减} &amp; \text{if } \phi_{\text{inner}} &lt; \theta &lt; \phi_{\text{outer}} \\ 0.0 &amp; \text{if } \theta \geq \phi_{\text{outer}} \end{cases}\)</p> <p><strong>标准线性插值公式</strong></p> <p>在两个端点之间线性插值：</p> \[f(x) = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}}\] <p>这给出：</p> <ul> <li>当 $x = x_{\text{min}}$ 时，$f(x) = 0$</li> <li>当 $x = x_{\text{max}}$ ​ 时，$f(x) = 1$</li> </ul> <p><strong>但我们需要反过来</strong></p> <p>对于聚光灯，我们希望：</p> <ul> <li>当$\theta = \phi_{\text{inner}}$ （小角度）时，衰减 = <strong>1.0</strong>（亮）</li> <li>当$\theta = \phi_{\text{outer}}$ （大角度）时，衰减 = <strong>0.0</strong>（暗）</li> </ul> <p>所以公式应该是：</p> \[f(\theta) = \frac{\phi_{\text{outer}} - \theta}{\phi_{\text{outer}} - \phi_{\text{inner}}}\] <p><strong>所以最终角度衰减公式：</strong> 线性插值得到的是直线过渡会产生硬边缘截断，为了更自然的视觉效果，对结果进行平方：</p> \[\text{AngleAttenuation} = \left[\text{saturate}\left(\frac{\cos\theta - \cos\phi_{\text{outer}}}{\cos\phi_{\text{inner}} - \cos\phi_{\text{outer}}}\right)\right]^2\] <p>其中：</p> <ul> <li>$\theta$= LightDir 和 SpotDir 的夹角</li> <li>$\phi_{\text{inner}}$​ = 内锥角</li> <li>$\phi_{\text{outer}}​$ = 外锥角</li> </ul> <p>平方是性能和效果的最佳平衡：</p> <p>|指数|中点值|指令数|效果|使用| |—|—|—|—|—| |t¹|0.50|0|线性，太硬|❌| |<strong>t²</strong>|<strong>0.25</strong>|<strong>1</strong>|<strong>适中</strong>|<strong>✓ Unity/UE</strong>| |t³|0.125|2|过于激进|特殊效果| |t⁴|0.0625|2|极窄光束|激光效果|</p> <h3 id="衰减混合">衰减混合</h3> <p><strong>最终角度衰减公式是这样</strong> \(\text{AngleAttenuation} = \left[\text{saturate}\left(\frac{\cos\theta - \cos\phi_{\text{outer}}}{\cos\phi_{\text{inner}} - \cos\phi_{\text{outer}}}\right)\right]^2\) 放进 shader 后，每个像素至少需要：</p> <ol> <li> <p><code class="language-plaintext highlighter-rouge">cosInner</code>、<code class="language-plaintext highlighter-rouge">cosOuter</code>（通常从角度算 cos）</p> </li> <li> <p><code class="language-plaintext highlighter-rouge">cosInner - cosOuter</code></p> </li> <li> <p><code class="language-plaintext highlighter-rouge">(cosθ - cosOuter)</code></p> </li> <li> <p><strong>一次除法</strong></p> </li> <li> <p><code class="language-plaintext highlighter-rouge">saturate</code></p> </li> </ol> <p><strong>除法是 GPU 上的慢指令</strong>（尤其是老架构 / mobile） 所以为了优化，会把公式拆分使用<strong>MAD</strong>也就是乘法加法，在GPU运行更快,$\cos\theta$是必须片元计算的，其它两个参数就在灯光设置时交给cpu算了 \(A = \text{saturate} \left( \cos\theta \cdot \frac{1}{\cos\phi_{inner} - \cos\phi_{outer}} - \frac{\cos\phi_{outer}}{\cos\phi_{inner} - \cos\phi_{outer}} \right)\)</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> <td class="rouge-code"><pre><span class="n">atten</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="n">SdotL</span> <span class="o">*</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong>最终的衰减就是 $DistanceAttenuation * AngleAttenuation$</strong></p> <h2 id="unity-shader-代码参考">Unity Shader 代码参考</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td> <td class="rouge-code"><pre><span class="n">float3</span> <span class="n">lightToPixel</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">WorldPos</span> <span class="o">-</span> <span class="n">LightPos</span><span class="p">);</span>
+<span class="n">float3</span> <span class="n">spotDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">SpotLightDirection</span><span class="p">);</span>
+<span class="kt">float</span> <span class="n">cosTheta</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">spotDir</span><span class="p">,</span> <span class="n">lightToPixel</span><span class="p">);</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td> <td class="rouge-code"><pre><span class="n">half</span> <span class="nf">AngleAttenuation</span><span class="p">(</span><span class="n">half3</span> <span class="n">spotDirection</span><span class="p">,</span> <span class="n">half3</span> <span class="n">lightDirection</span><span class="p">,</span> <span class="n">half2</span> <span class="n">spotAttenuation</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="c1">// Spot Attenuation with a linear falloff can be defined as</span>
+    <span class="c1">// (SdotL - cosOuterAngle) / (cosInnerAngle - cosOuterAngle)</span>
+    <span class="c1">// This can be rewritten as</span>
+    <span class="c1">// invAngleRange = 1.0 / (cosInnerAngle - cosOuterAngle)</span>
+    <span class="c1">// SdotL * invAngleRange + (-cosOuterAngle * invAngleRange)</span>
+    <span class="c1">// If we precompute the terms in a MAD instruction</span>
+    
+    <span class="c1">// 步骤1：计算 cos(θ)</span>
+    <span class="n">half</span> <span class="n">SdotL</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">spotDirection</span><span class="p">,</span> <span class="n">lightDirection</span><span class="p">);</span>
+    
+    <span class="c1">// 步骤2：线性插值（MAD 优化）</span>
+    <span class="c1">// 等价于：(SdotL - cosOuter) / (cosInner - cosOuter)</span>
+    <span class="n">half</span> <span class="n">atten</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="n">SdotL</span> <span class="o">*</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+    
+    <span class="c1">// 步骤3：平方平滑</span>
+    <span class="k">return</span> <span class="n">atten</span> <span class="o">*</span> <span class="n">atten</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h2 id="聚光灯阴影性能">聚光灯阴影性能</h2> <p><strong>移动端优化建议：</strong></p> <ul> <li>限制聚光灯数量（≤ 3-5 个）</li> <li>使用较小的 Range</li> <li>避免重叠的聚光灯</li> <li>使用 Light Culling</li> </ul> <p>聚光灯阴影比点光源便宜，但比方向光昂贵：</p> <table> <thead> <tr> <th>光源类型</th> <th>Shadow Maps</th> <th>性能</th> <th>备注</th> </tr> </thead> <tbody> <tr> <td><strong>Directional</strong></td> <td>4 cascades</td> <td>中</td> <td>覆盖整个场景</td> </tr> <tr> <td><strong>Spot</strong></td> <td><strong>1 张</strong></td> <td><strong>好</strong></td> <td>只覆盖锥体</td> </tr> <tr> <td><strong>Point</strong></td> <td>6 张（Cubemap）</td> <td>差</td> <td>6个方向</td> </tr> </tbody> </table> <p><strong>优化建议：</strong></p> <ul> <li>只对主要聚光灯开启阴影</li> <li>使用合适的 Shadow Resolution（512-1024）</li> <li>考虑使用烘焙阴影</li> </ul> </div> </article> <br> <hr> <br> <ul class="list-disc pl-8"></ul> <h2 class="text-3xl font-semibold mb-4 mt-12">Enjoy Reading This Article?</h2> <p class="mb-2">Here are some more articles you might like to read next:</p> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-Gamma-Correction-%E4%BC%BD%E9%A9%AC%E6%A0%A1%E6%AD%A3/">理论支线：Gamma Correction 伽马校正</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBRSpecular-GGX-%E9%80%9F%E9%80%9A/">理论支线：PBRSpecular - GGX 速通</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96/">GGX_D(H)分布可视化</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E7%8E%AF%E5%A2%83%E5%85%89/">Lv.2 Unity主线：添加环境光</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2025/Lv.2-Unity%E4%B8%BB%E7%BA%BF-%E6%B7%BB%E5%8A%A0%E5%A4%9A%E5%85%89%E6%BA%90%E4%BA%A4%E4%BA%92/">Lv.2 Unity主线：添加多光源交互</a> </li> </div> # # <script>
+# (function() {
+#   'use strict';
+  
+#   document.addEventListener('DOMContentLoaded', function() {
+#     // 检查 Medium Zoom 是否可用
+#     if (typeof mediumZoom !== 'undefined') {
+#       // 使用 Medium Zoom
+#       mediumZoom('.post-content img:not([width]):not([style])', {
+#         margin: 24,
+#         background: 'rgba(0, 0, 0, 0.9)',
+#         scrollOffset: 0
+#       });
+#       console.log('Medium Zoom enabled');
+#     } else {
+#       // 如果没有 Medium Zoom，手动添加点击事件
+#       const images = document.querySelectorAll('.post-content img:not([width]):not([style])');
+#       images.forEach(function(img) {
+#         img.style.cursor = 'zoom-in';
+#         img.addEventListener('click', function() {
+#           // 简单的全屏显示
+#           const overlay = document.createElement('div');
+#           overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+          
+#           const enlargedImg = document.createElement('img');
+#           enlargedImg.src = this.src;
+#           enlargedImg.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;';
+          
+#           overlay.appendChild(enlargedImg);
+#           document.body.appendChild(overlay);
+          
+#           overlay.addEventListener('click', function() {
+#             document.body.removeChild(overlay);
+#           });
+#         });
+#       });
+#       console.log('Manual zoom enabled for', images.length, 'images');
+#     }
+#   });
+# })();
+# </script> <script>
+(function() {
+  'use strict';
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    
+    const selector = '.post-content img:not([width]):not([style]):not([data-spotlight-converted])';
+    const images = document.querySelectorAll(selector);
+    
+    if (images.length === 0) {
+      console.log('Spotlight: No images to convert');
+      return;
+    }
+    
+    images.forEach(function(img) {
+      if (img.parentElement.classList.contains('spotlight')) {
+        return;
+      }
+      
+      const link = document.createElement('a');
+      link.className = 'spotlight';
+      link.href = img.src;
+      
+      if (img.alt) {
+        link.setAttribute('data-description', img.alt);
+      }
+      
+      img.setAttribute('data-spotlight-converted', 'true');
+      
+      // 强制设置样式（防止被覆盖）
+      img.style.cssText = 'max-width: 75% !important; display: block !important; margin: 1em auto !important; cursor: zoom-in !important;';
+      
+      const parent = img.parentNode;
+      parent.insertBefore(link, img);
+      link.appendChild(img);
+    });
+    
+    console.log('Spotlight: Converted', images.length, 'images');
+    
+    
+  });
+})();
+</script> </div> </div> </div> <footer class="fixed-bottom" role="contentinfo"> <div class="container mt-0"> © Copyright 2026 吟处雪 轻遮. Powered by <a href="https://jekyllrb.com/" target="_blank" rel="external nofollow noopener">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio" target="_blank" rel="external nofollow noopener">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank" rel="external nofollow noopener">GitHub Pages</a>. </div> </footer> <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> <script src="/assets/js/bootstrap.bundle.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?a0db7e5d5c70cc3252b3138b0c91dcaf" type="text/javascript"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/js/zoom.js?85ddb88934d28b74e78031fd54cf8308"></script> <script defer src="/assets/js/bootstrap-toc.min.js?c82ff4de8b0955d6ff14f5b05eed7eb6"></script> <script src="/assets/js/no_defer.js?2781658a0a2b13ed609542042a859126"></script> <script defer src="/assets/js/common.js?c15de51d4bb57887caa2c21988d97279"></script> <script defer src="/assets/js/copy_code.js?c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?d9f17b6adc2311cbabd747f4538bb15f"></script> <script async src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script> <script async src="https://badge.dimensions.ai/badge.js"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/js/mathjax-setup.js?a5bb4e6a542c546dd929b24b8b236dfd"></script> <script defer src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6" crossorigin="anonymous"></script> <script defer src="/assets/js/progress-bar.js?2f30e0e6801ea8f5036fa66e1ab0a71a" type="text/javascript"></script> <script defer src="https://cdn.jsdelivr.net/npm/spotlight.js@0.7.8/dist/spotlight.bundle.min.js" crossorigin="anonymous"></script> <script src="/assets/js/vanilla-back-to-top.min.js?f40d453793ff4f64e238e420181a1d17"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/assets/js/search/ninja-keys.min.js?a3446f084dcaecc5f75aa1757d087dcf"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/js/search-setup.js?6c304f7b1992d4b60f7a07956e52f04a"></script> <script src="/assets/js/search-data.js"></script> <script src="/assets/js/shortcut-key.js?6f508d74becd347268a7f822bca7309d"></script> </body> </html>

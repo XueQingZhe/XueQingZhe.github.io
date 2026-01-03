@@ -37,7 +37,29 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tutorials/";
           },
-        },{id: "post-理论支线-pbrspecular-ggx-速通",
+        },{id: "post-理论支线-lightattenuation-衰减",
+        
+          title: "理论支线：LightAttenuation 衰减",
+        
+        description: "理论支线：LightAttenuation 衰减",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-LightAttenuation-%E8%A1%B0%E5%87%8F/";
+          
+        },
+      },{id: "post-理论支线-gamma-correction-伽马校正",
+        
+          title: "理论支线：Gamma Correction  伽马校正",
+        
+        description: "理论支线：Gamma Correction  伽马校正",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-Gamma-Correction-%E4%BC%BD%E9%A9%AC%E6%A0%A1%E6%AD%A3/";
+          
+        },
+      },{id: "post-理论支线-pbrspecular-ggx-速通",
         
           title: "理论支线：PBRSpecular - GGX 速通",
         

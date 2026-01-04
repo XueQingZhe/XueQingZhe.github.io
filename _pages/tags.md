@@ -7,14 +7,9 @@ nav: true
 nav_order: 6
 ---
 
-{% comment %}
-  合并 posts 和 tutorials 的标签
-{% endcomment %}
-
 {% assign all_posts = site.posts | concat: site.tutorials %}
 {% assign all_tags = "" | split: "" %}
 
-{% comment %} 收集所有标签 {% endcomment %}
 {% for post in all_posts %}
   {% if post.tags %}
     {% for tag in post.tags %}
@@ -107,38 +102,77 @@ nav_order: 6
 </div>
 
 <style>
-/* 标签云 */
+/* ========== 渐变标签云 ========== */
 .tags-cloud {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   margin: 2rem 0;
-  padding: 2rem;
-  background: var(--global-code-bg-color);
-  border-radius: 12px;
+  padding: 2.5rem;
+  
+  /* 多色渐变背景 */
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(168, 85, 247, 0.1) 25%,
+    rgba(236, 72, 153, 0.1) 50%,
+    rgba(251, 146, 60, 0.1) 75%,
+    rgba(34, 197, 94, 0.1) 100%
+  );
+  
+  border-radius: 16px;
   border: 1px solid var(--global-divider-color);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 添加动态光效 */
+.tags-cloud::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--global-theme-color-rgb), 0.1) 0%,
+    transparent 70%
+  );
+  animation: rotate-gradient 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotate-gradient {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .tag-item {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.1rem;
   background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
-  border-radius: 20px;
+  border-radius: 24px;
   color: var(--global-text-color);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
 }
 
 .tag-item:hover {
-  background: var(--global-theme-color);
+  background: linear-gradient(135deg, 
+    var(--global-theme-color) 0%, 
+    var(--global-hover-color) 100%
+  );
   color: white;
-  border-color: var(--global-theme-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-color: transparent;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
 .tag-name {
@@ -147,16 +181,16 @@ nav_order: 6
 
 .tag-count {
   background: rgba(0,0,0,0.1);
-  padding: 0.2rem 0.5rem;
-  border-radius: 10px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  min-width: 1.5rem;
+  min-width: 1.8rem;
   text-align: center;
 }
 
 .tag-item:hover .tag-count {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.3);
 }
 
 /* 标签列表 */
@@ -181,7 +215,10 @@ nav_order: 6
 }
 
 .tag-count-badge {
-  background: var(--global-theme-color);
+  background: linear-gradient(135deg, 
+    var(--global-theme-color) 0%, 
+    var(--global-hover-color) 100%
+  );
   color: white;
   padding: 0.3rem 0.8rem;
   border-radius: 12px;
@@ -199,7 +236,7 @@ nav_order: 6
 .post-card {
   background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.5rem;
   transition: all 0.3s ease;
   display: flex;
@@ -207,8 +244,8 @@ nav_order: 6
 }
 
 .post-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transform: translateY(-4px);
   border-color: var(--global-theme-color);
 }
 
@@ -226,7 +263,7 @@ nav_order: 6
   background: var(--global-theme-color);
   color: white;
   padding: 0.25rem 0.7rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
 }
@@ -235,7 +272,7 @@ nav_order: 6
   background: var(--global-code-bg-color);
   color: var(--global-theme-color);
   padding: 0.25rem 0.7rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
   border: 1px solid var(--global-theme-color);
@@ -248,6 +285,7 @@ nav_order: 6
   margin: 0 0 0.75rem 0;
   font-size: 1.15rem;
   line-height: 1.4;
+  font-weight: 600;
 }
 
 .post-title a {
@@ -280,9 +318,15 @@ nav_order: 6
 .mini-tag {
   background: var(--global-code-bg-color);
   padding: 0.25rem 0.6rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.75rem;
   color: var(--global-text-color-light);
+  transition: all 0.2s;
+}
+
+.mini-tag:hover {
+  background: var(--global-theme-color);
+  color: white;
 }
 
 /* 响应式设计 */

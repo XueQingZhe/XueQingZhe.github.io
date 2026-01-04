@@ -13,10 +13,10 @@ nav_order: 5
   {% for series in tutorial_series %}
   <div class="tutorial-card">
     <div class="row g-0">
-      <!-- 左侧预览图 -->
+      <!-- 左侧预览图 - 带模糊背景效果 -->
       <div class="col-md-5">
         {% if series.image %}
-        <div class="tutorial-image-container">
+        <div class="tutorial-image-container" style="--preview-img: url('{{ series.image | relative_url }}')">
           <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="tutorial-preview-img">
         </div>
         {% else %}
@@ -120,42 +120,51 @@ nav_order: 5
   transform: translateY(-2px);
 }
 
-/* ========== 图片显示优化 ========== */
+/* ========== 模糊背景图片容器 ========== */
 .tutorial-image-container {
   width: 100%;
   height: 100%;
   min-height: 320px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
   position: relative;
   overflow: hidden;
+  background: #000;
 }
 
+/* 模糊背景层 */
+.tutorial-image-container::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background-image: var(--preview-img);
+  background-size: cover;
+  background-position: center;
+  filter: blur(25px) brightness(0.5);
+  transform: scale(1.1);
+  z-index: 0;
+}
+
+/* 清晰前景图片 */
 .tutorial-preview-img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: contain;  /* ← 改为 contain,完整显示图片 */
-  max-height: 400px;    /* ← 限制最大高度 */
-  transition: transform 0.3s ease;
+  object-fit: contain;
+  max-height: 90%;
+  padding: 1.5rem;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tutorial-card:hover .tutorial-preview-img {
-  transform: scale(1.05);  /* 悬停时轻微放大 */
+  transform: scale(1.05) translateY(-5px);
+  filter: drop-shadow(0 12px 24px rgba(0,0,0,0.7));
 }
 
-/* 如果你想要图片始终填满左侧,可以用这个版本 */
-/*
-.tutorial-preview-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-*/
-
+/* 占位图 */
 .placeholder-image {
   background: linear-gradient(135deg, var(--global-divider-color) 0%, var(--global-bg-color) 100%);
   height: 100%;
@@ -222,10 +231,17 @@ nav_order: 5
 .chapters-list li {
   padding: 0.5rem 0;
   border-bottom: 1px solid var(--global-divider-color);
+  transition: all 0.2s ease;
 }
 
 .chapters-list li:last-child {
   border-bottom: none;
+}
+
+.chapters-list li:hover {
+  padding-left: 0.5rem;
+  background: var(--global-code-bg-color);
+  border-radius: 4px;
 }
 
 .chapters-list li::before {
@@ -233,6 +249,11 @@ nav_order: 5
   color: var(--global-theme-color);
   margin-right: 0.75rem;
   font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+.chapters-list li:hover::before {
+  transform: translateX(3px);
 }
 
 .chapters-list a {
@@ -260,6 +281,12 @@ nav_order: 5
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 .bg-primary {
@@ -316,6 +343,8 @@ nav_order: 5
 .planned-item:hover {
   border-color: var(--global-theme-color);
   background: var(--global-code-bg-color);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .planned-icon {
@@ -336,7 +365,11 @@ nav_order: 5
   
   .tutorial-image-container,
   .placeholder-image {
-    min-height: 250px;
+    min-height: 280px;
+  }
+  
+  .tutorial-preview-img {
+    padding: 1rem;
   }
   
   .tutorial-content {
@@ -351,6 +384,13 @@ nav_order: 5
   
   .planned-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 暗色模式优化 */
+@media (prefers-color-scheme: dark) {
+  .tutorial-image-container::before {
+    filter: blur(25px) brightness(0.4);
   }
 }
 </style>

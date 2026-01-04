@@ -44,7 +44,40 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tags/";
           },
-        },{id: "post-理论支线-lightattenuation-衰减",
+        },{id: "post-unitytips-法线的空间变化",
+        
+          title: "UnityTips：法线的空间变化",
+        
+        description: "UnityTips：法线的空间变化",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/UnityTips-%E6%B3%95%E7%BA%BF%E7%9A%84%E7%A9%BA%E9%97%B4%E5%8F%98%E5%8C%96/";
+          
+        },
+      },{id: "post-unitytips-多subshder",
+        
+          title: "UnityTips：多SubShder",
+        
+        description: "UnityTips：多SubShder",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/UnityTips-%E5%A4%9ASubShder/";
+          
+        },
+      },{id: "post-unitytips-参数面板后面的-和属性标签",
+        
+          title: "UnityTips：参数面板后面的{}和属性标签",
+        
+        description: "UnityTips：参数面板后面的{}和属性标签",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/UnityTips-%E5%8F%82%E6%95%B0%E9%9D%A2%E6%9D%BF%E5%90%8E%E9%9D%A2%E7%9A%84-%E5%92%8C%E5%B1%9E%E6%80%A7%E6%A0%87%E7%AD%BE/";
+          
+        },
+      },{id: "post-理论支线-lightattenuation-衰减",
         
           title: "理论支线：LightAttenuation 衰减",
         

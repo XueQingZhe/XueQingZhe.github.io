@@ -37,8 +37,8 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tutorials/";
           },
-        },{id: "nav-tags",
-          title: "tags",
+        },{id: "nav-tagsfilters",
+          title: "tagsFilters",
           description: "按标签浏览所有文章和教程",
           section: "Navigation",
           handler: () => {

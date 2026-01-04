@@ -42,22 +42,18 @@ nav_order: 6
   <!-- Categories过滤 -->
   <div class="filter-group">
     <h4><i class="fas fa-folder"></i> 分类 (Categories)</h4>
-    <div class="filter-items">
+    <div class="filter-tags">
       {% for category in all_categories %}
-      <label class="filter-checkbox">
-        <input type="checkbox" class="category-filter" value="{{ category | slugify }}" onchange="applyFilters()">
-        <span class="checkmark"></span>
-        <span class="filter-label">{{ category }}</span>
-        <span class="filter-count">
-          {% assign count = 0 %}
-          {% for post in all_posts %}
-            {% if post.categories contains category %}
-              {% assign count = count | plus: 1 %}
-            {% endif %}
-          {% endfor %}
-          {{ count }}
-        </span>
-      </label>
+      {% assign count = 0 %}
+      {% for post in all_posts %}
+        {% if post.categories contains category %}
+          {% assign count = count | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+      <div class="filter-tag" data-type="category" data-value="{{ category | slugify }}" onclick="toggleFilter(this)">
+        <span class="tag-name">{{ category }}</span>
+        <span class="tag-count">{{ count }}</span>
+      </div>
       {% endfor %}
     </div>
   </div>
@@ -65,22 +61,18 @@ nav_order: 6
   <!-- Tags过滤 -->
   <div class="filter-group">
     <h4><i class="fas fa-tags"></i> 标签 (Tags)</h4>
-    <div class="filter-items">
+    <div class="filter-tags">
       {% for tag in all_tags %}
-      <label class="filter-checkbox">
-        <input type="checkbox" class="tag-filter" value="{{ tag | slugify }}" onchange="applyFilters()">
-        <span class="checkmark"></span>
-        <span class="filter-label">{{ tag }}</span>
-        <span class="filter-count">
-          {% assign count = 0 %}
-          {% for post in all_posts %}
-            {% if post.tags contains tag %}
-              {% assign count = count | plus: 1 %}
-            {% endif %}
-          {% endfor %}
-          {{ count }}
-        </span>
-      </label>
+      {% assign count = 0 %}
+      {% for post in all_posts %}
+        {% if post.tags contains tag %}
+          {% assign count = count | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+      <div class="filter-tag" data-type="tag" data-value="{{ tag | slugify }}" onclick="toggleFilter(this)">
+        <span class="tag-name">{{ tag }}</span>
+        <span class="tag-count">{{ count }}</span>
+      </div>
       {% endfor %}
     </div>
   </div>
@@ -88,52 +80,127 @@ nav_order: 6
 
 <hr>
 
-<!-- 文章列表 -->
-<div class="posts-grid">
-  {% for post in all_posts %}
-  {% assign sorted_posts = all_posts | sort: 'date' | reverse %}
+<!-- 标签列表(原有的展示方式) -->
+<div class="tags-list">
+  {% for category in all_categories %}
+    {% assign category_posts = "" | split: "" %}
+    {% for post in all_posts %}
+      {% if post.categories contains category %}
+        {% assign category_posts = category_posts | push: post %}
+      {% endif %}
+    {% endfor %}
+    
+    {% assign sorted_posts = category_posts | sort: 'date' | reverse %}
+    
+    <div class="tag-section" data-category="{{ category | slugify }}">
+      <h2 class="tag-title">
+        <i class="fas fa-folder"></i>
+        {{ category }}
+        <span class="tag-count-badge">{{ sorted_posts.size }} 篇</span>
+      </h2>
+      
+      <div class="posts-grid">
+        {% for post in sorted_posts %}
+        <article class="post-card" 
+          data-tags="{{ post.tags | join: ',' | slugify | split: ',' | join: ' ' }}"
+          data-categories="{{ post.categories | join: ',' | slugify | split: ',' | join: ' ' }}">
+          
+          <div class="post-meta">
+            <time datetime="{{ post.date | date_to_xmlschema }}">
+              <i class="far fa-calendar"></i>
+              {{ post.date | date: "%Y-%m-%d" }}
+            </time>
+            
+            {% if post.tutorial_series %}
+            <span class="post-series">
+              <i class="fas fa-book-open"></i>
+              {{ post.tutorial_series }}
+            </span>
+            {% endif %}
+          </div>
+          
+          <h3 class="post-title">
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          </h3>
+          
+          {% if post.description %}
+          <p class="post-description">{{ post.description | truncate: 100 }}</p>
+          {% endif %}
+          
+          <div class="post-tags">
+            {% for tag in post.tags limit:4 %}
+            <span class="mini-tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
   {% endfor %}
   
-  {% for post in sorted_posts %}
-  <article class="post-card" 
-    data-tags="{{ post.tags | join: ',' | slugify | split: ',' | join: ' ' }}"
-    data-categories="{{ post.categories | join: ',' | slugify | split: ',' | join: ' ' }}">
-    
-    <div class="post-meta">
-      <time datetime="{{ post.date | date_to_xmlschema }}">
-        <i class="far fa-calendar"></i>
-        {{ post.date | date: "%Y-%m-%d" }}
-      </time>
-      
-      {% if post.categories %}
-      <span class="post-category">
-        <i class="fas fa-folder"></i>
-        {{ post.categories | first }}
-      </span>
+  {% for tag in all_tags %}
+    {% assign tag_posts = "" | split: "" %}
+    {% for post in all_posts %}
+      {% if post.tags contains tag %}
+        {% assign tag_posts = tag_posts | push: post %}
       {% endif %}
+    {% endfor %}
+    
+    {% assign sorted_posts = tag_posts | sort: 'date' | reverse %}
+    
+    <div class="tag-section" data-tag="{{ tag | slugify }}">
+      <h2 class="tag-title">
+        <i class="fas fa-tag"></i>
+        {{ tag }}
+        <span class="tag-count-badge">{{ sorted_posts.size }} 篇</span>
+      </h2>
       
-      {% if post.tutorial_series %}
-      <span class="post-series">
-        <i class="fas fa-book-open"></i>
-        {{ post.tutorial_series }}
-      </span>
-      {% endif %}
+      <div class="posts-grid">
+        {% for post in sorted_posts %}
+        <article class="post-card"
+          data-tags="{{ post.tags | join: ',' | slugify | split: ',' | join: ' ' }}"
+          data-categories="{{ post.categories | join: ',' | slugify | split: ',' | join: ' ' }}">
+          
+          <div class="post-meta">
+            <time datetime="{{ post.date | date_to_xmlschema }}">
+              <i class="far fa-calendar"></i>
+              {{ post.date | date: "%Y-%m-%d" }}
+            </time>
+            
+            {% if post.categories %}
+            <span class="post-category">
+              <i class="fas fa-folder"></i>
+              {{ post.categories | first }}
+            </span>
+            {% endif %}
+            
+            {% if post.tutorial_series %}
+            <span class="post-series">
+              <i class="fas fa-book-open"></i>
+              {{ post.tutorial_series }}
+            </span>
+            {% endif %}
+          </div>
+          
+          <h3 class="post-title">
+            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          </h3>
+          
+          {% if post.description %}
+          <p class="post-description">{{ post.description | truncate: 100 }}</p>
+          {% endif %}
+          
+          <div class="post-tags">
+            {% for post_tag in post.tags limit:4 %}
+            {% if post_tag != tag %}
+            <span class="mini-tag">{{ post_tag }}</span>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
     </div>
-    
-    <h3 class="post-title">
-      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-    </h3>
-    
-    {% if post.description %}
-    <p class="post-description">{{ post.description | truncate: 100 }}</p>
-    {% endif %}
-    
-    <div class="post-tags">
-      {% for tag in post.tags limit:4 %}
-      <span class="mini-tag">{{ tag }}</span>
-      {% endfor %}
-    </div>
-  </article>
   {% endfor %}
 </div>
 
@@ -148,8 +215,8 @@ nav_order: 6
 /* ========== 过滤器区域 ========== */
 .filter-section {
   background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.01) 100%
   );
   border: 1px solid var(--global-divider-color);
   border-radius: 16px;
@@ -212,91 +279,99 @@ nav_order: 6
   gap: 0.5rem;
 }
 
-.filter-items {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
-/* 自定义复选框 */
-.filter-checkbox {
-  display: flex;
+/* 过滤标签 - 点击变亮 */
+.filter-tag {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
   background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
-  border-radius: 10px;
+  border-radius: 24px;
+  color: var(--global-text-color);
   cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.9rem;
   user-select: none;
 }
 
-.filter-checkbox:hover {
+.filter-tag:hover {
   background: var(--global-code-bg-color);
   border-color: var(--global-theme-color);
+  transform: translateY(-2px);
 }
 
-.filter-checkbox input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-}
-
-/* 自定义复选框样式 */
-.checkmark {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--global-divider-color);
-  border-radius: 6px;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.filter-checkbox input:checked ~ .checkmark {
+/* 选中状态 - 点亮 */
+.filter-tag.active {
   background: var(--global-theme-color);
-  border-color: var(--global-theme-color);
-}
-
-.filter-checkbox input:checked ~ .checkmark::after {
-  content: '✓';
   color: white;
-  font-size: 14px;
-  font-weight: bold;
+  border-color: var(--global-theme-color);
+  box-shadow: 0 4px 12px rgba(var(--global-theme-color-rgb), 0.4);
 }
 
-.filter-label {
-  flex-grow: 1;
-  font-size: 0.9rem;
-  color: var(--global-text-color);
+.tag-name {
+  font-weight: 500;
 }
 
-.filter-count {
-  background: var(--global-code-bg-color);
-  color: var(--global-text-color-light);
+.tag-count {
+  background: rgba(0,0,0,0.1);
   padding: 0.2rem 0.6rem;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  min-width: 2rem;
+  min-width: 1.8rem;
   text-align: center;
 }
 
-.filter-checkbox input:checked ~ .filter-count {
-  background: var(--global-theme-color);
-  color: white;
+.filter-tag.active .tag-count {
+  background: rgba(255,255,255,0.3);
 }
 
-/* ========== 文章网格 ========== */
+/* ========== 标签列表 ========== */
+.tags-list {
+  margin-top: 3rem;
+}
+
+.tag-section {
+  margin-bottom: 4rem;
+  scroll-margin-top: 100px;
+}
+
+.tag-section.hidden {
+  display: none;
+}
+
+.tag-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: var(--global-theme-color);
+  font-size: 1.75rem;
+  border-bottom: 2px solid var(--global-theme-color);
+  padding-bottom: 0.5rem;
+}
+
+.tag-count-badge {
+  background: var(--global-theme-color);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 文章网格 */
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
-  margin: 2rem 0;
 }
 
 .post-card {
@@ -415,8 +490,13 @@ nav_order: 6
 
 /* 响应式 */
 @media (max-width: 768px) {
-  .filter-items {
-    grid-template-columns: 1fr;
+  .filter-tags {
+    gap: 0.5rem;
+  }
+  
+  .filter-tag {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.9rem;
   }
   
   .posts-grid {
@@ -436,49 +516,52 @@ nav_order: 6
 </style>
 
 <script>
-// 过滤功能
+// 切换过滤器
+function toggleFilter(element) {
+  element.classList.toggle('active');
+  applyFilters();
+}
+
+// 应用过滤
 function applyFilters() {
-  const selectedTags = Array.from(document.querySelectorAll('.tag-filter:checked'))
-    .map(cb => cb.value);
-  const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked'))
-    .map(cb => cb.value);
+  const selectedTags = Array.from(document.querySelectorAll('.filter-tag[data-type="tag"].active'))
+    .map(el => el.dataset.value);
+  const selectedCategories = Array.from(document.querySelectorAll('.filter-tag[data-type="category"].active'))
+    .map(el => el.dataset.value);
   
-  const posts = document.querySelectorAll('.post-card');
-  let visibleCount = 0;
+  const sections = document.querySelectorAll('.tag-section');
+  let hasVisibleSection = false;
   
-  posts.forEach(post => {
-    const postTags = (post.dataset.tags || '').split(' ').filter(Boolean);
-    const postCategories = (post.dataset.categories || '').split(' ').filter(Boolean);
+  sections.forEach(section => {
+    const sectionTag = section.dataset.tag;
+    const sectionCategory = section.dataset.category;
     
-    let showPost = true;
+    let showSection = true;
     
-    // 如果选择了categories,必须匹配至少一个
-    if (selectedCategories.length > 0) {
-      const categoryMatch = selectedCategories.some(cat => 
-        postCategories.includes(cat)
-      );
-      if (!categoryMatch) showPost = false;
+    // 如果有筛选条件
+    if (selectedTags.length > 0 || selectedCategories.length > 0) {
+      showSection = false;
+      
+      // 检查是否匹配
+      if (sectionTag && selectedTags.includes(sectionTag)) {
+        showSection = true;
+      }
+      if (sectionCategory && selectedCategories.includes(sectionCategory)) {
+        showSection = true;
+      }
     }
     
-    // 如果选择了tags,必须匹配至少一个
-    if (selectedTags.length > 0) {
-      const tagMatch = selectedTags.some(tag => 
-        postTags.includes(tag)
-      );
-      if (!tagMatch) showPost = false;
-    }
-    
-    if (showPost) {
-      post.classList.remove('hidden');
-      visibleCount++;
+    if (showSection) {
+      section.classList.remove('hidden');
+      hasVisibleSection = true;
     } else {
-      post.classList.add('hidden');
+      section.classList.add('hidden');
     }
   });
   
   // 显示/隐藏无结果提示
   const noResults = document.querySelector('.no-results');
-  if (visibleCount === 0) {
+  if (!hasVisibleSection && (selectedTags.length > 0 || selectedCategories.length > 0)) {
     noResults.style.display = 'block';
   } else {
     noResults.style.display = 'none';
@@ -487,8 +570,8 @@ function applyFilters() {
 
 // 清除所有筛选
 function clearAllFilters() {
-  document.querySelectorAll('.tag-filter, .category-filter').forEach(cb => {
-    cb.checked = false;
+  document.querySelectorAll('.filter-tag.active').forEach(el => {
+    el.classList.remove('active');
   });
   applyFilters();
 }

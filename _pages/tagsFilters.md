@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /tags/
-title: tags
+title: tagsFilters
 description: 按标签浏览所有文章和教程
 nav: true
 nav_order: 6

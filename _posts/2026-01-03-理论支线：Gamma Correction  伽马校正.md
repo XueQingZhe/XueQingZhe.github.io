@@ -3,7 +3,7 @@ layout: post
 title: 理论支线：Gamma Correction  伽马校正
 date: 2026-01-03
 description: 理论支线：Gamma Correction  伽马校正
-tags: [shader，rendering]
+tags: [shader,rendering]
 categories: [TAMonth01]
 featured: true
 toc:

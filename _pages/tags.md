@@ -11,7 +11,6 @@ nav_order: 6
 {% assign all_tags = "" | split: "" %}
 {% assign all_categories = "" | split: "" %}
 
-{% comment %} 收集所有标签和分类 {% endcomment %}
 {% for post in all_posts %}
   {% if post.tags %}
     {% for tag in post.tags %}
@@ -30,18 +29,29 @@ nav_order: 6
   {% endif %}
 {% endfor %}
 
+<!-- 页面头部 -->
+<div class="tags-hero">
+  <div class="hero-content">
+    <h1 class="hero-title">
+      <i class="fas fa-filter"></i>
+      筛选文章
+    </h1>
+    <p class="hero-subtitle">通过分类和标签快速找到你感兴趣的内容</p>
+  </div>
+  <button class="clear-filters-hero" onclick="clearAllFilters()">
+    <i class="fas fa-redo-alt"></i>
+    <span>清除筛选</span>
+  </button>
+</div>
+
 <!-- 过滤器区域 -->
 <div class="filter-section">
-  <div class="filter-header">
-    <h3><i class="fas fa-filter"></i> 筛选文章</h3>
-    <button class="clear-filters" onclick="clearAllFilters()">
-      <i class="fas fa-times-circle"></i> 清除筛选
-    </button>
-  </div>
-  
-  <!-- Categories过滤 -->
+  <!-- Categories -->
   <div class="filter-group">
-    <h4><i class="fas fa-folder"></i> 分类 (Categories)</h4>
+    <div class="filter-group-header">
+      <h3><i class="fas fa-folder-open"></i> 分类</h3>
+      <span class="filter-count">{{ all_categories.size }} 个分类</span>
+    </div>
     <div class="filter-tags">
       {% for category in all_categories %}
       {% assign count = 0 %}
@@ -50,7 +60,8 @@ nav_order: 6
           {% assign count = count | plus: 1 %}
         {% endif %}
       {% endfor %}
-      <div class="filter-tag" data-type="category" data-value="{{ category | slugify }}" onclick="toggleFilter(this)">
+      <div class="filter-tag category-tag" data-type="category" data-value="{{ category | slugify }}" onclick="toggleFilter(this)">
+        <span class="tag-icon"><i class="fas fa-folder"></i></span>
         <span class="tag-name">{{ category }}</span>
         <span class="tag-count">{{ count }}</span>
       </div>
@@ -58,9 +69,12 @@ nav_order: 6
     </div>
   </div>
   
-  <!-- Tags过滤 -->
+  <!-- Tags -->
   <div class="filter-group">
-    <h4><i class="fas fa-tags"></i> 标签 (Tags)</h4>
+    <div class="filter-group-header">
+      <h3><i class="fas fa-tags"></i> 标签</h3>
+      <span class="filter-count">{{ all_tags.size }} 个标签</span>
+    </div>
     <div class="filter-tags">
       {% for tag in all_tags %}
       {% assign count = 0 %}
@@ -69,7 +83,8 @@ nav_order: 6
           {% assign count = count | plus: 1 %}
         {% endif %}
       {% endfor %}
-      <div class="filter-tag" data-type="tag" data-value="{{ tag | slugify }}" onclick="toggleFilter(this)">
+      <div class="filter-tag tag-tag" data-type="tag" data-value="{{ tag | slugify }}" onclick="toggleFilter(this)">
+        <span class="tag-icon"><i class="fas fa-tag"></i></span>
         <span class="tag-name">{{ tag }}</span>
         <span class="tag-count">{{ count }}</span>
       </div>
@@ -78,9 +93,14 @@ nav_order: 6
   </div>
 </div>
 
-<hr>
+<div class="results-divider">
+  <span class="results-text">
+    <i class="fas fa-arrow-down"></i>
+    筛选结果
+  </span>
+</div>
 
-<!-- 标签列表(原有的展示方式) -->
+<!-- 标签列表 -->
 <div class="tags-list">
   {% for category in all_categories %}
     {% assign category_posts = "" | split: "" %}
@@ -93,11 +113,13 @@ nav_order: 6
     {% assign sorted_posts = category_posts | sort: 'date' | reverse %}
     
     <div class="tag-section" data-category="{{ category | slugify }}">
-      <h2 class="tag-title">
-        <i class="fas fa-folder"></i>
-        {{ category }}
-        <span class="tag-count-badge">{{ sorted_posts.size }} 篇</span>
-      </h2>
+      <div class="section-header">
+        <h2 class="tag-title">
+          <span class="title-icon"><i class="fas fa-folder-open"></i></span>
+          <span class="title-text">{{ category }}</span>
+          <span class="tag-count-badge">{{ sorted_posts.size }}</span>
+        </h2>
+      </div>
       
       <div class="posts-grid">
         {% for post in sorted_posts %}
@@ -105,12 +127,13 @@ nav_order: 6
           data-tags="{{ post.tags | join: ',' | slugify | split: ',' | join: ' ' }}"
           data-categories="{{ post.categories | join: ',' | slugify | split: ',' | join: ' ' }}">
           
+          <div class="card-accent"></div>
+          
           <div class="post-meta">
             <time datetime="{{ post.date | date_to_xmlschema }}">
-              <i class="far fa-calendar"></i>
+              <i class="far fa-calendar-alt"></i>
               {{ post.date | date: "%Y-%m-%d" }}
             </time>
-            
             {% if post.tutorial_series %}
             <span class="post-series">
               <i class="fas fa-book-open"></i>
@@ -129,7 +152,10 @@ nav_order: 6
           
           <div class="post-tags">
             {% for tag in post.tags limit:4 %}
-            <span class="mini-tag">{{ tag }}</span>
+            <span class="mini-tag">
+              <i class="fas fa-hashtag"></i>
+              {{ tag }}
+            </span>
             {% endfor %}
           </div>
         </article>
@@ -149,11 +175,13 @@ nav_order: 6
     {% assign sorted_posts = tag_posts | sort: 'date' | reverse %}
     
     <div class="tag-section" data-tag="{{ tag | slugify }}">
-      <h2 class="tag-title">
-        <i class="fas fa-tag"></i>
-        {{ tag }}
-        <span class="tag-count-badge">{{ sorted_posts.size }} 篇</span>
-      </h2>
+      <div class="section-header">
+        <h2 class="tag-title">
+          <span class="title-icon"><i class="fas fa-tag"></i></span>
+          <span class="title-text">{{ tag }}</span>
+          <span class="tag-count-badge">{{ sorted_posts.size }}</span>
+        </h2>
+      </div>
       
       <div class="posts-grid">
         {% for post in sorted_posts %}
@@ -161,23 +189,17 @@ nav_order: 6
           data-tags="{{ post.tags | join: ',' | slugify | split: ',' | join: ' ' }}"
           data-categories="{{ post.categories | join: ',' | slugify | split: ',' | join: ' ' }}">
           
+          <div class="card-accent"></div>
+          
           <div class="post-meta">
             <time datetime="{{ post.date | date_to_xmlschema }}">
-              <i class="far fa-calendar"></i>
+              <i class="far fa-calendar-alt"></i>
               {{ post.date | date: "%Y-%m-%d" }}
             </time>
-            
             {% if post.categories %}
             <span class="post-category">
               <i class="fas fa-folder"></i>
               {{ post.categories | first }}
-            </span>
-            {% endif %}
-            
-            {% if post.tutorial_series %}
-            <span class="post-series">
-              <i class="fas fa-book-open"></i>
-              {{ post.tutorial_series }}
             </span>
             {% endif %}
           </div>
@@ -193,7 +215,10 @@ nav_order: 6
           <div class="post-tags">
             {% for post_tag in post.tags limit:4 %}
             {% if post_tag != tag %}
-            <span class="mini-tag">{{ post_tag }}</span>
+            <span class="mini-tag">
+              <i class="fas fa-hashtag"></i>
+              {{ post_tag }}
+            </span>
             {% endif %}
             {% endfor %}
           </div>
@@ -206,77 +231,147 @@ nav_order: 6
 
 <!-- 无结果提示 -->
 <div class="no-results" style="display: none;">
-  <i class="fas fa-search fa-3x"></i>
+  <div class="no-results-icon">
+    <i class="fas fa-search"></i>
+  </div>
   <h3>未找到匹配的文章</h3>
-  <p>请尝试调整筛选条件</p>
+  <p>试试调整筛选条件,或者
+    <button onclick="clearAllFilters()" class="inline-clear-btn">清除所有筛选</button>
+  </p>
 </div>
 
 <style>
-/* ========== 过滤器区域 ========== */
-.filter-section {
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
-  border: 1px solid var(--global-divider-color);
-  border-radius: 16px;
-  padding: 2rem;
-  margin: 2rem 0;
-}
-
-.filter-header {
+/* ========== 页面头部 ========== */
+.tags-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--global-divider-color);
+  padding: 2.5rem 2rem;
+  margin: -1rem -1rem 2rem;
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.08) 0%,
+    rgba(var(--global-theme-color-rgb), 0.03) 100%
+  );
+  border-radius: 16px;
+  border: 1px solid rgba(var(--global-theme-color-rgb), 0.2);
+  position: relative;
+  overflow: hidden;
 }
 
-.filter-header h3 {
-  margin: 0;
-  color: var(--global-theme-color);
+.tags-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 40%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--global-theme-color-rgb), 0.1) 0%,
+    transparent 70%
+  );
+  animation: float 20s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(135deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-.clear-filters {
-  background: transparent;
-  border: 1px solid var(--global-divider-color);
-  color: var(--global-text-color);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+.hero-subtitle {
+  color: var(--global-text-color-light);
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.clear-filters-hero {
+  background: var(--global-theme-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  gap: 0.6rem;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(var(--global-theme-color-rgb), 0.3);
+  position: relative;
+  z-index: 1;
 }
 
-.clear-filters:hover {
-  background: var(--global-theme-color);
-  color: white;
-  border-color: var(--global-theme-color);
+.clear-filters-hero:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--global-theme-color-rgb), 0.4);
 }
 
-/* 过滤组 */
+/* ========== 过滤器区域 ========== */
+.filter-section {
+  background: var(--global-bg-color);
+  border: 1px solid var(--global-divider-color);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
 .filter-group {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .filter-group:last-child {
   margin-bottom: 0;
 }
 
-.filter-group h4 {
-  color: var(--global-text-color);
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
+.filter-group-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--global-divider-color);
+}
+
+.filter-group-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--global-text-color);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+}
+
+.filter-count {
+  background: var(--global-code-bg-color);
+  color: var(--global-text-color-light);
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .filter-tags {
@@ -285,59 +380,131 @@ nav_order: 6
   gap: 0.75rem;
 }
 
-/* 过滤标签 - 点击变亮 */
+/* 过滤标签样式 */
 .filter-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.1rem;
+  gap: 0.6rem;
+  padding: 0.7rem 1.2rem;
   background: var(--global-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 24px;
-  color: var(--global-text-color);
+  border: 2px solid var(--global-divider-color);
+  border-radius: 28px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.9rem;
   user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.filter-tag > * {
+  position: relative;
+  z-index: 1;
 }
 
 .filter-tag:hover {
-  background: var(--global-code-bg-color);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
   border-color: var(--global-theme-color);
-  transform: translateY(-2px);
 }
 
-/* 选中状态 - 点亮 */
 .filter-tag.active {
-  background: var(--global-theme-color);
-  color: white;
   border-color: var(--global-theme-color);
-  box-shadow: 0 4px 12px rgba(var(--global-theme-color-rgb), 0.4);
+  box-shadow: 0 8px 20px rgba(var(--global-theme-color-rgb), 0.3);
+}
+
+.filter-tag.active::before {
+  opacity: 1;
+}
+
+.filter-tag.active .tag-icon,
+.filter-tag.active .tag-name,
+.filter-tag.active .tag-count {
+  color: white;
+}
+
+.tag-icon {
+  font-size: 1.1rem;
+  color: var(--global-theme-color);
+  transition: color 0.3s;
 }
 
 .tag-name {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--global-text-color);
+  transition: color 0.3s;
 }
 
 .tag-count {
-  background: rgba(0,0,0,0.1);
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
+  background: var(--global-code-bg-color);
+  color: var(--global-text-color-light);
+  padding: 0.25rem 0.7rem;
+  border-radius: 14px;
   font-size: 0.8rem;
-  font-weight: 600;
-  min-width: 1.8rem;
+  font-weight: 700;
+  min-width: 2rem;
   text-align: center;
+  transition: all 0.3s;
 }
 
 .filter-tag.active .tag-count {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.25);
 }
 
-/* ========== 标签列表 ========== */
-.tags-list {
-  margin-top: 3rem;
+/* ========== 分隔线 ========== */
+.results-divider {
+  text-align: center;
+  margin: 3rem 0;
+  position: relative;
 }
 
+.results-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--global-divider-color);
+}
+
+.results-text {
+  display: inline-block;
+  background: var(--global-bg-color);
+  padding: 0.5rem 1.5rem;
+  color: var(--global-text-color-light);
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--global-divider-color);
+  border-radius: 20px;
+}
+
+.results-text i {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* ========== 标签section ========== */
 .tag-section {
   margin-bottom: 4rem;
   scroll-margin-top: 100px;
@@ -347,27 +514,56 @@ nav_order: 6
   display: none;
 }
 
+.section-header {
+  margin-bottom: 2rem;
+}
+
 .tag-title {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin: 0;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid var(--global-theme-color);
+  position: relative;
+}
+
+.tag-title::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100px;
+  height: 3px;
+  background: var(--global-hover-color);
+}
+
+.title-icon {
+  font-size: 1.5rem;
   color: var(--global-theme-color);
+}
+
+.title-text {
   font-size: 1.75rem;
-  border-bottom: 2px solid var(--global-theme-color);
-  padding-bottom: 0.5rem;
+  font-weight: 700;
+  color: var(--global-text-color);
 }
 
 .tag-count-badge {
-  background: var(--global-theme-color);
+  background: linear-gradient(135deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
   color: white;
-  padding: 0.3rem 0.8rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 0.4rem 1rem;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-left: auto;
+  box-shadow: 0 2px 8px rgba(var(--global-theme-color-rgb), 0.3);
 }
 
-/* 文章网格 */
+/* ========== 文章卡片 ========== */
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -377,20 +573,38 @@ nav_order: 6
 .post-card {
   background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
+  border-radius: 16px;
+  padding: 1.75rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
-.post-card.hidden {
-  display: none;
+/* 卡片装饰条 */
+.card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-card:hover .card-accent {
+  transform: scaleX(1);
 }
 
 .post-card:hover {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
   border-color: var(--global-theme-color);
 }
 
@@ -398,48 +612,45 @@ nav_order: 6
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   font-size: 0.85rem;
   color: var(--global-text-color-light);
   flex-wrap: wrap;
 }
 
-.post-category {
-  background: var(--global-theme-color);
-  color: white;
-  padding: 0.25rem 0.7rem;
-  border-radius: 6px;
+.post-category,
+.post-series {
+  background: var(--global-code-bg-color);
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.3rem;
+}
+
+.post-category {
+  color: var(--global-theme-color);
+  border: 1px solid rgba(var(--global-theme-color-rgb), 0.3);
 }
 
 .post-series {
-  background: var(--global-code-bg-color);
-  color: var(--global-theme-color);
-  padding: 0.25rem 0.7rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border: 1px solid var(--global-theme-color);
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
+  color: var(--global-hover-color);
+  border: 1px solid rgba(var(--global-hover-color-rgb), 0.3);
 }
 
 .post-title {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.15rem;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
   line-height: 1.4;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .post-title a {
   color: var(--global-text-color);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.3s;
 }
 
 .post-title a:hover {
@@ -448,9 +659,9 @@ nav_order: 6
 
 .post-description {
   color: var(--global-text-color-light);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
   flex-grow: 1;
 }
 
@@ -459,70 +670,113 @@ nav_order: 6
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: auto;
-  padding-top: 0.75rem;
+  padding-top: 1rem;
   border-top: 1px solid var(--global-divider-color);
 }
 
 .mini-tag {
   background: var(--global-code-bg-color);
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
   font-size: 0.75rem;
   color: var(--global-text-color-light);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s;
 }
 
-/* 无结果提示 */
+.mini-tag:hover {
+  background: var(--global-theme-color);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ========== 无结果提示 ========== */
 .no-results {
   text-align: center;
-  padding: 4rem 2rem;
-  color: var(--global-text-color-light);
+  padding: 5rem 2rem;
 }
 
-.no-results i {
+.no-results-icon {
+  font-size: 4rem;
   color: var(--global-divider-color);
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
 }
 
 .no-results h3 {
   color: var(--global-text-color);
-  margin: 1rem 0 0.5rem;
+  margin: 0 0 0.75rem;
+  font-size: 1.5rem;
 }
 
-/* 响应式 */
+.no-results p {
+  color: var(--global-text-color-light);
+  font-size: 1.05rem;
+}
+
+.inline-clear-btn {
+  background: none;
+  border: none;
+  color: var(--global-theme-color);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  font-weight: 600;
+}
+
+.inline-clear-btn:hover {
+  color: var(--global-hover-color);
+}
+
+/* ========== 响应式 ========== */
 @media (max-width: 768px) {
-  .filter-tags {
-    gap: 0.5rem;
+  .tags-hero {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem 1.5rem;
   }
   
-  .filter-tag {
-    font-size: 0.85rem;
-    padding: 0.5rem 0.9rem;
-  }
-  
-  .posts-grid {
-    grid-template-columns: 1fr;
+  .hero-title {
+    font-size: 1.5rem;
   }
   
   .filter-section {
     padding: 1.5rem;
   }
   
-  .filter-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+  .filter-tags {
+    gap: 0.5rem;
+  }
+  
+  .filter-tag {
+    font-size: 0.85rem;
+    padding: 0.6rem 1rem;
+  }
+  
+  .posts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tag-title .title-text {
+    font-size: 1.4rem;
   }
 }
 </style>
 
 <script>
-// 切换过滤器
 function toggleFilter(element) {
   element.classList.toggle('active');
   applyFilters();
 }
 
-// 应用过滤
 function applyFilters() {
   const selectedTags = Array.from(document.querySelectorAll('.filter-tag[data-type="tag"].active'))
     .map(el => el.dataset.value);
@@ -538,11 +792,9 @@ function applyFilters() {
     
     let showSection = true;
     
-    // 如果有筛选条件
     if (selectedTags.length > 0 || selectedCategories.length > 0) {
       showSection = false;
       
-      // 检查是否匹配
       if (sectionTag && selectedTags.includes(sectionTag)) {
         showSection = true;
       }
@@ -559,7 +811,6 @@ function applyFilters() {
     }
   });
   
-  // 显示/隐藏无结果提示
   const noResults = document.querySelector('.no-results');
   if (!hasVisibleSection && (selectedTags.length > 0 || selectedCategories.length > 0)) {
     noResults.style.display = 'block';
@@ -568,7 +819,6 @@ function applyFilters() {
   }
 }
 
-// 清除所有筛选
 function clearAllFilters() {
   document.querySelectorAll('.filter-tag.active').forEach(el => {
     el.classList.remove('active');

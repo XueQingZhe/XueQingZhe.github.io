@@ -28,15 +28,6 @@ pagination:
   </div>
 {% endif %}
 
-<!-- 隐藏顶部标签/分类列表 -->
-{% comment %}
-{% if site.display_tags and site.display_tags.size > 0 or site.display_categories and site.display_categories.size > 0 %}
-  <div class="tag-category-list" style="display: none;">
-    ...
-  </div>
-{% endif %}
-{% endcomment %}
-
 {% assign featured_posts = site.posts | where: "featured", "true" %}
 {% if featured_posts.size > 0 %}
 <br>
@@ -46,7 +37,7 @@ pagination:
 {% for post in featured_posts %}
 <div class="col mb-4">
 <a href="{{ post.url | relative_url }}">
-<div class="card hoverable">
+<div class="card hoverable featured-card">
 <div class="row g-0">
 <div class="col-md-12">
 <div class="card-body">
@@ -97,11 +88,24 @@ pagination:
     {% assign tags = post.tags | join: "" %}
     {% assign categories = post.categories | join: "" %}
 
-    <li>
+    <li class="blog-post-item">
 {% if post.thumbnail %}
 <div class="row">
           <div class="col-sm-9">
 {% endif %}
+        <div class="post-header">
+          <span class="post-date">
+            <i class="far fa-calendar-alt"></i>
+            {{ post.date | date: '%B %d, %Y' }}
+          </span>
+          {% if categories != "" %}
+          <span class="post-category-badge">
+            <i class="fas fa-folder"></i>
+            {{ post.categories | first }}
+          </span>
+          {% endif %}
+        </div>
+        
         <h3>
         {% if post.redirect == blank %}
           <a class="post-title" href="{{ post.url | relative_url }}">{{ post.title }}</a>
@@ -114,45 +118,26 @@ pagination:
           <a class="post-title" href="{{ post.redirect | relative_url }}">{{ post.title }}</a>
         {% endif %}
       </h3>
-      <p>{{ post.description }}</p>
-      <p class="post-meta">
-        {{ read_time }} min read &nbsp; &middot; &nbsp;
-        {{ post.date | date: '%B %d, %Y' }}
-        {% if post.external_source %}
-        &nbsp; &middot; &nbsp; {{ post.external_source }}
-        {% endif %}
-      </p>
       
-      <!-- 隐藏底部的标签/分类 -->
-      <p class="post-tags" style="display: none;">
-        <a href="{{ year | prepend: '/blog/' | relative_url }}">
-          <i class="fa-solid fa-calendar fa-sm"></i> {{ year }} </a>
-          {% if tags != "" %}
-          &nbsp; &middot; &nbsp;
-            {% for tag in post.tags %}
-            <a href="{{ tag | slugify | prepend: '/blog/tag/' | relative_url }}">
-              <i class="fa-solid fa-hashtag fa-sm"></i> {{ tag }}</a>
-              {% unless forloop.last %}
-                &nbsp;
-              {% endunless %}
-              {% endfor %}
-          {% endif %}
-          {% if categories != "" %}
-          &nbsp; &middot; &nbsp;
-            {% for category in post.categories %}
-            <a href="{{ category | slugify | prepend: '/blog/category/' | relative_url }}">
-              <i class="fa-solid fa-tag fa-sm"></i> {{ category }}</a>
-              {% unless forloop.last %}
-                &nbsp;
-              {% endunless %}
-              {% endfor %}
-          {% endif %}
-    </p>
+      <p class="post-description">{{ post.description }}</p>
+      
+      <div class="post-footer">
+        <span class="read-time">
+          <i class="far fa-clock"></i>
+          {{ read_time }} min read
+        </span>
+        {% if post.external_source %}
+        <span class="external-source">
+          <i class="fas fa-external-link-alt"></i>
+          {{ post.external_source }}
+        </span>
+        {% endif %}
+      </div>
 
 {% if post.thumbnail %}
 </div>
   <div class="col-sm-3">
-    <img class="card-img" src="{{ post.thumbnail | relative_url }}" style="object-fit: cover; height: 90%" alt="image">
+    <img class="card-img post-thumbnail" src="{{ post.thumbnail | relative_url }}" alt="image">
   </div>
 </div>
 {% endif %}
@@ -167,117 +152,286 @@ pagination:
 </div>
 
 <style>
-/* ========== 优化Blog文章列表样式 ========== */
-
-/* 隐藏顶部标签分类列表 */
-.tag-category-list {
-  display: none !important;
-}
-
-/* 文章列表优化 */
-.post-list {
-  list-style: none;
-  padding: 0;
-}
-
-.post-list > li {
-  background: var(--global-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 12px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* ========== 页面整体优化 ========== */
+.header-bar {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
   position: relative;
 }
 
-/* 顶部彩色条 */
-.post-list > li::before {
+.header-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    var(--global-theme-color) 50%,
+    transparent 100%
+  );
+}
+
+.header-bar h1 {
+  background: linear-gradient(135deg, 
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* ========== 特色文章卡片 ========== */
+.featured-card {
+  border-radius: 16px;
+  border: 2px solid var(--global-divider-color);
+  background: var(--global-bg-color);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.featured-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, 
-    var(--global-theme-color) 0%, 
+  background: linear-gradient(90deg,
+    var(--global-theme-color) 0%,
     var(--global-hover-color) 100%
   );
-  border-radius: 12px 12px 0 0;
+}
+
+.featured-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  border-color: var(--global-theme-color);
+}
+
+.featured-card .card-title {
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+/* ========== 文章列表优化 ========== */
+.post-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.blog-post-item {
+  background: var(--global-bg-color);
+  border: 1px solid var(--global-divider-color);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 左侧彩色装饰条 */
+.blog-post-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
   opacity: 0;
   transition: opacity 0.3s;
 }
 
-.post-list > li:hover::before {
+.blog-post-item:hover::before {
   opacity: 1;
 }
 
-.post-list > li:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+/* 背景渐变效果 */
+.blog-post-item::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--global-theme-color-rgb), 0.03) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.blog-post-item:hover::after {
+  opacity: 1;
+}
+
+.blog-post-item:hover {
+  transform: translateX(8px);
+  box-shadow: -4px 8px 32px rgba(0,0,0,0.12);
   border-color: var(--global-theme-color);
 }
 
-/* 标题样式 */
-.post-list h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
+/* 文章头部 */
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
-  line-height: 1.3;
+  flex-wrap: wrap;
 }
 
-.post-list .post-title {
-  color: var(--global-text-color);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.post-list .post-title:hover {
-  color: var(--global-theme-color);
-}
-
-/* 描述文字 */
-.post-list > li > p {
-  color: var(--global-text-color-light);
-  font-size: 1rem;
-  line-height: 1.7;
-  margin-bottom: 1rem;
-}
-
-/* 元信息 */
-.post-list .post-meta {
+.post-date {
   font-size: 0.9rem;
   color: var(--global-text-color-light);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
-/* 特色文章卡片优化 */
-.featured-posts .card {
+.post-category-badge {
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.15) 0%,
+    rgba(var(--global-theme-color-rgb), 0.25) 100%
+  );
+  color: var(--global-theme-color);
+  padding: 0.3rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(var(--global-theme-color-rgb), 0.3);
+}
+
+/* 标题 */
+.blog-post-item h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0.5rem 0 1rem;
+  line-height: 1.3;
+}
+
+.blog-post-item .post-title {
+  color: var(--global-text-color);
+  text-decoration: none;
+  transition: all 0.3s;
+  background: linear-gradient(
+    to right,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  background-size: 0% 2px;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+}
+
+.blog-post-item:hover .post-title {
+  color: var(--global-theme-color);
+  background-size: 100% 2px;
+}
+
+/* 描述文字 */
+.post-description {
+  color: var(--global-text-color-light);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+/* 文章底部 */
+.post-footer {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--global-divider-color);
+  font-size: 0.9rem;
+  color: var(--global-text-color-light);
+}
+
+.read-time,
+.external-source {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* 缩略图 */
+.post-thumbnail {
   border-radius: 12px;
+  object-fit: cover;
+  height: 200px;
+  width: 100%;
+  transition: transform 0.4s;
+}
+
+.blog-post-item:hover .post-thumbnail {
+  transform: scale(1.05);
+}
+
+/* 分页样式优化 */
+.pagination {
+  margin: 3rem 0;
+}
+
+.pagination .page-item {
+  margin: 0 0.25rem;
+}
+
+.pagination .page-link {
+  border-radius: 8px;
   border: 1px solid var(--global-divider-color);
+  color: var(--global-text-color);
+  padding: 0.5rem 1rem;
   transition: all 0.3s;
 }
 
-.featured-posts .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+.pagination .page-link:hover {
+  background: var(--global-theme-color);
+  color: white;
   border-color: var(--global-theme-color);
+  transform: translateY(-2px);
 }
 
-.featured-posts .card-title {
-  font-weight: 600;
-  color: var(--global-text-color);
+.pagination .page-item.active .page-link {
+  background: var(--global-theme-color);
+  border-color: var(--global-theme-color);
 }
 
 /* 响应式 */
 @media (max-width: 768px) {
-  .post-list > li {
+  .blog-post-item {
     padding: 1.5rem;
   }
   
-  .post-list h3 {
+  .blog-post-item h3 {
     font-size: 1.3rem;
+  }
+  
+  .blog-post-item:hover {
+    transform: translateX(4px);
+  }
+  
+  .post-thumbnail {
+    height: 150px;
   }
 }
 </style>

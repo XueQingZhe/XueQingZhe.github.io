@@ -3,7 +3,7 @@ layout: post
 title: 理论支线：LightAttenuation 衰减
 date: 2026-01-03
 description: 理论支线：LightAttenuation 衰减
-tags: [shader，rendering]
+tags: [shader,rendering]
 categories: [TAMonth01]
 featured: true
 toc:

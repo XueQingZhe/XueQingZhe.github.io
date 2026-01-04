@@ -154,6 +154,7 @@ collections:
     output: true
   tutorials:
     output: true
+    permalink: /tutorials/:path/
 # -----------------------------------------------------------------------------
 # Jekyll settings
 # -----------------------------------------------------------------------------
@@ -230,6 +231,14 @@ defaults:
   #     layout: post
   #     images:
   #       photoswipe: true
+  - scope:
+      path: ""
+      type: tutorials
+    values:
+      layout: post  # ← 默认使用 post 布局
+      comments: true
+      toc:
+        sidebar: left
 sass:
   style: compressed
 

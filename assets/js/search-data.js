@@ -37,6 +37,13 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tutorials/";
           },
+        },{id: "nav-tags",
+          title: "tags",
+          description: "按标签浏览所有文章和教程",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/tags/";
+          },
         },{id: "post-理论支线-lightattenuation-衰减",
         
           title: "理论支线：LightAttenuation 衰减",

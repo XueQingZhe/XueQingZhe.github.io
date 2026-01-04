@@ -1,0 +1,15 @@
+# _data/tutorials.yml
+
+- title: "Blender-绝区零角色渲染"
+  description: "深入学习如何在Blender中复刻绝区零的角色渲染效果，涵盖模型处理、光照设置和最终渲染输出"
+  base_url: "/tutorials/ZZZRendering"
+  image: "/assets/img/tutorials/UUEB.png"  # 可选
+  status: "更新中"
+  status_color: "primary"
+  chapters:
+    - file: "01_Blender复刻和模型处理.md"
+      title: "第一章 Blender复刻和模型处理"
+    - file: "02_lighting.md"
+      title: "第二章 光照"
+    - file: "03_rendering.md"
+      title: "第三章 渲染"

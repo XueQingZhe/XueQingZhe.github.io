@@ -29,390 +29,553 @@ selected_papers: false
 nav_order: 1
 ---
 
-你好!我是**吟处雪轻遮**,一名正在学习技术美术(Technical Artist)的开发者。
-
-<div class="about-section">
-  <div class="section-header">
-    <h2 class="section-title">
-      <i class="fas fa-user-circle"></i>
-      关于我
-    </h2>
-  </div>
-  
-  <p class="intro-text">我专注于实时渲染技术的学习与实践,目标是成为一名专业的技术美术(TA)。</p>
+<div class="about-intro">
+  <p class="lead-text">你好!我是<strong>吟处雪轻遮</strong>,一名正在学习技术美术(Technical Artist)的开发者。</p>
+  <p>我专注于实时渲染技术的学习与实践,目标是成为一名专业的技术美术(TA)。在这个博客里,我会分享Shader开发心得、渲染原理学习笔记、项目实践经验以及技术成长历程。</p>
 </div>
 
-<div class="skills-section">
-  <div class="section-header">
-    <h2 class="section-title">
-      <i class="fas fa-tools"></i>
-      技术栈
-    </h2>
-  </div>
+<div class="divider-line"></div>
+
+<div class="tech-stack-section">
+  <h2 class="section-heading">
+    <i class="fas fa-code"></i>
+    技术栈与工具链
+  </h2>
   
-  <div class="skills-grid">
-    <div class="skill-card">
-      <div class="skill-icon engine">🎮</div>
-      <h4 class="skill-category">引擎</h4>
-      <p class="skill-items">Unity (URP) · Unreal Engine</p>
+  <div class="stack-list">
+    <div class="stack-item">
+      <div class="stack-label">
+        <i class="fas fa-gamepad"></i>
+        <strong>引擎平台</strong>
+      </div>
+      <div class="stack-content">
+        <span class="tech-tag primary">Unity URP</span>
+        <span class="tech-tag primary">Unreal Engine</span>
+        <span class="tech-tag">Built-in Pipeline</span>
+      </div>
     </div>
     
-    <div class="skill-card">
-      <div class="skill-icon code">💻</div>
-      <h4 class="skill-category">语言</h4>
-      <p class="skill-items">HLSL · Blueprint</p>
+    <div class="stack-item">
+      <div class="stack-label">
+        <i class="fas fa-terminal"></i>
+        <strong>编程语言</strong>
+      </div>
+      <div class="stack-content">
+        <span class="tech-tag primary">HLSL</span>
+        <span class="tech-tag primary">ShaderLab</span>
+        <span class="tech-tag">C#</span>
+        <span class="tech-tag">Blueprint</span>
+        <span class="tech-tag">Python</span>
+      </div>
     </div>
     
-    <div class="skill-card">
-      <div class="skill-icon expertise">✨</div>
-      <h4 class="skill-category">专长</h4>
-      <p class="skill-items">角色渲染 · 卡通着色 · PBR</p>
+    <div class="stack-item">
+      <div class="stack-label">
+        <i class="fas fa-paint-brush"></i>
+        <strong>专业领域</strong>
+      </div>
+      <div class="stack-content">
+        <span class="tech-tag primary">角色渲染</span>
+        <span class="tech-tag primary">卡通着色(NPR)</span>
+        <span class="tech-tag primary">PBR工作流</span>
+        <span class="tech-tag">实时光照</span>
+        <span class="tech-tag">后处理效果</span>
+        <span class="tech-tag">性能优化</span>
+      </div>
     </div>
     
-    <div class="skill-card">
-      <div class="skill-icon tools">🔧</div>
-      <h4 class="skill-category">工具</h4>
-      <p class="skill-items">Blender · Substance Painter · RenderDoc · Git</p>
+    <div class="stack-item">
+      <div class="stack-label">
+        <i class="fas fa-tools"></i>
+        <strong>开发工具</strong>
+      </div>
+      <div class="stack-content">
+        <span class="tech-tag">Blender</span>
+        <span class="tech-tag">Substance Painter</span>
+        <span class="tech-tag">RenderDoc</span>
+        <span class="tech-tag">Git</span>
+        <span class="tech-tag">Visual Studio</span>
+        <span class="tech-tag">Rider</span>
+      </div>
     </div>
   </div>
 </div>
+
+<div class="divider-line"></div>
 
 <div class="goals-section">
-  <div class="section-header">
-    <h2 class="section-title">
-      <i class="fas fa-bullseye"></i>
-      当前目标
-    </h2>
-  </div>
+  <h2 class="section-heading">
+    <i class="fas fa-rocket"></i>
+    当前学习重点
+  </h2>
   
-  <div class="goals-grid">
-    <div class="goal-item">
-      <div class="goal-icon">🔧</div>
-      <p>深入学习渲染管线架构</p>
+  <div class="goals-timeline">
+    <div class="timeline-item">
+      <div class="timeline-marker">
+        <i class="fas fa-circle"></i>
+      </div>
+      <div class="timeline-content">
+        <h4>渲染管线深入研究</h4>
+        <p>深入学习Unity URP和Unreal渲染管线架构,理解从Vertex到Pixel的完整流程,掌握Render Features和自定义Pass开发</p>
+      </div>
     </div>
-    <div class="goal-item">
-      <div class="goal-icon">📚</div>
-      <p>实践PBR与卡通渲染技术</p>
+    
+    <div class="timeline-item">
+      <div class="timeline-marker">
+        <i class="fas fa-circle"></i>
+      </div>
+      <div class="timeline-content">
+        <h4>PBR与卡通渲染实践</h4>
+        <p>实现能量守恒的PBR着色模型,研究卡通渲染中的描边、阴影、高光等技术,探索风格化渲染的最佳实践</p>
+      </div>
     </div>
-    <div class="goal-item">
-      <div class="goal-icon">✨</div>
-      <p>构建完整的技术作品集</p>
+    
+    <div class="timeline-item">
+      <div class="timeline-marker">
+        <i class="fas fa-circle"></i>
+      </div>
+      <div class="timeline-content">
+        <h4>技术作品集建设</h4>
+        <p>通过复刻商业级游戏渲染效果(如绝区零、崩坏)来积累实战经验,形成完整的技术作品集和案例库</p>
+      </div>
     </div>
-    <div class="goal-item">
-      <div class="goal-icon">🎯</div>
-      <p>探索Unreal Engine渲染系统</p>
+    
+    <div class="timeline-item">
+      <div class="timeline-marker">
+        <i class="fas fa-circle"></i>
+      </div>
+      <div class="timeline-content">
+        <h4>Unreal Engine渲染系统探索</h4>
+        <p>学习Unreal的材质系统、后处理框架和渲染特性,掌握蓝图可视化编程和引擎级渲染定制</p>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="blog-intro-section">
-  <div class="section-header">
-    <h2 class="section-title">
-      <i class="fas fa-pencil-alt"></i>
-      博客内容
-    </h2>
-  </div>
+<div class="divider-line"></div>
+
+<div class="blog-topics-section">
+  <h2 class="section-heading">
+    <i class="fas fa-book-open"></i>
+    博客内容
+  </h2>
   
-  <div class="blog-topics">
-    <div class="topic-card">
+  <div class="topics-grid">
+    <div class="topic-row">
       <div class="topic-icon">💡</div>
-      <h4>Shader开发心得</h4>
-      <p>技术探索与实战经验</p>
+      <div class="topic-info">
+        <h4>Shader开发与技术探索</h4>
+        <p>分享Shader编程技巧、渲染算法实现、图形学理论应用以及踩坑经验</p>
+      </div>
     </div>
     
-    <div class="topic-card">
+    <div class="topic-row">
       <div class="topic-icon">📖</div>
-      <h4>渲染原理笔记</h4>
-      <p>深入理解图形学理论</p>
+      <div class="topic-info">
+        <h4>渲染原理学习笔记</h4>
+        <p>记录光照模型、BRDF、全局光照等图形学核心概念的学习过程和理解</p>
+      </div>
     </div>
     
-    <div class="topic-card">
+    <div class="topic-row">
       <div class="topic-icon">🎨</div>
-      <h4>项目实践经验</h4>
-      <p>问题解决与经验总结</p>
+      <div class="topic-info">
+        <h4>项目实践与问题解决</h4>
+        <p>记录实际项目中遇到的渲染问题、性能优化方案和最终解决思路</p>
+      </div>
     </div>
     
-    <div class="topic-card">
+    <div class="topic-row">
       <div class="topic-icon">🚀</div>
-      <h4>技术成长历程</h4>
-      <p>学习路径与心得分享</p>
+      <div class="topic-info">
+        <h4>技术成长与学习路径</h4>
+        <p>分享从入门到进阶的学习历程、资源推荐以及对TA职业发展的思考</p>
+      </div>
     </div>
   </div>
 </div>
+
+<div class="divider-line"></div>
 
 <div class="contact-section">
-  <div class="section-header">
-    <h2 class="section-title">
-      <i class="fas fa-paper-plane"></i>
-      联系方式
-    </h2>
-  </div>
+  <h2 class="section-heading">
+    <i class="fas fa-paper-plane"></i>
+    联系方式
+  </h2>
   
-  <div class="contact-grid">
-    <a href="mailto:1215422936@qq.com" class="contact-card email">
-      <div class="contact-icon">
+  <div class="contact-list">
+    <a href="mailto:1215422936@qq.com" class="contact-item">
+      <div class="contact-icon email">
         <i class="fas fa-envelope"></i>
       </div>
-      <div class="contact-info">
-        <h4>邮箱</h4>
-        <p>1215422936@qq.com</p>
+      <div class="contact-details">
+        <strong>邮箱</strong>
+        <span>1215422936@qq.com</span>
       </div>
+      <i class="fas fa-chevron-right contact-arrow"></i>
     </a>
     
-    <a href="https://github.com/XueQingZhe" target="_blank" class="contact-card github">
-      <div class="contact-icon">
+    <a href="https://github.com/XueQingZhe" target="_blank" class="contact-item">
+      <div class="contact-icon github">
         <i class="fab fa-github"></i>
       </div>
-      <div class="contact-info">
-        <h4>GitHub</h4>
-        <p>@XueQingZhe</p>
+      <div class="contact-details">
+        <strong>GitHub</strong>
+        <span>@XueQingZhe - 查看我的代码仓库</span>
       </div>
+      <i class="fas fa-chevron-right contact-arrow"></i>
     </a>
     
-    <a href="https://www.zhihu.com/people/93-66-30-25" target="_blank" class="contact-card zhihu">
-      <div class="contact-icon">
+    <a href="https://www.zhihu.com/people/93-66-30-25" target="_blank" class="contact-item">
+      <div class="contact-icon zhihu">
         <i class="fab fa-zhihu"></i>
       </div>
-      <div class="contact-info">
-        <h4>知乎</h4>
-        <p>我的知乎主页</p>
+      <div class="contact-details">
+        <strong>知乎</strong>
+        <span>技术问答与经验分享</span>
       </div>
+      <i class="fas fa-chevron-right contact-arrow"></i>
     </a>
     
-    <a href="https://afdian.com/a/AtristForMyDream" target="_blank" class="contact-card support">
-      <div class="contact-icon">
+    <a href="https://afdian.com/a/AtristForMyDream" target="_blank" class="contact-item">
+      <div class="contact-icon support">
         <i class="fas fa-coffee"></i>
       </div>
-      <div class="contact-info">
-        <h4>爱发电</h4>
-        <p>支持我的创作</p>
+      <div class="contact-details">
+        <strong>爱发电</strong>
+        <span>支持我的内容创作</span>
       </div>
+      <i class="fas fa-chevron-right contact-arrow"></i>
     </a>
   </div>
   
-  <p class="contact-cta">欢迎与我交流!</p>
+  <p class="contact-note">欢迎与我交流技术问题,分享学习心得,或者讨论TA相关话题!</p>
 </div>
 
 <style>
-/* ========== 通用区域样式 ========== */
-.about-section,
-.skills-section,
-.goals-section,
-.blog-intro-section,
-.contact-section {
+/* ========== 基础样式 ========== */
+.about-intro {
+  margin: 2rem 0 3rem;
+  line-height: 1.8;
+}
+
+.lead-text {
+  font-size: 1.2rem;
+  color: var(--global-text-color);
+  margin-bottom: 1rem;
+}
+
+.lead-text strong {
+  color: var(--global-theme-color);
+  font-weight: 700;
+}
+
+.about-intro p {
+  color: var(--global-text-color-light);
+  font-size: 1.05rem;
+}
+
+/* ========== 分隔线 ========== */
+.divider-line {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--global-divider-color) 10%,
+    var(--global-divider-color) 90%,
+    transparent 100%
+  );
   margin: 3rem 0;
 }
 
-.section-header {
-  margin-bottom: 2rem;
-  position: relative;
-}
-
-.section-title {
-  font-size: 1.8rem;
+/* ========== Section标题 ========== */
+.section-heading {
+  font-size: 1.6rem;
   font-weight: 700;
   color: var(--global-text-color);
-  margin: 0 0 0.75rem 0;
-  display: inline-flex;
+  margin: 0 0 1.5rem 0;
+  display: flex;
   align-items: center;
   gap: 0.75rem;
+  position: relative;
+  padding-left: 1rem;
 }
 
-.section-title i {
-  color: var(--global-theme-color);
-  font-size: 1.6rem;
-}
-
-.section-title::after {
+.section-heading::before {
   content: '';
   position: absolute;
-  bottom: -0.5rem;
   left: 0;
-  width: 80px;
-  height: 3px;
-  background: linear-gradient(90deg,
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(180deg,
     var(--global-theme-color) 0%,
-    transparent 100%
+    var(--global-hover-color) 100%
   );
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
-/* ========== 简介文字 ========== */
-.intro-text {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: var(--global-text-color);
-  margin: 0;
+.section-heading i {
+  color: var(--global-theme-color);
 }
 
-/* ========== 技能网格 ========== */
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+/* ========== 技术栈列表 ========== */
+.tech-stack-section {
+  margin: 3rem 0;
+}
+
+.stack-list {
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
-.skill-card {
+.stack-item {
+  display: flex;
+  gap: 2rem;
+  padding: 1.5rem;
   background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
-  border-radius: 16px;
-  padding: 2rem;
-  text-align: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
+  border-radius: 12px;
+  transition: all 0.3s;
+  align-items: flex-start;
 }
 
-.skill-card::before {
+.stack-item:hover {
+  border-color: var(--global-theme-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateX(4px);
+}
+
+.stack-label {
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--global-text-color);
+  font-size: 1rem;
+}
+
+.stack-label i {
+  color: var(--global-theme-color);
+  font-size: 1.2rem;
+  width: 20px;
+  text-align: center;
+}
+
+.stack-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.tech-tag {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  background: var(--global-code-bg-color);
+  border: 1px solid var(--global-divider-color);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: var(--global-text-color);
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.tech-tag:hover {
+  background: var(--global-theme-color);
+  color: white;
+  border-color: var(--global-theme-color);
+  transform: translateY(-2px);
+}
+
+.tech-tag.primary {
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.15) 0%,
+    rgba(var(--global-theme-color-rgb), 0.25) 100%
+  );
+  border-color: var(--global-theme-color);
+  color: var(--global-theme-color);
+  font-weight: 600;
+}
+
+.tech-tag.primary:hover {
+  background: var(--global-theme-color);
+  color: white;
+}
+
+/* ========== 目标时间线 ========== */
+.goals-section {
+  margin: 3rem 0;
+}
+
+.goals-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.goals-timeline::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(var(--global-theme-color-rgb), 0.08) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-
-.skill-card:hover::before {
-  opacity: 1;
-}
-
-.skill-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
-  border-color: var(--global-theme-color);
-}
-
-.skill-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-.skill-category {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--global-text-color);
-  margin: 0 0 0.75rem 0;
-  position: relative;
-  z-index: 1;
-}
-
-.skill-items {
-  color: var(--global-text-color-light);
-  line-height: 1.7;
-  margin: 0;
-  position: relative;
-  z-index: 1;
-}
-
-/* ========== 目标网格 ========== */
-.goals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.goal-item {
-  background: var(--global-bg-color);
-  border: 2px dashed var(--global-divider-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  text-align: center;
-  transition: all 0.3s;
-  cursor: default;
-}
-
-.goal-item:hover {
-  border-style: solid;
-  border-color: var(--global-theme-color);
-  background: var(--global-code-bg-color);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-
-.goal-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.goal-item p {
-  margin: 0;
-  color: var(--global-text-color);
-  font-weight: 500;
-  line-height: 1.6;
-}
-
-/* ========== 博客主题卡片 ========== */
-.blog-topics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-}
-
-.topic-card {
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.05) 0%,
-    rgba(var(--global-theme-color-rgb), 0.02) 100%
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg,
+    var(--global-theme-color) 0%,
+    var(--global-divider-color) 100%
   );
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-left: 1.5rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -1.85rem;
+  top: 0.3rem;
+  width: 1rem;
+  height: 1rem;
+  background: var(--global-bg-color);
+  border: 3px solid var(--global-theme-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.timeline-marker i {
+  font-size: 0.4rem;
+  color: var(--global-theme-color);
+}
+
+.timeline-content {
+  background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
-  border-radius: 16px;
-  padding: 2rem;
-  text-align: center;
-  transition: all 0.4s;
+  border-left: 3px solid var(--global-theme-color);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  transition: all 0.3s;
 }
 
-.topic-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.12);
-  border-color: var(--global-theme-color);
+.timeline-content:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-left-color: var(--global-hover-color);
+  transform: translateX(4px);
 }
 
-.topic-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.topic-card h4 {
+.timeline-content h4 {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--global-text-color);
   margin: 0 0 0.5rem 0;
 }
 
-.topic-card p {
-  color: var(--global-text-color-light);
+.timeline-content p {
   font-size: 0.95rem;
+  color: var(--global-text-color-light);
+  line-height: 1.7;
   margin: 0;
-  line-height: 1.6;
 }
 
-/* ========== 联系方式卡片 ========== */
-.contact-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+/* ========== 博客主题列表 ========== */
+.blog-topics-section {
+  margin: 3rem 0;
+}
+
+.topics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.topic-row {
+  display: flex;
+  align-items: flex-start;
   gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--global-bg-color);
+  border: 1px solid var(--global-divider-color);
+  border-radius: 10px;
+  transition: all 0.3s;
+}
+
+.topic-row:hover {
+  border-color: var(--global-theme-color);
+  background: var(--global-code-bg-color);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.topic-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.1) 0%,
+    rgba(var(--global-theme-color-rgb), 0.2) 100%
+  );
+  border-radius: 10px;
+}
+
+.topic-info {
+  flex: 1;
+}
+
+.topic-info h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--global-text-color);
+  margin: 0 0 0.5rem 0;
+}
+
+.topic-info p {
+  font-size: 0.95rem;
+  color: var(--global-text-color-light);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ========== 联系方式列表 ========== */
+.contact-section {
+  margin: 3rem 0;
+}
+
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.contact-card {
+.contact-item {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
   background: var(--global-bg-color);
-  border: 2px solid var(--global-divider-color);
-  border-radius: 16px;
-  padding: 1.75rem;
+  border: 1px solid var(--global-divider-color);
+  border-radius: 12px;
   text-decoration: none;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s;
   position: relative;
   overflow: hidden;
 }
 
-.contact-card::before {
+.contact-item::before {
   content: '';
   position: absolute;
   left: 0;
@@ -424,151 +587,156 @@ nav_order: 1
     var(--global-hover-color) 100%
   );
   transform: scaleY(0);
-  transition: transform 0.4s;
+  transition: transform 0.3s;
 }
 
-.contact-card:hover::before {
+.contact-item:hover::before {
   transform: scaleY(1);
 }
 
-.contact-card:hover {
-  transform: translateX(8px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+.contact-item:hover {
   border-color: var(--global-theme-color);
+  transform: translateX(8px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .contact-icon {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.15) 0%,
-    rgba(var(--global-theme-color-rgb), 0.25) 100%
-  );
-  border-radius: 12px;
-  font-size: 1.8rem;
-  color: var(--global-theme-color);
+  border-radius: 10px;
+  font-size: 1.5rem;
   flex-shrink: 0;
   transition: transform 0.3s;
 }
 
-.contact-card:hover .contact-icon {
-  transform: scale(1.1) rotate(5deg);
+.contact-item:hover .contact-icon {
+  transform: scale(1.1);
 }
 
-.contact-info {
+.contact-icon.email {
+  background: linear-gradient(135deg, #EA4335 0%, #E31C3D 100%);
+  color: white;
+}
+
+.contact-icon.github {
+  background: linear-gradient(135deg, #333 0%, #000 100%);
+  color: white;
+}
+
+.contact-icon.zhihu {
+  background: linear-gradient(135deg, #0084FF 0%, #0066CC 100%);
+  color: white;
+}
+
+.contact-icon.support {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+  color: white;
+}
+
+.contact-details {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.contact-info h4 {
-  font-size: 1.1rem;
-  font-weight: 700;
+.contact-details strong {
+  font-size: 1.05rem;
   color: var(--global-text-color);
-  margin: 0 0 0.3rem 0;
+  font-weight: 700;
 }
 
-.contact-info p {
-  font-size: 0.95rem;
+.contact-details span {
+  font-size: 0.9rem;
   color: var(--global-text-color-light);
-  margin: 0;
 }
 
-/* 特殊联系方式颜色 */
-.contact-card.email:hover {
-  border-color: #EA4335;
-}
-
-.contact-card.github:hover {
-  border-color: #333;
-}
-
-.contact-card.zhihu:hover {
-  border-color: #0084FF;
-}
-
-.contact-card.support:hover {
-  border-color: #FF6B6B;
-}
-
-.contact-cta {
-  text-align: center;
-  font-size: 1.2rem;
+.contact-arrow {
   color: var(--global-theme-color);
-  font-weight: 600;
+  font-size: 1.2rem;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.3s;
+}
+
+.contact-item:hover .contact-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.contact-note {
+  text-align: center;
+  color: var(--global-text-color-light);
+  font-size: 1rem;
   margin: 0;
+  padding: 1rem;
+  background: var(--global-code-bg-color);
+  border-radius: 8px;
 }
 
 /* ========== 响应式 ========== */
 @media (max-width: 768px) {
-  .section-title {
-    font-size: 1.5rem;
+  .section-heading {
+    font-size: 1.4rem;
   }
   
-  .skills-grid,
-  .goals-grid,
-  .blog-topics,
-  .contact-grid {
-    grid-template-columns: 1fr;
+  .stack-item {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
   }
   
-  .skill-card,
-  .goal-item,
-  .topic-card {
-    padding: 1.5rem;
+  .stack-label {
+    min-width: auto;
   }
   
-  .contact-card {
-    padding: 1.5rem;
+  .tech-tag {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.85rem;
+  }
+  
+  .goals-timeline {
+    padding-left: 1.5rem;
+  }
+  
+  .timeline-item {
+    padding-left: 1rem;
+  }
+  
+  .topic-row {
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .topic-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.75rem;
+  }
+  
+  .contact-item {
+    padding: 1rem;
   }
   
   .contact-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
   }
 }
 
 /* ========== Profile图片增强 ========== */
-.profile {
-  margin-bottom: 2rem;
-}
-
 .profile img {
   border: 3px solid var(--global-theme-color);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   transition: all 0.4s;
 }
 
 .profile img:hover {
-  transform: scale(1.05) rotate(2deg);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-}
-
-/* ========== News和Posts增强 ========== */
-.news,
-.latest-posts {
-  margin: 3rem 0;
-}
-
-.news h2,
-.latest-posts h2 {
-  color: var(--global-theme-color);
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.news h2::before {
-  content: '📢';
-  font-size: 1.5rem;
-}
-
-.latest-posts h2::before {
-  content: '📝';
-  font-size: 1.5rem;
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.18);
 }
 </style>

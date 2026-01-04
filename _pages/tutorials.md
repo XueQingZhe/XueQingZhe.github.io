@@ -16,7 +16,9 @@ nav_order: 5
       <!-- 左侧预览图 -->
       <div class="col-md-5">
         {% if series.image %}
-        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="tutorial-preview-img">
+        <div class="tutorial-image-container">
+          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="tutorial-preview-img">
+        </div>
         {% else %}
         <div class="placeholder-image">
           <i class="fas fa-book-open fa-4x"></i>
@@ -118,18 +120,46 @@ nav_order: 5
   transform: translateY(-2px);
 }
 
-/* 预览图区域 */
+/* ========== 图片显示优化 ========== */
+.tutorial-image-container {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.tutorial-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;  /* ← 改为 contain,完整显示图片 */
+  max-height: 400px;    /* ← 限制最大高度 */
+  transition: transform 0.3s ease;
+}
+
+.tutorial-card:hover .tutorial-preview-img {
+  transform: scale(1.05);  /* 悬停时轻微放大 */
+}
+
+/* 如果你想要图片始终填满左侧,可以用这个版本 */
+/*
 .tutorial-preview-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  min-height: 300px;
+  object-position: center;
 }
+*/
 
 .placeholder-image {
   background: linear-gradient(135deg, var(--global-divider-color) 0%, var(--global-bg-color) 100%);
   height: 100%;
-  min-height: 300px;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -304,9 +334,9 @@ nav_order: 5
     flex-direction: column;
   }
   
-  .tutorial-preview-img,
+  .tutorial-image-container,
   .placeholder-image {
-    min-height: 200px;
+    min-height: 250px;
   }
   
   .tutorial-content {

@@ -12,8 +12,8 @@ pagination:
   sort_field: date
   sort_reverse: true
   trail:
-    before: 1 # The number of links before the current page
-    after: 3 # The number of links after the current page
+    before: 1
+    after: 3
 ---
 
 <div class="post">
@@ -22,44 +22,24 @@ pagination:
 {% assign blog_description_size = site.blog_description | size %}
 
 {% if blog_name_size > 0 or blog_description_size > 0 %}
-
   <div class="header-bar">
     <h1>{{ site.blog_name }}</h1>
     <h2>{{ site.blog_description }}</h2>
   </div>
-  {% endif %}
+{% endif %}
 
+<!-- 隐藏顶部标签/分类列表 -->
+{% comment %}
 {% if site.display_tags and site.display_tags.size > 0 or site.display_categories and site.display_categories.size > 0 %}
-
-  <div class="tag-category-list">
-    <ul class="p-0 m-0">
-      {% for tag in site.display_tags %}
-        <li>
-          <i class="fa-solid fa-hashtag fa-sm"></i> <a href="{{ tag | slugify | prepend: '/blog/tag/' | relative_url }}">{{ tag }}</a>
-        </li>
-        {% unless forloop.last %}
-          <p>&bull;</p>
-        {% endunless %}
-      {% endfor %}
-      {% if site.display_categories.size > 0 and site.display_tags.size > 0 %}
-        <p>&bull;</p>
-      {% endif %}
-      {% for category in site.display_categories %}
-        <li>
-          <i class="fa-solid fa-tag fa-sm"></i> <a href="{{ category | slugify | prepend: '/blog/category/' | relative_url }}">{{ category }}</a>
-        </li>
-        {% unless forloop.last %}
-          <p>&bull;</p>
-        {% endunless %}
-      {% endfor %}
-    </ul>
+  <div class="tag-category-list" style="display: none;">
+    ...
   </div>
-  {% endif %}
+{% endif %}
+{% endcomment %}
 
 {% assign featured_posts = site.posts | where: "featured", "true" %}
 {% if featured_posts.size > 0 %}
 <br>
-
 <div class="container featured-posts">
 {% assign is_even = featured_posts.size | modulo: 2 %}
 <div class="row row-cols-{% if featured_posts.size <= 2 or is_even == 0 %}2{% else %}3{% endif %}">
@@ -98,11 +78,9 @@ pagination:
       </div>
     </div>
     <hr>
-
 {% endif %}
 
   <ul class="post-list">
-
     {% if page.pagination.enabled %}
       {% assign postlist = paginator.posts %}
     {% else %}
@@ -110,7 +88,6 @@ pagination:
     {% endif %}
 
     {% for post in postlist %}
-
     {% if post.external_source == blank %}
       {% assign read_time = post.content | number_of_words | divided_by: 180 | plus: 1 %}
     {% else %}
@@ -121,9 +98,7 @@ pagination:
     {% assign categories = post.categories | join: "" %}
 
     <li>
-
 {% if post.thumbnail %}
-
 <div class="row">
           <div class="col-sm-9">
 {% endif %}
@@ -147,10 +122,11 @@ pagination:
         &nbsp; &middot; &nbsp; {{ post.external_source }}
         {% endif %}
       </p>
-      <p class="post-tags">
+      
+      <!-- 隐藏底部的标签/分类 -->
+      <p class="post-tags" style="display: none;">
         <a href="{{ year | prepend: '/blog/' | relative_url }}">
           <i class="fa-solid fa-calendar fa-sm"></i> {{ year }} </a>
-
           {% if tags != "" %}
           &nbsp; &middot; &nbsp;
             {% for tag in post.tags %}
@@ -161,7 +137,6 @@ pagination:
               {% endunless %}
               {% endfor %}
           {% endif %}
-
           {% if categories != "" %}
           &nbsp; &middot; &nbsp;
             {% for category in post.categories %}
@@ -175,18 +150,14 @@ pagination:
     </p>
 
 {% if post.thumbnail %}
-
 </div>
-
   <div class="col-sm-3">
     <img class="card-img" src="{{ post.thumbnail | relative_url }}" style="object-fit: cover; height: 90%" alt="image">
   </div>
 </div>
 {% endif %}
     </li>
-
     {% endfor %}
-
   </ul>
 
 {% if page.pagination.enabled %}
@@ -194,3 +165,119 @@ pagination:
 {% endif %}
 
 </div>
+
+<style>
+/* ========== 优化Blog文章列表样式 ========== */
+
+/* 隐藏顶部标签分类列表 */
+.tag-category-list {
+  display: none !important;
+}
+
+/* 文章列表优化 */
+.post-list {
+  list-style: none;
+  padding: 0;
+}
+
+.post-list > li {
+  background: var(--global-bg-color);
+  border: 1px solid var(--global-divider-color);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+/* 顶部彩色条 */
+.post-list > li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    var(--global-theme-color) 0%, 
+    var(--global-hover-color) 100%
+  );
+  border-radius: 12px 12px 0 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.post-list > li:hover::before {
+  opacity: 1;
+}
+
+.post-list > li:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  border-color: var(--global-theme-color);
+}
+
+/* 标题样式 */
+.post-list h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+.post-list .post-title {
+  color: var(--global-text-color);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.post-list .post-title:hover {
+  color: var(--global-theme-color);
+}
+
+/* 描述文字 */
+.post-list > li > p {
+  color: var(--global-text-color-light);
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+}
+
+/* 元信息 */
+.post-list .post-meta {
+  font-size: 0.9rem;
+  color: var(--global-text-color-light);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 特色文章卡片优化 */
+.featured-posts .card {
+  border-radius: 12px;
+  border: 1px solid var(--global-divider-color);
+  transition: all 0.3s;
+}
+
+.featured-posts .card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+  border-color: var(--global-theme-color);
+}
+
+.featured-posts .card-title {
+  font-weight: 600;
+  color: var(--global-text-color);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .post-list > li {
+    padding: 1.5rem;
+  }
+  
+  .post-list h3 {
+    font-size: 1.3rem;
+  }
+}
+</style>

@@ -1,0 +1,163 @@
+---
+layout: post
+---
+
+{{ content }}
+
+{% comment %} 自动添加导航 {% endcomment %}
+<hr>
+
+{% if page.tutorial_series %}
+  {% assign series = site.data.tutorials | where: "title", page.tutorial_series | first %}
+  
+  {% if series %}
+    {% assign current_idx = page.chapter_index %}
+    {% assign total_chapters = series.chapters.size %}
+    
+    {% if current_idx > 0 %}
+      {% assign prev_idx = current_idx | minus: 1 %}
+      {% assign prev = series.chapters[prev_idx] %}
+    {% endif %}
+    
+    {% if current_idx < total_chapters | minus: 1 %}
+      {% assign next_idx = current_idx | plus: 1 %}
+      {% assign next = series.chapters[next_idx] %}
+    {% endif %}
+    
+    <div class="tutorial-navigation">
+      <h3>章节导航</h3>
+      
+      <div class="nav-container">
+        <a href="/tutorials/" class="nav-btn nav-home">
+          <i class="fas fa-home"></i>
+          <span>返回目录</span>
+        </a>
+        
+        <div class="nav-spacer"></div>
+        
+        {% if prev %}
+        <a href="{{ series.base_url }}/{{ prev.file | remove: '.md' }}/" class="nav-btn nav-prev">
+          <i class="fas fa-arrow-left"></i>
+          <span>{{ prev.title }}</span>
+        </a>
+        {% endif %}
+        
+        {% if next %}
+        <a href="{{ series.base_url }}/{{ next.file | remove: '.md' }}/" class="nav-btn nav-next">
+          <span>{{ next.title }}</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      
+      <div class="nav-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ current_idx | plus: 1 | times: 100 | divided_by: total_chapters }}%"></div>
+        </div>
+        <span class="progress-text">第 {{ current_idx | plus: 1 }} 章 / 共 {{ total_chapters }} 章</span>
+      </div>
+    </div>
+    
+    <style>
+    .tutorial-navigation {
+      margin: 3rem 0;
+      padding: 2rem;
+      background: var(--global-code-bg-color);
+      border-radius: 8px;
+      border-left: 4px solid var(--global-theme-color);
+    }
+    
+    .tutorial-navigation h3 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: var(--global-theme-color);
+    }
+    
+    .nav-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      background: var(--global-bg-color);
+      border: 1px solid var(--global-divider-color);
+      border-radius: 6px;
+      color: var(--global-text-color);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+    
+    .nav-btn:hover {
+      background: var(--global-theme-color);
+      color: white;
+      border-color: var(--global-theme-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .nav-home {
+      background: var(--global-theme-color);
+      color: white;
+      border-color: var(--global-theme-color);
+    }
+    
+    .nav-spacer {
+      flex: 1;
+    }
+    
+    .nav-progress {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--global-divider-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--global-theme-color), var(--global-hover-color));
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      font-size: 0.9rem;
+      color: var(--global-text-color-light);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    @media (max-width: 768px) {
+      .nav-container {
+        flex-wrap: wrap;
+      }
+      
+      .nav-spacer {
+        display: none;
+      }
+      
+      .nav-btn {
+        flex: 1;
+        min-width: 45%;
+        justify-content: center;
+      }
+      
+      .nav-home {
+        flex-basis: 100%;
+      }
+    }
+    </style>
+  {% endif %}
+{% endif %}

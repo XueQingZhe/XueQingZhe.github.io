@@ -30,6 +30,13 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/books/";
           },
+        },{id: "nav-tutorials",
+          title: "tutorials",
+          description: "技术分享与教程",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/tutorials/";
+          },
         },{id: "nav-tagsfilters",
           title: "tagsFilters",
           description: "按标签浏览所有文章和教程",

@@ -23,112 +23,148 @@ nav_order: 5
   </div>
 </div>
 
-<!-- 教程卡片网格 -->
-<div class="tutorials-grid">
-  {% assign tutorial_series = site.data.tutorials %}
-  
-  {% for series in tutorial_series %}
-  <div class="tutorial-card-compact" onclick="openTutorialModal('modal-{{ forloop.index }}')">
-    <!-- 背景图片 -->
-    {% if series.image %}
-    <div class="card-image" style="background-image: url('{{ series.image | relative_url }}')">
-      <div class="card-overlay"></div>
-    </div>
-    {% else %}
-    <div class="card-image placeholder">
-      <div class="placeholder-icon">
-        <i class="fas fa-book-open fa-3x"></i>
-      </div>
-    </div>
-    {% endif %}
+<!-- 胶片滚动区域 -->
+<div class="film-strip-container">
+  <div class="film-strip-wrapper">
+    <button class="scroll-btn scroll-left" onclick="scrollFilm(-1)">
+      <i class="fas fa-chevron-left"></i>
+    </button>
     
-    <!-- 卡片内容 -->
-    <div class="card-content">
-      {% if series.status %}
-      <span class="status-badge-mini badge-{{ series.status_color }}">
-        <i class="fas fa-circle"></i>
-        {{ series.status }}
-      </span>
-      {% endif %}
+    <div class="film-strip" id="filmStrip">
+      {% assign tutorial_series = site.data.tutorials %}
       
-      <h3 class="card-title">{{ series.title }}</h3>
-      <p class="card-description">{{ series.description }}</p>
-      
-      <div class="card-footer">
-        <span class="chapter-count">
-          <i class="fas fa-list"></i>
-          {{ series.chapters.size }} 章节
-        </span>
-        <span class="view-details">
-          查看详情
-          <i class="fas fa-arrow-right"></i>
-        </span>
-      </div>
-    </div>
-    
-    <!-- 悬停提示 -->
-    <div class="hover-hint">
-      <i class="fas fa-search-plus"></i>
-      点击查看完整目录
-    </div>
-  </div>
-  
-  <!-- 模态框 -->
-  <div id="modal-{{ forloop.index }}" class="tutorial-modal">
-    <div class="modal-backdrop" onclick="closeTutorialModal('modal-{{ forloop.index }}')"></div>
-    <div class="modal-container">
-      <button class="modal-close" onclick="closeTutorialModal('modal-{{ forloop.index }}')">
-        <i class="fas fa-times"></i>
-      </button>
-      
-      <div class="modal-content">
-        <div class="modal-left">
-          {% if series.image %}
-          <div class="modal-image-container" style="--preview-img: url('{{ series.image | relative_url }}')">
-            <div class="image-overlay"></div>
-            <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="modal-preview-img">
-          </div>
-          {% else %}
-          <div class="modal-placeholder">
-            <i class="fas fa-book-open fa-4x"></i>
-            <p>{{ series.title }}</p>
-          </div>
-          {% endif %}
+      {% for series in tutorial_series %}
+      <div class="film-frame" data-tutorial-id="{{ forloop.index }}">
+        <!-- 胶片孔 -->
+        <div class="film-holes film-holes-top">
+          <span class="hole"></span>
+          <span class="hole"></span>
+          <span class="hole"></span>
         </div>
         
-        <div class="modal-right">
-          <div class="modal-header">
-            <h2 class="modal-title">
-              <i class="fas fa-book"></i>
-              {{ series.title }}
-            </h2>
+        <!-- 缩略图 -->
+        <div class="film-thumbnail" 
+             onmouseenter="showPreview({{ forloop.index }})"
+             onmouseleave="hidePreview({{ forloop.index }})"
+             onclick="expandTutorial({{ forloop.index }})">
+          {% if series.image %}
+          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+          {% else %}
+          <div class="placeholder-thumb">
+            <i class="fas fa-book-open fa-2x"></i>
+          </div>
+          {% endif %}
+          
+          {% if series.status %}
+          <span class="status-indicator badge-{{ series.status_color }}">
+            <i class="fas fa-circle"></i>
+          </span>
+          {% endif %}
+          
+          <div class="film-label">{{ series.title }}</div>
+        </div>
+        
+        <!-- 胶片孔 -->
+        <div class="film-holes film-holes-bottom">
+          <span class="hole"></span>
+          <span class="hole"></span>
+          <span class="hole"></span>
+        </div>
+        
+        <!-- 悬停预览卡片 -->
+        <div class="preview-card" id="preview-{{ forloop.index }}">
+          <div class="preview-content">
             {% if series.status %}
-            <span class="status-badge-large badge-{{ series.status_color }}">
-              <i class="fas fa-circle pulse-dot"></i>
+            <span class="preview-badge badge-{{ series.status_color }}">
+              <i class="fas fa-circle"></i>
               {{ series.status }}
             </span>
             {% endif %}
-          </div>
-          
-          <p class="modal-description">{{ series.description }}</p>
-          
-          <div class="modal-chapters">
-            <div class="chapters-header">
-              <i class="fas fa-list-ul"></i>
-              <span>章节列表</span>
-              <span class="chapter-badge">{{ series.chapters.size }}</span>
-            </div>
             
-            <div class="chapters-list-modal">
-              {% for chapter in series.chapters %}
-              <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-link">
-                <span class="chapter-num">{{ forloop.index }}</span>
-                <span class="chapter-name">{{ chapter.title }}</span>
-                <i class="fas fa-external-link-alt"></i>
-              </a>
-              {% endfor %}
+            <h3 class="preview-title">{{ series.title }}</h3>
+            <p class="preview-description">{{ series.description }}</p>
+            
+            <div class="preview-footer">
+              <span class="preview-chapters">
+                <i class="fas fa-list"></i>
+                {{ series.chapters.size }} 章节
+              </span>
+              <span class="preview-hint">
+                点击查看详情 <i class="fas fa-arrow-down"></i>
+              </span>
             </div>
           </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    <button class="scroll-btn scroll-right" onclick="scrollFilm(1)">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- 展开的详情区域 -->
+<div class="tutorial-details-container" id="detailsContainer">
+  {% for series in tutorial_series %}
+  <div class="tutorial-details" id="details-{{ forloop.index }}" style="display: none;">
+    <div class="details-close" onclick="collapseTutorial()">
+      <i class="fas fa-times"></i>
+      收起
+    </div>
+    
+    <div class="details-content">
+      <div class="details-left">
+        {% if series.image %}
+        <div class="details-image-container" style="--preview-img: url('{{ series.image | relative_url }}')">
+          <div class="image-blur-bg"></div>
+          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="details-image">
+        </div>
+        {% else %}
+        <div class="details-placeholder">
+          <i class="fas fa-book-open fa-4x"></i>
+        </div>
+        {% endif %}
+        
+        <div class="details-info">
+          <h2 class="details-title">
+            <i class="fas fa-book"></i>
+            {{ series.title }}
+          </h2>
+          {% if series.status %}
+          <span class="details-badge badge-{{ series.status_color }}">
+            <i class="fas fa-circle pulse-dot"></i>
+            {{ series.status }}
+          </span>
+          {% endif %}
+          
+          <p class="details-description">{{ series.description }}</p>
+          
+          <div class="details-stats">
+            <div class="stat">
+              <i class="fas fa-book-open"></i>
+              <span>{{ series.chapters.size }} 章节</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="details-right">
+        <div class="chapters-header">
+          <i class="fas fa-list-ul"></i>
+          <span>章节列表</span>
+          <span class="chapters-count">{{ series.chapters.size }}</span>
+        </div>
+        
+        <div class="chapters-grid">
+          {% for chapter in series.chapters %}
+          <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-item">
+            <span class="chapter-number">{{ forloop.index }}</span>
+            <span class="chapter-title">{{ chapter.title }}</span>
+            <i class="fas fa-arrow-right chapter-arrow"></i>
+          </a>
+          {% endfor %}
         </div>
       </div>
     </div>
@@ -185,32 +221,77 @@ nav_order: 5
 </div>
 
 <script>
-function openTutorialModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+let currentExpanded = null;
+
+function scrollFilm(direction) {
+  const filmStrip = document.getElementById('filmStrip');
+  const scrollAmount = 300;
+  filmStrip.scrollBy({
+    left: direction * scrollAmount,
+    behavior: 'smooth'
+  });
+}
+
+function showPreview(id) {
+  const preview = document.getElementById(`preview-${id}`);
+  if (preview && currentExpanded === null) {
+    preview.style.display = 'block';
+    setTimeout(() => {
+      preview.classList.add('visible');
+    }, 10);
   }
 }
 
-function closeTutorialModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+function hidePreview(id) {
+  const preview = document.getElementById(`preview-${id}`);
+  if (preview) {
+    preview.classList.remove('visible');
+    setTimeout(() => {
+      preview.style.display = 'none';
+    }, 300);
   }
 }
 
-// ESC键关闭
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    const activeModal = document.querySelector('.tutorial-modal.active');
-    if (activeModal) {
-      activeModal.classList.remove('active');
-      document.body.style.overflow = '';
+function expandTutorial(id) {
+  // 隐藏所有预览卡片
+  document.querySelectorAll('.preview-card').forEach(card => {
+    card.classList.remove('visible');
+    card.style.display = 'none';
+  });
+  
+  // 如果点击的是当前展开的,则收起
+  if (currentExpanded === id) {
+    collapseTutorial();
+    return;
+  }
+  
+  // 隐藏其他详情
+  document.querySelectorAll('.tutorial-details').forEach(details => {
+    details.style.display = 'none';
+  });
+  
+  // 显示选中的详情
+  const details = document.getElementById(`details-${id}`);
+  if (details) {
+    details.style.display = 'block';
+    currentExpanded = id;
+    
+    // 平滑滚动到详情区域
+    setTimeout(() => {
+      details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+}
+
+function collapseTutorial() {
+  if (currentExpanded) {
+    const details = document.getElementById(`details-${currentExpanded}`);
+    if (details) {
+      details.style.display = 'none';
     }
+    currentExpanded = null;
   }
-});
+}
 </script>
 
 <style>
@@ -300,115 +381,434 @@ document.addEventListener('keydown', function(e) {
   margin: 0;
 }
 
-/* ========== 教程卡片网格 ========== */
-.tutorials-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
-  margin-bottom: 4rem;
+/* ========== 胶片滚动区域 ========== */
+.film-strip-container {
+  margin: 3rem 0;
+  padding: 2rem 0;
 }
 
-/* ========== 紧凑卡片 ========== */
-.tutorial-card-compact {
-  background: var(--global-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.film-strip-wrapper {
   position: relative;
-  height: 420px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.film-strip {
   display: flex;
-  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem 4rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--global-theme-color) var(--global-divider-color);
 }
 
-.tutorial-card-compact:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.15);
-  border-color: var(--global-theme-color);
+.film-strip::-webkit-scrollbar {
+  height: 8px;
 }
 
-/* 卡片图片 */
-.card-image {
-  width: 100%;
-  height: 200px;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  overflow: hidden;
+.film-strip::-webkit-scrollbar-track {
+  background: var(--global-divider-color);
+  border-radius: 4px;
 }
 
-.card-image::before {
-  content: '';
+.film-strip::-webkit-scrollbar-thumb {
+  background: var(--global-theme-color);
+  border-radius: 4px;
+}
+
+/* 滚动按钮 */
+.scroll-btn {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg,
-    transparent 0%,
-    rgba(0,0,0,0.3) 100%
-  );
-}
-
-.card-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.2);
-  transition: background 0.3s;
-}
-
-.tutorial-card-compact:hover .card-overlay {
-  background: rgba(0,0,0,0.1);
-}
-
-.card-image.placeholder {
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.1) 0%,
-    rgba(var(--global-theme-color-rgb), 0.05) 100%
-  );
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(var(--global-theme-color-rgb), 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.placeholder-icon {
+.scroll-btn:hover {
+  background: var(--global-theme-color);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.scroll-left {
+  left: 0;
+}
+
+.scroll-right {
+  right: 0;
+}
+
+/* ========== 胶片帧 ========== */
+.film-frame {
+  flex-shrink: 0;
+  width: 280px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 1rem 0.8rem;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: transform 0.3s;
+}
+
+.film-frame:hover {
+  transform: scale(1.05);
+}
+
+/* 胶片孔 */
+.film-holes {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.5rem 0;
+}
+
+.hole {
+  width: 12px;
+  height: 12px;
+  background: #000;
+  border: 2px solid #333;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* 缩略图 */
+.film-thumbnail {
+  width: 100%;
+  height: 320px;
+  background: #000;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.film-thumbnail:hover {
+  box-shadow: 0 0 20px rgba(var(--global-theme-color-rgb), 0.5);
+}
+
+.film-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.film-thumbnail:hover img {
+  transform: scale(1.1);
+}
+
+.placeholder-thumb {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--global-theme-color);
   opacity: 0.3;
 }
 
-/* 卡片内容 */
-.card-content {
-  padding: 1.5rem;
-  flex: 1;
+/* 状态指示器 */
+.status-indicator {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: linear-gradient(135deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 16px;
+  font-size: 0.7rem;
+  font-weight: 600;
   display: flex;
-  flex-direction: column;
-  position: relative;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.status-badge-mini {
+.status-indicator i {
+  font-size: 0.4rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* 胶片标签 */
+.film-label {
   position: absolute;
-  top: -28px;
-  right: 1.5rem;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.9) 100%);
+  color: white;
+  padding: 1rem 0.75rem 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ========== 悬停预览卡片 ========== */
+.preview-card {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100%) scale(0.9);
+  width: 350px;
+  background: var(--global-bg-color);
+  border: 2px solid var(--global-theme-color);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+  z-index: 100;
+  display: none;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.preview-card.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-100%) scale(1);
+}
+
+.preview-card::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid var(--global-theme-color);
+}
+
+.preview-content {
+  padding: 1.5rem;
+}
+
+.preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   background: linear-gradient(135deg,
     var(--global-theme-color) 0%,
     var(--global-hover-color) 100%
   );
   color: white;
   padding: 0.4rem 0.9rem;
-  border-radius: 20px;
+  border-radius: 16px;
   font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.preview-badge i {
+  font-size: 0.5rem;
+}
+
+.preview-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--global-text-color);
+  margin: 0 0 0.75rem 0;
+}
+
+.preview-description {
+  font-size: 0.9rem;
+  color: var(--global-text-color-light);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.preview-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--global-divider-color);
+}
+
+.preview-chapters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--global-text-color-light);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.preview-chapters i {
+  color: var(--global-theme-color);
+}
+
+.preview-hint {
+  color: var(--global-theme-color);
+  font-size: 0.85rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 12px rgba(var(--global-theme-color-rgb), 0.3);
 }
 
-.status-badge-mini i {
+/* ========== 展开详情区域 ========== */
+.tutorial-details-container {
+  margin: 3rem 0;
+}
+
+.tutorial-details {
+  background: var(--global-bg-color);
+  border: 2px solid var(--global-theme-color);
+  border-radius: 20px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.details-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--global-theme-color);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.details-close:hover {
+  background: var(--global-hover-color);
+  transform: scale(1.05);
+}
+
+.details-content {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 2.5rem;
+}
+
+/* 详情左侧 */
+.details-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.details-image-container {
+  width: 100%;
+  height: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  background: #000;
+}
+
+.image-blur-bg {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background-image: var(--preview-img);
+  background-size: cover;
+  background-position: center;
+  filter: blur(20px) brightness(0.4);
+  transform: scale(1.1);
+}
+
+.details-image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 1.5rem;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+}
+
+.details-placeholder {
+  width: 100%;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.1) 0%,
+    rgba(var(--global-theme-color-rgb), 0.05) 100%
+  );
+  border-radius: 16px;
+  color: var(--global-theme-color);
+  opacity: 0.3;
+}
+
+.details-info {
+  background: var(--global-code-bg-color);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.details-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--global-text-color);
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.details-title i {
+  color: var(--global-theme-color);
+}
+
+.details-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.pulse-dot {
   font-size: 0.5rem;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -418,285 +818,34 @@ document.addEventListener('keydown', function(e) {
   50% { opacity: 0.4; }
 }
 
-.card-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--global-text-color);
-  margin: 0 0 0.75rem 0;
-  line-height: 1.3;
-}
-
-.card-description {
-  font-size: 0.95rem;
-  color: var(--global-text-color-light);
+.details-description {
+  font-size: 1rem;
   line-height: 1.7;
+  color: var(--global-text-color-light);
   margin: 0 0 1.5rem 0;
-  flex: 1;
 }
 
-.card-footer {
+.details-stats {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 1rem;
-  border-top: 1px solid var(--global-divider-color);
+  gap: 1.5rem;
 }
 
-.chapter-count {
+.stat {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--global-text-color-light);
-  font-size: 0.9rem;
+  color: var(--global-text-color);
   font-weight: 500;
 }
 
-.chapter-count i {
+.stat i {
   color: var(--global-theme-color);
 }
 
-.view-details {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--global-theme-color);
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: gap 0.3s;
-}
-
-.tutorial-card-compact:hover .view-details {
-  gap: 0.75rem;
-}
-
-/* 悬停提示 */
-.hover-hint {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.85);
-  color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-weight: 600;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-  z-index: 10;
-}
-
-.tutorial-card-compact:hover .hover-hint {
-  opacity: 1;
-}
-
-/* ========== 模态框 ========== */
-.tutorial-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-
-.tutorial-modal.active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.modal-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(8px);
-}
-
-.modal-container {
-  position: relative;
-  width: 90%;
-  max-width: 1200px;
-  max-height: 85vh;
-  background: var(--global-bg-color);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  transform: scale(0.9);
-  transition: transform 0.3s;
-}
-
-.tutorial-modal.active .modal-container {
-  transform: scale(1);
-}
-
-.modal-close {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  width: 40px;
-  height: 40px;
-  border: none;
-  background: rgba(0,0,0,0.5);
-  color: white;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-close:hover {
-  background: var(--global-theme-color);
-  transform: rotate(90deg);
-}
-
-.modal-content {
-  display: flex;
-  height: 85vh;
-  max-height: 800px;
-}
-
-/* 模态框左侧 */
-.modal-left {
-  width: 35%;
-  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.modal-image-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.modal-image-container::before {
-  content: '';
-  position: absolute;
-  top: -30px;
-  left: -30px;
-  right: -30px;
-  bottom: -30px;
-  background-image: var(--preview-img);
-  background-size: cover;
-  background-position: center;
-  filter: blur(30px) brightness(0.4);
-  transform: scale(1.2);
-}
-
-.image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.2) 0%,
-    transparent 100%
-  );
-}
-
-.modal-preview-img {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 3rem;
-  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.7));
-}
-
-.modal-placeholder {
-  width: 100%;
-  height: 100%;
+/* 详情右侧 - 章节列表 */
+.details-right {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--global-theme-color);
-  opacity: 0.3;
-  padding: 2rem;
-  text-align: center;
-}
-
-/* 模态框右侧 */
-.modal-right {
-  width: 65%;
-  padding: 3rem;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.modal-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--global-text-color);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-}
-
-.modal-title i {
-  color: var(--global-theme-color);
-}
-
-.status-badge-large {
-  padding: 0.6rem 1.2rem;
-  border-radius: 24px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  white-space: nowrap;
-  background: linear-gradient(135deg,
-    var(--global-theme-color) 0%,
-    var(--global-hover-color) 100%
-  );
-  color: white;
-  box-shadow: 0 4px 12px rgba(var(--global-theme-color-rgb), 0.3);
-}
-
-.pulse-dot {
-  font-size: 0.5rem;
-}
-
-.modal-description {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: var(--global-text-color-light);
-  margin: 0 0 2rem 0;
-}
-
-/* 章节列表 */
-.modal-chapters {
-  flex: 1;
 }
 
 .chapters-header {
@@ -711,7 +860,7 @@ document.addEventListener('keydown', function(e) {
   border-bottom: 2px solid var(--global-divider-color);
 }
 
-.chapter-badge {
+.chapters-count {
   background: var(--global-theme-color);
   color: white;
   padding: 0.3rem 0.8rem;
@@ -720,20 +869,37 @@ document.addEventListener('keydown', function(e) {
   margin-left: auto;
 }
 
-.chapters-list-modal {
+.chapters-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: 0.75rem;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
-.chapter-link {
+.chapters-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chapters-grid::-webkit-scrollbar-track {
+  background: var(--global-divider-color);
+  border-radius: 3px;
+}
+
+.chapters-grid::-webkit-scrollbar-thumb {
+  background: var(--global-theme-color);
+  border-radius: 3px;
+}
+
+.chapter-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
   background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--global-text-color);
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -741,13 +907,13 @@ document.addEventListener('keydown', function(e) {
   overflow: hidden;
 }
 
-.chapter-link::before {
+.chapter-item::before {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 3px;
   background: linear-gradient(180deg,
     var(--global-theme-color) 0%,
     var(--global-hover-color) 100%
@@ -756,20 +922,20 @@ document.addEventListener('keydown', function(e) {
   transition: transform 0.3s;
 }
 
-.chapter-link:hover::before {
+.chapter-item:hover::before {
   transform: scaleY(1);
 }
 
-.chapter-link:hover {
-  transform: translateX(6px);
+.chapter-item:hover {
+  transform: translateX(4px);
   background: var(--global-code-bg-color);
   border-color: var(--global-theme-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
 }
 
-.chapter-num {
-  width: 32px;
-  height: 32px;
+.chapter-number {
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -778,27 +944,27 @@ document.addEventListener('keydown', function(e) {
     var(--global-hover-color) 100%
   );
   color: white;
-  border-radius: 8px;
+  border-radius: 7px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   flex-shrink: 0;
 }
 
-.chapter-name {
+.chapter-title {
   flex: 1;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
-.chapter-link i {
+.chapter-arrow {
   color: var(--global-theme-color);
   opacity: 0;
-  transform: translateX(-10px);
+  transform: translateX(-8px);
   transition: all 0.3s;
   font-size: 0.85rem;
 }
 
-.chapter-link:hover i {
+.chapter-item:hover .chapter-arrow {
   opacity: 1;
   transform: translateX(0);
 }
@@ -940,20 +1106,11 @@ document.addEventListener('keydown', function(e) {
 
 /* ========== 响应式 ========== */
 @media (max-width: 1024px) {
-  .modal-content {
-    flex-direction: column;
+  .details-content {
+    grid-template-columns: 1fr;
   }
   
-  .modal-left {
-    width: 100%;
-    height: 250px;
-  }
-  
-  .modal-right {
-    width: 100%;
-  }
-  
-  .chapters-list-modal {
+  .chapters-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -967,21 +1124,26 @@ document.addEventListener('keydown', function(e) {
     font-size: 2rem;
   }
   
-  .tutorials-grid {
-    grid-template-columns: 1fr;
+  .film-frame {
+    width: 240px;
   }
   
-  .modal-container {
-    width: 95%;
-    max-height: 90vh;
+  .film-thumbnail {
+    height: 280px;
   }
   
-  .modal-right {
-    padding: 2rem;
+  .preview-card {
+    width: 300px;
   }
   
-  .modal-title {
-    font-size: 1.5rem;
+  .tutorial-details {
+    padding: 1.5rem;
+  }
+  
+  .scroll-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
   }
   
   .planned-grid {

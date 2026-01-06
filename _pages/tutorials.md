@@ -19,7 +19,8 @@ nav_order: 5
 <div class="arc-series-wrapper">
   <div class="arc-series-track">
     {% for series in site.data.tutorials %}
-    <div class="arc-series-item" data-series-index="{{ forloop.index0 }}">
+    <div class="arc-series-item"
+         data-series-key="{{ series.id | default: series.title }}">
       <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
       <div class="arc-hover-card">
         <h4>{{ series.title }}</h4>
@@ -33,12 +34,14 @@ nav_order: 5
 <!-- ========== 绿色区域：教程完整目录 ========== -->
 <div class="tutorials-container" id="tutorial-detail">
   {% for series in site.data.tutorials %}
-  <div class="tutorial-card">
+  <div class="tutorial-card"
+       data-series-key="{{ series.id | default: series.title }}">
     <div class="row g-0">
 
       <div class="col-md-5">
         <div class="tutorial-image-container">
-          <img src="{{ series.image | relative_url }}" class="tutorial-preview-img">
+          <img src="{{ series.image | relative_url }}"
+               class="tutorial-preview-img">
         </div>
       </div>
 
@@ -48,9 +51,7 @@ nav_order: 5
           <p class="tutorial-description">{{ series.description }}</p>
 
           <div class="chapters-section">
-            <div class="chapters-header">
-              章节列表
-            </div>
+            <div class="chapters-header">章节列表</div>
             <ul class="chapters-list">
               {% for chapter in series.chapters %}
               <li class="chapter-item">
@@ -119,7 +120,7 @@ nav_order: 5
   z-index: 10;
 }
 
-/* ===== hover 弹出卡牌 ===== */
+/* ===== hover 卡牌 ===== */
 .arc-hover-card {
   position: absolute;
   top: -190px;
@@ -140,23 +141,13 @@ nav_order: 5
   transform: translateX(-50%) translateY(-12px);
 }
 
-.arc-hover-card h4 {
-  margin: 0 0 0.5rem;
-}
-
-.arc-hover-card p {
-  font-size: 0.9rem;
-  color: var(--global-text-color-light);
-}
-
-/* ===== 教程详情 ===== */
+/* ===== 详情区域 ===== */
 .tutorial-card {
   display: none;
   margin-bottom: 4rem;
 }
 
 .tutorial-image-container {
-  height: 100%;
   min-height: 320px;
 }
 
@@ -184,11 +175,15 @@ const cards = document.querySelectorAll('.tutorial-card');
 
 arcItems.forEach(item => {
   item.addEventListener('click', () => {
-    const index = item.dataset.seriesIndex;
-    cards.forEach((card, i) => {
-      card.style.display = (i == index) ? 'block' : 'none';
+    const key = item.dataset.seriesKey;
+
+    cards.forEach(card => {
+      card.style.display =
+        card.dataset.seriesKey === key ? 'block' : 'none';
     });
-    document.getElementById('tutorial-detail')
+
+    document
+      .getElementById('tutorial-detail')
       .scrollIntoView({ behavior: 'smooth' });
   });
 });

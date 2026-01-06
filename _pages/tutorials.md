@@ -9,499 +9,449 @@ nav_order: 5
 
 <style>
   :root {
-    /* 定义炫酷的霓虹色系 */
-    --neon-primary: #00f2fe;
-    --neon-secondary: #4facfe;
-    --neon-accent: #f093fb;
-    --card-glass: rgba(255, 255, 255, 0.05);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --text-glow: 0 0 10px rgba(79, 172, 254, 0.5);
+    /* 专业配色方案：克制、冷静 */
+    --tech-bg: var(--global-bg-color);
+    --tech-card-bg: var(--global-bg-color); /* 或者稍微亮一点的颜色 */
+    --tech-border: var(--global-divider-color);
+    --tech-primary: var(--global-theme-color); /* 使用博客主色调 */
+    --tech-text-main: var(--global-text-color);
+    --tech-text-sub: var(--global-text-color-light);
+    
+    /* 阴影层次 */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
-  /* ========== 动态背景层 ========== */
-  .cool-bg-layer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
-    overflow: hidden;
-    background: radial-gradient(circle at 50% 50%, #1a1a2e, #16213e);
+  /* ========== 头部区域 ========== */
+  .tech-hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--tech-border);
+    margin-bottom: 3rem;
   }
 
-  /* 漂浮的光斑 */
-  .blob {
-    position: absolute;
-    filter: blur(80px);
-    opacity: 0.4;
-    animation: float 20s infinite ease-in-out alternate;
-  }
-  .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #4facfe; animation-delay: 0s; }
-  .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: #764ba2; animation-delay: -5s; }
-  .blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: #f093fb; animation-delay: -10s; }
-
-  @keyframes float {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(30px, 50px) scale(1.1); }
+  .tech-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--tech-text-main);
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
   }
 
-  /* ========== 页面头部 ========== */
-  .tutorials-hero {
-    text-align: center;
-    padding: 5rem 1rem 4rem;
-    position: relative;
-  }
-  
-  .hero-title {
-    font-size: clamp(2.5rem, 6vw, 4rem);
-    font-weight: 900;
-    margin-bottom: 1rem;
-    color: white;
-    text-shadow: var(--text-glow);
-    letter-spacing: -1px;
-    /* 标题渐变 */
-    background: linear-gradient(to right, #fff, #b3e5fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-  }
-
-  .hero-subtitle {
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.8);
+  .tech-subtitle {
+    font-size: 1.1rem;
+    color: var(--tech-text-sub);
+    line-height: 1.6;
     max-width: 600px;
-    margin: 0 auto;
-    font-weight: 300;
-    letter-spacing: 1px;
   }
 
-  /* ========== 3D 卡片网格 ========== */
-  .tutorials-grid {
+  /* ========== 网格布局 ========== */
+  .tech-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2.5rem;
-    padding: 1rem 2rem 5rem;
-    max-width: 1400px;
-    margin: 0 auto;
-    perspective: 1000px; /* 开启 3D 视角 */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 5rem;
   }
 
-  .tilt-card {
-    position: relative;
-    border-radius: 20px;
-    background: var(--card-glass);
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    transform-style: preserve-3d;
-    transform: translateZ(0);
-    transition: transform 0.1s ease-out; /* 快速响应鼠标 */
-    cursor: pointer;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  /* ========== 专业卡片样式 ========== */
+  .tech-card {
+    background: var(--tech-card-bg);
+    border: 1px solid var(--tech-border);
+    border-radius: 8px;
     overflow: hidden;
-    opacity: 0; /* 初始隐藏，用于入场动画 */
-    animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  }
-
-  /* 入场动画延迟 */
-  {% for i in (1..10) %}
-  .tilt-card:nth-child({{ i }}) { animation-delay: {{ i | times: 0.1 }}s; }
-  {% endfor %}
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* 卡片悬停光效 */
-  .tilt-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    border-radius: 20px;
-    padding: 2px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0) 40%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0.5;
-    transition: opacity 0.3s;
-  }
-
-  .tilt-card:hover::before {
-    opacity: 1;
-    background: linear-gradient(135deg, var(--neon-primary), var(--neon-accent));
-  }
-
-  /* 卡片内部内容浮动 (3D层次感) */
-  .card-inner {
-    transform: translateZ(20px); /* 让内容浮起来 */
-    height: 100%;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
-  .card-cover {
-    height: 180px;
+  /* 悬停效果：仅轻微上浮和加深阴影，不乱动 */
+  .tech-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--tech-primary);
+  }
+
+  .card-img-box {
+    height: 160px;
+    width: 100%;
+    background: var(--global-code-bg-color); /* 这里的背景色可以根据你的深浅色模式自动变 */
     position: relative;
-    border-radius: 20px 20px 0 0;
+    border-bottom: 1px solid var(--tech-border);
     overflow: hidden;
   }
 
-  .card-cover img {
+  .card-img-box img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
   }
-
-  .tilt-card:hover .card-cover img {
-    transform: scale(1.1);
+  
+  .tech-card:hover .card-img-box img {
+    transform: scale(1.05);
   }
 
-  .card-badge {
+  /* 如果没有图片的占位符 */
+  .card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--tech-text-sub);
+    opacity: 0.3;
+  }
+
+  .card-status {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.2);
+    top: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.7);
     color: #fff;
-    padding: 4px 12px;
-    border-radius: 30px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
     backdrop-filter: blur(4px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   }
 
   .card-body {
     padding: 1.5rem;
-    color: white;
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(0,0,0,0.2) 100%);
   }
 
   .card-title {
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--tech-text-main);
     margin: 0 0 0.5rem 0;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
 
   .card-desc {
     font-size: 0.9rem;
-    color: rgba(255,255,255,0.7);
+    color: var(--tech-text-sub);
     line-height: 1.6;
     margin-bottom: 1.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 限制2行 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  .card-footer {
+  .card-meta {
     margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--tech-border);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
     font-size: 0.85rem;
-    color: var(--neon-primary);
-    font-weight: 600;
+    color: var(--tech-text-sub);
   }
 
-  /* ========== 详情模态框 (Cyberpunk 风格) ========== */
-  .modal-overlay {
+  .card-meta i {
+    color: var(--tech-primary);
+    margin-right: 0.4rem;
+  }
+
+  /* ========== 弹窗 (Modal) - 稳定版 ========== */
+  .modal-backdrop {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    z-index: 10000;
-    display: flex;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* 纯粹的半透明黑，不用太复杂的模糊 */
+    z-index: 9999;
+    display: flex; /* Flex 居中 */
     align-items: center;
     justify-content: center;
     opacity: 0;
-    pointer-events: none;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    visibility: hidden;
+    transition: all 0.2s ease;
   }
 
-  .modal-overlay.active {
+  .modal-backdrop.active {
     opacity: 1;
-    pointer-events: auto;
+    visibility: visible;
   }
 
-  .modal-content {
+  .modal-panel {
     width: 90%;
-    max-width: 900px;
+    max-width: 800px;
     max-height: 85vh;
-    background: #1a1a2e;
-    border: 1px solid var(--neon-secondary);
-    box-shadow: 0 0 30px rgba(79, 172, 254, 0.2);
-    border-radius: 24px;
-    overflow: hidden;
-    transform: scale(0.9) translateY(20px);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--tech-bg);
+    border-radius: 8px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     display: flex;
     flex-direction: column;
-    position: relative;
+    transform: scale(0.98);
+    transition: transform 0.2s ease;
+    border: 1px solid var(--tech-border);
+    position: relative; /* 确保 z-index 上下文正确 */
   }
 
-  .modal-overlay.active .modal-content {
-    transform: scale(1) translateY(0);
+  .modal-backdrop.active .modal-panel {
+    transform: scale(1);
   }
 
   .modal-header {
-    background: linear-gradient(90deg, rgba(26,26,46,1) 0%, rgba(22,33,62,1) 100%);
-    padding: 2rem;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--tech-border);
     display: flex;
-    gap: 2rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    justify-content: space-between;
+    align-items: center;
+    background: var(--global-code-bg-color); /* 轻微区分头部 */
   }
 
-  .modal-thumb {
-    width: 100px;
-    height: 100px;
-    border-radius: 16px;
-    object-fit: cover;
-    border: 2px solid var(--neon-secondary);
-    box-shadow: 0 0 15px rgba(79, 172, 254, 0.4);
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
   }
-
-  .modal-text h2 {
-    color: white;
-    margin: 0 0 0.5rem;
-    font-size: 1.8rem;
-  }
-  .modal-text p { color: rgba(255,255,255,0.7); }
 
   .close-btn {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    color: white;
     background: none;
     border: none;
     font-size: 1.5rem;
+    color: var(--tech-text-sub);
     cursor: pointer;
-    transition: transform 0.3s;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: color 0.2s;
   }
-  .close-btn:hover { transform: rotate(90deg) scale(1.2); color: var(--neon-accent); }
 
-  .modal-body {
-    padding: 2rem;
+  .close-btn:hover {
+    color: var(--tech-primary);
+  }
+
+  .modal-content {
+    padding: 0; /* 列表直接贴边或者留白 */
     overflow-y: auto;
-    /* 自定义滚动条 */
-    scrollbar-width: thin;
-    scrollbar-color: var(--neon-secondary) #1a1a2e;
+    flex: 1;
   }
-  
-  .modal-body::-webkit-scrollbar { width: 6px; }
-  .modal-body::-webkit-scrollbar-thumb { background: var(--neon-secondary); border-radius: 3px; }
 
-  .chapter-item {
+  /* 章节列表 - 类似文件浏览器的感觉 */
+  .chapter-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .chapter-link {
     display: flex;
     align-items: center;
-    padding: 1.2rem;
-    margin-bottom: 1rem;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 12px;
-    color: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--tech-border);
     text-decoration: none;
-    transition: all 0.3s;
+    color: var(--tech-text-main);
+    transition: background 0.1s;
+    /* 关键：确保它是块级交互区域 */
+    position: relative; 
+    z-index: 10; 
   }
 
-  .chapter-item:hover {
-    background: rgba(79, 172, 254, 0.1);
-    border-color: var(--neon-secondary);
-    transform: translateX(10px);
-    box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
+  .chapter-link:hover {
+    background: rgba(var(--global-theme-color-rgb), 0.05); /* 极淡的主题色背景 */
     text-decoration: none;
-    color: #fff;
+    color: var(--tech-primary);
   }
 
-  .chapter-num {
-    font-family: 'Courier New', monospace;
-    color: var(--neon-accent);
-    font-weight: bold;
-    margin-right: 1.5rem;
-    font-size: 1.2rem;
+  .chapter-index {
+    font-family: monospace;
+    color: var(--tech-text-sub);
+    width: 2.5rem;
+    font-size: 1.1rem;
+    opacity: 0.6;
   }
 
-  /* ========== 计划内容芯片 ========== */
-  .plan-chips {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+  .chapter-name {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .chapter-arrow {
+    opacity: 0.3;
+    font-size: 0.9rem;
+  }
+  
+  .chapter-link:hover .chapter-arrow {
+    opacity: 1;
+    color: var(--tech-primary);
+  }
+
+  /* ========== 计划中模块 (Mini List) ========== */
+  .planned-section {
+    border-top: 1px solid var(--tech-border);
+    padding-top: 3rem;
+  }
+  
+  .planned-header {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--tech-text-sub);
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+
+  .planned-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
-    padding-bottom: 4rem;
   }
 
-  .chip {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--neon-secondary);
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border-radius: 50px;
+  .planned-item {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    transition: all 0.3s;
-    cursor: default;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--global-code-bg-color);
+    border-radius: 6px;
+    color: var(--tech-text-sub);
+    border: 1px dashed var(--tech-border);
   }
 
-  .chip:hover {
-    background: var(--neon-secondary);
-    box-shadow: 0 0 20px var(--neon-secondary);
-    transform: scale(1.05);
+  .planned-item i {
+    color: var(--tech-text-sub);
+    opacity: 0.5;
   }
-  
+
   /* 移动端适配 */
   @media (max-width: 768px) {
-    .modal-header { flex-direction: column; text-align: center; }
-    .modal-thumb { margin: 0 auto; }
-    .hero-title { font-size: 2.2rem; }
+    .tech-title { font-size: 1.8rem; }
+    .modal-panel { width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
+    .chapter-link { padding: 1.2rem; }
   }
 </style>
 
-<div class="cool-bg-layer">
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-</div>
-
-<div class="tutorials-hero">
-  <h1 class="hero-title">
-    <i class="fas fa-meteor fa-spin-hover"></i> EXPLORE KNOWLEDGE
+<div class="tech-hero">
+  <h1 class="tech-title">
+    <i class="fas fa-book-reader" style="color: var(--tech-primary);"></i>
+    Tutorials
   </h1>
-  <p class="hero-subtitle">系统化的技术学习路径 · 沉浸式阅读体验</p>
+  <p class="tech-subtitle">
+    系统化的技术专栏。这里汇总了按系列编写的深度教程，旨在提供完整的知识路径，而非碎片化的技巧。
+  </p>
 </div>
 
-<div class="tutorials-grid" id="gridArea">
+<div class="tech-grid">
   {% assign tutorial_series = site.data.tutorials %}
   {% for series in tutorial_series %}
-  <div class="tilt-card" onclick="openModal('modal-{{ forloop.index }}')">
-    <div class="card-inner">
-      <div class="card-cover">
-        {% if series.image %}
-        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
-        {% else %}
-        <div style="width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;color:#333;">
-          <i class="fas fa-code fa-3x"></i>
-        </div>
-        {% endif %}
-        {% if series.status %}
-        <span class="card-badge">{{ series.status }}</span>
-        {% endif %}
+  <div class="tech-card" onclick="openModal('modal-{{ forloop.index }}')">
+    <div class="card-img-box">
+      {% if series.image %}
+      <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" loading="lazy">
+      {% else %}
+      <div class="card-placeholder">
+        <i class="fas fa-terminal fa-3x"></i>
       </div>
+      {% endif %}
       
-      <div class="card-body">
-        <h3 class="card-title">{{ series.title }}</h3>
-        <p class="card-desc">{{ series.description | truncate: 50 }}</p>
-        <div class="card-footer">
-          <i class="fas fa-layer-group"></i>
-          {{ series.chapters.size }} 章节
-          <i class="fas fa-arrow-right" style="margin-left:auto;"></i>
-        </div>
+      {% if series.status %}
+      <span class="card-status">{{ series.status }}</span>
+      {% endif %}
+    </div>
+    
+    <div class="card-body">
+      <h3 class="card-title">{{ series.title }}</h3>
+      <p class="card-desc">{{ series.description }}</p>
+      
+      <div class="card-meta">
+        <span><i class="fas fa-list"></i> {{ series.chapters.size }} 章节</span>
+        <span><i class="fas fa-arrow-right" style="font-size: 0.8em;"></i></span>
       </div>
     </div>
   </div>
   {% endfor %}
 </div>
 
-<div style="text-align: center; margin: 4rem 0 2rem;">
-  <h4 style="color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2rem;">Coming Soon</h4>
-  <div class="plan-chips">
-    <div class="chip"><i class="fas fa-magic"></i> Shader 进阶</div>
-    <div class="chip"><i class="fas fa-cube"></i> Unity DOTS</div>
-    <div class="chip"><i class="fas fa-robot"></i> AI 行为树</div>
+<div class="planned-section">
+  <h4 class="planned-header"><i class="fas fa-hourglass-half"></i> Writing Plan</h4>
+  <div class="planned-list">
+    <div class="planned-item">
+      <i class="fas fa-cube"></i>
+      <span>Unity Shader 进阶</span>
+    </div>
+    <div class="planned-item">
+      <i class="fas fa-project-diagram"></i>
+      <span>设计模式实战</span>
+    </div>
+    <div class="planned-item">
+      <i class="fas fa-gamepad"></i>
+      <span>游戏服务器架构</span>
+    </div>
   </div>
 </div>
 
-<div id="modals-container">
-  {% for series in tutorial_series %}
-  <div class="modal-overlay" id="modal-{{ forloop.index }}" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <button class="close-btn" onclick="closeModalDirect('modal-{{ forloop.index }}')"><i class="fas fa-times"></i></button>
-      
-      <div class="modal-header">
-        {% if series.image %}
-        <img src="{{ series.image | relative_url }}" class="modal-thumb">
-        {% else %}
-        <div class="modal-thumb" style="background:#000;display:flex;align-items:center;justify-content:center;color:white;"><i class="fas fa-book"></i></div>
-        {% endif %}
-        <div class="modal-text">
-          <h2>{{ series.title }}</h2>
-          <p>{{ series.description }}</p>
-        </div>
-      </div>
-      
-      <div class="modal-body">
+{% for series in tutorial_series %}
+<div class="modal-backdrop" id="modal-{{ forloop.index }}" onclick="closeModal(event)">
+  <div class="modal-panel" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ series.title }}</h3>
+      <button class="close-btn" onclick="closeModalDirect('modal-{{ forloop.index }}')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-content">
+      <div class="chapter-list">
         {% for chapter in series.chapters %}
-        <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-item">
-          <span class="chapter-num">0{{ forloop.index }}</span>
-          <span>{{ chapter.title }}</span>
-          <i class="fas fa-chevron-right" style="margin-left: auto; opacity: 0.5;"></i>
+        <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-link">
+          <span class="chapter-index">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+          <span class="chapter-name">{{ chapter.title }}</span>
+          <i class="fas fa-chevron-right chapter-arrow"></i>
         </a>
         {% endfor %}
       </div>
     </div>
   </div>
-  {% endfor %}
 </div>
+{% endfor %}
 
 <script>
-// ========== 3D TILT 效果脚本 (核心炫酷逻辑) ==========
-const cards = document.querySelectorAll('.tilt-card');
-
-cards.forEach(card => {
-  card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // 计算中心点
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    
-    // 计算旋转角度 (限制最大旋转角度为 15deg)
-    const rotateX = ((y - centerY) / centerY) * -10;
-    const rotateY = ((x - centerX) / centerX) * 10;
-    
-    // 应用变换：旋转 + 略微放大
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-  });
-
-  // 鼠标离开时复原
-  card.addEventListener('mouseleave', () => {
-    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
-  });
-});
-
-// ========== 模态框逻辑 ==========
+// 打开弹窗
 function openModal(id) {
   const modal = document.getElementById(id);
-  modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
+  if(modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // 锁住背景滚动
+  }
 }
 
-function closeModal(e) {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('active');
+// 点击背景关闭
+function closeModal(event) {
+  // 只有直接点击 backdrop 层才关闭
+  if (event.target.classList.contains('modal-backdrop')) {
+    event.target.classList.remove('active');
     document.body.style.overflow = '';
   }
 }
 
+// 按钮直接关闭
 function closeModalDirect(id) {
-  document.getElementById(id).classList.remove('active');
-  document.body.style.overflow = '';
+  const modal = document.getElementById(id);
+  if(modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
 }
 
-// ESC 关闭
-document.addEventListener('keydown', (e) => {
+// 键盘 ESC 关闭
+document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    document.querySelectorAll('.modal-overlay.active').forEach(m => {
+    const actives = document.querySelectorAll('.modal-backdrop.active');
+    actives.forEach(m => {
       m.classList.remove('active');
-      document.body.style.overflow = '';
     });
+    document.body.style.overflow = '';
   }
 });
 </script>

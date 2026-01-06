@@ -153,22 +153,22 @@ nav_order: 5
     color: var(--accent-color);
   }
 
-  /* ========== 详情面板 (折叠动画) ========== */
+  /* ========== 详情面板 - 重新设计 ========== */
   .details-panel {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.35s ease;
   }
 
   .details-panel.active {
@@ -177,118 +177,271 @@ nav_order: 5
   }
 
   .details-container {
-    width: 90%;
-    max-width: 900px;
-    max-height: 85vh;
-    background: var(--global-bg-color);
+    width: 92%;
+    max-width: 720px;
+    max-height: 90vh;
+    background: linear-gradient(165deg, rgba(30, 32, 40, 0.98) 0%, rgba(20, 22, 28, 0.99) 100%);
     border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 25px 80px -12px rgba(0, 0, 0, 0.6),
+      0 0 100px -20px var(--accent-color);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transform: translateY(20px) scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(30px) scale(0.92);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .details-panel.active .details-container {
     transform: translateY(0) scale(1);
   }
 
-  .details-header {
-    padding: 2rem;
-    background: var(--global-code-bg-color);
-    display: flex;
-    gap: 2rem;
-    align-items: flex-start;
+  /* 顶部封面区域 */
+  .details-hero {
     position: relative;
-    border-bottom: 1px solid var(--global-divider-color);
+    height: 200px;
+    overflow: hidden;
   }
 
-  .details-thumb {
-    width: 120px;
-    height: 160px;
-    border-radius: 12px;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-  }
-  
-  .details-thumb img {
+  .details-hero-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    background-size: cover;
+    background-position: center;
+    filter: blur(0px);
+    transform: scale(1.1);
   }
 
-  .details-info {
-    flex: 1;
+  .details-hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      180deg,
+      rgba(20, 22, 28, 0) 0%,
+      rgba(20, 22, 28, 0.4) 50%,
+      rgba(20, 22, 28, 0.95) 100%
+    );
   }
 
-  .details-info h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.8rem;
-  }
-
+  /* 关闭按钮 */
   .details-close-btn {
     position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--global-text-color-light);
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.25s ease;
+    z-index: 10;
   }
 
   .details-close-btn:hover {
-    color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transform: rotate(90deg);
   }
 
+  /* 状态标签 */
+  .details-status {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--accent-color);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
+  }
+
+  /* 信息区域 */
+  .details-info {
+    position: relative;
+    padding: 0 2rem 1.5rem;
+    margin-top: -50px;
+    z-index: 5;
+  }
+
+  .details-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.75rem;
+    line-height: 1.3;
+  }
+
+  .details-desc {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.7;
+    margin: 0 0 1.25rem;
+  }
+
+  .details-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .meta-item i {
+    color: var(--accent-color);
+    font-size: 0.9rem;
+  }
+
+  .meta-item strong {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 600;
+  }
+
+  /* 分隔线 */
+  .details-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    margin: 0 2rem;
+  }
+
+  /* 章节列表区域 */
   .details-body {
-    padding: 2rem;
+    padding: 1.5rem 1.5rem 2rem;
     overflow-y: auto;
+    flex: 1;
+  }
+
+  .chapter-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 0.5rem 1rem;
+    font-weight: 600;
   }
 
   .chapter-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: grid;
-    gap: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .chapter-link {
     display: flex;
     align-items: center;
-    padding: 1rem 1.5rem;
-    background: var(--global-bg-color);
-    border: 1px solid var(--global-divider-color);
-    border-radius: 12px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
     text-decoration: none;
-    color: var(--global-text-color);
-    transition: all 0.2s;
+    color: rgba(255, 255, 255, 0.85);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .chapter-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 3px;
+    background: var(--accent-color);
+    opacity: 0;
+    transition: opacity 0.25s ease;
   }
 
   .chapter-link:hover {
-    border-color: var(--accent-color);
-    transform: translateX(5px);
-    background: var(--global-code-bg-color);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(var(--global-theme-color-rgb, 100, 181, 246), 0.3);
+    transform: translateX(6px);
     text-decoration: none;
   }
 
+  .chapter-link:hover::before {
+    opacity: 1;
+  }
+
   .chapter-num {
-    width: 28px;
-    height: 28px;
-    background: var(--accent-color);
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent-color), rgba(var(--global-theme-color-rgb, 100, 181, 246), 0.7));
     color: white;
-    border-radius: 50%;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-right: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-right: 14px;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px -2px rgba(var(--global-theme-color-rgb, 100, 181, 246), 0.4);
+  }
+
+  .chapter-title {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  .chapter-arrow {
+    opacity: 0.3;
+    font-size: 0.85rem;
+    transition: all 0.25s ease;
+  }
+
+  .chapter-link:hover .chapter-arrow {
+    opacity: 1;
+    transform: translateX(4px);
+    color: var(--accent-color);
+  }
+
+  /* 自定义滚动条 */
+  .details-body::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .details-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .details-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+
+  .details-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
   }
 
   /* ========== 计划内容区 ========== */
@@ -347,18 +500,60 @@ nav_order: 5
     border-radius: 12px;
   }
 
-  /* 移动端适配 */
+  /* ========== 移动端适配 ========== */
   @media (max-width: 768px) {
-    .details-header {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 1.5rem;
+    .details-container {
+      width: 95%;
+      max-height: 92vh;
+      border-radius: 20px;
     }
-    .details-thumb {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
+
+    .details-hero {
+      height: 160px;
+    }
+
+    .details-info {
+      padding: 0 1.5rem 1.25rem;
+      margin-top: -40px;
+    }
+
+    .details-title {
+      font-size: 1.35rem;
+    }
+
+    .details-body {
+      padding: 1.25rem;
+    }
+
+    .chapter-link {
+      padding: 12px 14px;
+    }
+
+    .chapter-num {
+      width: 28px;
+      height: 28px;
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .details-hero {
+      height: 140px;
+    }
+
+    .details-close-btn {
+      width: 36px;
+      height: 36px;
+      top: 12px;
+      right: 12px;
+    }
+
+    .details-meta {
+      gap: 0.75rem;
+    }
+
+    .meta-item {
+      font-size: 0.8rem;
     }
   }
 </style>
@@ -406,41 +601,61 @@ nav_order: 5
   {% for series in tutorial_series %}
   <div class="details-panel" id="detail-modal-{{ forloop.index }}" onclick="closeDetails(event)">
     <div class="details-container" onclick="event.stopPropagation()">
-      <div class="details-header">
+      
+      <!-- 顶部封面 -->
+      <div class="details-hero">
+        {% if series.image %}
+          <div class="details-hero-bg" style="background-image: url('{{ series.image | relative_url }}');"></div>
+        {% else %}
+          <div class="details-hero-bg" style="background: linear-gradient(135deg, #1a1c24 0%, #2d3142 100%);"></div>
+        {% endif %}
+        <div class="details-hero-overlay"></div>
+        
+        {% if series.status %}
+          <div class="details-status">
+            <i class="fas fa-circle" style="font-size: 6px;"></i>
+            {{ series.status }}
+          </div>
+        {% endif %}
+        
         <button class="details-close-btn" onclick="closeDetailsDirect('detail-modal-{{ forloop.index }}')">
           <i class="fas fa-times"></i>
         </button>
+      </div>
+      
+      <!-- 信息区域 -->
+      <div class="details-info">
+        <h2 class="details-title">{{ series.title }}</h2>
+        <p class="details-desc">{{ series.description }}</p>
         
-        <div class="details-thumb">
-          {% if series.image %}
-            <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
-          {% else %}
-            <div class="card-placeholder" style="font-size: 2rem;">
-              <i class="fas fa-book"></i>
-            </div>
-          {% endif %}
-        </div>
-        
-        <div class="details-info">
-          <h2>{{ series.title }}</h2>
-          <p>{{ series.description }}</p>
-          <div style="margin-top: 1rem; color: var(--accent-color); font-weight: bold;">
-            <i class="fas fa-book-reader"></i> 共 {{ series.chapters.size }} 节课程
+        <div class="details-meta">
+          <div class="meta-item">
+            <i class="fas fa-book-reader"></i>
+            <span>共 <strong>{{ series.chapters.size }}</strong> 节课程</span>
+          </div>
+          <div class="meta-item">
+            <i class="fas fa-clock"></i>
+            <span>预计 <strong>{{ series.chapters.size | times: 15 }}</strong> 分钟</span>
           </div>
         </div>
       </div>
       
+      <div class="details-divider"></div>
+      
+      <!-- 章节列表 -->
       <div class="details-body">
+        <div class="chapter-section-title">课程目录</div>
         <div class="chapter-list">
           {% for chapter in series.chapters %}
           <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-link">
             <span class="chapter-num">{{ forloop.index }}</span>
             <span class="chapter-title">{{ chapter.title }}</span>
-            <i class="fas fa-arrow-right" style="margin-left: auto; opacity: 0.5;"></i>
+            <i class="fas fa-chevron-right chapter-arrow"></i>
           </a>
           {% endfor %}
         </div>
       </div>
+      
     </div>
   </div>
   {% endfor %}
@@ -482,7 +697,7 @@ function openDetails(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // 禁止背景滚动
+    document.body.style.overflow = 'hidden';
   }
 }
 

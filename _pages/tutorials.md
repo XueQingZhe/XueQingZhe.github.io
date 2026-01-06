@@ -1,399 +1,516 @@
-@ -31,8 +31,8 @@ nav_order: 5
-    <div class="card-glow"></div>
-    
-    <div class="row g-0">
-      <!-- 左侧预览图 -->
-      <div class="col-md-5">
-      <!-- 左侧预览图 - 缩小宽度 -->
-      <div class="col-md-4">
-        {% if series.image %}
-        <div class="tutorial-image-container" style="--preview-img: url('{{ series.image | relative_url }}')">
-          <div class="image-overlay"></div>
-@ -41,15 +41,15 @@ nav_order: 5
-        {% else %}
-        <div class="placeholder-image">
-          <div class="placeholder-icon">
-            <i class="fas fa-book-open fa-4x"></i>
-            <i class="fas fa-book-open fa-3x"></i>
-          </div>
-          <p class="placeholder-text">{{ series.title }}</p>
+---
+layout: page
+permalink: /tutorials/
+title: tutorials
+description: 技术分享与教程
+nav: true
+nav_order: 5
+---
+
+<style>
+  :root {
+    --card-radius: 16px;
+    --card-bg: var(--global-bg-color);
+    --card-border: var(--global-divider-color);
+    --accent-color: var(--global-theme-color);
+    --hover-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+  }
+
+  /* ========== Hero 区域 ========== */
+  .tutorials-hero {
+    text-align: center;
+    padding: 4rem 1rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hero-title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--global-text-color), var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--global-text-color-light);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ========== 教程卡片网格 ========== */
+  .tutorials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .tutorial-card {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tutorial-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--hover-shadow);
+    border-color: var(--accent-color);
+  }
+
+  .card-cover {
+    height: 180px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background: var(--global-code-bg-color);
+  }
+
+  .card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+
+  .tutorial-card:hover .card-cover img {
+    transform: scale(1.05);
+  }
+
+  .card-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-color);
+    opacity: 0.2;
+    font-size: 3rem;
+  }
+
+  .card-content {
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: white;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: var(--global-text-color);
+  }
+
+  .card-desc {
+    font-size: 0.9rem;
+    color: var(--global-text-color-light);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-meta {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--global-text-color-light);
+    font-weight: 500;
+  }
+
+  .card-meta i {
+    color: var(--accent-color);
+  }
+
+  /* ========== 详情面板 (折叠动画) ========== */
+  .details-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .details-panel.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .details-container {
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    background: var(--global-bg-color);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .details-panel.active .details-container {
+    transform: translateY(0) scale(1);
+  }
+
+  .details-header {
+    padding: 2rem;
+    background: var(--global-code-bg-color);
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    position: relative;
+    border-bottom: 1px solid var(--global-divider-color);
+  }
+
+  .details-thumb {
+    width: 120px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  }
+  
+  .details-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .details-info {
+    flex: 1;
+  }
+
+  .details-info h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.8rem;
+  }
+
+  .details-close-btn {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--global-text-color-light);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .details-close-btn:hover {
+    color: var(--accent-color);
+  }
+
+  .details-body {
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  .chapter-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .chapter-link {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: var(--global-bg-color);
+    border: 1px solid var(--global-divider-color);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--global-text-color);
+    transition: all 0.2s;
+  }
+
+  .chapter-link:hover {
+    border-color: var(--accent-color);
+    transform: translateX(5px);
+    background: var(--global-code-bg-color);
+    text-decoration: none;
+  }
+
+  .chapter-num {
+    width: 28px;
+    height: 28px;
+    background: var(--accent-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 1rem;
+    flex-shrink: 0;
+  }
+
+  /* ========== 计划内容区 ========== */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4rem 0;
+    color: var(--global-divider-color);
+  }
+  
+  .section-divider::before,
+  .section-divider::after {
+    content: "";
+    height: 1px;
+    background: currentColor;
+    flex: 1;
+    margin: 0 1rem;
+    opacity: 0.3;
+  }
+
+  .planned-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .planned-card {
+    background: var(--global-code-bg-color);
+    border: 1px dashed var(--global-divider-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s;
+  }
+
+  .planned-card:hover {
+    border-style: solid;
+    border-color: var(--accent-color);
+    background: var(--card-bg);
+    transform: translateY(-5px);
+  }
+
+  .planned-icon {
+    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--global-theme-color-rgb), 0.1);
+    color: var(--accent-color);
+    border-radius: 12px;
+  }
+
+  /* 移动端适配 */
+  @media (max-width: 768px) {
+    .details-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1.5rem;
+    }
+    .details-thumb {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+    }
+  }
+</style>
+
+<div class="tutorials-hero">
+  <h1 class="hero-title">
+    <i class="fas fa-graduation-cap"></i>
+    教程系列
+  </h1>
+  <p class="hero-subtitle">系统化的技术学习路径，从入门到精通的完整知识体系。</p>
+</div>
+
+<div class="tutorials-grid">
+  {% assign tutorial_series = site.data.tutorials %}
+  {% for series in tutorial_series %}
+  <div class="tutorial-card" onclick="openDetails('detail-modal-{{ forloop.index }}')">
+    <div class="card-cover">
+      {% if series.image %}
+        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" loading="lazy">
+      {% else %}
+        <div class="card-placeholder">
+          <i class="fas fa-book-open"></i>
         </div>
-        {% endif %}
+      {% endif %}
+      
+      {% if series.status %}
+        <span class="card-status">{{ series.status }}</span>
+      {% endif %}
+    </div>
+    
+    <div class="card-content">
+      <h3 class="card-title">{{ series.title }}</h3>
+      <p class="card-desc">{{ series.description }}</p>
+      
+      <div class="card-meta">
+        <i class="fas fa-list-ul"></i>
+        <span>{{ series.chapters.size }} 章节</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="modal-container">
+  {% for series in tutorial_series %}
+  <div class="details-panel" id="detail-modal-{{ forloop.index }}" onclick="closeDetails(event)">
+    <div class="details-container" onclick="event.stopPropagation()">
+      <div class="details-header">
+        <button class="details-close-btn" onclick="closeDetailsDirect('detail-modal-{{ forloop.index }}')">
+          <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="details-thumb">
+          {% if series.image %}
+            <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+          {% else %}
+            <div class="card-placeholder" style="font-size: 2rem;">
+              <i class="fas fa-book"></i>
+            </div>
+          {% endif %}
+        </div>
+        
+        <div class="details-info">
+          <h2>{{ series.title }}</h2>
+          <p>{{ series.description }}</p>
+          <div style="margin-top: 1rem; color: var(--accent-color); font-weight: bold;">
+            <i class="fas fa-book-reader"></i> 共 {{ series.chapters.size }} 节课程
+          </div>
+        </div>
       </div>
       
-      <!-- 右侧内容 -->
-      <div class="col-md-7">
-      <!-- 右侧内容 - 增加宽度 -->
-      <div class="col-md-8">
-        <div class="tutorial-content">
-          <div class="content-header">
-            <h3 class="tutorial-title">
-@ -73,17 +73,16 @@ nav_order: 5
-              <span class="chapter-count-badge">{{ series.chapters.size }}</span>
-            </div>
-            
-            <ul class="chapters-list">
-            <!-- 改为两列布局 -->
-            <div class="chapters-grid">
-              {% for chapter in series.chapters %}
-              <li class="chapter-item">
-                <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/">
-                  <span class="chapter-number">{{ forloop.index }}</span>
-                  <span class="chapter-title">{{ chapter.title }}</span>
-                  <i class="fas fa-arrow-right chapter-arrow"></i>
-                </a>
-              </li>
-              <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-item">
-                <span class="chapter-number">{{ forloop.index }}</span>
-                <span class="chapter-title">{{ chapter.title }}</span>
-                <i class="fas fa-arrow-right chapter-arrow"></i>
-              </a>
-              {% endfor %}
-            </ul>
-            </div>
-          </div>
-          
-          <div class="tutorial-footer">
-@ -281,11 +280,11 @@ nav_order: 5
-  border-color: var(--global-theme-color);
-}
+      <div class="details-body">
+        <div class="chapter-list">
+          {% for chapter in series.chapters %}
+          <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-link">
+            <span class="chapter-num">{{ forloop.index }}</span>
+            <span class="chapter-title">{{ chapter.title }}</span>
+            <i class="fas fa-arrow-right" style="margin-left: auto; opacity: 0.5;"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 
-/* ========== 图片区域 ========== */
-/* ========== 图片区域 - 缩小高度 ========== */
-.tutorial-image-container {
-  width: 100%;
-  height: 100%;
-  min-height: 360px;
-  min-height: 280px;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-@ -295,15 +294,15 @@ nav_order: 5
-.tutorial-image-container::before {
-  content: '';
-  position: absolute;
-  top: -30px;
-  left: -30px;
-  right: -30px;
-  bottom: -30px;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  background-image: var(--preview-img);
-  background-size: cover;
-  background-position: center;
-  filter: blur(30px) brightness(0.4);
-  transform: scale(1.2);
-  filter: blur(25px) brightness(0.4);
-  transform: scale(1.15);
-  z-index: 0;
-}
+<div class="section-divider">
+  <span style="background: var(--global-bg-color); padding: 0 1rem; font-weight: bold;">
+    <i class="fas fa-hourglass-half"></i> 筹备中
+  </span>
+</div>
 
-@ -328,14 +327,14 @@ nav_order: 5
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 2rem;
-  filter: drop-shadow(0 10px 25px rgba(0,0,0,0.7));
-  padding: 1.5rem;
-  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.7));
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
+<div class="planned-grid">
+  <div class="planned-card">
+    <div class="planned-icon"><i class="fas fa-palette"></i></div>
+    <div>
+      <h4 style="margin:0 0 0.3rem">Shader 入门</h4>
+      <p style="margin:0; font-size:0.85rem; opacity:0.7">着色器编程基础</p>
+    </div>
+  </div>
+  <div class="planned-card">
+    <div class="planned-icon"><i class="fas fa-bolt"></i></div>
+    <div>
+      <h4 style="margin:0 0 0.3rem">Unity URP</h4>
+      <p style="margin:0; font-size:0.85rem; opacity:0.7">渲染管线详解</p>
+    </div>
+  </div>
+  <div class="planned-card">
+    <div class="planned-icon"><i class="fas fa-magic"></i></div>
+    <div>
+      <h4 style="margin:0 0 0.3rem">卡通渲染</h4>
+      <p style="margin:0; font-size:0.85rem; opacity:0.7">NPR技术解析</p>
+    </div>
+  </div>
+</div>
 
-.tutorial-card:hover .tutorial-preview-img {
-  transform: scale(1.08) translateY(-8px) rotate(2deg);
-  filter: drop-shadow(0 15px 35px rgba(0,0,0,0.8));
-  transform: scale(1.05) translateY(-6px);
-  filter: drop-shadow(0 12px 28px rgba(0,0,0,0.8));
-}
-
-/* 占位图 */
-@ -345,12 +344,12 @@ nav_order: 5
-    rgba(var(--global-theme-color-rgb), 0.05) 100%
-  );
-  height: 100%;
-  min-height: 360px;
-  min-height: 280px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  padding: 1.5rem;
-  position: relative;
-  overflow: hidden;
-}
-@ -362,20 +361,20 @@ nav_order: 5
-}
-
-.tutorial-card:hover .placeholder-icon {
-  transform: scale(1.2) rotate(10deg);
-  transform: scale(1.15) rotate(8deg);
-  opacity: 0.5;
-}
-
-.placeholder-text {
-  margin-top: 1.5rem;
-  margin-top: 1rem;
-  font-weight: 600;
-  color: var(--global-text-color-light);
-  font-size: 1.1rem;
-  font-size: 1rem;
-}
-
-/* ========== 内容区域 ========== */
-.tutorial-content {
-  padding: 2.5rem;
-  padding: 2rem;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-@ -385,12 +384,12 @@ nav_order: 5
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  margin-bottom: 0.75rem;
-  gap: 1rem;
-}
-
-.tutorial-title {
-  font-size: 1.6rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--global-text-color);
-@ -402,14 +401,14 @@ nav_order: 5
-
-.title-icon {
-  color: var(--global-theme-color);
-  font-size: 1.3rem;
-  font-size: 1.2rem;
-}
-
-/* 状态徽章 */
-.status-badge {
-  padding: 0.5rem 1rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-@ -438,15 +437,15 @@ nav_order: 5
-
-.tutorial-description {
-  color: var(--global-text-color-light);
-  margin-bottom: 2rem;
-  line-height: 1.8;
-  font-size: 1.05rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.7;
-  font-size: 1rem;
-}
-
-/* ========== 章节列表 ========== */
-/* ========== 章节列表 - 改为网格布局 ========== */
-.chapters-section {
-  flex-grow: 1;
-  margin-bottom: 1.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.chapters-header {
-@ -455,9 +454,9 @@ nav_order: 5
-  gap: 0.75rem;
-  font-weight: 700;
-  color: var(--global-theme-color);
-  margin-bottom: 1.25rem;
-  font-size: 1.05rem;
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  padding-bottom: 0.65rem;
-  border-bottom: 2px solid var(--global-divider-color);
-}
-
-@ -466,29 +465,25 @@ nav_order: 5
-  color: white;
-  padding: 0.2rem 0.6rem;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-size: 0.75rem;
-  margin-left: auto;
-}
-
-.chapters-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-/* 章节网格 - 两列布局 */
-.chapters-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-}
-
-.chapter-item {
-  margin-bottom: 0.75rem;
-  transition: all 0.3s;
-}
-
-.chapter-item a {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: var(--global-bg-color);
-  border: 1px solid var(--global-divider-color);
-  border-radius: 12px;
-  border-radius: 10px;
-  color: var(--global-text-color);
-  text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-@ -496,13 +491,13 @@ nav_order: 5
-  overflow: hidden;
-}
-
-.chapter-item a::before {
-.chapter-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  width: 3px;
-  background: linear-gradient(180deg,
-    var(--global-theme-color) 0%,
-    var(--global-hover-color) 100%
-@ -511,20 +506,20 @@ nav_order: 5
-  transition: transform 0.3s;
-}
-
-.chapter-item a:hover::before {
-.chapter-item:hover::before {
-  transform: scaleY(1);
-}
-
-.chapter-item a:hover {
-  transform: translateX(8px);
-.chapter-item:hover {
-  transform: translateX(4px);
-  background: var(--global-code-bg-color);
-  border-color: var(--global-theme-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-}
-
-.chapter-number {
-  width: 32px;
-  height: 32px;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-@ -533,25 +528,30 @@ nav_order: 5
-    var(--global-hover-color) 100%
-  );
-  color: white;
-  border-radius: 8px;
-  border-radius: 7px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-}
-
-.chapter-title {
-  flex: 1;
-  font-weight: 500;
-  font-size: 0.9rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.chapter-arrow {
-  color: var(--global-theme-color);
-  opacity: 0;
-  transform: translateX(-10px);
-  transform: translateX(-8px);
-  transition: all 0.3s;
-  font-size: 0.85rem;
-}
-
-.chapter-item a:hover .chapter-arrow {
-.chapter-item:hover .chapter-arrow {
-  opacity: 1;
-  transform: translateX(0);
-}
-@ -559,7 +559,7 @@ nav_order: 5
-/* 底部信息 */
-.tutorial-footer {
-  margin-top: auto;
-  padding-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--global-divider-color);
-}
-
-@ -573,7 +573,7 @@ nav_order: 5
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--global-text-color-light);
-  font-size: 0.95rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-@ -717,6 +717,12 @@ nav_order: 5
-}
-
-/* ========== 响应式 ========== */
-@media (max-width: 992px) {
-  .chapters-grid {
-    grid-template-columns: 1fr;
+<script>
+// 打开模态框
+function openDetails(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // 禁止背景滚动
   }
 }
 
-@media (max-width: 768px) {
-  .tutorials-hero {
-    padding: 3rem 1.5rem;
-@ -732,11 +738,11 @@ nav_order: 5
-  
-  .tutorial-image-container,
-  .placeholder-image {
-    min-height: 300px;
-    min-height: 240px;
+// 关闭模态框 (点击背景)
+function closeDetails(event) {
+  if (event.target.classList.contains('details-panel')) {
+    event.target.classList.remove('active');
+    document.body.style.overflow = '';
   }
-  
-  .tutorial-content {
-    padding: 2rem;
-    padding: 1.75rem;
+}
+
+// 关闭模态框 (按钮)
+function closeDetailsDirect(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
   }
-  
-  .content-header {
-@ -745,11 +751,15 @@ nav_order: 5
+}
+
+// 键盘 ESC 关闭
+document.addEventListener('keydown', function(event) {
+  if (event.key === "Escape") {
+    const activeModals = document.querySelectorAll('.details-panel.active');
+    activeModals.forEach(modal => {
+      modal.classList.remove('active');
+    });
+    document.body.style.overflow = '';
   }
-  
-  .tutorial-title {
-    font-size: 1.4rem;
-    font-size: 1.3rem;
-  }
-  
-  .chapters-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .chapter-item a {
-    padding: 0.875rem 1rem;
-  .chapter-item {
-    padding: 0.75rem 0.9rem;
-  }
-  
-  .planned-grid {
+});
+</script>

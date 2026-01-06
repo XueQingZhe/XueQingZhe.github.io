@@ -9,508 +9,499 @@ nav_order: 5
 
 <style>
   :root {
-    --card-radius: 16px;
-    --card-bg: var(--global-bg-color);
-    --card-border: var(--global-divider-color);
-    --accent-color: var(--global-theme-color);
-    --hover-shadow: 0 20px 40px -10px rgba(0,0,0,0.15);
+    /* 定义炫酷的霓虹色系 */
+    --neon-primary: #00f2fe;
+    --neon-secondary: #4facfe;
+    --neon-accent: #f093fb;
+    --card-glass: rgba(255, 255, 255, 0.05);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --text-glow: 0 0 10px rgba(79, 172, 254, 0.5);
   }
 
-  /* ========== Hero 区域 ========== */
+  /* ========== 动态背景层 ========== */
+  .cool-bg-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 50%, #1a1a2e, #16213e);
+  }
+
+  /* 漂浮的光斑 */
+  .blob {
+    position: absolute;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: float 20s infinite ease-in-out alternate;
+  }
+  .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #4facfe; animation-delay: 0s; }
+  .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: #764ba2; animation-delay: -5s; }
+  .blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: #f093fb; animation-delay: -10s; }
+
+  @keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, 50px) scale(1.1); }
+  }
+
+  /* ========== 页面头部 ========== */
   .tutorials-hero {
     text-align: center;
-    padding: 4rem 1rem 3rem;
+    padding: 5rem 1rem 4rem;
     position: relative;
-    overflow: hidden;
   }
   
   .hero-title {
-    font-size: clamp(2rem, 5vw, 3rem);
-    font-weight: 800;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 900;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, var(--global-text-color), var(--accent-color));
+    color: white;
+    text-shadow: var(--text-glow);
+    letter-spacing: -1px;
+    /* 标题渐变 */
+    background: linear-gradient(to right, #fff, #b3e5fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    display: inline-flex;
-    align-items: center;
-    gap: 1rem;
+    display: inline-block;
   }
 
   .hero-subtitle {
     font-size: 1.2rem;
-    color: var(--global-text-color-light);
+    color: rgba(255, 255, 255, 0.8);
     max-width: 600px;
     margin: 0 auto;
+    font-weight: 300;
+    letter-spacing: 1px;
   }
 
-  /* ========== 教程卡片网格 ========== */
+  /* ========== 3D 卡片网格 ========== */
   .tutorials-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
-    padding: 1rem 0 3rem;
-    max-width: 1200px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2.5rem;
+    padding: 1rem 2rem 5rem;
+    max-width: 1400px;
     margin: 0 auto;
+    perspective: 1000px; /* 开启 3D 视角 */
   }
 
-  .tutorial-card {
+  .tilt-card {
     position: relative;
-    background: var(--card-bg);
+    border-radius: 20px;
+    background: var(--card-glass);
     border: 1px solid var(--card-border);
-    border-radius: var(--card-radius);
-    overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transform-style: preserve-3d;
+    transform: translateZ(0);
+    transition: transform 0.1s ease-out; /* 快速响应鼠标 */
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    opacity: 0; /* 初始隐藏，用于入场动画 */
+    animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+
+  /* 入场动画延迟 */
+  {% for i in (1..10) %}
+  .tilt-card:nth-child({{ i }}) { animation-delay: {{ i | times: 0.1 }}s; }
+  {% endfor %}
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 卡片悬停光效 */
+  .tilt-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 20px;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0) 40%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+  }
+
+  .tilt-card:hover::before {
+    opacity: 1;
+    background: linear-gradient(135deg, var(--neon-primary), var(--neon-accent));
+  }
+
+  /* 卡片内部内容浮动 (3D层次感) */
+  .card-inner {
+    transform: translateZ(20px); /* 让内容浮起来 */
+    height: 100%;
     display: flex;
     flex-direction: column;
   }
 
-  .tutorial-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--hover-shadow);
-    border-color: var(--accent-color);
-  }
-
   .card-cover {
     height: 180px;
-    width: 100%;
     position: relative;
+    border-radius: 20px 20px 0 0;
     overflow: hidden;
-    background: var(--global-code-bg-color);
   }
 
   .card-cover img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s ease;
+    transition: transform 0.5s ease;
   }
 
-  .tutorial-card:hover .card-cover img {
-    transform: scale(1.05);
+  .tilt-card:hover .card-cover img {
+    transform: scale(1.1);
   }
 
-  .card-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent-color);
-    opacity: 0.2;
-    font-size: 3rem;
+  .card-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   }
 
-  .card-content {
+  .card-body {
     padding: 1.5rem;
+    color: white;
     flex: 1;
     display: flex;
     flex-direction: column;
-  }
-
-  .card-status {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    color: white;
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 600;
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(0,0,0,0.2) 100%);
   }
 
   .card-title {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     font-weight: 700;
     margin: 0 0 0.5rem 0;
-    color: var(--global-text-color);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
 
   .card-desc {
     font-size: 0.9rem;
-    color: var(--global-text-color-light);
+    color: rgba(255,255,255,0.7);
     line-height: 1.6;
     margin-bottom: 1.5rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 
-  .card-meta {
+  .card-footer {
     margin-top: auto;
     display: flex;
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
-    color: var(--global-text-color-light);
-    font-weight: 500;
+    color: var(--neon-primary);
+    font-weight: 600;
   }
 
-  .card-meta i {
-    color: var(--accent-color);
-  }
-
-  /* ========== 详情面板 (折叠动画) ========== */
-  .details-panel {
+  /* ========== 详情模态框 (Cyberpunk 风格) ========== */
+  .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    z-index: 9999;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .details-panel.active {
+  .modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
   }
 
-  .details-container {
+  .modal-content {
     width: 90%;
     max-width: 900px;
     max-height: 85vh;
-    background: var(--global-bg-color);
+    background: #1a1a2e;
+    border: 1px solid var(--neon-secondary);
+    box-shadow: 0 0 30px rgba(79, 172, 254, 0.2);
     border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    transform: translateY(20px) scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
   }
 
-  .details-panel.active .details-container {
-    transform: translateY(0) scale(1);
+  .modal-overlay.active .modal-content {
+    transform: scale(1) translateY(0);
   }
 
-  .details-header {
+  .modal-header {
+    background: linear-gradient(90deg, rgba(26,26,46,1) 0%, rgba(22,33,62,1) 100%);
     padding: 2rem;
-    background: var(--global-code-bg-color);
     display: flex;
     gap: 2rem;
-    align-items: flex-start;
-    position: relative;
-    border-bottom: 1px solid var(--global-divider-color);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
   }
 
-  .details-thumb {
-    width: 120px;
-    height: 160px;
-    border-radius: 12px;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-  }
-  
-  .details-thumb img {
-    width: 100%;
-    height: 100%;
+  .modal-thumb {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
     object-fit: cover;
+    border: 2px solid var(--neon-secondary);
+    box-shadow: 0 0 15px rgba(79, 172, 254, 0.4);
   }
 
-  .details-info {
-    flex: 1;
-  }
-
-  .details-info h2 {
+  .modal-text h2 {
+    color: white;
     margin: 0 0 0.5rem;
     font-size: 1.8rem;
   }
+  .modal-text p { color: rgba(255,255,255,0.7); }
 
-  .details-close-btn {
+  .close-btn {
     position: absolute;
     top: 1.5rem;
     right: 1.5rem;
-    background: transparent;
+    color: white;
+    background: none;
     border: none;
     font-size: 1.5rem;
-    color: var(--global-text-color-light);
     cursor: pointer;
-    transition: color 0.2s;
+    transition: transform 0.3s;
   }
+  .close-btn:hover { transform: rotate(90deg) scale(1.2); color: var(--neon-accent); }
 
-  .details-close-btn:hover {
-    color: var(--accent-color);
-  }
-
-  .details-body {
+  .modal-body {
     padding: 2rem;
     overflow-y: auto;
-  }
-
-  .chapter-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  .chapter-link {
-    display: flex;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: var(--global-bg-color);
-    border: 1px solid var(--global-divider-color);
-    border-radius: 12px;
-    text-decoration: none;
-    color: var(--global-text-color);
-    transition: all 0.2s;
-  }
-
-  .chapter-link:hover {
-    border-color: var(--accent-color);
-    transform: translateX(5px);
-    background: var(--global-code-bg-color);
-    text-decoration: none;
-  }
-
-  .chapter-num {
-    width: 28px;
-    height: 28px;
-    background: var(--accent-color);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-right: 1rem;
-    flex-shrink: 0;
-  }
-
-  /* ========== 计划内容区 ========== */
-  .section-divider {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 4rem 0;
-    color: var(--global-divider-color);
+    /* 自定义滚动条 */
+    scrollbar-width: thin;
+    scrollbar-color: var(--neon-secondary) #1a1a2e;
   }
   
-  .section-divider::before,
-  .section-divider::after {
-    content: "";
-    height: 1px;
-    background: currentColor;
-    flex: 1;
-    margin: 0 1rem;
-    opacity: 0.3;
-  }
+  .modal-body::-webkit-scrollbar { width: 6px; }
+  .modal-body::-webkit-scrollbar-thumb { background: var(--neon-secondary); border-radius: 3px; }
 
-  .planned-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    padding-bottom: 2rem;
-  }
-
-  .planned-card {
-    background: var(--global-code-bg-color);
-    border: 1px dashed var(--global-divider-color);
-    border-radius: 16px;
-    padding: 1.5rem;
+  .chapter-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    color: white;
+    text-decoration: none;
     transition: all 0.3s;
   }
 
-  .planned-card:hover {
-    border-style: solid;
-    border-color: var(--accent-color);
-    background: var(--card-bg);
-    transform: translateY(-5px);
+  .chapter-item:hover {
+    background: rgba(79, 172, 254, 0.1);
+    border-color: var(--neon-secondary);
+    transform: translateX(10px);
+    box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
+    text-decoration: none;
+    color: #fff;
   }
 
-  .planned-icon {
-    font-size: 1.5rem;
-    width: 50px;
-    height: 50px;
+  .chapter-num {
+    font-family: 'Courier New', monospace;
+    color: var(--neon-accent);
+    font-weight: bold;
+    margin-right: 1.5rem;
+    font-size: 1.2rem;
+  }
+
+  /* ========== 计划内容芯片 ========== */
+  .plan-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    padding-bottom: 4rem;
+  }
+
+  .chip {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--neon-secondary);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: rgba(var(--global-theme-color-rgb), 0.1);
-    color: var(--accent-color);
-    border-radius: 12px;
+    gap: 0.8rem;
+    transition: all 0.3s;
+    cursor: default;
   }
 
+  .chip:hover {
+    background: var(--neon-secondary);
+    box-shadow: 0 0 20px var(--neon-secondary);
+    transform: scale(1.05);
+  }
+  
   /* 移动端适配 */
   @media (max-width: 768px) {
-    .details-header {
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 1.5rem;
-    }
-    .details-thumb {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-    }
+    .modal-header { flex-direction: column; text-align: center; }
+    .modal-thumb { margin: 0 auto; }
+    .hero-title { font-size: 2.2rem; }
   }
 </style>
 
+<div class="cool-bg-layer">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
 <div class="tutorials-hero">
   <h1 class="hero-title">
-    <i class="fas fa-graduation-cap"></i>
-    教程系列
+    <i class="fas fa-meteor fa-spin-hover"></i> EXPLORE KNOWLEDGE
   </h1>
-  <p class="hero-subtitle">系统化的技术学习路径，从入门到精通的完整知识体系。</p>
+  <p class="hero-subtitle">系统化的技术学习路径 · 沉浸式阅读体验</p>
 </div>
 
-<div class="tutorials-grid">
+<div class="tutorials-grid" id="gridArea">
   {% assign tutorial_series = site.data.tutorials %}
   {% for series in tutorial_series %}
-  <div class="tutorial-card" onclick="openDetails('detail-modal-{{ forloop.index }}')">
-    <div class="card-cover">
-      {% if series.image %}
-        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" loading="lazy">
-      {% else %}
-        <div class="card-placeholder">
-          <i class="fas fa-book-open"></i>
+  <div class="tilt-card" onclick="openModal('modal-{{ forloop.index }}')">
+    <div class="card-inner">
+      <div class="card-cover">
+        {% if series.image %}
+        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+        {% else %}
+        <div style="width:100%;height:100%;background:#111;display:flex;align-items:center;justify-content:center;color:#333;">
+          <i class="fas fa-code fa-3x"></i>
         </div>
-      {% endif %}
+        {% endif %}
+        {% if series.status %}
+        <span class="card-badge">{{ series.status }}</span>
+        {% endif %}
+      </div>
       
-      {% if series.status %}
-        <span class="card-status">{{ series.status }}</span>
-      {% endif %}
-    </div>
-    
-    <div class="card-content">
-      <h3 class="card-title">{{ series.title }}</h3>
-      <p class="card-desc">{{ series.description }}</p>
-      
-      <div class="card-meta">
-        <i class="fas fa-list-ul"></i>
-        <span>{{ series.chapters.size }} 章节</span>
+      <div class="card-body">
+        <h3 class="card-title">{{ series.title }}</h3>
+        <p class="card-desc">{{ series.description | truncate: 50 }}</p>
+        <div class="card-footer">
+          <i class="fas fa-layer-group"></i>
+          {{ series.chapters.size }} 章节
+          <i class="fas fa-arrow-right" style="margin-left:auto;"></i>
+        </div>
       </div>
     </div>
   </div>
   {% endfor %}
 </div>
 
-<div id="modal-container">
+<div style="text-align: center; margin: 4rem 0 2rem;">
+  <h4 style="color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 2rem;">Coming Soon</h4>
+  <div class="plan-chips">
+    <div class="chip"><i class="fas fa-magic"></i> Shader 进阶</div>
+    <div class="chip"><i class="fas fa-cube"></i> Unity DOTS</div>
+    <div class="chip"><i class="fas fa-robot"></i> AI 行为树</div>
+  </div>
+</div>
+
+<div id="modals-container">
   {% for series in tutorial_series %}
-  <div class="details-panel" id="detail-modal-{{ forloop.index }}" onclick="closeDetails(event)">
-    <div class="details-container" onclick="event.stopPropagation()">
-      <div class="details-header">
-        <button class="details-close-btn" onclick="closeDetailsDirect('detail-modal-{{ forloop.index }}')">
-          <i class="fas fa-times"></i>
-        </button>
-        
-        <div class="details-thumb">
-          {% if series.image %}
-            <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
-          {% else %}
-            <div class="card-placeholder" style="font-size: 2rem;">
-              <i class="fas fa-book"></i>
-            </div>
-          {% endif %}
-        </div>
-        
-        <div class="details-info">
+  <div class="modal-overlay" id="modal-{{ forloop.index }}" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="close-btn" onclick="closeModalDirect('modal-{{ forloop.index }}')"><i class="fas fa-times"></i></button>
+      
+      <div class="modal-header">
+        {% if series.image %}
+        <img src="{{ series.image | relative_url }}" class="modal-thumb">
+        {% else %}
+        <div class="modal-thumb" style="background:#000;display:flex;align-items:center;justify-content:center;color:white;"><i class="fas fa-book"></i></div>
+        {% endif %}
+        <div class="modal-text">
           <h2>{{ series.title }}</h2>
           <p>{{ series.description }}</p>
-          <div style="margin-top: 1rem; color: var(--accent-color); font-weight: bold;">
-            <i class="fas fa-book-reader"></i> 共 {{ series.chapters.size }} 节课程
-          </div>
         </div>
       </div>
       
-      <div class="details-body">
-        <div class="chapter-list">
-          {% for chapter in series.chapters %}
-          <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-link">
-            <span class="chapter-num">{{ forloop.index }}</span>
-            <span class="chapter-title">{{ chapter.title }}</span>
-            <i class="fas fa-arrow-right" style="margin-left: auto; opacity: 0.5;"></i>
-          </a>
-          {% endfor %}
-        </div>
+      <div class="modal-body">
+        {% for chapter in series.chapters %}
+        <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-item">
+          <span class="chapter-num">0{{ forloop.index }}</span>
+          <span>{{ chapter.title }}</span>
+          <i class="fas fa-chevron-right" style="margin-left: auto; opacity: 0.5;"></i>
+        </a>
+        {% endfor %}
       </div>
     </div>
   </div>
   {% endfor %}
-</div>
-
-<div class="section-divider">
-  <span style="background: var(--global-bg-color); padding: 0 1rem; font-weight: bold;">
-    <i class="fas fa-hourglass-half"></i> 筹备中
-  </span>
-</div>
-
-<div class="planned-grid">
-  <div class="planned-card">
-    <div class="planned-icon"><i class="fas fa-palette"></i></div>
-    <div>
-      <h4 style="margin:0 0 0.3rem">Shader 入门</h4>
-      <p style="margin:0; font-size:0.85rem; opacity:0.7">着色器编程基础</p>
-    </div>
-  </div>
-  <div class="planned-card">
-    <div class="planned-icon"><i class="fas fa-bolt"></i></div>
-    <div>
-      <h4 style="margin:0 0 0.3rem">Unity URP</h4>
-      <p style="margin:0; font-size:0.85rem; opacity:0.7">渲染管线详解</p>
-    </div>
-  </div>
-  <div class="planned-card">
-    <div class="planned-icon"><i class="fas fa-magic"></i></div>
-    <div>
-      <h4 style="margin:0 0 0.3rem">卡通渲染</h4>
-      <p style="margin:0; font-size:0.85rem; opacity:0.7">NPR技术解析</p>
-    </div>
-  </div>
 </div>
 
 <script>
-// 打开模态框
-function openDetails(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden'; // 禁止背景滚动
-  }
+// ========== 3D TILT 效果脚本 (核心炫酷逻辑) ==========
+const cards = document.querySelectorAll('.tilt-card');
+
+cards.forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // 计算中心点
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // 计算旋转角度 (限制最大旋转角度为 15deg)
+    const rotateX = ((y - centerY) / centerY) * -10;
+    const rotateY = ((x - centerX) / centerX) * 10;
+    
+    // 应用变换：旋转 + 略微放大
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+  });
+
+  // 鼠标离开时复原
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+  });
+});
+
+// ========== 模态框逻辑 ==========
+function openModal(id) {
+  const modal = document.getElementById(id);
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
 }
 
-// 关闭模态框 (点击背景)
-function closeDetails(event) {
-  if (event.target.classList.contains('details-panel')) {
-    event.target.classList.remove('active');
+function closeModal(e) {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('active');
     document.body.style.overflow = '';
   }
 }
 
-// 关闭模态框 (按钮)
-function closeDetailsDirect(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
+function closeModalDirect(id) {
+  document.getElementById(id).classList.remove('active');
+  document.body.style.overflow = '';
 }
 
-// 键盘 ESC 关闭
-document.addEventListener('keydown', function(event) {
-  if (event.key === "Escape") {
-    const activeModals = document.querySelectorAll('.details-panel.active');
-    activeModals.forEach(modal => {
-      modal.classList.remove('active');
+// ESC 关闭
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.active').forEach(m => {
+      m.classList.remove('active');
+      document.body.style.overflow = '';
     });
-    document.body.style.overflow = '';
   }
 });
 </script>

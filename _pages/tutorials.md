@@ -16,144 +16,134 @@ nav_order: 5
   <p class="hero-subtitle">系统化的技术学习路径</p>
 </div>
 
-<!-- 主布局 -->
-<div class="tutorials-layout">
-  <!-- 左侧弧形轨道区 -->
-  <div class="arc-track-area">
-    <svg class="arc-path-svg" width="100%" height="100%" viewBox="0 0 400 400">
-      <!-- 定义弧形路径 -->
-      <defs>
-        <path id="arcPath" d="M 50,350 Q 50,50 350,50" fill="none"/>
-      </defs>
-      
-      <!-- 轨道线 -->
-      <path d="M 50,350 Q 50,50 350,50" 
-            stroke="var(--global-divider-color)" 
-            stroke-width="2" 
-            fill="none" 
-            opacity="0.3"/>
-    </svg>
-    
-    <div class="arc-items-container" id="arcItems">
-      {% assign tutorial_series = site.data.tutorials %}
-      
-      {% for series in tutorial_series %}
-      <div class="arc-item" 
-           data-index="{{ forloop.index0 }}"
-           data-total="{{ tutorial_series.size }}"
-           onmouseenter="showPreview({{ forloop.index }})"
-           onmouseleave="hidePreview({{ forloop.index }})"
-           onclick="selectTutorial({{ forloop.index }})">
-        <div class="arc-item-inner">
-          {% if series.image %}
-          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
-          {% else %}
-          <div class="arc-item-placeholder">
-            <i class="fas fa-book-open"></i>
-          </div>
-          {% endif %}
-          
-          {% if series.status %}
-          <span class="arc-item-badge">
-            <i class="fas fa-circle"></i>
-          </span>
-          {% endif %}
-        </div>
-        
-        <div class="arc-item-label">{{ series.title | truncate: 15 }}</div>
-      </div>
-      
-      <!-- 预览卡片 -->
-      <div class="preview-popup" id="preview-{{ forloop.index }}">
-        <div class="popup-content">
-          <div class="popup-image">
-            {% if series.image %}
-            <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
-            {% else %}
-            <div class="popup-placeholder">
-              <i class="fas fa-book-open fa-2x"></i>
-            </div>
-            {% endif %}
-          </div>
-          <div class="popup-info">
-            <h4>{{ series.title }}</h4>
-            {% if series.status %}
-            <span class="popup-status">{{ series.status }}</span>
-            {% endif %}
-            <p>{{ series.description | truncate: 80 }}</p>
-            <div class="popup-meta">
-              <i class="fas fa-list"></i> {{ series.chapters.size }} 章节
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    
-    <!-- 滚动控制 -->
-    <div class="arc-controls">
-      <button class="arc-btn" onclick="scrollArcItems(-1)">
-        <i class="fas fa-arrow-left"></i>
-      </button>
-      <button class="arc-btn" onclick="scrollArcItems(1)">
-        <i class="fas fa-arrow-right"></i>
-      </button>
-    </div>
-  </div>
+<!-- 左上角弧形轨道 -->
+<div class="arc-track-section">
+  <svg class="arc-bg-svg" width="500" height="400" viewBox="0 0 500 400">
+    <!-- 反转的弧线: 左上到右下 -->
+    <path d="M 50,50 Q 350,50 350,350" 
+          stroke="var(--global-divider-color)" 
+          stroke-width="2" 
+          fill="none" 
+          opacity="0.3"/>
+  </svg>
   
-  <!-- 右侧详情面板 -->
-  <div class="details-panel">
-    <div class="panel-placeholder" id="panelPlaceholder">
-      <i class="fas fa-hand-pointer fa-3x"></i>
-      <p>点击左侧教程查看详情</p>
-    </div>
+  <div class="arc-items" id="arcItems">
+    {% assign tutorial_series = site.data.tutorials %}
     
     {% for series in tutorial_series %}
-    <div class="panel-content" id="panel-{{ forloop.index }}" style="display: none;">
-      <div class="panel-header">
-        <div class="panel-image">
+    <div class="arc-item" 
+         data-index="{{ forloop.index0 }}"
+         data-total="{{ tutorial_series.size }}"
+         onmouseenter="showPreview({{ forloop.index }})"
+         onmouseleave="hidePreview({{ forloop.index }})"
+         onclick="showDetails({{ forloop.index }})">
+      <div class="item-thumb">
+        {% if series.image %}
+        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+        {% else %}
+        <div class="thumb-empty">
+          <i class="fas fa-book-open"></i>
+        </div>
+        {% endif %}
+        
+        {% if series.status %}
+        <span class="thumb-dot"></span>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- 右侧悬停预览 -->
+    <div class="hover-preview" id="hover-{{ forloop.index }}">
+      <div class="preview-layout">
+        <div class="preview-images">
           {% if series.image %}
           <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
           {% else %}
-          <div class="panel-image-placeholder">
+          <div class="preview-empty">
             <i class="fas fa-book-open fa-2x"></i>
           </div>
           {% endif %}
         </div>
         
-        <div class="panel-info">
-          <h2>{{ series.title }}</h2>
+        <div class="preview-content">
+          <h3>{{ series.title }}</h3>
           {% if series.status %}
-          <span class="panel-badge">
-            <i class="fas fa-circle"></i>
-            {{ series.status }}
-          </span>
+          <span class="preview-badge">{{ series.status }}</span>
           {% endif %}
           <p>{{ series.description }}</p>
-          <div class="panel-stats">
-            <i class="fas fa-book-open"></i>
-            {{ series.chapters.size }} 章节
+          <div class="preview-info">
+            <i class="fas fa-book"></i> {{ series.chapters.size }} 章节
           </div>
-        </div>
-      </div>
-      
-      <div class="panel-divider"></div>
-      
-      <div class="panel-chapters">
-        <h3><i class="fas fa-list-ul"></i> 章节列表</h3>
-        <div class="chapters-bars">
-          {% for chapter in series.chapters %}
-          <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-bar">
-            <span class="chapter-num">{{ forloop.index }}</span>
-            <span class="chapter-title">{{ chapter.title }}</span>
-            <i class="fas fa-arrow-right"></i>
-          </a>
-          {% endfor %}
         </div>
       </div>
     </div>
     {% endfor %}
   </div>
+  
+  <!-- 左右控制按钮 -->
+  <div class="arc-buttons">
+    <button class="arc-control" onclick="moveArc(-1)">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <button class="arc-control" onclick="moveArc(1)">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- 底部详情展开区 -->
+<div class="details-area" id="detailsArea">
+  {% for series in tutorial_series %}
+  <div class="detail-box" id="detail-{{ forloop.index }}" style="display: none;">
+    <div class="detail-top">
+      <div class="detail-image">
+        {% if series.image %}
+        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+        {% else %}
+        <div class="detail-image-empty">
+          <i class="fas fa-book-open fa-3x"></i>
+        </div>
+        {% endif %}
+      </div>
+      
+      <div class="detail-header">
+        <h2>{{ series.title }}</h2>
+        {% if series.status %}
+        <span class="detail-status">
+          <i class="fas fa-circle"></i>
+          {{ series.status }}
+        </span>
+        {% endif %}
+        <p>{{ series.description }}</p>
+        <div class="detail-meta">
+          <i class="fas fa-book-open"></i>
+          {{ series.chapters.size }} 章节
+        </div>
+      </div>
+      
+      <button class="detail-close" onclick="hideDetails()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="detail-divider"></div>
+    
+    <div class="detail-chapters">
+      <h3><i class="fas fa-list-ul"></i> 章节列表</h3>
+      <div class="chapter-list">
+        {% for chapter in series.chapters %}
+        <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-item">
+          <span class="item-number">{{ forloop.index }}</span>
+          <span class="item-title">{{ chapter.title }}</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
 <div class="section-divider">
@@ -208,14 +198,14 @@ nav_order: 5
 let currentOffset = 0;
 let totalItems = {{ tutorial_series.size }};
 
-// 计算弧形轨道上的位置
+// 计算反转弧形位置 (左上到右下)
 function getArcPosition(index, total) {
-  const t = index / (total - 1); // 0 到 1
+  const t = index / (total - 1);
   
-  // 二次贝塞尔曲线: P = (1-t)²P0 + 2(1-t)tP1 + t²P2
-  const P0 = { x: 50, y: 350 };   // 起点(左下)
-  const P1 = { x: 50, y: 50 };    // 控制点(左上)
-  const P2 = { x: 350, y: 50 };   // 终点(右上)
+  // 反转的二次贝塞尔: 左上(50,50) -> 控制点(350,50) -> 右下(350,350)
+  const P0 = { x: 50, y: 50 };
+  const P1 = { x: 350, y: 50 };
+  const P2 = { x: 350, y: 350 };
   
   const x = Math.pow(1-t, 2) * P0.x + 2 * (1-t) * t * P1.x + Math.pow(t, 2) * P2.x;
   const y = Math.pow(1-t, 2) * P0.y + 2 * (1-t) * t * P1.y + Math.pow(t, 2) * P2.y;
@@ -223,7 +213,7 @@ function getArcPosition(index, total) {
   return { x, y };
 }
 
-// 更新弧形项目位置
+// 更新位置
 function updateArcPositions() {
   const items = document.querySelectorAll('.arc-item');
   
@@ -234,10 +224,9 @@ function updateArcPositions() {
     item.style.left = `${pos.x}px`;
     item.style.top = `${pos.y}px`;
     
-    // 根据位置调整透明度和大小
     const progress = visualIndex / (totalItems - 1);
-    const opacity = 0.4 + (1 - Math.abs(progress - 0.5) * 2) * 0.6;
-    const scale = 0.7 + (1 - Math.abs(progress - 0.5) * 2) * 0.3;
+    const opacity = 0.3 + (1 - Math.abs(progress - 0.5) * 2) * 0.7;
+    const scale = 0.75 + (1 - Math.abs(progress - 0.5) * 2) * 0.25;
     
     item.style.opacity = opacity;
     item.style.transform = `translate(-50%, -50%) scale(${scale})`;
@@ -245,15 +234,15 @@ function updateArcPositions() {
   });
 }
 
-// 滚动弧形项目
-function scrollArcItems(direction) {
+// 移动弧形
+function moveArc(direction) {
   currentOffset = (currentOffset + direction + totalItems) % totalItems;
   updateArcPositions();
 }
 
 // 显示预览
 function showPreview(id) {
-  const preview = document.getElementById(`preview-${id}`);
+  const preview = document.getElementById(`hover-${id}`);
   if (preview) {
     preview.style.display = 'block';
     setTimeout(() => preview.classList.add('visible'), 10);
@@ -262,32 +251,48 @@ function showPreview(id) {
 
 // 隐藏预览
 function hidePreview(id) {
-  const preview = document.getElementById(`preview-${id}`);
+  const preview = document.getElementById(`hover-${id}`);
   if (preview) {
     preview.classList.remove('visible');
     setTimeout(() => preview.style.display = 'none', 300);
   }
 }
 
-// 选择教程
-function selectTutorial(id) {
+// 显示详情
+function showDetails(id) {
   // 隐藏所有预览
-  document.querySelectorAll('.preview-popup').forEach(p => {
+  document.querySelectorAll('.hover-preview').forEach(p => {
     p.classList.remove('visible');
     p.style.display = 'none';
   });
   
-  // 隐藏占位符和其他面板
-  document.getElementById('panelPlaceholder').style.display = 'none';
-  document.querySelectorAll('.panel-content').forEach(p => {
-    p.style.display = 'none';
+  // 隐藏其他详情
+  document.querySelectorAll('.detail-box').forEach(d => {
+    d.style.display = 'none';
   });
   
-  // 显示选中面板
-  const panel = document.getElementById(`panel-${id}`);
-  if (panel) {
-    panel.style.display = 'block';
+  // 显示选中详情
+  const detail = document.getElementById(`detail-${id}`);
+  const area = document.getElementById('detailsArea');
+  
+  if (detail) {
+    area.style.display = 'block';
+    detail.style.display = 'block';
+    
+    setTimeout(() => {
+      detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   }
+}
+
+// 隐藏详情
+function hideDetails() {
+  const area = document.getElementById('detailsArea');
+  area.style.display = 'none';
+  
+  document.querySelectorAll('.detail-box').forEach(d => {
+    d.style.display = 'none';
+  });
 }
 
 // 初始化
@@ -323,77 +328,60 @@ updateArcPositions();
   margin: 0;
 }
 
-/* ========== 主布局 ========== */
-.tutorials-layout {
-  display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 2rem;
-  margin: 3rem 0;
-  min-height: 600px;
-}
-
-/* ========== 左侧弧形轨道区 ========== */
-.arc-track-area {
+/* ========== 左上角弧形轨道 ========== */
+.arc-track-section {
   position: relative;
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.05) 0%,
-    rgba(var(--global-theme-color-rgb), 0.02) 100%
-  );
-  border: 2px solid var(--global-divider-color);
-  border-radius: 20px;
-  padding: 1rem;
-  overflow: hidden;
+  width: 500px;
+  height: 400px;
+  margin: 2rem 0 3rem 0;
 }
 
-.arc-path-svg {
+.arc-bg-svg {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
   pointer-events: none;
 }
 
-.arc-items-container {
+.arc-items {
   position: relative;
   width: 100%;
-  height: 500px;
+  height: 100%;
 }
 
-/* 弧形轨道项目 */
+/* 弧形项目 */
 .arc-item {
   position: absolute;
   width: 100px;
-  height: 130px;
   cursor: pointer;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.arc-item-inner {
-  width: 100%;
-  height: 100px;
+.item-thumb {
+  width: 100px;
+  height: 120px;
   background: var(--global-bg-color);
   border: 2px solid var(--global-divider-color);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   transition: all 0.3s;
   position: relative;
 }
 
-.arc-item:hover .arc-item-inner {
+.arc-item:hover .item-thumb {
   border-color: var(--global-theme-color);
-  box-shadow: 0 8px 24px rgba(var(--global-theme-color-rgb), 0.3);
+  box-shadow: 0 8px 24px rgba(var(--global-theme-color-rgb), 0.4);
   transform: scale(1.1);
 }
 
-.arc-item-inner img {
+.item-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.arc-item-placeholder {
+.thumb-empty {
   width: 100%;
   height: 100%;
   display: flex;
@@ -407,260 +395,15 @@ updateArcPositions();
   opacity: 0.3;
 }
 
-.arc-item-badge {
+.thumb-dot {
   position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  width: 12px;
-  height: 12px;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 10px;
+  height: 10px;
   background: var(--global-theme-color);
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 0.35rem;
-}
-
-.arc-item-label {
-  margin-top: 0.5rem;
-  text-align: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--global-text-color);
-}
-
-/* 预览弹出卡片 */
-.preview-popup {
-  position: fixed;
-  top: 50%;
-  left: 35%;
-  transform: translate(-50%, -50%);
-  width: 380px;
-  background: var(--global-bg-color);
-  border: 2px solid var(--global-theme-color);
-  border-radius: 16px;
-  box-shadow: 0 12px 36px rgba(0,0,0,0.3);
-  display: none;
-  opacity: 0;
-  transition: all 0.3s;
-  z-index: 1000;
-  pointer-events: none;
-}
-
-.preview-popup.visible {
-  opacity: 1;
-}
-
-.popup-content {
-  display: flex;
-}
-
-.popup-image {
-  width: 140px;
-  height: 100%;
-  background: #000;
-  flex-shrink: 0;
-  border-radius: 14px 0 0 14px;
-  overflow: hidden;
-}
-
-.popup-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.popup-placeholder {
-  width: 100%;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.1) 0%,
-    rgba(var(--global-theme-color-rgb), 0.05) 100%
-  );
-  color: var(--global-theme-color);
-  opacity: 0.3;
-}
-
-.popup-info {
-  flex: 1;
-  padding: 1.25rem;
-}
-
-.popup-info h4 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--global-text-color);
-  margin: 0 0 0.5rem 0;
-}
-
-.popup-status {
-  display: inline-block;
-  background: var(--global-theme-color);
-  color: white;
-  padding: 0.25rem 0.6rem;
-  border-radius: 10px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.popup-info p {
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--global-text-color-light);
-  margin: 0 0 0.75rem 0;
-}
-
-.popup-meta {
-  font-size: 0.8rem;
-  color: var(--global-text-color-light);
-}
-
-.popup-meta i {
-  color: var(--global-theme-color);
-  margin-right: 0.4rem;
-}
-
-/* 弧形控制按钮 */
-.arc-controls {
-  position: absolute;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 1rem;
-  z-index: 100;
-}
-
-.arc-btn {
-  width: 40px;
-  height: 40px;
-  background: var(--global-theme-color);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.arc-btn:hover {
-  background: var(--global-hover-color);
-  transform: scale(1.1);
-}
-
-/* ========== 右侧详情面板 ========== */
-.details-panel {
-  background: var(--global-bg-color);
-  border: 2px solid var(--global-theme-color);
-  border-radius: 20px;
-  padding: 2rem;
-  min-height: 600px;
-}
-
-.panel-placeholder {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--global-text-color-light);
-  opacity: 0.5;
-}
-
-.panel-placeholder i {
-  color: var(--global-theme-color);
-  margin-bottom: 1rem;
-}
-
-.panel-placeholder p {
-  font-size: 1.1rem;
-  margin: 0;
-}
-
-.panel-content {
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.panel-header {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.panel-image {
-  width: 140px;
-  height: 140px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
-  flex-shrink: 0;
-}
-
-.panel-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.panel-image-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.1) 0%,
-    rgba(var(--global-theme-color-rgb), 0.05) 100%
-  );
-  color: var(--global-theme-color);
-  opacity: 0.3;
-}
-
-.panel-info {
-  flex: 1;
-}
-
-.panel-info h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--global-text-color);
-  margin: 0 0 0.75rem 0;
-}
-
-.panel-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: var(--global-theme-color);
-  color: white;
-  padding: 0.35rem 0.8rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.panel-badge i {
-  font-size: 0.4rem;
+  box-shadow: 0 0 8px rgba(var(--global-theme-color-rgb), 0.6);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -669,110 +412,329 @@ updateArcPositions();
   50% { opacity: 0.4; }
 }
 
-.panel-info p {
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: var(--global-text-color-light);
+/* 控制按钮 */
+.arc-buttons {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
+}
+
+.arc-control {
+  width: 44px;
+  height: 44px;
+  background: var(--global-theme-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.arc-control:hover {
+  background: var(--global-hover-color);
+  transform: scale(1.1);
+}
+
+/* ========== 右侧悬停预览 ========== */
+.hover-preview {
+  position: fixed;
+  top: 50%;
+  right: 5%;
+  transform: translateY(-50%);
+  width: 420px;
+  background: var(--global-bg-color);
+  border: 3px solid var(--global-theme-color);
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+  display: none;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.hover-preview.visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.preview-layout {
+  padding: 1.5rem;
+}
+
+.preview-images {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.preview-images img {
+  width: calc(33.33% - 0.5rem);
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.preview-empty {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.1) 0%,
+    rgba(var(--global-theme-color-rgb), 0.05) 100%
+  );
+  border-radius: 10px;
+  color: var(--global-theme-color);
+  opacity: 0.3;
+}
+
+.preview-content h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--global-text-color);
   margin: 0 0 0.75rem 0;
 }
 
-.panel-stats {
+.preview-badge {
+  display: inline-block;
+  background: var(--global-theme-color);
+  color: white;
+  padding: 0.4rem 0.9rem;
+  border-radius: 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.preview-content p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--global-text-color-light);
+  margin: 0 0 1rem 0;
+}
+
+.preview-info {
   font-size: 0.9rem;
   color: var(--global-text-color-light);
+  font-weight: 500;
 }
 
-.panel-stats i {
+.preview-info i {
   color: var(--global-theme-color);
-  margin-right: 0.4rem;
+  margin-right: 0.5rem;
 }
 
-.panel-divider {
-  height: 2px;
-  background: var(--global-divider-color);
-  margin: 1.5rem 0;
+/* ========== 底部详情区 ========== */
+.details-area {
+  margin: 3rem 0;
+  display: none;
 }
 
-.panel-chapters h3 {
-  font-size: 1.2rem;
+.detail-box {
+  background: var(--global-bg-color);
+  border: 3px solid var(--global-theme-color);
+  border-radius: 24px;
+  padding: 2.5rem;
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detail-top {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.detail-image {
+  width: 160px;
+  height: 160px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  flex-shrink: 0;
+}
+
+.detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-image-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.1) 0%,
+    rgba(var(--global-theme-color-rgb), 0.05) 100%
+  );
+  color: var(--global-theme-color);
+  opacity: 0.3;
+}
+
+.detail-header {
+  flex: 1;
+}
+
+.detail-header h2 {
+  font-size: 1.8rem;
   font-weight: 700;
   color: var(--global-text-color);
-  margin: 0 0 1.25rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin: 0 0 0.75rem 0;
 }
 
-.panel-chapters h3 i {
+.detail-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--global-theme-color);
+  color: white;
+  padding: 0.5rem 1.1rem;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.detail-status i {
+  font-size: 0.5rem;
+}
+
+.detail-header p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--global-text-color-light);
+  margin: 0 0 1rem 0;
+}
+
+.detail-meta {
+  font-size: 0.95rem;
+  color: var(--global-text-color-light);
+  font-weight: 500;
+}
+
+.detail-meta i {
+  color: var(--global-theme-color);
+  margin-right: 0.5rem;
+}
+
+.detail-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  background: var(--global-theme-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s;
+}
+
+.detail-close:hover {
+  background: var(--global-hover-color);
+  transform: rotate(90deg);
+}
+
+.detail-divider {
+  height: 2px;
+  background: var(--global-divider-color);
+  margin: 2rem 0;
+}
+
+.detail-chapters h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--global-text-color);
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detail-chapters h3 i {
   color: var(--global-theme-color);
 }
 
-.chapters-bars {
+.chapter-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
+  gap: 1rem;
 }
 
-.chapters-bars::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chapters-bars::-webkit-scrollbar-track {
-  background: var(--global-divider-color);
-  border-radius: 3px;
-}
-
-.chapters-bars::-webkit-scrollbar-thumb {
-  background: var(--global-theme-color);
-  border-radius: 3px;
-}
-
-.chapter-bar {
+.chapter-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.9rem 1.25rem;
+  gap: 1.25rem;
+  padding: 1.25rem 1.75rem;
   background: var(--global-code-bg-color);
   border: 2px solid var(--global-divider-color);
-  border-radius: 12px;
+  border-radius: 14px;
   text-decoration: none;
   color: var(--global-text-color);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
-.chapter-bar::before {
+.chapter-item::before {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 5px;
   background: linear-gradient(180deg,
     var(--global-theme-color) 0%,
     var(--global-hover-color) 100%
   );
   transform: scaleY(0);
-  transition: transform 0.3s;
+  transition: transform 0.4s;
 }
 
-.chapter-bar:hover::before {
+.chapter-item:hover::before {
   transform: scaleY(1);
 }
 
-.chapter-bar:hover {
-  transform: translateX(8px);
+.chapter-item:hover {
+  transform: translateX(12px);
   background: var(--global-bg-color);
   border-color: var(--global-theme-color);
-  box-shadow: 0 4px 12px rgba(var(--global-theme-color-rgb), 0.2);
+  box-shadow: 0 6px 20px rgba(var(--global-theme-color-rgb), 0.25);
 }
 
-.chapter-num {
-  width: 32px;
-  height: 32px;
+.item-number {
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -781,26 +743,27 @@ updateArcPositions();
     var(--global-hover-color) 100%
   );
   color: white;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   flex-shrink: 0;
 }
 
-.chapter-title {
+.item-title {
   flex: 1;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
-.chapter-bar i {
+.chapter-item i {
   color: var(--global-theme-color);
   opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.3s;
+  transform: translateX(-12px);
+  transition: all 0.4s;
+  font-size: 1.1rem;
 }
 
-.chapter-bar:hover i {
+.chapter-item:hover i {
   opacity: 1;
   transform: translateX(0);
 }
@@ -941,47 +904,46 @@ updateArcPositions();
 }
 
 /* ========== 响应式 ========== */
-@media (max-width: 1024px) {
-  .tutorials-layout {
-    grid-template-columns: 1fr;
-  }
-  
-  .arc-track-area {
-    height: 500px;
-  }
-}
-
 @media (max-width: 768px) {
   .hero-title {
     font-size: 2rem;
   }
   
-  .details-panel {
+  .arc-track-section {
+    width: 100%;
+    height: 350px;
+  }
+  
+  .hover-preview {
+    width: 90%;
+    right: 5%;
+    left: 5%;
+    transform: translate(0, -50%);
+  }
+  
+  .hover-preview.visible {
+    transform: translate(0, -50%);
+  }
+  
+  .preview-images {
+    flex-direction: column;
+  }
+  
+  .preview-images img {
+    width: 100%;
+  }
+  
+  .detail-box {
     padding: 1.5rem;
   }
   
-  .panel-header {
+  .detail-top {
     flex-direction: column;
   }
   
-  .panel-image {
+  .detail-image {
     width: 100%;
-    height: 180px;
-  }
-  
-  .preview-popup {
-    width: 90%;
-    left: 50%;
-  }
-  
-  .popup-content {
-    flex-direction: column;
-  }
-  
-  .popup-image {
-    width: 100%;
-    height: 150px;
-    border-radius: 14px 14px 0 0;
+    height: 200px;
   }
   
   .planned-grid {

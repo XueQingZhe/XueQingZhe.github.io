@@ -1,9 +1,123 @@
 # _data/tutorials.yml
 
-- title: "Blender-绝区零角色渲染"
+#--------------------------------------------Blender-绝区零角色渲染-星见雅------------------------------------
+#------------------------------------------------------------------------------------------------------------
+- title: "Blender-绝区零角色渲染-星见雅"
+  description: "《此专题内容部分有误暂未纠正》-深入学习如何在Blender中复刻绝区零的角色渲染效果，涵盖模型处理、光照设置和最终渲染输出"
+  base_url: "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/"
+  image: "/assets/img/tutorials/UUEB.png"  # 可选
+  status: "已完结"
+  status_color: "primary"
+  chapters:
+    - file: "01_Blender模型处理.md"
+      title: "第一章 Blender模型处理"
+    - file: "02_材质初步处理.md"
+      title: "第二章 Blender材质初步处理"
+    - file: "03_描边追加.md"
+      title: "第三章 描边追加"
+    - file: "04_描边追加.md"
+      title: "第四章 着色模型构建"
+    - file: "05_描边追加.md"
+      title: "第五章 描边追加"
+    - file: "06_描边追加.md"
+      title: "第六章 描边追加"
+    - file: "07_描边追加.md"
+      title: "第七章 描边追加"
+    - file: "08_描边追加.md"
+      title: "第八章 描边追加"
+    - file: "09_描边追加.md"
+      title: "第九章 描边追加"
+    - file: "10_描边追加.md"
+      title: "第十章 描边追加"
+    - file: "11_描边追加.md"
+      title: "第十一章 描边追加"
+    - file: "12_描边追加.md"
+      title: "第十二章 描边追加"
+    - file: "13_描边追加.md"
+      title: "第十三章(末) 描边追加"
+#--------------------------------------------Unity-绝区零角色渲染-星见雅------------------------------------
+#------------------------------------------------------------------------------------------------------------
+- title: "Unity-绝区零角色渲染-星见雅"
+  description: "《此专题内容部分有误暂未纠正,模型处理先看Blender处理第一章》-深入学习如何在Unity中复刻绝区零的角色渲染效果，涵盖模型处理、光照设置和最终渲染输出"
+  base_url: "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/"
+  image: "/assets/img/tutorials/UUEB.png"  # 可选
+  status: "已完结"
+  status_color: "primary"
+  chapters:
+    - file: "01_管线及资源设置.md"
+      title: "第一章 管线及资源设置"
+    - file: "02_描边追加.md"
+      title: "第二章 描边追加"
+    - file: "03_着色模型构建.md"
+      title: "第三章 着色模型构建"
+    - file: "04_投影追加.md"
+      title: "第四章 投影追加"
+    - file: "05_面部阴影SDF重构.md"
+      title: "第五章 面部阴影SDF重构"
+    - file: "06_鼻线添加.md"
+      title: "第六章 鼻线添加"
+    - file: "07_增加MatCap.md"
+      title: "第七章 增加MatCap"
+    - file: "08_颜色锐化处理.md"
+      title: "第八章 颜色锐化处理"
+    - file: "09_添加PBR高光.md"
+      title: "第九章 添加PBR高光"
+    - file: "10_添加SH环境光.md"
+      title: "第十章 添加SH环境光"
+    - file: "11_添加边缘光.md"
+      title: "第十一章 添加边缘光"
+    - file: "12_眼睛处理.md"
+      title: "第十二章(末) 眼睛处理"
+
+
+#--------------------------------------------UE-绝区零角色渲染-星见雅------------------------------------
+#------------------------------------------------------------------------------------------------------------
+- title: "UE-绝区零角色渲染-星见雅"
+  description: "《此专题内容部分有误暂未纠正,模型处理先看Blender处理第一章》-深入学习如何在UE中复刻绝区零的角色渲染效果，涵盖模型处理、光照设置和最终渲染输出"
+  base_url: "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/"
+  image: "/assets/img/tutorials/UUEB.png"  # 可选
+  status: "已完结"
+  status_color: "primary"
+  chapters:
+    - file: "01_导入及资源处理.md"
+      title: "第一章 导入及资源处理"
+    - file: "02_描边追加.md"
+      title: "第二章 描边追加"
+    - file: "03_着色模型构建.md"
+      title: "第三章 着色模型构建"
+    - file: "04_投影追加.md"
+      title: "第四章 投影追加"
+    - file: "05_面部阴影SDF重构.md"
+      title: "第五章 面部阴影SDF重构"
+    - file: "06_鼻线添加.md"
+      title: "第六章 鼻线添加"
+    - file: "07_增加MatCap.md"
+      title: "第七章 增加MatCap"
+    - file: "08_颜色锐化处理.md"
+      title: "第八章 颜色锐化处理"
+    - file: "09_添加PBR高光.md"
+      title: "第九章 添加PBR高光"
+    - file: "10_添加SH环境光.md"
+      title: "第十章 添加SH环境光"
+    - file: "11_添加边缘光.md"
+      title: "第十一章 添加边缘光"
+    - file: "12_眼睛处理.md"
+      title: "第十二章(末) 眼睛处理"
+    - file: "13_导入法线问题解决.md"
+      title: "EX番外 导入法线问题解决"
+
+
+
+
+
+
+
+
+
+- title: "Blender-绝区零角色渲染-橘福福"
   description: "深入学习如何在Blender中复刻绝区零的角色渲染效果，涵盖模型处理、光照设置和最终渲染输出"
   base_url: "/tutorials/ZZZRendering"
-  image: "/assets/img/tutorials/UUEB.png"  # 可选
+  #image: "/assets/img/tutorials/UUEB.png"  # 可选
   status: "更新中"
   status_color: "primary"
   chapters:

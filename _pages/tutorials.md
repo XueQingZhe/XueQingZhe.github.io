@@ -9,110 +9,111 @@ nav_order: 5
 
 <!-- 页面头部 -->
 <div class="tutorials-hero">
-  <div class="hero-content">
-    <h1 class="hero-title">
-      <i class="fas fa-graduation-cap"></i>
-      教程系列
-    </h1>
-    <p class="hero-subtitle">系统化的技术学习路径</p>
-  </div>
+  <h1 class="hero-title">
+    <i class="fas fa-graduation-cap"></i>
+    教程系列
+  </h1>
+  <p class="hero-subtitle">系统化的技术学习路径</p>
 </div>
 
-<!-- 主要内容区域 -->
-<div class="tutorials-main-layout">
-  <!-- 左侧弧形轮播区 -->
-  <div class="carousel-section">
-    <div class="carousel-container" id="carouselContainer">
-      {% assign tutorial_series = site.data.tutorials %}
-      
-      {% for series in tutorial_series %}
-      <div class="carousel-card" data-index="{{ forloop.index0 }}" onclick="showDetail({{ forloop.index }})">
-        <div class="card-image">
-          {% if series.image %}
-          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
-          {% else %}
-          <div class="card-placeholder">
-            <i class="fas fa-book-open fa-2x"></i>
-          </div>
-          {% endif %}
-          
-          {% if series.status %}
-          <span class="card-badge badge-{{ series.status_color }}">
-            <i class="fas fa-circle"></i>
-          </span>
-          {% endif %}
-        </div>
-        <div class="card-label">{{ series.title }}</div>
-      </div>
-      {% endfor %}
-    </div>
-    
-    <div class="carousel-controls">
-      <button class="ctrl-btn" onclick="prevSlide()">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <div class="carousel-dots">
-        {% for series in tutorial_series %}
-        <span class="dot" data-index="{{ forloop.index0 }}" onclick="goToSlide({{ forloop.index0 }})"></span>
-        {% endfor %}
-      </div>
-      <button class="ctrl-btn" onclick="nextSlide()">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-  </div>
-  
-  <!-- 右侧详情展示区 -->
-  <div class="detail-section" id="detailSection">
-    <div class="detail-placeholder">
-      <i class="fas fa-hand-pointer fa-3x"></i>
-      <p>点击左侧卡片查看详情</p>
-    </div>
+<!-- 弧形轮播区域 -->
+<div class="arc-carousel-area">
+  <div class="arc-track">
+    {% assign tutorial_series = site.data.tutorials %}
     
     {% for series in tutorial_series %}
-    <div class="detail-panel" id="panel-{{ forloop.index }}" style="display: none;">
-      <div class="detail-header">
-        <div class="detail-image-preview">
+    <div class="arc-thumbnail" 
+         data-id="{{ forloop.index }}"
+         onmouseenter="showPreviewCard({{ forloop.index }})"
+         onmouseleave="hidePreviewCard({{ forloop.index }})"
+         onclick="toggleChapters({{ forloop.index }})">
+      <div class="thumb-inner">
+        {% if series.image %}
+        <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
+        {% else %}
+        <div class="thumb-placeholder">
+          <i class="fas fa-book-open"></i>
+        </div>
+        {% endif %}
+        
+        {% if series.status %}
+        <span class="thumb-badge badge-{{ series.status_color }}">
+          <i class="fas fa-circle"></i>
+        </span>
+        {% endif %}
+      </div>
+      
+      <!-- 悬停预览卡片 -->
+      <div class="preview-card" id="preview-{{ forloop.index }}">
+        <div class="preview-image-area">
           {% if series.image %}
           <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
           {% else %}
           <div class="preview-placeholder">
-            <i class="fas fa-book-open fa-2x"></i>
+            <i class="fas fa-book-open fa-3x"></i>
           </div>
           {% endif %}
         </div>
         
-        <div class="detail-info">
-          <h2 class="detail-title">
-            <i class="fas fa-book"></i>
-            {{ series.title }}
-          </h2>
+        <div class="preview-info">
+          <h3 class="preview-title">{{ series.title }}</h3>
           {% if series.status %}
-          <span class="detail-status badge-{{ series.status_color }}">
-            <i class="fas fa-circle pulse"></i>
+          <span class="preview-status badge-{{ series.status_color }}">
+            <i class="fas fa-circle"></i>
             {{ series.status }}
           </span>
           {% endif %}
-          <p class="detail-desc">{{ series.description }}</p>
-          <div class="detail-meta">
-            <span><i class="fas fa-list"></i> {{ series.chapters.size }} 章节</span>
+          <p class="preview-desc">{{ series.description }}</p>
+          <div class="preview-meta">
+            <i class="fas fa-list"></i>
+            {{ series.chapters.size }} 章节
+          </div>
+          <div class="preview-hint">
+            <i class="fas fa-mouse-pointer"></i>
+            点击查看完整目录
           </div>
         </div>
-      </div>
-      
-      <!-- 章节列表 -->
-      <div class="chapters-list" id="chapters-{{ forloop.index }}">
-        {% for chapter in series.chapters %}
-        <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-bar">
-          <span class="chapter-num">{{ forloop.index }}</span>
-          <span class="chapter-text">{{ chapter.title }}</span>
-          <i class="fas fa-arrow-right"></i>
-        </a>
-        {% endfor %}
       </div>
     </div>
     {% endfor %}
   </div>
+  
+  <!-- 左右滚动按钮 -->
+  <button class="scroll-btn scroll-left" onclick="scrollArc('left')">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+  <button class="scroll-btn scroll-right" onclick="scrollArc('right')">
+    <i class="fas fa-chevron-right"></i>
+  </button>
+</div>
+
+<!-- 展开的章节目录区域 -->
+<div class="chapters-expand-area" id="chaptersArea">
+  {% for series in tutorial_series %}
+  <div class="chapters-panel" id="chapters-{{ forloop.index }}" style="display: none;">
+    <div class="panel-header">
+      <div class="header-left">
+        <i class="fas fa-list-ul"></i>
+        <h3>{{ series.title }} - 章节列表</h3>
+        <span class="chapter-count">{{ series.chapters.size }}</span>
+      </div>
+      <button class="close-btn" onclick="closeChapters({{ forloop.index }})">
+        <i class="fas fa-times"></i>
+        收起
+      </button>
+    </div>
+    
+    <div class="chapters-list">
+      {% for chapter in series.chapters %}
+      <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-bar">
+        <span class="bar-num">{{ forloop.index }}</span>
+        <span class="bar-text">{{ chapter.title }}</span>
+        <i class="fas fa-arrow-right bar-arrow"></i>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
 <div class="section-divider">
@@ -164,67 +165,84 @@ nav_order: 5
 </div>
 
 <script>
-let currentSlide = 0;
-let totalSlides = {{ tutorial_series.size }};
+let currentOpenPanel = null;
 
-function updateCarousel() {
-  const cards = document.querySelectorAll('.carousel-card');
-  const dots = document.querySelectorAll('.dot');
+function scrollArc(direction) {
+  const track = document.querySelector('.arc-track');
+  const scrollAmount = 250;
   
-  cards.forEach((card, index) => {
-    const offset = index - currentSlide;
-    card.style.setProperty('--offset', offset);
-    
-    if (index === currentSlide) {
-      card.classList.add('active');
-    } else {
-      card.classList.remove('active');
-    }
-  });
-  
-  dots.forEach((dot, index) => {
-    if (index === currentSlide) {
-      dot.classList.add('active');
-    } else {
-      dot.classList.remove('active');
-    }
-  });
-}
-
-function prevSlide() {
-  currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-  updateCarousel();
-}
-
-function nextSlide() {
-  currentSlide = (currentSlide + 1) % totalSlides;
-  updateCarousel();
-}
-
-function goToSlide(index) {
-  currentSlide = index;
-  updateCarousel();
-}
-
-function showDetail(id) {
-  // 隐藏占位符
-  document.querySelector('.detail-placeholder').style.display = 'none';
-  
-  // 隐藏所有面板
-  document.querySelectorAll('.detail-panel').forEach(panel => {
-    panel.style.display = 'none';
-  });
-  
-  // 显示选中的面板
-  const panel = document.getElementById(`panel-${id}`);
-  if (panel) {
-    panel.style.display = 'block';
-    panel.style.animation = 'slideIn 0.4s ease-out';
+  if (direction === 'left') {
+    track.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+  } else {
+    track.scrollBy({ left: scrollAmount, behavior: 'smooth' });
   }
 }
 
-// 初始化
-updateCarousel();
+function showPreviewCard(id) {
+  const preview = document.getElementById(`preview-${id}`);
+  if (preview) {
+    preview.style.display = 'flex';
+    setTimeout(() => {
+      preview.classList.add('visible');
+    }, 10);
+  }
+}
+
+function hidePreviewCard(id) {
+  const preview = document.getElementById(`preview-${id}`);
+  if (preview) {
+    preview.classList.remove('visible');
+    setTimeout(() => {
+      preview.style.display = 'none';
+    }, 300);
+  }
+}
+
+function toggleChapters(id) {
+  const panel = document.getElementById(`chapters-${id}`);
+  const area = document.getElementById('chaptersArea');
+  
+  // 如果点击的是当前打开的面板,则关闭
+  if (currentOpenPanel === id) {
+    closeChapters(id);
+    return;
+  }
+  
+  // 关闭其他面板
+  if (currentOpenPanel !== null) {
+    closeChapters(currentOpenPanel);
+  }
+  
+  // 打开新面板
+  if (panel) {
+    area.style.display = 'block';
+    panel.style.display = 'block';
+    currentOpenPanel = id;
+    
+    // 平滑滚动到章节区域
+    setTimeout(() => {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+}
+
+function closeChapters(id) {
+  const panel = document.getElementById(`chapters-${id}`);
+  const area = document.getElementById('chaptersArea');
+  
+  if (panel) {
+    panel.style.display = 'none';
+    currentOpenPanel = null;
+    
+    // 检查是否还有其他打开的面板
+    const anyOpen = Array.from(document.querySelectorAll('.chapters-panel'))
+      .some(p => p.style.display === 'block');
+    
+    if (!anyOpen) {
+      area.style.display = 'none';
+    }
+  }
+}
 </script>
 
 <style>
@@ -256,63 +274,79 @@ updateCarousel();
   margin: 0;
 }
 
-/* ========== 主布局: 左右分栏 ========== */
-.tutorials-main-layout {
-  display: grid;
-  grid-template-columns: 40% 60%;
-  gap: 2rem;
-  margin: 3rem 0;
-  min-height: 600px;
-}
-
-/* ========== 左侧轮播区 ========== */
-.carousel-section {
-  background: linear-gradient(135deg,
-    rgba(var(--global-theme-color-rgb), 0.05) 0%,
-    rgba(var(--global-theme-color-rgb), 0.02) 100%
-  );
-  border: 2px solid var(--global-divider-color);
-  border-radius: 20px;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.carousel-container {
+/* ========== 弧形轮播区域 ========== */
+.arc-carousel-area {
   position: relative;
-  height: 450px;
-  perspective: 1200px;
-  overflow: visible;
+  margin: 3rem 0;
+  padding: 3rem 0;
+  min-height: 400px;
 }
 
-.carousel-card {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 220px;
-  height: 300px;
-  transform-style: preserve-3d;
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+.arc-track {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem 4rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--global-theme-color) var(--global-divider-color);
+  
+  /* 创建弧形视觉效果 */
+  align-items: center;
+  padding-bottom: 4rem;
+}
+
+.arc-track::-webkit-scrollbar {
+  height: 8px;
+}
+
+.arc-track::-webkit-scrollbar-track {
+  background: var(--global-divider-color);
+  border-radius: 4px;
+}
+
+.arc-track::-webkit-scrollbar-thumb {
+  background: var(--global-theme-color);
+  border-radius: 4px;
+}
+
+/* 弧形排列效果 */
+.arc-thumbnail {
+  flex-shrink: 0;
+  width: 180px;
+  position: relative;
   cursor: pointer;
-  
-  /* 弧形排列 */
-  transform: 
-    translate(-50%, -50%)
-    rotateY(calc(var(--offset) * 35deg))
-    translateZ(calc(300px - abs(var(--offset)) * 80px))
-    scale(calc(1 - abs(var(--offset)) * 0.2));
-  
-  opacity: calc(1 - abs(var(--offset)) * 0.4);
-  z-index: calc(10 - abs(var(--offset)));
+  transition: all 0.3s;
 }
 
-.carousel-card.active {
-  z-index: 50;
+.arc-thumbnail:nth-child(odd) {
+  margin-top: -20px;
 }
 
-.card-image {
-  width: 100%;
+.arc-thumbnail:nth-child(even) {
+  margin-top: 20px;
+}
+
+.arc-thumbnail:nth-child(3n) {
+  margin-top: 0px;
+}
+
+.arc-thumbnail:nth-child(3n+1) {
+  margin-top: -30px;
+}
+
+.arc-thumbnail:nth-child(3n+2) {
+  margin-top: 30px;
+}
+
+.arc-thumbnail:hover {
+  transform: translateY(-10px) scale(1.05);
+  z-index: 100;
+}
+
+.thumb-inner {
+  width: 180px;
   height: 240px;
   background: var(--global-bg-color);
   border: 2px solid var(--global-divider-color);
@@ -320,21 +354,21 @@ updateCarousel();
   overflow: hidden;
   position: relative;
   transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.carousel-card:hover .card-image,
-.carousel-card.active .card-image {
+.arc-thumbnail:hover .thumb-inner {
   border-color: var(--global-theme-color);
   box-shadow: 0 8px 24px rgba(var(--global-theme-color-rgb), 0.3);
 }
 
-.card-image img {
+.thumb-inner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.card-placeholder {
+.thumb-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
@@ -348,7 +382,7 @@ updateCarousel();
   opacity: 0.3;
 }
 
-.card-badge {
+.thumb-badge {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
@@ -357,16 +391,17 @@ updateCarousel();
     var(--global-hover-color) 100%
   );
   color: white;
-  padding: 0.35rem 0.75rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 12px;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.card-badge i {
+.thumb-badge i {
   font-size: 0.4rem;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -376,131 +411,73 @@ updateCarousel();
   50% { opacity: 0.4; }
 }
 
-.card-label {
-  margin-top: 0.75rem;
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--global-text-color);
-}
-
-/* 轮播控制 */
-.carousel-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-}
-
-.ctrl-btn {
-  width: 40px;
-  height: 40px;
-  background: var(--global-theme-color);
+/* 滚动按钮 */
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(var(--global-theme-color-rgb), 0.9);
   color: white;
   border: none;
   border-radius: 50%;
+  font-size: 1.2rem;
   cursor: pointer;
+  z-index: 200;
+  transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.ctrl-btn:hover {
-  background: var(--global-hover-color);
-  transform: scale(1.1);
-}
-
-.carousel-dots {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
-  background: var(--global-divider-color);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.dot:hover {
-  background: var(--global-text-color-light);
-  transform: scale(1.2);
-}
-
-.dot.active {
+.scroll-btn:hover {
   background: var(--global-theme-color);
-  width: 24px;
-  border-radius: 5px;
+  transform: translateY(-50%) scale(1.1);
 }
 
-/* ========== 右侧详情区 ========== */
-.detail-section {
+.scroll-left {
+  left: 1rem;
+}
+
+.scroll-right {
+  right: 1rem;
+}
+
+/* ========== 悬停预览卡片 ========== */
+.preview-card {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 400px;
   background: var(--global-bg-color);
   border: 2px solid var(--global-theme-color);
-  border-radius: 20px;
-  padding: 2rem;
-  min-height: 600px;
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-placeholder {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--global-text-color-light);
-  opacity: 0.5;
-}
-
-.detail-placeholder i {
-  color: var(--global-theme-color);
-  margin-bottom: 1rem;
-}
-
-.detail-placeholder p {
-  font-size: 1.1rem;
-  margin: 0;
-}
-
-.detail-panel {
-  animation: slideIn 0.4s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* 详情头部 */
-.detail-header {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 2px solid var(--global-divider-color);
-}
-
-.detail-image-preview {
-  width: 150px;
-  height: 150px;
-  border-radius: 12px;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.3);
+  display: none;
+  flex-direction: row;
   overflow: hidden;
+  z-index: 1000;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.preview-card.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(100%) scale(1);
+}
+
+.preview-image-area {
+  width: 140px;
+  height: 100%;
   background: #000;
   flex-shrink: 0;
 }
 
-.detail-image-preview img {
+.preview-image-area img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -520,92 +497,165 @@ updateCarousel();
   opacity: 0.3;
 }
 
-.detail-info {
+.preview-info {
   flex: 1;
+  padding: 1.25rem;
 }
 
-.detail-title {
-  font-size: 1.6rem;
+.preview-title {
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--global-text-color);
-  margin: 0 0 0.75rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
 }
 
-.detail-title i {
-  color: var(--global-theme-color);
-}
-
-.detail-status {
+.preview-status {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   background: linear-gradient(135deg,
     var(--global-theme-color) 0%,
     var(--global-hover-color) 100%
   );
   color: white;
-  padding: 0.4rem 0.9rem;
-  border-radius: 16px;
-  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
   font-weight: 600;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-.detail-status i {
-  font-size: 0.5rem;
+.preview-status i {
+  font-size: 0.4rem;
 }
 
-.detail-desc {
-  font-size: 0.95rem;
-  line-height: 1.7;
+.preview-desc {
+  font-size: 0.85rem;
+  line-height: 1.5;
   color: var(--global-text-color-light);
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.detail-meta {
-  display: flex;
-  gap: 1rem;
+.preview-meta {
+  font-size: 0.8rem;
   color: var(--global-text-color-light);
-  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
 }
 
-.detail-meta i {
+.preview-meta i {
   color: var(--global-theme-color);
   margin-right: 0.4rem;
 }
 
-/* ========== 章节列表(横条) ========== */
+.preview-hint {
+  font-size: 0.75rem;
+  color: var(--global-theme-color);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ========== 章节展开区域 ========== */
+.chapters-expand-area {
+  margin: 3rem 0;
+  display: none;
+}
+
+.chapters-panel {
+  background: var(--global-bg-color);
+  border: 2px solid var(--global-theme-color);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  animation: expandIn 0.4s ease-out;
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--global-divider-color);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.header-left i {
+  color: var(--global-theme-color);
+  font-size: 1.2rem;
+}
+
+.header-left h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--global-text-color);
+  margin: 0;
+}
+
+.chapter-count {
+  background: var(--global-theme-color);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: var(--global-theme-color);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.close-btn:hover {
+  background: var(--global-hover-color);
+  transform: scale(1.05);
+}
+
+/* 章节横条列表 */
 .chapters-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-height: 350px;
-  overflow-y: auto;
-  padding-right: 0.5rem;
-}
-
-.chapters-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chapters-list::-webkit-scrollbar-track {
-  background: var(--global-divider-color);
-  border-radius: 3px;
-}
-
-.chapters-list::-webkit-scrollbar-thumb {
-  background: var(--global-theme-color);
-  border-radius: 3px;
 }
 
 .chapter-bar {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.9rem 1.25rem;
+  padding: 1rem 1.5rem;
   background: var(--global-code-bg-color);
   border: 2px solid var(--global-divider-color);
   border-radius: 12px;
@@ -622,7 +672,7 @@ updateCarousel();
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 5px;
   background: linear-gradient(180deg,
     var(--global-theme-color) 0%,
     var(--global-hover-color) 100%
@@ -636,15 +686,15 @@ updateCarousel();
 }
 
 .chapter-bar:hover {
-  transform: translateX(8px);
+  transform: translateX(10px);
   background: var(--global-bg-color);
   border-color: var(--global-theme-color);
   box-shadow: 0 4px 12px rgba(var(--global-theme-color-rgb), 0.2);
 }
 
-.chapter-num {
-  width: 32px;
-  height: 32px;
+.bar-num {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -655,24 +705,24 @@ updateCarousel();
   color: white;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 1rem;
   flex-shrink: 0;
 }
 
-.chapter-text {
+.bar-text {
   flex: 1;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
-.chapter-bar i {
+.bar-arrow {
   color: var(--global-theme-color);
   opacity: 0;
   transform: translateX(-10px);
   transition: all 0.3s;
 }
 
-.chapter-bar:hover i {
+.chapter-bar:hover .bar-arrow {
   opacity: 1;
   transform: translateX(0);
 }
@@ -813,41 +863,42 @@ updateCarousel();
 }
 
 /* ========== 响应式 ========== */
-@media (max-width: 1024px) {
-  .tutorials-main-layout {
-    grid-template-columns: 1fr;
-  }
-  
-  .carousel-section {
-    height: 500px;
-  }
-}
-
 @media (max-width: 768px) {
   .hero-title {
     font-size: 2rem;
   }
   
-  .carousel-card {
-    width: 180px;
-    height: 260px;
+  .arc-track {
+    padding: 2rem 2rem;
   }
   
-  .card-image {
+  .arc-thumbnail {
+    width: 150px;
+  }
+  
+  .thumb-inner {
+    width: 150px;
     height: 200px;
   }
   
-  .detail-section {
-    padding: 1.5rem;
-  }
-  
-  .detail-header {
+  .preview-card {
+    width: 320px;
     flex-direction: column;
   }
   
-  .detail-image-preview {
+  .preview-image-area {
     width: 100%;
-    height: 200px;
+    height: 150px;
+  }
+  
+  .scroll-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .chapters-panel {
+    padding: 1.5rem;
   }
   
   .planned-grid {

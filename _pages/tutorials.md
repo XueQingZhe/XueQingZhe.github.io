@@ -23,146 +23,116 @@ nav_order: 5
   </div>
 </div>
 
-<!-- 胶片滚动区域 -->
-<div class="film-strip-container">
-  <div class="film-strip-wrapper">
-    <button class="scroll-btn scroll-left" onclick="scrollFilm(-1)">
-      <i class="fas fa-chevron-left"></i>
-    </button>
-    
-    <div class="film-strip" id="filmStrip">
+<!-- 弧形画廊区域 -->
+<div class="arc-gallery-container">
+  <div class="arc-viewport">
+    <div class="arc-carousel" id="arcCarousel">
       {% assign tutorial_series = site.data.tutorials %}
       
       {% for series in tutorial_series %}
-      <div class="film-frame" data-tutorial-id="{{ forloop.index }}">
-        <!-- 胶片孔 -->
-        <div class="film-holes film-holes-top">
-          <span class="hole"></span>
-          <span class="hole"></span>
-          <span class="hole"></span>
-        </div>
-        
-        <!-- 缩略图 -->
-        <div class="film-thumbnail" 
-             onmouseenter="showPreview({{ forloop.index }})"
-             onmouseleave="hidePreview({{ forloop.index }})"
-             onclick="expandTutorial({{ forloop.index }})">
-          {% if series.image %}
-          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}">
-          {% else %}
-          <div class="placeholder-thumb">
-            <i class="fas fa-book-open fa-2x"></i>
-          </div>
-          {% endif %}
-          
-          {% if series.status %}
-          <span class="status-indicator badge-{{ series.status_color }}">
-            <i class="fas fa-circle"></i>
-          </span>
-          {% endif %}
-          
-          <div class="film-label">{{ series.title }}</div>
-        </div>
-        
-        <!-- 胶片孔 -->
-        <div class="film-holes film-holes-bottom">
-          <span class="hole"></span>
-          <span class="hole"></span>
-          <span class="hole"></span>
-        </div>
-        
-        <!-- 悬停预览卡片 -->
-        <div class="preview-card" id="preview-{{ forloop.index }}">
-          <div class="preview-content">
-            {% if series.status %}
-            <span class="preview-badge badge-{{ series.status_color }}">
-              <i class="fas fa-circle"></i>
-              {{ series.status }}
-            </span>
+      <div class="arc-card" data-index="{{ forloop.index0 }}">
+        <div class="card-inner" onclick="selectTutorial({{ forloop.index }})">
+          <!-- 卡片内容 -->
+          <div class="card-image-container">
+            {% if series.image %}
+            <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="card-image">
+            {% else %}
+            <div class="card-placeholder">
+              <i class="fas fa-book-open fa-3x"></i>
+            </div>
             {% endif %}
             
-            <h3 class="preview-title">{{ series.title }}</h3>
-            <p class="preview-description">{{ series.description }}</p>
-            
-            <div class="preview-footer">
-              <span class="preview-chapters">
-                <i class="fas fa-list"></i>
-                {{ series.chapters.size }} 章节
-              </span>
-              <span class="preview-hint">
-                点击查看详情 <i class="fas fa-arrow-down"></i>
-              </span>
-            </div>
+            {% if series.status %}
+            <span class="card-status badge-{{ series.status_color }}">
+              <i class="fas fa-circle"></i>
+            </span>
+            {% endif %}
+          </div>
+          
+          <div class="card-info">
+            <h3 class="card-title">{{ series.title }}</h3>
+            <p class="card-chapters">
+              <i class="fas fa-list"></i>
+              {{ series.chapters.size }} 章节
+            </p>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    
-    <button class="scroll-btn scroll-right" onclick="scrollFilm(1)">
-      <i class="fas fa-chevron-right"></i>
-    </button>
+  </div>
+  
+  <!-- 导航按钮 -->
+  <button class="nav-btn nav-prev" onclick="rotateCarousel(-1)">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+  <button class="nav-btn nav-next" onclick="rotateCarousel(1)">
+    <i class="fas fa-chevron-right"></i>
+  </button>
+  
+  <!-- 指示器 -->
+  <div class="carousel-indicators">
+    {% for series in tutorial_series %}
+    <span class="indicator" data-index="{{ forloop.index0 }}" onclick="goToSlide({{ forloop.index0 }})"></span>
+    {% endfor %}
   </div>
 </div>
 
-<!-- 展开的详情区域 -->
-<div class="tutorial-details-container" id="detailsContainer">
+<!-- 详情展示区域 -->
+<div class="tutorial-details-section" id="detailsSection">
   {% for series in tutorial_series %}
-  <div class="tutorial-details" id="details-{{ forloop.index }}" style="display: none;">
-    <div class="details-close" onclick="collapseTutorial()">
-      <i class="fas fa-times"></i>
-      收起
+  <div class="tutorial-detail" id="detail-{{ forloop.index }}" style="display: none;">
+    <div class="detail-header">
+      <div class="detail-title-area">
+        <h2 class="detail-title">
+          <i class="fas fa-book"></i>
+          {{ series.title }}
+        </h2>
+        {% if series.status %}
+        <span class="detail-badge badge-{{ series.status_color }}">
+          <i class="fas fa-circle pulse-dot"></i>
+          {{ series.status }}
+        </span>
+        {% endif %}
+      </div>
+      <button class="detail-close" onclick="closeDetail()">
+        <i class="fas fa-times"></i>
+        收起
+      </button>
     </div>
     
-    <div class="details-content">
-      <div class="details-left">
+    <div class="detail-content">
+      <div class="detail-left">
         {% if series.image %}
-        <div class="details-image-container" style="--preview-img: url('{{ series.image | relative_url }}')">
-          <div class="image-blur-bg"></div>
-          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="details-image">
+        <div class="detail-image-wrapper">
+          <div class="image-bg" style="background-image: url('{{ series.image | relative_url }}')"></div>
+          <img src="{{ series.image | relative_url }}" alt="{{ series.title }}" class="detail-image">
         </div>
         {% else %}
-        <div class="details-placeholder">
+        <div class="detail-placeholder">
           <i class="fas fa-book-open fa-4x"></i>
         </div>
         {% endif %}
         
-        <div class="details-info">
-          <h2 class="details-title">
-            <i class="fas fa-book"></i>
-            {{ series.title }}
-          </h2>
-          {% if series.status %}
-          <span class="details-badge badge-{{ series.status_color }}">
-            <i class="fas fa-circle pulse-dot"></i>
-            {{ series.status }}
-          </span>
-          {% endif %}
-          
-          <p class="details-description">{{ series.description }}</p>
-          
-          <div class="details-stats">
-            <div class="stat">
-              <i class="fas fa-book-open"></i>
-              <span>{{ series.chapters.size }} 章节</span>
-            </div>
-          </div>
+        <div class="detail-description">
+          <h4><i class="fas fa-info-circle"></i> 教程简介</h4>
+          <p>{{ series.description }}</p>
         </div>
       </div>
       
-      <div class="details-right">
+      <div class="detail-right">
         <div class="chapters-header">
           <i class="fas fa-list-ul"></i>
           <span>章节列表</span>
-          <span class="chapters-count">{{ series.chapters.size }}</span>
+          <span class="chapters-total">{{ series.chapters.size }}</span>
         </div>
         
-        <div class="chapters-grid">
+        <div class="chapters-container">
           {% for chapter in series.chapters %}
-          <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-item">
-            <span class="chapter-number">{{ forloop.index }}</span>
-            <span class="chapter-title">{{ chapter.title }}</span>
-            <i class="fas fa-arrow-right chapter-arrow"></i>
+          <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-link">
+            <span class="chapter-num">{{ forloop.index }}</span>
+            <span class="chapter-name">{{ chapter.title }}</span>
+            <i class="fas fa-arrow-right"></i>
           </a>
           {% endfor %}
         </div>
@@ -221,77 +191,75 @@ nav_order: 5
 </div>
 
 <script>
-let currentExpanded = null;
+let currentIndex = 0;
+let totalCards = {{ tutorial_series.size }};
+let selectedTutorial = null;
 
-function scrollFilm(direction) {
-  const filmStrip = document.getElementById('filmStrip');
-  const scrollAmount = 300;
-  filmStrip.scrollBy({
-    left: direction * scrollAmount,
-    behavior: 'smooth'
+function rotateCarousel(direction) {
+  currentIndex = (currentIndex + direction + totalCards) % totalCards;
+  updateCarousel();
+}
+
+function goToSlide(index) {
+  currentIndex = index;
+  updateCarousel();
+}
+
+function updateCarousel() {
+  const cards = document.querySelectorAll('.arc-card');
+  const indicators = document.querySelectorAll('.indicator');
+  
+  cards.forEach((card, index) => {
+    const offset = index - currentIndex;
+    card.style.setProperty('--offset', offset);
+    
+    if (offset === 0) {
+      card.classList.add('active');
+    } else {
+      card.classList.remove('active');
+    }
+  });
+  
+  indicators.forEach((indicator, index) => {
+    if (index === currentIndex) {
+      indicator.classList.add('active');
+    } else {
+      indicator.classList.remove('active');
+    }
   });
 }
 
-function showPreview(id) {
-  const preview = document.getElementById(`preview-${id}`);
-  if (preview && currentExpanded === null) {
-    preview.style.display = 'block';
-    setTimeout(() => {
-      preview.classList.add('visible');
-    }, 10);
-  }
-}
-
-function hidePreview(id) {
-  const preview = document.getElementById(`preview-${id}`);
-  if (preview) {
-    preview.classList.remove('visible');
-    setTimeout(() => {
-      preview.style.display = 'none';
-    }, 300);
-  }
-}
-
-function expandTutorial(id) {
-  // 隐藏所有预览卡片
-  document.querySelectorAll('.preview-card').forEach(card => {
-    card.classList.remove('visible');
-    card.style.display = 'none';
-  });
-  
-  // 如果点击的是当前展开的,则收起
-  if (currentExpanded === id) {
-    collapseTutorial();
-    return;
-  }
-  
-  // 隐藏其他详情
-  document.querySelectorAll('.tutorial-details').forEach(details => {
-    details.style.display = 'none';
+function selectTutorial(id) {
+  // 隐藏所有详情
+  document.querySelectorAll('.tutorial-detail').forEach(detail => {
+    detail.style.display = 'none';
   });
   
   // 显示选中的详情
-  const details = document.getElementById(`details-${id}`);
-  if (details) {
-    details.style.display = 'block';
-    currentExpanded = id;
+  const detail = document.getElementById(`detail-${id}`);
+  if (detail) {
+    detail.style.display = 'block';
+    selectedTutorial = id;
     
-    // 平滑滚动到详情区域
+    // 滚动到详情区域
     setTimeout(() => {
-      details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
   }
 }
 
-function collapseTutorial() {
-  if (currentExpanded) {
-    const details = document.getElementById(`details-${currentExpanded}`);
-    if (details) {
-      details.style.display = 'none';
+function closeDetail() {
+  if (selectedTutorial) {
+    const detail = document.getElementById(`detail-${selectedTutorial}`);
+    if (detail) {
+      detail.style.display = 'none';
     }
-    currentExpanded = null;
+    selectedTutorial = null;
   }
 }
+
+// 初始化
+updateCarousel();
 </script>
 
 <style>
@@ -381,44 +349,167 @@ function collapseTutorial() {
   margin: 0;
 }
 
-/* ========== 胶片滚动区域 ========== */
-.film-strip-container {
-  margin: 3rem 0;
-  padding: 2rem 0;
-}
-
-.film-strip-wrapper {
+/* ========== 弧形画廊 ========== */
+.arc-gallery-container {
   position: relative;
-  max-width: 100%;
+  height: 500px;
+  margin: 3rem 0;
   overflow: hidden;
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.03) 0%,
+    transparent 100%
+  );
+  border-radius: 20px;
 }
 
-.film-strip {
+.arc-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  perspective: 1500px;
+}
+
+.arc-carousel {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.arc-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 280px;
+  height: 380px;
+  transform-style: preserve-3d;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  
+  /* 3D弧形排列 */
+  transform: 
+    translate(-50%, -50%)
+    rotateY(calc(var(--offset) * 45deg))
+    translateZ(calc(400px - abs(var(--offset)) * 100px))
+    scale(calc(1 - abs(var(--offset)) * 0.2));
+  
+  opacity: calc(1 - abs(var(--offset)) * 0.3);
+  z-index: calc(10 - abs(var(--offset)));
+}
+
+.arc-card.active {
+  z-index: 100;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--global-bg-color);
+  border: 2px solid var(--global-divider-color);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.arc-card:hover .card-inner,
+.arc-card.active .card-inner {
+  border-color: var(--global-theme-color);
+  box-shadow: 0 12px 36px rgba(var(--global-theme-color-rgb), 0.3);
+}
+
+/* 卡片图片 */
+.card-image-container {
+  width: 100%;
+  height: 280px;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.arc-card:hover .card-image {
+  transform: scale(1.1);
+}
+
+.card-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
-  gap: 2rem;
-  padding: 2rem 4rem;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: var(--global-theme-color) var(--global-divider-color);
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    rgba(var(--global-theme-color-rgb), 0.1) 0%,
+    rgba(var(--global-theme-color-rgb), 0.05) 100%
+  );
+  color: var(--global-theme-color);
+  opacity: 0.3;
 }
 
-.film-strip::-webkit-scrollbar {
-  height: 8px;
+.card-status {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: linear-gradient(135deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  color: white;
+  padding: 0.4rem 0.9rem;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-.film-strip::-webkit-scrollbar-track {
-  background: var(--global-divider-color);
-  border-radius: 4px;
+.card-status i {
+  font-size: 0.5rem;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-.film-strip::-webkit-scrollbar-thumb {
-  background: var(--global-theme-color);
-  border-radius: 4px;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-/* 滚动按钮 */
-.scroll-btn {
+/* 卡片信息 */
+.card-info {
+  padding: 1.25rem;
+  background: var(--global-bg-color);
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--global-text-color);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.3;
+}
+
+.card-chapters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--global-text-color-light);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.card-chapters i {
+  color: var(--global-theme-color);
+}
+
+/* 导航按钮 */
+.nav-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -430,7 +521,7 @@ function collapseTutorial() {
   border-radius: 50%;
   font-size: 1.2rem;
   cursor: pointer;
-  z-index: 10;
+  z-index: 200;
   transition: all 0.3s;
   display: flex;
   align-items: center;
@@ -438,248 +529,65 @@ function collapseTutorial() {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.scroll-btn:hover {
+.nav-btn:hover {
   background: var(--global-theme-color);
   transform: translateY(-50%) scale(1.1);
 }
 
-.scroll-left {
-  left: 0;
+.nav-prev {
+  left: 2rem;
 }
 
-.scroll-right {
-  right: 0;
+.nav-next {
+  right: 2rem;
 }
 
-/* ========== 胶片帧 ========== */
-.film-frame {
-  flex-shrink: 0;
-  width: 280px;
-  background: #1a1a1a;
-  border-radius: 8px;
-  padding: 1rem 0.8rem;
-  position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transition: transform 0.3s;
-}
-
-.film-frame:hover {
-  transform: scale(1.05);
-}
-
-/* 胶片孔 */
-.film-holes {
+/* 指示器 */
+.carousel-indicators {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: space-around;
-  padding: 0.5rem 0;
+  gap: 0.75rem;
+  z-index: 200;
 }
 
-.hole {
+.indicator {
   width: 12px;
   height: 12px;
-  background: #000;
-  border: 2px solid #333;
+  background: rgba(var(--global-text-color-rgb), 0.3);
   border-radius: 50%;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-}
-
-/* 缩略图 */
-.film-thumbnail {
-  width: 100%;
-  height: 320px;
-  background: #000;
-  border-radius: 4px;
-  overflow: hidden;
   cursor: pointer;
-  position: relative;
   transition: all 0.3s;
 }
 
-.film-thumbnail:hover {
-  box-shadow: 0 0 20px rgba(var(--global-theme-color-rgb), 0.5);
+.indicator:hover {
+  background: rgba(var(--global-text-color-rgb), 0.5);
+  transform: scale(1.2);
 }
 
-.film-thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s;
+.indicator.active {
+  background: var(--global-theme-color);
+  width: 32px;
+  border-radius: 6px;
 }
 
-.film-thumbnail:hover img {
-  transform: scale(1.1);
-}
-
-.placeholder-thumb {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--global-theme-color);
-  opacity: 0.3;
-}
-
-/* 状态指示器 */
-.status-indicator {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  background: linear-gradient(135deg,
-    var(--global-theme-color) 0%,
-    var(--global-hover-color) 100%
-  );
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 16px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-.status-indicator i {
-  font-size: 0.4rem;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-/* 胶片标签 */
-.film-label {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.9) 100%);
-  color: white;
-  padding: 1rem 0.75rem 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* ========== 悬停预览卡片 ========== */
-.preview-card {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-100%) scale(0.9);
-  width: 350px;
-  background: var(--global-bg-color);
-  border: 2px solid var(--global-theme-color);
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-  z-index: 100;
-  display: none;
-  opacity: 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-}
-
-.preview-card.visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-100%) scale(1);
-}
-
-.preview-card::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 10px solid var(--global-theme-color);
-}
-
-.preview-content {
-  padding: 1.5rem;
-}
-
-.preview-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg,
-    var(--global-theme-color) 0%,
-    var(--global-hover-color) 100%
-  );
-  color: white;
-  padding: 0.4rem 0.9rem;
-  border-radius: 16px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-}
-
-.preview-badge i {
-  font-size: 0.5rem;
-}
-
-.preview-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--global-text-color);
-  margin: 0 0 0.75rem 0;
-}
-
-.preview-description {
-  font-size: 0.9rem;
-  color: var(--global-text-color-light);
-  line-height: 1.6;
-  margin: 0 0 1rem 0;
-}
-
-.preview-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 1rem;
-  border-top: 1px solid var(--global-divider-color);
-}
-
-.preview-chapters {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--global-text-color-light);
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.preview-chapters i {
-  color: var(--global-theme-color);
-}
-
-.preview-hint {
-  color: var(--global-theme-color);
-  font-size: 0.85rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ========== 展开详情区域 ========== */
-.tutorial-details-container {
+/* ========== 详情区域 ========== */
+.tutorial-details-section {
   margin: 3rem 0;
 }
 
-.tutorial-details {
+.tutorial-detail {
   background: var(--global-bg-color);
   border: 2px solid var(--global-theme-color);
   border-radius: 20px;
   padding: 2.5rem;
   margin-bottom: 2rem;
-  position: relative;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-  animation: slideDown 0.4s ease-out;
+  animation: slideIn 0.4s ease-out;
 }
 
-@keyframes slideDown {
+@keyframes slideIn {
   from {
     opacity: 0;
     transform: translateY(-20px);
@@ -690,76 +598,123 @@ function collapseTutorial() {
   }
 }
 
-.details-close {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: var(--global-theme-color);
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
+.detail-header {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 2rem;
 }
 
-.details-close:hover {
+.detail-title-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--global-text-color);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detail-title i {
+  color: var(--global-theme-color);
+}
+
+.detail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg,
+    var(--global-theme-color) 0%,
+    var(--global-hover-color) 100%
+  );
+  color: white;
+  padding: 0.5rem 1.1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.pulse-dot {
+  font-size: 0.5rem;
+}
+
+.detail-close {
+  background: var(--global-theme-color);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.detail-close:hover {
   background: var(--global-hover-color);
   transform: scale(1.05);
 }
 
-.details-content {
+.detail-content {
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 2.5rem;
 }
 
 /* 详情左侧 */
-.details-left {
+.detail-left {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.details-image-container {
+.detail-image-wrapper {
   width: 100%;
-  height: 300px;
+  height: 350px;
   border-radius: 16px;
   overflow: hidden;
   position: relative;
   background: #000;
 }
 
-.image-blur-bg {
+.image-bg {
   position: absolute;
   top: -20px;
   left: -20px;
   right: -20px;
   bottom: -20px;
-  background-image: var(--preview-img);
   background-size: cover;
   background-position: center;
   filter: blur(20px) brightness(0.4);
   transform: scale(1.1);
 }
 
-.details-image {
+.detail-image {
   position: relative;
   z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 1.5rem;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+  padding: 2rem;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.6));
 }
 
-.details-placeholder {
+.detail-placeholder {
   width: 100%;
-  height: 300px;
+  height: 350px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -772,78 +727,35 @@ function collapseTutorial() {
   opacity: 0.3;
 }
 
-.details-info {
+.detail-description {
   background: var(--global-code-bg-color);
   padding: 1.5rem;
   border-radius: 12px;
 }
 
-.details-title {
-  font-size: 1.6rem;
+.detail-description h4 {
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--global-text-color);
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.75rem 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.details-title i {
+.detail-description h4 i {
   color: var(--global-theme-color);
 }
 
-.details-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg,
-    var(--global-theme-color) 0%,
-    var(--global-hover-color) 100%
-  );
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.pulse-dot {
-  font-size: 0.5rem;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.details-description {
-  font-size: 1rem;
+.detail-description p {
+  font-size: 0.95rem;
   line-height: 1.7;
   color: var(--global-text-color-light);
-  margin: 0 0 1.5rem 0;
+  margin: 0;
 }
 
-.details-stats {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--global-text-color);
-  font-weight: 500;
-}
-
-.stat i {
-  color: var(--global-theme-color);
-}
-
-/* 详情右侧 - 章节列表 */
-.details-right {
+/* 详情右侧 - 章节 */
+.detail-right {
   display: flex;
   flex-direction: column;
 }
@@ -860,7 +772,7 @@ function collapseTutorial() {
   border-bottom: 2px solid var(--global-divider-color);
 }
 
-.chapters-count {
+.chapters-total {
   background: var(--global-theme-color);
   color: white;
   padding: 0.3rem 0.8rem;
@@ -869,34 +781,34 @@ function collapseTutorial() {
   margin-left: auto;
 }
 
-.chapters-grid {
+.chapters-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  max-height: 450px;
+  gap: 0.85rem;
+  max-height: 500px;
   overflow-y: auto;
   padding-right: 0.5rem;
 }
 
-.chapters-grid::-webkit-scrollbar {
+.chapters-container::-webkit-scrollbar {
   width: 6px;
 }
 
-.chapters-grid::-webkit-scrollbar-track {
+.chapters-container::-webkit-scrollbar-track {
   background: var(--global-divider-color);
   border-radius: 3px;
 }
 
-.chapters-grid::-webkit-scrollbar-thumb {
+.chapters-container::-webkit-scrollbar-thumb {
   background: var(--global-theme-color);
   border-radius: 3px;
 }
 
-.chapter-item {
+.chapter-link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1.1rem;
   background: var(--global-bg-color);
   border: 1px solid var(--global-divider-color);
   border-radius: 10px;
@@ -907,7 +819,7 @@ function collapseTutorial() {
   overflow: hidden;
 }
 
-.chapter-item::before {
+.chapter-link::before {
   content: '';
   position: absolute;
   left: 0;
@@ -922,20 +834,20 @@ function collapseTutorial() {
   transition: transform 0.3s;
 }
 
-.chapter-item:hover::before {
+.chapter-link:hover::before {
   transform: scaleY(1);
 }
 
-.chapter-item:hover {
+.chapter-link:hover {
   transform: translateX(4px);
   background: var(--global-code-bg-color);
   border-color: var(--global-theme-color);
   box-shadow: 0 3px 10px rgba(0,0,0,0.08);
 }
 
-.chapter-number {
-  width: 28px;
-  height: 28px;
+.chapter-num {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -944,19 +856,19 @@ function collapseTutorial() {
     var(--global-hover-color) 100%
   );
   color: white;
-  border-radius: 7px;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 0.85rem;
   flex-shrink: 0;
 }
 
-.chapter-title {
+.chapter-name {
   flex: 1;
   font-weight: 500;
   font-size: 0.9rem;
 }
 
-.chapter-arrow {
+.chapter-link i {
   color: var(--global-theme-color);
   opacity: 0;
   transform: translateX(-8px);
@@ -964,7 +876,7 @@ function collapseTutorial() {
   font-size: 0.85rem;
 }
 
-.chapter-item:hover .chapter-arrow {
+.chapter-link:hover i {
   opacity: 1;
   transform: translateX(0);
 }
@@ -1106,11 +1018,24 @@ function collapseTutorial() {
 
 /* ========== 响应式 ========== */
 @media (max-width: 1024px) {
-  .details-content {
+  .arc-gallery-container {
+    height: 450px;
+  }
+  
+  .arc-card {
+    width: 240px;
+    height: 340px;
+  }
+  
+  .card-image-container {
+    height: 240px;
+  }
+  
+  .detail-content {
     grid-template-columns: 1fr;
   }
   
-  .chapters-grid {
+  .chapters-container {
     grid-template-columns: 1fr;
   }
 }
@@ -1124,26 +1049,40 @@ function collapseTutorial() {
     font-size: 2rem;
   }
   
-  .film-frame {
-    width: 240px;
+  .arc-gallery-container {
+    height: 400px;
   }
   
-  .film-thumbnail {
-    height: 280px;
+  .arc-card {
+    width: 220px;
+    height: 320px;
   }
   
-  .preview-card {
-    width: 300px;
+  .card-image-container {
+    height: 220px;
   }
   
-  .tutorial-details {
-    padding: 1.5rem;
-  }
-  
-  .scroll-btn {
+  .nav-btn {
     width: 40px;
     height: 40px;
     font-size: 1rem;
+  }
+  
+  .nav-prev {
+    left: 1rem;
+  }
+  
+  .nav-next {
+    right: 1rem;
+  }
+  
+  .tutorial-detail {
+    padding: 1.5rem;
+  }
+  
+  .detail-header {
+    flex-direction: column;
+    gap: 1rem;
   }
   
   .planned-grid {

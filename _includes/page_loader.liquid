@@ -1,0 +1,245 @@
+<!-- _includes/page_loader.liquid -->
+<!-- 全局页面加载/转场动画 -->
+
+<style>
+/* ========== 全局加载动画样式 ========== */
+.page-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--global-bg-color, #0d1117);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.page-loader.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-content {
+  text-align: center;
+  animation: loaderFadeIn 0.6s ease forwards;
+}
+
+@keyframes loaderFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.loader-logo {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--global-text-color, #fff) 30%, var(--global-theme-color, #64b5f6));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+  letter-spacing: -1px;
+}
+
+.loader-quote {
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  color: var(--global-text-color-light, rgba(255,255,255,0.6));
+  margin-bottom: 2.5rem;
+  font-weight: 400;
+  font-style: italic;
+  max-width: 400px;
+  line-height: 1.6;
+  padding: 0 1rem;
+}
+
+.loader-progress {
+  width: 180px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.loader-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--global-theme-color, #64b5f6), rgba(var(--global-theme-color-rgb, 100, 181, 246), 0.5));
+  border-radius: 2px;
+  width: 0%;
+  animation: progressLoad 1.2s ease forwards;
+  box-shadow: 0 0 15px rgba(var(--global-theme-color-rgb, 100, 181, 246), 0.5);
+}
+
+@keyframes progressLoad {
+  0% { width: 0%; }
+  20% { width: 30%; }
+  50% { width: 60%; }
+  80% { width: 85%; }
+  100% { width: 100%; }
+}
+
+/* 装饰光效 */
+.loader-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(var(--global-theme-color-rgb, 100, 181, 246), 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+/* 页面内容初始状态 */
+.page-content-wrapper {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.page-content-wrapper.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .loader-logo {
+    font-size: 1.8rem;
+  }
+  .loader-quote {
+    font-size: 0.85rem;
+    padding: 0 1.5rem;
+  }
+}
+</style>
+
+<div class="page-loader" id="globalPageLoader">
+  <div class="loader-glow"></div>
+  <div class="loader-content">
+    <div class="loader-logo">{{ site.first_name }} {{ site.last_name | default: "轻遮" }}</div>
+    <div class="loader-quote" id="loaderQuote"></div>
+    <div class="loader-progress">
+      <div class="loader-progress-bar"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // 励志语句库
+  const quotes = [
+    "代码如诗，渲染如画",
+    "每一帧都是艺术的追求",
+    "技术与美学的交汇点",
+    "Shader 是光影的语言",
+    "在像素中寻找无限可能",
+    "渲染世界，创造美好",
+    "追光者永不止步",
+    "用代码绘制梦想",
+    "探索图形学的奥秘",
+    "让每个顶点都有意义",
+    "从零到一，从一到无穷",
+    "技术的深度决定艺术的高度",
+    "保持热爱，奔赴山海",
+    "Stay hungry, Stay foolish",
+    "Learning never exhausts the mind"
+  ];
+
+  // 根据页面类型选择相关语句
+  const pageQuotes = {
+    'tutorials': [
+      "知识的积累，从这里开始",
+      "系统学习，扎实进步",
+      "每一步都算数"
+    ],
+    'blog': [
+      "记录思考，分享成长",
+      "文字是思想的结晶"
+    ],
+    'projects': [
+      "实践出真知",
+      "作品是最好的名片"
+    ],
+    'about': [
+      "认识自己，认识世界"
+    ]
+  };
+
+  // 获取当前页面类型
+  const path = window.location.pathname;
+  let selectedQuotes = quotes;
+  
+  for (const [key, value] of Object.entries(pageQuotes)) {
+    if (path.includes(key)) {
+      selectedQuotes = [...value, ...quotes.slice(0, 5)];
+      break;
+    }
+  }
+
+  // 随机选择一条语句
+  const randomQuote = selectedQuotes[Math.floor(Math.random() * selectedQuotes.length)];
+  
+  // 设置语句
+  const quoteEl = document.getElementById('loaderQuote');
+  if (quoteEl) {
+    quoteEl.textContent = randomQuote;
+  }
+
+  // 页面加载完成后的处理
+  function hideLoader() {
+    const loader = document.getElementById('globalPageLoader');
+    const content = document.querySelector('.page-content-wrapper');
+    
+    if (loader) {
+      loader.classList.add('fade-out');
+    }
+    if (content) {
+      content.classList.add('loaded');
+    }
+    
+    // 完全移除 loader
+    setTimeout(function() {
+      if (loader) {
+        loader.style.display = 'none';
+      }
+    }, 600);
+  }
+
+  // 检查是否是页面内导航（同一站点）
+  const isInternalNavigation = (
+    document.referrer && 
+    document.referrer.includes(window.location.hostname) &&
+    sessionStorage.getItem('hasVisited')
+  );
+
+  // 如果是站内导航，缩短加载时间
+  const loadTime = isInternalNavigation ? 800 : 1500;
+
+  // 设置已访问标记
+  sessionStorage.setItem('hasVisited', 'true');
+
+  // 确保 DOM 加载完成
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(hideLoader, loadTime);
+    });
+  } else {
+    setTimeout(hideLoader, loadTime);
+  }
+})();
+</script>

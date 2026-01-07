@@ -231,9 +231,9 @@ ninja.data = [{
           description: "ZZZRendering-XingJianYa",
           section: "Projects",handler: () => {
               window.location.href = "/projects/1_project/";
-            },},{id: "tutorials-blender复刻和模型处理",
-          title: 'Blender复刻和模型处理',
-          description: "Blender模型处理",
+            },},{id: "tutorials-01-blender模型处理",
+          title: '01_Blender模型处理',
+          description: "01_Blender模型处理",
           section: "Tutorials",handler: () => {
               window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/01_Blender%E6%A8%A1%E5%9E%8B%E5%A4%84%E7%90%86/";
             },},{

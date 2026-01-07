@@ -1,0 +1,292 @@
+<!DOCTYPE html> <html lang="zh-CN"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> 10_添加PBR高光 | 吟处雪 轻遮 </title> <meta name="author" content="吟处雪 轻遮"> <meta name="description" content="10_添加PBR高光"> <meta name="keywords" content="technical-artist, shader, rendering, unity, unreal-engine, pbr, toon-shading"> <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04"> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5"> <link defer rel="stylesheet" href="/assets/css/scholar-icons.css?62b2ac103a88034e6882a5be5f3e2772"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link defer href="/assets/css/bootstrap-toc.min.css?6f5af0bb9aab25d79b2448143cbeaa88" rel="stylesheet"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e"> <link rel="canonical" href="https://xueqingzhe.github.io/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/10_%E6%B7%BB%E5%8A%A0PBR%E9%AB%98%E5%85%89/"> <script src="/assets/js/theme.js?a81d82887dd692e91686b43de4542f18"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/spotlight.js@0.7.8/dist/css/spotlight.min.css" integrity="sha256-Dsvkx8BU8ntk9Iv+4sCkgHRynYSQQFP6gJfBN5STFLY=" crossorigin="anonymous"> </head> <body class="fixed-top-nav "> <link rel="preconnect" href="https://fonts.googleapis.com"> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&amp;family=Noto+Serif+SC:wght@400;600;700&amp;display=swap" rel="stylesheet"> <style>.page-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--global-bg-color,#0d1117);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s cubic-bezier(0.4,0,0.2,1),visibility .8s;overflow:hidden}.page-loader.fade-out{opacity:0;visibility:hidden;pointer-events:none}.loader-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:loaderFadeIn .8s ease forwards;position:relative;z-index:2}@keyframes loaderFadeIn{from{opacity:0;transform:translateY(30px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}.loader-logo{font-size:clamp(2.2rem,6vw,3.5rem);font-weight:700;font-family:"Noto Serif SC","Source Han Serif SC","STSong",serif;background:linear-gradient(135deg,var(--global-text-color,#fff) 20%,var(--global-theme-color,#64b5f6) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem;letter-spacing:4px;text-shadow:0 0 60px rgba(var(--global-theme-color-rgb,100,181,246),0.3)}.loader-quote-container{margin-bottom:3rem;opacity:0;animation:quoteAppear .8s ease .4s forwards;text-align:center}.loader-quote-main{font-size:clamp(1rem,2.5vw,1.25rem);color:var(--global-text-color-light,rgba(255,255,255,0.7));font-family:"Noto Serif SC","Source Han Serif SC","STKaiti","KaiTi",serif;font-weight:400;letter-spacing:3px;margin-bottom:.8rem;line-height:1.8}.loader-quote-sub{font-size:clamp(0.75rem,1.5vw,0.9rem);color:var(--global-text-color-light,rgba(255,255,255,0.4));font-family:"Cormorant Garamond","Times New Roman",Georgia,serif;font-weight:300;font-style:italic;letter-spacing:1px;line-height:1.6}@keyframes quoteAppear{from{opacity:0;transform:translateY(10px)}to{opacity:.7;transform:translateY(0)}}.loader-progress-wrapper{display:flex;justify-content:center;width:100%}.loader-progress{width:220px;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;position:relative}.loader-progress-bar{height:100%;background:linear-gradient(90deg,var(--global-theme-color,#64b5f6),rgba(var(--global-theme-color-rgb,100,181,246),0.7),var(--global-theme-color,#64b5f6));background-size:200% 100%;border-radius:3px;width:0;animation:progressLoad 1.4s ease forwards,progressShine 1.5s ease-in-out infinite;box-shadow:0 0 20px rgba(var(--global-theme-color-rgb,100,181,246),0.6),0 0 40px rgba(var(--global-theme-color-rgb,100,181,246),0.3)}@keyframes progressLoad{0%{width:0}15%{width:25%}40%{width:50%}65%{width:75%}85%{width:90%}100%{width:100%}}@keyframes progressShine{0%{background-position:200% 0}100%{background-position:-200% 0}}.loader-bg-decoration{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}.loader-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(var(--global-theme-color-rgb,100,181,246),0.08) 0%,transparent 70%);border-radius:50%;animation:glowPulse 3s ease-in-out infinite}@keyframes glowPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}}.loader-particle{position:absolute;width:4px;height:4px;background:var(--global-theme-color,#64b5f6);border-radius:50%;opacity:.4}.loader-particle:nth-child(1){top:15%;left:10%;animation:particleFloat1 4s ease-in-out infinite}.loader-particle:nth-child(2){top:75%;left:15%;animation:particleFloat2 5s ease-in-out infinite .5s}.loader-particle:nth-child(3){top:20%;right:15%;animation:particleFloat1 4.5s ease-in-out infinite 1s}.loader-particle:nth-child(4){top:70%;right:10%;animation:particleFloat2 5.5s ease-in-out infinite .3s}.loader-particle:nth-child(5){top:50%;left:5%;animation:particleFloat1 6s ease-in-out infinite .7s}.loader-particle:nth-child(6){top:40%;right:8%;animation:particleFloat2 5s ease-in-out infinite 1.2s}@keyframes particleFloat1{0%,100%{transform:translateY(0) translateX(0) scale(1);opacity:.3}50%{transform:translateY(-30px) translateX(15px) scale(1.5);opacity:.7}}@keyframes particleFloat2{0%,100%{transform:translateY(0) translateX(0) scale(1);opacity:.3}50%{transform:translateY(25px) translateX(-10px) scale(1.3);opacity:.6}}.loader-line-top,.loader-line-bottom{position:absolute;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent 0,rgba(var(--global-theme-color-rgb,100,181,246),0.3) 50%,transparent 100%)}.loader-line-top{top:20%;animation:lineSlide 3s ease-in-out infinite}.loader-line-bottom{bottom:20%;animation:lineSlide 3s ease-in-out infinite 1.5s}@keyframes lineSlide{0%,100%{opacity:.3;transform:scaleX(0.5)}50%{opacity:.6;transform:scaleX(1)}}.page-content-wrapper{opacity:0;transition:opacity .6s ease .1s}.page-content-wrapper.loaded{opacity:1}@media(max-width:768px){.loader-logo{font-size:2rem;letter-spacing:2px}
+.loader-quote-main{font-size:.95rem;letter-spacing:2px}.loader-quote-sub{font-size:.7rem}.loader-quote-container{margin-bottom:2.5rem;padding:0 1rem}.loader-progress{width:180px}.loader-glow{width:300px;height:300px}}</style> <div class="page-loader" id="globalPageLoader"> <div class="loader-bg-decoration"> <div class="loader-glow"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-line-top"></div> <div class="loader-line-bottom"></div> </div> <div class="loader-content"> <div class="loader-logo">吟处雪 轻遮</div> <div class="loader-quote-container" id="loaderQuote"> <div class="loader-quote-main" id="quoteMain"></div> <div class="loader-quote-sub" id="quoteSub"></div> </div> <div class="loader-progress-wrapper"> <div class="loader-progress"> <div class="loader-progress-bar"></div> </div> </div> </div> </div> <script>
+(function() {
+  // 名言库 - 中文 + 外语对照
+  const quotes = [
+    {
+      main: "代码如诗，渲染如画",
+      sub: "Code is poetry, rendering is art."
+    },
+    {
+      main: "什么是恶？凡是源于虚弱的东西都是恶",
+      sub: "Was ist schlecht? — Alles, was aus der Schwäche stammt."
+    },
+    {
+      main: "凡不能毁灭我的，必使我强大",
+      sub: "What does not kill me makes me stronger."
+    },
+    {
+      main: "技术与美学的交汇点",
+      sub: "Where technology meets aesthetics."
+    },
+    {
+      main: "追光者永不止步",
+      sub: "Those who chase the light never stop."
+    },
+    {
+      main: "在像素中寻找无限可能",
+      sub: "Finding infinite possibilities in pixels."
+    },
+    {
+      main: "保持饥饿，保持愚蠢",
+      sub: "Stay hungry, Stay foolish."
+    },
+    {
+      main: "学习永不疲倦心灵",
+      sub: "Learning never exhausts the mind. — Leonardo da Vinci"
+    },
+    {
+      main: "预测未来最好的方式就是创造它",
+      sub: "The best way to predict the future is to create it."
+    },
+    {
+      main: "简约是终极的复杂",
+      sub: "Simplicity is the ultimate sophistication."
+    },
+    {
+      main: "每一帧都是艺术的追求",
+      sub: "Every frame is a pursuit of art."
+    },
+    {
+      main: "吾生也有涯，而知也无涯",
+      sub: "Life is finite, but knowledge is infinite. — Zhuangzi"
+    },
+    {
+      main: "路漫漫其修远兮，吾将上下而求索",
+      sub: "The road ahead is long; I shall seek high and low. — Qu Yuan"
+    },
+    {
+      main: "工欲善其事，必先利其器",
+      sub: "A craftsman must sharpen his tools first."
+    },
+    {
+      main: "光影是渲染的灵魂",
+      sub: "Light and shadow are the soul of rendering."
+    }
+  ];
+
+  // 根据页面类型选择相关语句
+  const pageQuotes = {
+    'tutorials': [
+      {
+        main: "知识的积累，从这里开始",
+        sub: "The accumulation of knowledge begins here."
+      },
+      {
+        main: "学而不思则罔，思而不学则殆",
+        sub: "Learning without thought is labor lost. — Confucius"
+      },
+      {
+        main: "千里之行，始于足下",
+        sub: "A journey of a thousand miles begins with a single step."
+      }
+    ],
+    'blog': [
+      {
+        main: "记录思考，分享成长",
+        sub: "Record thoughts, share growth."
+      },
+      {
+        main: "文字是思想的结晶",
+        sub: "Words are the crystallization of thoughts."
+      }
+    ],
+    'projects': [
+      {
+        main: "实践出真知",
+        sub: "Practice brings true knowledge."
+      },
+      {
+        main: "纸上得来终觉浅，绝知此事要躬行",
+        sub: "What you learn on paper is superficial; true understanding requires practice."
+      }
+    ]
+  };
+
+  // 获取当前页面类型
+  const path = window.location.pathname;
+  let selectedQuotes = quotes;
+  
+  for (const [key, value] of Object.entries(pageQuotes)) {
+    if (path.includes(key)) {
+      selectedQuotes = [...value, ...quotes.slice(0, 5)];
+      break;
+    }
+  }
+
+  // 随机选择一条语句
+  const randomQuote = selectedQuotes[Math.floor(Math.random() * selectedQuotes.length)];
+  
+  // 设置语句
+  const quoteMain = document.getElementById('quoteMain');
+  const quoteSub = document.getElementById('quoteSub');
+  
+  if (quoteMain && quoteSub) {
+    quoteMain.textContent = randomQuote.main;
+    quoteSub.textContent = randomQuote.sub;
+  }
+
+  // 页面加载完成后的处理
+  function hideLoader() {
+    const loader = document.getElementById('globalPageLoader');
+    const content = document.querySelector('.page-content-wrapper');
+    
+    if (loader) {
+      loader.classList.add('fade-out');
+    }
+    if (content) {
+      content.classList.add('loaded');
+    }
+    
+    // 完全移除 loader
+    setTimeout(function() {
+      if (loader) {
+        loader.style.display = 'none';
+      }
+    }, 800);
+  }
+
+  // 检查是否是页面内导航（同一站点）
+  const isInternalNavigation = (
+    document.referrer && 
+    document.referrer.includes(window.location.hostname) &&
+    sessionStorage.getItem('hasVisited')
+  );
+
+  // 如果是站内导航，缩短加载时间；首次访问时间稍长
+  const loadTime = isInternalNavigation ? 1000 : 1800;
+
+  // 设置已访问标记
+  sessionStorage.setItem('hasVisited', 'true');
+
+  // 确保 DOM 加载完成
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(hideLoader, loadTime);
+    });
+  } else {
+    setTimeout(hideLoader, loadTime);
+  }
+})();
+</script> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">吟处雪</span> 轻遮 </a> <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse text-right" id="navbarNav"> <ul class="navbar-nav ml-auto flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">about </a> </li> <li class="nav-item "> <a class="nav-link" href="/blog/">blog </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">projects </a> </li> <li class="nav-item "> <a class="nav-link" href="/books/">books </a> </li> <li class="nav-item active"> <a class="nav-link" href="/tutorials/">tutorials <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/tags/">tagsFilters </a> </li> <li class="nav-item"> <button id="search-toggle" title="Search" onclick="openSearchModal()"> <span class="nav-link">ctrl k <i class="ti ti-search"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" title="Change theme"> <i class="ti ti-sun-moon" id="light-toggle-system"></i> <i class="ti ti-moon-filled" id="light-toggle-dark"></i> <i class="ti ti-sun-filled" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="page-content-wrapper"> <div class="container mt-5" role="main"> <div class="row"> <div class="col-sm-3"> <nav id="toc-sidebar" class="sticky-top"></nav> </div> <div class="col-sm-9"> <div class="post"> <header class="post-header"> <h1 class="post-title">10_添加PBR高光</h1> <p class="post-meta"> Created on January 07, 2026 </p> <p class="post-tags"> <i class="fa-solid fa-calendar fa-sm"></i> 2026   ·   <i class="fa-solid fa-hashtag fa-sm"></i> shader   <i class="fa-solid fa-hashtag fa-sm"></i> rendering   <i class="fa-solid fa-hashtag fa-sm"></i> tutorials   <i class="fa-solid fa-hashtag fa-sm"></i> blender   ·   <i class="fa-solid fa-tag fa-sm"></i> tutorials   <i class="fa-solid fa-tag fa-sm"></i> ZZZ渲染复刻 </p> </header> <article class="post-content"> <div id="markdown-content"> <h2 id="添加pbr高光">添加PBR高光</h2> <h3 id="贴图信息">贴图信息</h3> <p><strong><em>找到找到DataTex1贴图组，其中G通道就是金属度，B通道是高光遮罩</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319134741.png" alt=""> <strong><em>金属度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319134812.png" alt=""> <strong><em>高光遮罩</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319134957.png" alt=""></p> <p><strong><em>找到DataTex2组，光滑度信息在G通道中</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319135037.png" alt=""> <strong><em>光滑度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319135330.png" alt=""></p> <h3 id="提取贴图信息">提取贴图信息</h3> <h4 id="金属和高光遮罩">金属和高光遮罩</h4> <p><strong><em>修改之前解释DataTex1的组，提取金属和高光遮罩信息</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212522.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212546.png" alt=""></p> <h4 id="光滑度">光滑度</h4> <p><strong><em>修改之前解释DataTex2的组，提取光滑度信息</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212627.png" alt=""> <strong><em>这里注意默认给0.58的光滑度而不是0</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212650.png" alt=""></p> <h3 id="pbr漫反射和高光划分">PBR漫反射和高光划分</h3> <h4 id="划分比例">划分比例</h4> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250316145231.png" alt=""></p> <h4 id="创建dividepbrcolor新组">创建DividePBRColor新组</h4> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212801.png" alt=""> <strong><em>pbrDiffuseColor进行金属与非金属的划分，非金属的最大漫反射比例是0.96，0.96 x Color就是非金属的漫反射，而金属部分是只有镜面反射的没有漫反射，所以漫反射为0。pbrSpecularColor镜面反射，非金属的镜面反射比例就是1-0.96，因为非金属的镜面反射颜色不受本身颜色影响仅受材料的反射率影响，所以这里给上0.04固定颜色。而金属部分，金属的镜面反射是受颜色影响的所以反射原本的颜色</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319145325.png" alt=""></p> <h3 id="高光的一般计算方法">高光的一般计算方法</h3> <p><strong><em>高光的常规计算方式是Phong和BlinnPhong</em></strong></p> <h4 id="phong-brdf">Phong BRDF</h4> <p><strong><em>公式：</em></strong> <strong><em>K是指SpecularIntensity高光强度，R是灯光向量（-L）的反射向量，V是观察向量，这里需要指明一点这里参加计算的灯光向量是物体指向灯光的向量，也就是-L</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317140026.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141340.png" alt=""> <strong><em>常规计算代码：</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td> <td class="rouge-code"><pre><span class="n">float3</span> <span class="n">reflect_dir</span> <span class="o">=</span> <span class="n">reflect</span><span class="p">(</span><span class="o">-</span><span class="n">light_dir</span><span class="p">,</span> <span class="n">normal_dir</span><span class="p">);</span> <span class="c1">//获取灯光反射向量</span>
+<span class="kt">float</span> <span class="n">RdotV</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">reflect_dir</span><span class="p">,</span> <span class="n">view_dir</span><span class="p">);</span><span class="c1">//数值范围在-1~1所以需要限制</span>
+<span class="n">float3</span> <span class="n">specular</span> <span class="o">=</span> <span class="n">pow</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span> <span class="n">RdotV</span><span class="p">),</span> <span class="n">_Shininess</span><span class="p">)</span> <span class="o">*</span> <span class="n">_SpecularIntensity</span><span class="p">;</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h4 id="blinn-phong-brdf">Blinn-Phong BRDF</h4> <p><strong><em>K是指SpecularIntensity高光强度，H是半角向量是L和V之间的向量，V是观察向量,它不需要计算反射所以性能被Phong更好</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141812.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141851.png" alt=""></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td> <td class="rouge-code"><pre><span class="n">half3</span> <span class="n">half_dir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">light_dir</span> <span class="o">+</span> <span class="n">view_dir</span><span class="p">);</span><span class="c1">//获得灯光与视角中间的半角向量</span>
+<span class="n">half</span> <span class="n">NdotH</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">normal_dir</span><span class="p">,</span> <span class="n">half_dir</span><span class="p">);</span><span class="c1">///数值范围在-1~1所以需要限制</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h4 id="pbr中-ggx-brdf高光计算">PBR中 GGX BRDF高光计算</h4> <p><strong><em>相关资料</em></strong> https://community.arm.com/cfs-file/__key/communityserver-blogs-components-weblogfiles/00-00-00-20-66/siggraph2015_2D00_mmg_2D00_renaldas_2D00_notes.pdf <strong><em>公式：</em></strong> <strong><em>公式看起来太复杂了，说人话就是D是像NoH粗糙度影响然后乘上SpecularMask得到高光形状（这部分可以由我们自己调整），F是菲涅尔系数，G是物体表面的遮蔽。F和G是固定公式</em></strong> <strong><em>GGX高光计算</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151131.png" alt=""> <strong><em>不乘上面末尾的NoL就是BRDF计算的结果</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317145043.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317150032.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317150839.png" alt=""></p> <p><strong><em>Unity中URP的BRDF.hlsl文件中也有介绍,但这里是使用的优化版的减少计算量</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317144917.png" alt=""> <strong><em>简化方式简单来说就是将F(菲涅尔项)与G(几何遮蔽项)变成了V点乘F</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151101.png" alt=""> <strong><em>将含G的这部分式子替换成V了</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151351.png" alt=""> <strong><em>不需要纠结怎么简化的，反正最后优化成近似的结果，V乘F公式就变成了下面这个,L是光向量，H是半角向量</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td> <td class="rouge-code"><pre><span class="n">V</span> <span class="o">*</span> <span class="n">F</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span> <span class="n">LoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="p">)</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>计算公式就变成了</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td> <td class="rouge-code"><pre><span class="n">BRDFspec</span> <span class="o">=</span> <span class="p">(</span><span class="n">D</span> <span class="o">*</span> <span class="n">V</span> <span class="o">*</span> <span class="n">F</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span>
+
+<span class="n">Finalspec</span> <span class="o">=</span> <span class="p">(</span><span class="n">D</span> <span class="o">*</span> <span class="n">V</span> <span class="o">*</span> <span class="n">F</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span> <span class="o">*</span> <span class="n">NoL</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h3 id="forward组输入参数增加">Forward组输入参数增加</h3> <p><strong><em>分别对应金属度，光滑度，头部球形法线范围，总高光强度，球形法线高光开关，高光范围，高光软硬度控制，高光Toon强度，根基模型大小控制高光强度的额外控制</em></strong></p> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212400.png" alt=""> <strong><em>高光染色</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319150044.png" alt=""></p> <h3 id="饰品类pbr卡通高光计算">饰品类PBR卡通高光计算</h3> <h4 id="参数处理">参数处理</h4> <p><strong><em>使用MatID和Select组处理输入</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212836.png" alt=""></p> <h4 id="创建高光shader组">创建高光Shader组</h4> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319212856.png" alt=""></p> <h4 id="计算halfdir和传入参数">计算HalfDir和传入参数</h4> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319213107.png" alt=""> <strong><em>传入对应参数</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319213157.png" alt=""></p> <h4 id="计算球形法线使用范围">计算球形法线使用范围</h4> <p><strong><em>Specular内</em></strong> <strong><em>头发部分使用球形法线，其余部分使用贴图法线，使用顶点位置减去球心HeadCenter位置就可以得到球状法线，使用HeadSphereRang进行控制范围计算出球形法线的一个遮罩，使用遮罩对贴图法线和球形法线混合输出</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319154457.png" alt=""></p> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319153852.png" alt=""></p> <h4 id="使用球状遮罩混合法线">使用球状遮罩混合法线</h4> <p><strong><em>当HeadSphereRang有效时输出混合的法线，无效则输出贴图法线</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319213400.png" alt=""></p> <h4 id="计算高光项和衰减项">计算高光项和衰减项</h4> <p><strong><em>根据公式，计算高光项ShapeNoH。当HeadSphereRang计算ShapeAttenuation，反之使用原贴图法线计算的BaseAttenuation</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319213703.png" alt=""> <strong><em>使用混合法线计算的衰减进行了开方和重映射都是为了调整曲线，增加高光的有效范围，开放可以使高光的衰减变平缓</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317154915.png" alt=""></p> <h4 id="最终计算">最终计算</h4> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td> <td class="rouge-code"><pre><span class="n">V</span> <span class="o">*</span> <span class="n">F</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span> <span class="n">LoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">Finalspec</span> <span class="o">=</span> <span class="p">(</span><span class="n">D</span> <span class="o">*</span> <span class="n">V</span> <span class="o">*</span> <span class="n">F</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span> <span class="o">*</span> <span class="n">NoL</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>回忆公式，这里VxF项中Roughness直接给1，然后直接使用公式计算</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319214722.png" alt=""> <strong><em>计算完(D * V * F) / 4.0后和RangeNoL相乘就得到高光了</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319214820.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319220309.png" alt=""></p> <h3 id="衣服类pbr写实高光计算">衣服类PBR写实高光计算</h3> <p><strong><em>这里直接照抄GGX就行</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td> <td class="rouge-code"><pre><span class="err"> </span><span class="n">brdfData</span><span class="p">.</span><span class="n">normalizationTerm</span> <span class="o">=</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span>
+<span class="err"> </span>
+<span class="err"> </span><span class="n">Final</span> <span class="n">BRDFspec</span> <span class="o">=</span> <span class="n">roughness</span><span class="o">^</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span> <span class="n">NoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span><span class="o">^</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">LoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span>
+</pre></td> </tr></tbody></table></code></pre></div></div> <h4 id="光滑度转粗糙度等参数处理">光滑度转粗糙度等参数处理</h4> <p><strong><em>这里还是使用GGX的计算方式，但需要引入粗糙度计算了，贴图给的是光滑度，需要进行处理，这里直接新建一个处理光滑度的组</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319215102.png" alt=""> <strong><em>这里计算Roughness的相关参数。光滑度转粗糙度是1-Smoothness在平方，1-Smoothness是感知粗糙度，真正参与计算的是它的平方，也就是粗糙度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319215636.png" alt=""></p> <h4 id="计算ggx">计算GGX</h4> <p><strong><em>根据公式直接计算GGX高光，这里直接使用贴图法线计算</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319215819.png" alt=""></p> <h4 id="最终混合">最终混合</h4> <p><strong><em>计算完GGX后减去光滑度，降低光滑表面的高光强度，然后乘上光照衰减，钳制到0~1。除以粗糙度这里在提高粗糙表面的高光强度。最后使用两个参数控制高光强度然后乘上高光遮罩后就得到了高光，末尾的乘法相当于提高了高光的硬度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319220115.png" alt=""></p> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319220223.png" alt=""></p> <h3 id="两种高光混合">两种高光混合</h3> <p><strong><em>使用是否开启了球形法线为判断来混合，后面使用SpecularIntensity进行整体的强度控制，然后染色</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319220622.png" alt=""></p> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319220600.png" alt=""></p> <h3 id="混合颜色">混合颜色</h3> <p><strong><em>使用区域判断，因为高光在面部眼睛是没有的，所以使用身体开关判断</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319221250.png" alt=""> <strong><em>使用乘法进行计算，最后混合Diffuse和Specular直接加法混合即可</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319221541.png" alt=""></p> <h3 id="当前效果">当前效果</h3> <p><strong><em>参数</em></strong> <strong><em>默认总强度是0.01，头发需要开启球形法线高光，其余参数自己看着调就行</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319221739.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319221647.png" alt=""></p> <hr> <div class="tutorial-navigation"> <h3>章节导航</h3> <div class="nav-container"> <a href="/tutorials/" class="nav-btn nav-home"> <i class="fas fa-home"></i> <span>返回目录</span> </a> <div class="nav-spacer"></div> <a href="/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ//09_%E9%A2%9C%E8%89%B2%E9%94%90%E5%8C%96%E5%A4%84%E7%90%86/" class="nav-btn nav-prev"> <i class="fas fa-arrow-left"></i> <span>第九章 颜色锐化处理</span> </a> <a href="/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ//11_%E6%B7%BB%E5%8A%A0SH%E7%8E%AF%E5%A2%83%E5%85%89/" class="nav-btn nav-next"> <span>第十一章 添加SH环境光</span> <i class="fas fa-arrow-right"></i> </a> </div> <div class="nav-progress"> <div class="progress-bar"> <div class="progress-fill" style="width: 76%"></div> </div> <span class="progress-text">第 10 章 / 共 13 章</span> </div> </div> <style>.tutorial-navigation{margin:3rem 0;padding:2rem;background:var(--global-code-bg-color);border-radius:8px;border-left:4px solid var(--global-theme-color)}.tutorial-navigation h3{margin-top:0;margin-bottom:1.5rem;color:var(--global-theme-color)}.nav-container{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}.nav-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;background:var(--global-bg-color);border:1px solid var(--global-divider-color);border-radius:6px;color:var(--global-text-color);text-decoration:none;transition:all .3s ease;font-weight:500}.nav-btn:hover{background:var(--global-theme-color);color:white;border-color:var(--global-theme-color);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}.nav-home{background:var(--global-theme-color);color:white;border-color:var(--global-theme-color)}.nav-spacer{flex:1}.nav-progress{display:flex;align-items:center;gap:1rem}.progress-bar{flex:1;height:8px;background:var(--global-divider-color);border-radius:4px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--global-theme-color),var(--global-hover-color));transition:width .3s ease}.progress-text{font-size:.9rem;color:var(--global-text-color-light);font-weight:500;white-space:nowrap}@media(max-width:768px){.nav-container{flex-wrap:wrap}.nav-spacer{display:none}.nav-btn{flex:1;min-width:45%;justify-content:center}.nav-home{flex-basis:100%}}</style> </div> </article> <h2 class="text-3xl font-semibold mb-4 mt-12">Enjoy Reading This Article?</h2> <p class="mb-2">Here are some more articles you might like to read next:</p> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/UnityTips-%E6%B3%95%E7%BA%BF%E7%9A%84%E7%A9%BA%E9%97%B4%E5%8F%98%E5%8C%96/">UnityTips：法线的空间变化</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/UnityTips-%E5%A4%9ASubShder/">UnityTips：多SubShder</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/UnityTips-%E5%8F%82%E6%95%B0%E9%9D%A2%E6%9D%BF%E5%90%8E%E9%9D%A2%E7%9A%84-%E5%92%8C%E5%B1%9E%E6%80%A7%E6%A0%87%E7%AD%BE/">UnityTips：参数面板后面的{}和属性标签</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-LightAttenuation-%E8%A1%B0%E5%87%8F/">理论支线：LightAttenuation 衰减</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-Gamma-Correction-%E4%BC%BD%E9%A9%AC%E6%A0%A1%E6%AD%A3/">理论支线：Gamma Correction 伽马校正</a> </li> <div id="giscus_thread"> <script defer src="/assets/js/giscus-setup.js"></script> <noscript> Please enable JavaScript to view the <a href="http://giscus.app/?ref_noscript" rel="external nofollow noopener" target="_blank">comments powered by giscus.</a> </noscript> </div> </div> # # <script>
+# (function() {
+#   'use strict';
+  
+#   document.addEventListener('DOMContentLoaded', function() {
+#     // 检查 Medium Zoom 是否可用
+#     if (typeof mediumZoom !== 'undefined') {
+#       // 使用 Medium Zoom
+#       mediumZoom('.post-content img:not([width]):not([style])', {
+#         margin: 24,
+#         background: 'rgba(0, 0, 0, 0.9)',
+#         scrollOffset: 0
+#       });
+#       console.log('Medium Zoom enabled');
+#     } else {
+#       // 如果没有 Medium Zoom，手动添加点击事件
+#       const images = document.querySelectorAll('.post-content img:not([width]):not([style])');
+#       images.forEach(function(img) {
+#         img.style.cursor = 'zoom-in';
+#         img.addEventListener('click', function() {
+#           // 简单的全屏显示
+#           const overlay = document.createElement('div');
+#           overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
+          
+#           const enlargedImg = document.createElement('img');
+#           enlargedImg.src = this.src;
+#           enlargedImg.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;';
+          
+#           overlay.appendChild(enlargedImg);
+#           document.body.appendChild(overlay);
+          
+#           overlay.addEventListener('click', function() {
+#             document.body.removeChild(overlay);
+#           });
+#         });
+#       });
+#       console.log('Manual zoom enabled for', images.length, 'images');
+#     }
+#   });
+# })();
+# </script> <script>
+(function() {
+  'use strict';
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    
+    const selector = '.post-content img:not([width]):not([style]):not([data-spotlight-converted])';
+    const images = document.querySelectorAll(selector);
+    
+    if (images.length === 0) {
+      console.log('Spotlight: No images to convert');
+      return;
+    }
+    
+    images.forEach(function(img) {
+      if (img.parentElement.classList.contains('spotlight')) {
+        return;
+      }
+      
+      const link = document.createElement('a');
+      link.className = 'spotlight';
+      link.href = img.src;
+      
+      if (img.alt) {
+        link.setAttribute('data-description', img.alt);
+      }
+      
+      img.setAttribute('data-spotlight-converted', 'true');
+      
+      // 强制设置样式（防止被覆盖）
+      img.style.cssText = 'max-width: 75% !important; display: block !important; margin: 1em auto !important; cursor: zoom-in !important;';
+      
+      const parent = img.parentNode;
+      parent.insertBefore(link, img);
+      link.appendChild(img);
+    });
+    
+    console.log('Spotlight: Converted', images.length, 'images');
+    
+    
+  });
+})();
+</script> </div> </div> </div> </div> <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> <script src="/assets/js/bootstrap.bundle.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?a0db7e5d5c70cc3252b3138b0c91dcaf" type="text/javascript"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/js/zoom.js?85ddb88934d28b74e78031fd54cf8308"></script> <script defer src="/assets/js/bootstrap-toc.min.js?c82ff4de8b0955d6ff14f5b05eed7eb6"></script> <script src="/assets/js/no_defer.js?2781658a0a2b13ed609542042a859126"></script> <script defer src="/assets/js/common.js?c15de51d4bb57887caa2c21988d97279"></script> <script defer src="/assets/js/copy_code.js?c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?d9f17b6adc2311cbabd747f4538bb15f"></script> <script async src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script> <script async src="https://badge.dimensions.ai/badge.js"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/js/mathjax-setup.js?a5bb4e6a542c546dd929b24b8b236dfd"></script> <script defer src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6" crossorigin="anonymous"></script> <script defer src="/assets/js/progress-bar.js?2f30e0e6801ea8f5036fa66e1ab0a71a" type="text/javascript"></script> <script defer src="https://cdn.jsdelivr.net/npm/spotlight.js@0.7.8/dist/spotlight.bundle.min.js" crossorigin="anonymous"></script> <script src="/assets/js/vanilla-back-to-top.min.js?f40d453793ff4f64e238e420181a1d17"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/assets/js/search/ninja-keys.min.js?a3446f084dcaecc5f75aa1757d087dcf"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/js/search-setup.js?6c304f7b1992d4b60f7a07956e52f04a"></script> <script src="/assets/js/search-data.js"></script> <script src="/assets/js/shortcut-key.js?6f508d74becd347268a7f822bca7309d"></script> </body> </html>

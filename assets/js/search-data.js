@@ -240,7 +240,62 @@ ninja.data = [{
           title: '02_材质初步处理',
           description: "02_材质初步处理",
           section: "Tutorials",handler: () => {
-              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/01_Blender%E6%A8%A1%E5%9E%8B%E5%A4%84%E7%90%86/";
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/02_%E6%9D%90%E8%B4%A8%E5%88%9D%E6%AD%A5%E5%A4%84%E7%90%86/";
+            },},{id: "tutorials-03-描边追加",
+          title: '03_描边追加',
+          description: "03_描边追加",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/03_%E6%8F%8F%E8%BE%B9%E8%BF%BD%E5%8A%A0/";
+            },},{id: "tutorials-04-着色模型构建",
+          title: '04_着色模型构建',
+          description: "04_着色模型构建",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/04_%E7%9D%80%E8%89%B2%E6%A8%A1%E5%9E%8B%E6%9E%84%E5%BB%BA/";
+            },},{id: "tutorials-05-投影追加",
+          title: '05_投影追加',
+          description: "05_投影追加",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/05_%E6%8A%95%E5%BD%B1%E8%BF%BD%E5%8A%A0/";
+            },},{id: "tutorials-06-面部阴影sdf重构",
+          title: '06_面部阴影SDF重构',
+          description: "06_面部阴影SDF重构",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/06_%E9%9D%A2%E9%83%A8%E9%98%B4%E5%BD%B1SDF%E9%87%8D%E6%9E%84/";
+            },},{id: "tutorials-07-添加鼻线",
+          title: '07_添加鼻线',
+          description: "07_添加鼻线",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/07_%E6%B7%BB%E5%8A%A0%E9%BC%BB%E7%BA%BF/";
+            },},{id: "tutorials-08-添加matcap",
+          title: '08_添加MatCap',
+          description: "08_添加MatCap",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/08_%E6%B7%BB%E5%8A%A0MatCap/";
+            },},{id: "tutorials-09-颜色锐化处理",
+          title: '09_颜色锐化处理',
+          description: "09_颜色锐化处理",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/09_%E9%A2%9C%E8%89%B2%E9%94%90%E5%8C%96%E5%A4%84%E7%90%86/";
+            },},{id: "tutorials-10-添加pbr高光",
+          title: '10_添加PBR高光',
+          description: "10_添加PBR高光",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/10_%E6%B7%BB%E5%8A%A0PBR%E9%AB%98%E5%85%89/";
+            },},{id: "tutorials-11-添加环境光",
+          title: '11_添加环境光',
+          description: "11_添加环境光",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/11_%E6%B7%BB%E5%8A%A0%E7%8E%AF%E5%A2%83%E5%85%89/";
+            },},{id: "tutorials-12-添加边缘光",
+          title: '12_添加边缘光',
+          description: "12_添加边缘光",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/12_%E6%B7%BB%E5%8A%A0%E8%BE%B9%E7%BC%98%E5%85%89/";
+            },},{id: "tutorials-13-眼睛处理-末",
+          title: '13_眼睛处理(末)',
+          description: "13_眼睛处理(末)",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/13_%E7%9C%BC%E7%9D%9B%E5%A4%84%E7%90%86(%E6%9C%AB)/";
             },},{
         id: 'social-email',
         title: 'email',

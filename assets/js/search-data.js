@@ -236,6 +236,11 @@ ninja.data = [{
           description: "01_Blender模型处理",
           section: "Tutorials",handler: () => {
               window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/01_Blender%E6%A8%A1%E5%9E%8B%E5%A4%84%E7%90%86/";
+            },},{id: "tutorials-02-材质初步处理",
+          title: '02_材质初步处理',
+          description: "02_材质初步处理",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/BlenderPJ/01_Blender%E6%A8%A1%E5%9E%8B%E5%A4%84%E7%90%86/";
             },},{
         id: 'social-email',
         title: 'email',

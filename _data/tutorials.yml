@@ -62,8 +62,8 @@
       title: "第八章 颜色锐化处理"
     - file: "09_添加PBR高光.md"
       title: "第九章 添加PBR高光"
-    - file: "10_添加SH环境光.md"
-      title: "第十章 添加SH环境光"
+    - file: "10_添加环境光.md"
+      title: "第十章 添加环境光"
     - file: "11_添加边缘光.md"
       title: "第十一章 添加边缘光"
     - file: "12_眼睛处理.md"
@@ -97,8 +97,8 @@
       title: "第八章 颜色锐化处理"
     - file: "09_添加PBR高光.md"
       title: "第九章 添加PBR高光"
-    - file: "10_添加SH环境光.md"
-      title: "第十章 添加SH环境光"
+    - file: "10_添加环境光.md"
+      title: "第十章 添加环境光"
     - file: "11_添加边缘光.md"
       title: "第十一章 添加边缘光"
     - file: "12_眼睛处理.md"
@@ -114,16 +114,16 @@
 
 
 
-- title: "Blender-绝区零角色渲染-橘福福"
-  description: "深入学习如何在Blender中复刻绝区零的角色渲染效果，涵盖模型处理、光照设置和最终渲染输出"
-  base_url: "/tutorials/ZZZRendering"
-  #image: "/assets/img/tutorials/UUEB.png"  # 可选
-  status: "更新中"
-  status_color: "primary"
-  chapters:
-    - file: "01_Blender复刻和模型处理.md"
-      title: "第一章 Blender复刻和模型处理"
-    - file: "02_lighting.md"
-      title: "第二章 光照"
-    - file: "03_rendering.md"
-      title: "第三章 渲染"
+# - title: "Blender-绝区零角色渲染-橘福福"
+#   description: "深入学习如何在Blender中复刻绝区零的角色渲染效果，涵盖模型处理、光照设置和最终渲染输出"
+#   base_url: "/tutorials/ZZZRendering"
+#   #image: "/assets/img/tutorials/UUEB.png"  # 可选
+#   status: "更新中"
+#   status_color: "primary"
+#   chapters:
+#     - file: "01_Blender复刻和模型处理.md"
+#       title: "第一章 Blender复刻和模型处理"
+#     - file: "02_lighting.md"
+#       title: "第二章 光照"
+#     - file: "03_rendering.md"
+#       title: "第三章 渲染"

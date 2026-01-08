@@ -361,6 +361,66 @@ ninja.data = [{
           description: "13_导入法线问题解决",
           section: "Tutorials",handler: () => {
               window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/13_%E5%AF%BC%E5%85%A5%E6%B3%95%E7%BA%BF%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3/";
+            },},{id: "tutorials-01-管线及资源设置",
+          title: '01_管线及资源设置',
+          description: "01_管线及资源设置",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/01_%E7%AE%A1%E7%BA%BF%E5%8F%8A%E8%B5%84%E6%BA%90%E8%AE%BE%E7%BD%AE/";
+            },},{id: "tutorials-02-描边追加",
+          title: '02_描边追加',
+          description: "02_描边追加",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/02_%E6%8F%8F%E8%BE%B9%E8%BF%BD%E5%8A%A0/";
+            },},{id: "tutorials-03-着色模型构建",
+          title: '03_着色模型构建',
+          description: "03_着色模型构建",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/03_%E7%9D%80%E8%89%B2%E6%A8%A1%E5%9E%8B%E6%9E%84%E5%BB%BA/";
+            },},{id: "tutorials-04-投影追加",
+          title: '04_投影追加',
+          description: "04_投影追加",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/04_%E6%8A%95%E5%BD%B1%E8%BF%BD%E5%8A%A0/";
+            },},{id: "tutorials-05-面部阴影sdf重构",
+          title: '05_面部阴影SDF重构',
+          description: "05_面部阴影SDF重构",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/05_%E9%9D%A2%E9%83%A8%E9%98%B4%E5%BD%B1SDF%E9%87%8D%E6%9E%84/";
+            },},{id: "tutorials-06-鼻线添加",
+          title: '06_鼻线添加',
+          description: "06_鼻线添加",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/06_%E9%BC%BB%E7%BA%BF%E6%B7%BB%E5%8A%A0/";
+            },},{id: "tutorials-07-增加matcap",
+          title: '07_增加MatCap',
+          description: "07_增加MatCap",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/07_%E5%A2%9E%E5%8A%A0MatCap/";
+            },},{id: "tutorials-08-颜色锐化处理",
+          title: '08_颜色锐化处理',
+          description: "08_颜色锐化处理",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/08_%E9%A2%9C%E8%89%B2%E9%94%90%E5%8C%96%E5%A4%84%E7%90%86/";
+            },},{id: "tutorials-09-添加pbr高光",
+          title: '09_添加PBR高光',
+          description: "09_添加PBR高光",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/09_%E6%B7%BB%E5%8A%A0PBR%E9%AB%98%E5%85%89/";
+            },},{id: "tutorials-10-添加环境光",
+          title: '10_添加环境光',
+          description: "10_添加环境光",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/10_%E6%B7%BB%E5%8A%A0%E7%8E%AF%E5%A2%83%E5%85%89/";
+            },},{id: "tutorials-11-添加边缘光",
+          title: '11_添加边缘光',
+          description: "11_添加边缘光",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/11_%E6%B7%BB%E5%8A%A0%E8%BE%B9%E7%BC%98%E5%85%89/";
+            },},{id: "tutorials-12-眼睛处理",
+          title: '12_眼睛处理',
+          description: "12_眼睛处理",
+          section: "Tutorials",handler: () => {
+              window.location.href = "/tutorials/ZZZRendering/XingJianYa(Miyabi)/UnityPJ/12_%E7%9C%BC%E7%9D%9B%E5%A4%84%E7%90%86/";
             },},{
         id: 'social-email',
         title: 'email',

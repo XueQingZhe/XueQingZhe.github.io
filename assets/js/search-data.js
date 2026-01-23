@@ -44,7 +44,18 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tags/";
           },
-        },{id: "post-unitytips-法线的空间变化",
+        },{id: "post-lv-3-unity主线-视差-parallax-mapping",
+        
+          title: "Lv.3 Unity主线：视差(Parallax Mapping)",
+        
+        description: "Lv.3 Unity主线：视差(Parallax Mapping)",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/Lv.3-Unity%E4%B8%BB%E7%BA%BF-%E8%A7%86%E5%B7%AE(Parallax-Mapping)/";
+          
+        },
+      },{id: "post-unitytips-法线的空间变化",
         
           title: "UnityTips：法线的空间变化",
         

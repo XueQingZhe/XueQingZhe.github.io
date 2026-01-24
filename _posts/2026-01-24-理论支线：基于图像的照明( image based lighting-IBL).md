@@ -22,14 +22,14 @@ related_posts: true
 ## IBL渲染方程方程
 
 $$L_o(p,\omega_o) = \int\limits_{\Omega}(k_d\frac{c}{\pi} + k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)}) L_i(p,\omega_i) n \cdot \omega_i  d\omega_i$$
+
 这里可以拆分成两个部分
+
 $$L_o(p,\omega_o) = 
 		\int\limits_{\Omega} (k_d\frac{c}{\pi}) L_i(p,\omega_i) n \cdot \omega_i  d\omega_i
-
-		+ 
-
-		\int\limits_{\Omega} (k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)})
+		+ \int\limits_{\Omega} (k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)})
 			L_i(p,\omega_i) n \cdot \omega_i  d\omega_i$$
+			
 **这里其实看公式可以知道这就是漫反射 + 镜面反射，这个内容和直接光是类似的**
 **那么环境光漫反射其实就是SH(球谐光照)，镜面反射则是源自于环境反射的HDR图**
 

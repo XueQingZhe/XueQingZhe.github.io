@@ -44,7 +44,29 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tags/";
           },
-        },{id: "post-lv-3-unity主线-视差-parallax-mapping",
+        },{id: "post-理论支线-直接光漫反射与ggx高光的混合问题",
+        
+          title: "理论支线：直接光漫反射与GGX高光的混合问题",
+        
+        description: "理论支线：直接光漫反射与GGX高光的混合问题",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-%E7%9B%B4%E6%8E%A5%E5%85%89%E6%BC%AB%E5%8F%8D%E5%B0%84%E4%B8%8EGGX%E9%AB%98%E5%85%89%E7%9A%84%E6%B7%B7%E5%90%88%E9%97%AE%E9%A2%98/";
+          
+        },
+      },{id: "post-理论支线-基于图像的照明-image-based-lighting-ibl",
+        
+          title: "理论支线：基于图像的照明( image based lighting-IBL)",
+        
+        description: "理论支线：基于图像的照明( image based lighting-IBL)",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(-image-based-lighting-IBL)/";
+          
+        },
+      },{id: "post-lv-3-unity主线-视差-parallax-mapping",
         
           title: "Lv.3 Unity主线：视差(Parallax Mapping)",
         

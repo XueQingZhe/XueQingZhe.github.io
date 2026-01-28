@@ -1,8 +1,8 @@
 ---
 layout: post
-title: 理论支线：基于图像的照明( image based lighting-IBL)
+title: 理论支线：PBR - 基于图像的照明( image based lighting-IBL)
 date: 2026-01-24
-description: 理论支线：基于图像的照明( image based lighting-IBL)
+description: 理论支线：PBR - 基于图像的照明( image based lighting-IBL)
 tags: [unity, shader, rendering]
 categories: [TAMonth02]
 featured: true
@@ -27,11 +27,14 @@ $$L_o(p,\omega_o) = \int\limits_{\Omega}(k_d\frac{c}{\pi} + k_s\frac{DFG}{4(\ome
 
 $$L_o(p,\omega_o) = 
 		\int\limits_{\Omega} (k_d\frac{c}{\pi}) L_i(p,\omega_i) n \cdot \omega_i  d\omega_i
-		+ \int\limits_{\Omega} (k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)})
+
+		+ 
+
+		\int\limits_{\Omega} (k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)})
 			L_i(p,\omega_i) n \cdot \omega_i  d\omega_i$$
-			
+
 **这里其实看公式可以知道这就是漫反射 + 镜面反射，这个内容和直接光是类似的**
-**那么环境光漫反射其实就是SH(球谐光照)，镜面反射则是源自于环境反射的HDR图**
+**那么环境光漫反射其实就是SH(球谐光照)，镜面反射则是源自于环境反射的HDR图，这里主要是讲镜面反射**
 
 ## 采样
 
@@ -43,7 +46,7 @@ float4 envSpecularRaw = texCUBElod(_CubeMap, float4(reflviewDir, mipLevel));
 half3 envSpecular = DecodeHDR(envSpecularRaw, _CubeMap_HDR); 
 ```
 
-# 与GGX的关系
+# 与GGX的关系和使用方法
 
 ## 直接光照的镜面反射(GGX)
 
@@ -53,13 +56,90 @@ $$f_{DirectSpecular}^{GGX}(l, v) = \frac{D(h) \cdot F(v, h) \cdot G(l, v, h)}{4 
 
 $$F(v, h) = F_0 + (1 - F_0)(1 - v \cdot h)^5$$
 
+## Environment BRDF
+
+**对于直接光，是只需要处理单一光源，所以F和G项都是实时计算的，但是对于环境光镜面反射来说，光线是四面八方传来，这意味着实时计算需要计算无数光线方向，这样肯定是不行的，所以环境光需要一个更好的处理办法，那就是Environment BRDF**
+
+它是一张2D查找表(LUT)，描述镜面反射能量随观察角度的衰减曲线，其实就是控制衰减形状和距离程度
+想象一张图片:
+
+- **横轴(X)**: `NoV` (法线和视角夹角余弦值,范围0→1)
+- **纵轴(Y)**: `roughness` (粗糙度,范围0→1)
+- **像素值**: `RG两通道` 存储 `(scale, bias)` 两个数值
+
 ## 环境光照的镜面反射(IBL)
+
+### 简化只处理菲涅尔项
+
+**能用，几乎没有衰减也就是比较明亮，卡通渲染应该比较合适**
 
 $$f_{IBLSpecular} = \underbrace{L_{prefiltered}(r, \text{roughness})}_{\text{D和G已经在这里了!}} \cdot F(n,v)$$
 
 其中:
-**这其实就是F项发生了变换，因为环境光是四周辐射的而非根据视线方向，所以它的因子变成了法线**
+**F项发生了变化，因为环境光是四周辐射的而非根据视线方向，所以它的因子变成了法线**
+
 $$F(n, v) = F_0 + (1 - F_0)(1 - n \cdot v)^5$$
+
+### 使用近似拟合方法
+
+```c
+float2 EnvBRDFApprox(float roughness, float NoV)
+{
+    // Epic Games通过拟合大量数据得出的魔法系数
+    const float4 c0 = float4(-1.0, -0.0275, -0.572, 0.022);
+    const float4 c1 = float4(1.0, 0.0425, 1.04, -0.04);
+    float4 r = roughness * c0 + c1;
+    float a004 = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
+    float2 AB = float2(-1.04, 1.04) * a004 + r.zw;
+    return AB;  // AB.x = scale, AB.y = bias
+}
+```
+
+**使用近似后和仅处理理菲涅尔项的对比**
+![](/assets/img/TAMonth02/Pasted image 20260127204725.png)
+
+### 使用Unity默认LUT
+
+**IBL贴图过滤采样中处理D和G项，但G项并不完整或者没有。所以更好的方案是在额外计算F和G积分项,也就是使用LUT图**
+Epic Games的聪明解决方案:拆成两部分
+
+$$\int L_i \cdot BRDF \approx \underbrace{\int L_i \cdot D}_{\text{第1部分:预过滤环境贴图}} \times \underbrace{\int \frac{FG}{4(n \cdot v)} }_{\text{第2部分:Environment BRDF}}$$
+
+**关键思想**:
+
+- **第1部分**只和环境光、粗糙度有关 → 提前烘焙成Cubemap的不同mip层
+- **第2部分**只和材质参数(roughness, NoV)有关 → 提前计算成一张2D表
+
+**采样Unity默认LUT**
+
+```c
+ float2 brdfLUT = tex2D(unity_NHxRoughness, float2(roughness, nov)).rg;
+ envSpecular =  envSpecular * (f0 * brdfLUT.x + brdfLUT.y);
+```
+
+### 使用自定义LUT
+
+图片：https://learnopengl-cn.github.io/07%20PBR/03%20IBL/02%20Specular%20IBL/
+
+![](/assets/img/TAMonth02/ibl_brdf_lut.png)
+
+**这里使用了一个_UseCustomLUT作为开关**
+
+```c
+[Header(EnvBRDFLUT)]
+[Toggle]_UseCustomLUT("Custom BRDF LUT", float) = 1.0
+_CustomBRDFLUT("Custom BRDF LUT", 2D) = "white" {}
+----------------------------------------
+//采样BRDFLUT
+float2 brdfLUT = tex2D(unity_NHxRoughness, float2(roughness, nov)).rg;
+float2 CustombrdfLUT = tex2D(_CustomBRDFLUT, float2(roughness, nov)).rg;
+                
+if(_UseCustomLUT > 0.5)
+{
+    brdfLUT = CustombrdfLUT;
+}
+envSpecular =  envSpecular * (f0 * brdfLUT.x + brdfLUT.y);
+```
 
 ## 对比
 
@@ -69,6 +149,7 @@ $$F(n, v) = F_0 + (1 - F_0)(1 - n \cdot v)^5$$
 | **D项**   | D(h) 实时计算                                               | 预计算到贴图Mip里                     |
 | **F项**   | $F_0 + (1-F_0)(1-v \cdot h)^5$                          | $F_0 + (1-F_0)(1-n \cdot v)^5$ |
 | **G项**   | G(l,v,h)实时计算                                            | 预计算到贴图里                        |
+|          |                                                         |                                |
 
 | 项目       | 直接光照(GGX)                      | 环境光照(IBL)                      |
 | -------- | ------------------------------ | ------------------------------ |
@@ -89,11 +170,25 @@ $$F(n, v) = F_0 + (1 - F_0)(1 - n \cdot v)^5$$
 float3 f_indirect = f0 + (1-f0) * pow(1 - max(0,(dot(viewDir, pixelNormal))), 5);
 float3 kD_indirect  = (1.0 - f_indirect) * (1.0 - metallic);
 float3 indirectDiffuse  = kD_indirect * envColorSH;
+            
 //环境光镜面漫反射
 float mipLevel = roughness* 7.0;
 float4 envSpecularRaw = texCUBElod(_CubeMap, float4(reflviewDir, mipLevel));
 half3 envSpecular = DecodeHDR(envSpecularRaw, _CubeMap_HDR); 
-envSpecular *= f_indirect;
+
+//1.拟合BRDF(未使用)
+float2 envBRDF = EnvBRDFApprox(roughness, nov);
+float3 envSpecularEasy = envSpecular * f_indirect;
+//2.采样BRDFLUT
+float2 brdfLUT = tex2D(unity_NHxRoughness, float2(roughness, nov)).rg;
+float2 CustombrdfLUT = tex2D(_CustomBRDFLUT, float2(roughness, nov)).rg;
+            
+if(_UseCustomLUT > 0.5)
+{
+    brdfLUT = CustombrdfLUT;
+}
+envSpecular =  envSpecular * (f0 * brdfLUT.x + brdfLUT.y);
+            
 //AO
 float AO = tex2D(_AOTex, texcoord).r;
 ```

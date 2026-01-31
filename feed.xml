@@ -1,4 +1,870 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2026-01-28T11:03:25+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">理论支线：PBR - 基于图像的照明( image based lighting-IBL)</title><link href="https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBR-%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(-image-based-lighting-IBL)/" rel="alternate" type="text/html" title="理论支线：PBR - 基于图像的照明( image based lighting-IBL)"/><published>2026-01-24T00:00:00+00:00</published><updated>2026-01-24T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF%EF%BC%9APBR%20-%20%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(%20image%20based%20lighting-IBL)</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBR-%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(-image-based-lighting-IBL)/"><![CDATA[<h1 id="介绍">介绍</h1> <p>这通常通过作立方体贴图环境贴图（取自现实世界或从三维场景生成）实现，使我们能直接将其用于光照方程：将每个立方体贴图像素视为光发射体。这样我们就能有效捕捉环境的全局光照和整体感觉，让物体在环境中有更好的归属感。</p> <h2 id="ibl渲染方程方程">IBL渲染方程方程</h2> \[L_o(p,\omega_o) = \int\limits_{\Omega}(k_d\frac{c}{\pi} + k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)}) L_i(p,\omega_i) n \cdot \omega_i d\omega_i\] <p>这里可以拆分成两个部分</p> \[L_o(p,\omega_o) = \int\limits_{\Omega} (k_d\frac{c}{\pi}) L_i(p,\omega_i) n \cdot \omega_i d\omega_i + \int\limits_{\Omega} (k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)}) L_i(p,\omega_i) n \cdot \omega_i d\omega_i\] <p><strong>这里其实看公式可以知道这就是漫反射 + 镜面反射，这个内容和直接光是类似的</strong> <strong>那么环境光漫反射其实就是SH(球谐光照)，镜面反射则是源自于环境反射的HDR图，这里主要是讲镜面反射</strong></p> <h2 id="采样">采样</h2> <p><strong>通常采用是texCUBElod，因为需要将粗糙度和mipLevel相关联。</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2026-01-31T12:34:28+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">Lv.3 Unity主线：一个简单的PBRShader</title><link href="https://xueqingzhe.github.io/blog/2026/Lv.3-Unity%E4%B8%BB%E7%BA%BF-%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84PBRShader/" rel="alternate" type="text/html" title="Lv.3 Unity主线：一个简单的PBRShader"/><published>2026-01-31T00:00:00+00:00</published><updated>2026-01-31T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2026/Lv.3%20Unity%E4%B8%BB%E7%BA%BF%EF%BC%9A%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84PBRShader</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2026/Lv.3-Unity%E4%B8%BB%E7%BA%BF-%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84PBRShader/"><![CDATA[<h1 id="使用资产">使用资产</h1> <p>通过网盘分享的文件：PBR测试内容 链接: https://pan.baidu.com/s/1MpDbI4TXPY2lKaz2uZC3_w?pwd=2psd 提取码: 2psd</p> <h1 id="完整代码">完整代码</h1> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+</pre></td><td class="rouge-code"><pre><span class="n">Shader</span> <span class="s">"Unlit/PBRShader"</span>
+<span class="p">{</span>
+    <span class="n">properties</span>
+    <span class="p">{</span>
+        <span class="n">_MainTex</span><span class="p">(</span><span class="s">"MainTex"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span> <span class="o">=</span> <span class="s">"white"</span><span class="p">{}</span>
+
+        <span class="n">_NormalMap</span><span class="p">(</span><span class="s">"NormalMap"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span> <span class="o">=</span> <span class="s">"bump"</span><span class="p">{}</span>
+        <span class="n">_NormalMapScale</span><span class="p">(</span><span class="s">"NormalMapScale"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">_RoughnessTex</span><span class="p">(</span><span class="s">"RoughnessTex"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span><span class="o">=</span> <span class="s">"white"</span><span class="p">{}</span>
+        <span class="n">_MetallicTex</span><span class="p">(</span><span class="s">"MetallicTex"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span><span class="o">=</span> <span class="s">"white"</span><span class="p">{}</span>
+        <span class="n">_HeightTex</span><span class="p">(</span><span class="s">"HeightTex"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span><span class="o">=</span> <span class="s">"white"</span><span class="p">{}</span>
+        <span class="n">_AOTex</span><span class="p">(</span><span class="s">"AOTex"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span><span class="o">=</span> <span class="s">"white"</span><span class="p">{}</span>
+        <span class="n">_CubeMap</span><span class="p">(</span><span class="s">"CubeMap"</span><span class="p">,</span> <span class="n">cube</span><span class="p">)</span><span class="o">=</span> <span class="s">"white"</span><span class="p">{}</span>
+
+        <span class="n">_SpecularColor</span><span class="p">(</span><span class="s">"SpecularColor"</span><span class="p">,</span><span class="n">color</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">_SpecularIntensity</span><span class="p">(</span><span class="s">"SpecularIntensity"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">50</span><span class="p">))</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">_SpecularShininess</span><span class="p">(</span><span class="s">"SpecularShininess"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="p">[</span><span class="n">Header</span><span class="p">(</span><span class="n">Roughness</span> <span class="n">Adjustment</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">Space</span><span class="p">]</span>
+        <span class="n">_RoughnessIntensity</span> <span class="p">(</span><span class="s">"RoughnessIntensity"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="p">[</span><span class="n">Space</span><span class="p">]</span>
+        <span class="n">_RoughnessBias</span> <span class="p">(</span><span class="s">"Bias"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">))</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="p">[</span><span class="n">Space</span><span class="p">]</span>
+        <span class="n">_RoughnessRemapMin</span> <span class="p">(</span><span class="s">"Remap Min"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">_RoughnessRemapMax</span> <span class="p">(</span><span class="s">"Remap Max"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="p">[</span><span class="n">Header</span><span class="p">(</span><span class="n">ParallaxMapping</span> <span class="n">Basic</span><span class="p">)]</span>
+        <span class="n">_ParallaxScale</span> <span class="p">(</span><span class="s">"Parallax Scale 未使用"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span>
+        <span class="p">[</span><span class="n">Header</span><span class="p">(</span><span class="n">ParallaxOcclusionMapping</span><span class="p">)]</span>
+        <span class="n">_HeightScale</span> <span class="p">(</span><span class="s">"Height Scale"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">2</span><span class="p">))</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mo">05</span>
+        <span class="n">_MinLayers</span><span class="p">(</span><span class="s">"Parallax Min Layers"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">_MaxLayers</span><span class="p">(</span><span class="s">"Parallax Max Layers"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="n">_HeightReferencePlane</span> <span class="p">(</span><span class="s">"Height Reference Plane"</span><span class="p">,</span> <span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span>  <span class="c1">// 解决凹凸问题</span>
+        <span class="c1">//_POMFadeDistance ("POM Near Fade Distance", Range(0, 10)) = 2.0  </span>
+        <span class="n">_ShadowSoftness</span><span class="p">(</span><span class="s">"POM Shadow Strength"</span> <span class="p">,</span><span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span>
+        <span class="n">_ShadowSteps</span><span class="p">(</span><span class="s">"POM Shadow Steps"</span> <span class="p">,</span><span class="n">Range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span> <span class="o">=</span> <span class="mi">8</span>
+
+        <span class="p">[</span><span class="n">Header</span><span class="p">(</span><span class="n">EnvBRDFLUT</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">Toggle</span><span class="p">]</span><span class="n">_UseCustomLUT</span><span class="p">(</span><span class="s">"Custom BRDF LUT"</span><span class="p">,</span> <span class="kt">float</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span>
+        <span class="n">_CustomBRDFLUT</span><span class="p">(</span><span class="s">"Custom BRDF LUT"</span><span class="p">,</span> <span class="mi">2</span><span class="n">D</span><span class="p">)</span> <span class="o">=</span> <span class="s">"white"</span> <span class="p">{}</span>
+
+    <span class="p">}</span>
+
+    <span class="n">Subshader</span>
+    <span class="p">{</span>
+        <span class="n">Tags</span>
+        <span class="p">{</span>
+            <span class="s">"RenderType"</span><span class="o">=</span><span class="s">"Opaque"</span>
+            <span class="s">"Queue"</span><span class="o">=</span><span class="s">"Geometry"</span>
+        <span class="p">}</span>
+
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">Name</span><span class="s">"FORWARD"</span>
+            <span class="n">Tags</span><span class="p">{</span><span class="s">"LightMode"</span><span class="o">=</span><span class="s">"ForwardBase"</span><span class="p">}</span>
+
+            <span class="n">CGPROGRAM</span>
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>            <span class="cp">#pragma multi_compile_fwdbase
+</span>
+            <span class="cp">#include</span> <span class="cpf">"UnityCG.cginc"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"Lighting.cginc"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"AutoLight.cginc"</span><span class="cp">
+</span>             
+            <span class="k">struct</span> <span class="n">appdata</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">vertex</span>   <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normal</span>   <span class="o">:</span> <span class="n">NORMAL</span><span class="p">;</span>
+                <span class="n">float4</span> <span class="n">tangent</span>  <span class="o">:</span> <span class="n">TANGENT</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">uv</span>       <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                
+            <span class="p">};</span>
+
+            <span class="k">struct</span> <span class="n">v2f</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">pos</span>          <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
+                <span class="n">float4</span> <span class="n">positionWS</span>   <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normalWS</span>     <span class="o">:</span> <span class="n">TEXCOORD1</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">tangentWS</span>    <span class="o">:</span> <span class="n">TEXCOORD2</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">bitangentWS</span>  <span class="o">:</span> <span class="n">TEXCOORD3</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">texcoord</span>     <span class="o">:</span> <span class="n">TEXCOORD4</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">viewDirTS</span>    <span class="o">:</span> <span class="n">TEXCOORD5</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">lightDirTS</span>   <span class="o">:</span> <span class="n">TEXCOORD6</span><span class="p">;</span>
+                <span class="n">UNITY_SHADOW_COORDS</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+            <span class="p">};</span>
+
+            <span class="n">sampler2D</span> <span class="n">_MainTex</span><span class="p">;</span>
+            <span class="n">half4</span> <span class="n">_MainTex_ST</span><span class="p">;</span>
+            <span class="n">sampler2D</span> <span class="n">_NormalMap</span><span class="p">;</span>
+            <span class="n">sampler2D</span> <span class="n">_RoughnessTex</span><span class="p">;</span>
+            <span class="n">sampler2D</span> <span class="n">_MetallicTex</span><span class="p">;</span>
+            <span class="n">sampler2D</span> <span class="n">_HeightTex</span><span class="p">;</span>
+            <span class="n">sampler2D</span> <span class="n">_AOTex</span><span class="p">;</span>
+            <span class="n">samplerCUBE</span> <span class="n">_CubeMap</span><span class="p">;</span>
+            <span class="n">float4</span> <span class="n">_CubeMap_HDR</span><span class="p">;</span> <span class="c1">//此参数声明后，Unity会自动配置</span>
+            <span class="n">half</span> <span class="n">_NormalMapScale</span><span class="p">;</span>
+            <span class="n">half4</span> <span class="n">_SpecularColor</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_SpecularIntensity</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_SpecularShininess</span><span class="p">;</span>
+           
+
+            <span class="n">half</span> <span class="n">_RoughnessIntensity</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_RoughnessBias</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_RoughnessRemapMin</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_RoughnessRemapMax</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_RoughnessBoost</span><span class="p">;</span>
+
+            <span class="n">half</span> <span class="n">_ParallaxScale</span><span class="p">;</span>
+
+            <span class="n">half</span> <span class="n">_HeightScale</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_MinLayers</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_MaxLayers</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_HeightReferencePlane</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_POMFadeDistance</span><span class="p">;</span>
+
+            <span class="n">half</span> <span class="n">_ShadowSoftness</span><span class="p">;</span>
+            <span class="n">half</span> <span class="n">_ShadowSteps</span><span class="p">;</span>
+
+            <span class="n">half</span> <span class="n">_UseCustomLUT</span><span class="p">;</span>
+            <span class="n">sampler2D</span> <span class="n">_CustomBRDFLUT</span><span class="p">;</span>
+
+            <span class="n">float3</span> <span class="n">ParallaxOcclusionMapping</span><span class="p">(</span><span class="n">float2</span> <span class="n">uv</span><span class="p">,</span> <span class="n">float3</span> <span class="n">viewDirTS</span><span class="p">,</span> <span class="n">float3</span> <span class="n">lightDirTS</span><span class="p">)</span>
+            <span class="p">{</span>
+                
+                <span class="c1">// === 保存原始UV导数 ===</span>
+                <span class="n">float2</span> <span class="n">dx</span> <span class="o">=</span> <span class="n">ddx</span><span class="p">(</span><span class="n">uv</span><span class="p">);</span>
+                <span class="n">float2</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">ddy</span><span class="p">(</span><span class="n">uv</span><span class="p">);</span>
+                
+                <span class="c1">// 这个系数能保证在极低角度时视差平滑消失</span>
+                <span class="c1">//float angleFade = saturate(viewDirTS.z * 5.0);</span>
+                <span class="kt">float</span> <span class="n">angleFade</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="n">pow</span><span class="p">(</span><span class="n">viewDirTS</span><span class="p">.</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">));</span>
+                <span class="c1">//float angleFade = smoothstep(0.15, 0.4, viewDirTS.z);</span>
+
+                <span class="c1">// 截断淡出，效果较差</span>
+                <span class="c1">// float2 rawOffset = viewDirTS.xy / max(viewDirTS.z, 0.0001) * _HeightScale;</span>
+                <span class="c1">// float maxLen = _HeightScale * 2.0; </span>
+                <span class="c1">// float currentLen = length(rawOffset);</span>
+                <span class="c1">// float2 maxParallaxOffset = rawOffset * (min(currentLen, maxLen) / max(currentLen, 0.001));</span>
+
+                <span class="c1">// === 1. 动态调整采样层数 ===</span>
+                <span class="kt">float</span> <span class="n">numLayers</span> <span class="o">=</span> <span class="n">lerp</span><span class="p">(</span><span class="n">_MaxLayers</span><span class="p">,</span> <span class="n">_MinLayers</span><span class="p">,</span> <span class="n">abs</span><span class="p">(</span><span class="n">viewDirTS</span><span class="p">.</span><span class="n">z</span><span class="p">));</span>
+                <span class="c1">// === 2. 计算步进参数 ===</span>
+                <span class="kt">float</span> <span class="n">layerStepDistance</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="n">numLayers</span><span class="p">;</span>              <span class="c1">// 步进距离</span>
+                <span class="n">float2</span> <span class="n">maxParallaxOffset</span> <span class="o">=</span> <span class="n">viewDirTS</span><span class="p">.</span><span class="n">xy</span> <span class="o">/</span> <span class="n">max</span><span class="p">(</span><span class="n">viewDirTS</span><span class="p">.</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">001</span><span class="p">)</span> <span class="o">*</span> <span class="n">_HeightScale</span> <span class="o">*</span> <span class="n">angleFade</span><span class="p">;</span> <span class="c1">//最大步进距离</span>
+                <span class="n">float2</span> <span class="n">deltaUV</span> <span class="o">=</span> <span class="n">maxParallaxOffset</span> <span class="o">/</span> <span class="n">numLayers</span><span class="p">;</span> <span class="c1">//步进UV</span>
+                <span class="c1">// === 3. 初始化 第一层数据===</span>
+                <span class="kt">float</span> <span class="n">currentLayerDistance</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>         <span class="c1">//起始层基准</span>
+                <span class="n">float2</span> <span class="n">currentUV</span> <span class="o">=</span> <span class="n">uv</span> <span class="o">+</span> <span class="n">maxParallaxOffset</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">_HeightReferencePlane</span><span class="p">);</span>   <span class="c1">// 当前UV坐标</span>
+                <span class="c1">//float currentHeight = 1 - tex2D(_HeightTex, currentUV).r; // 初始表面高度</span>
+                <span class="kt">float</span> <span class="n">currentHeight</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">tex2Dgrad</span><span class="p">(</span><span class="n">_HeightTex</span><span class="p">,</span> <span class="n">currentUV</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">).</span><span class="n">r</span><span class="p">;</span>
+
+                <span class="c1">// 缓存上一步的数据，避免循环结束后重复采样</span>
+                <span class="kt">float</span> <span class="n">prevHeight</span> <span class="o">=</span> <span class="n">currentHeight</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">prevLayerDistance</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+                <span class="c1">//[unroll(50)] // 展开循环优化（数字要≥_MaxLayers）</span>
+                <span class="p">[</span><span class="n">loop</span><span class="p">]</span> <span class="c1">//标记循环</span>
+                <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">numLayers</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="c1">// 1.检查是否当前位置数值是否大于当前高度值</span>
+                    <span class="k">if</span><span class="p">(</span><span class="n">currentLayerDistance</span> <span class="o">&gt;=</span> <span class="n">currentHeight</span><span class="p">)</span>
+                        <span class="k">break</span><span class="p">;</span>
+                    
+                    <span class="c1">// 2.记录旧状态</span>
+                    <span class="n">prevHeight</span> <span class="o">=</span> <span class="n">currentHeight</span><span class="p">;</span>
+                    <span class="n">prevLayerDistance</span> <span class="o">=</span> <span class="n">currentLayerDistance</span><span class="p">;</span>
+
+                    <span class="c1">// 3.步进操作</span>
+                    <span class="c1">// 沿视线方向步进，下一层的数据，这里虽然命名是current，但是数据已经是下一层的了</span>
+                    <span class="n">currentUV</span> <span class="o">-=</span> <span class="n">deltaUV</span><span class="p">;</span>                               <span class="c1">//UV步进1层</span>
+                    <span class="n">currentLayerDistance</span> <span class="o">+=</span>  <span class="n">layerStepDistance</span><span class="p">;</span>         <span class="c1">//当前位置步进1层 </span>
+
+                    <span class="c1">// 4.采样新高度</span>
+                    <span class="c1">//currentHeight = 1 - tex2Dlod(_HeightTex, float4(currentUV, 0, 0)).r; //深度值随UV步进1层</span>
+                    <span class="n">currentHeight</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">tex2Dgrad</span><span class="p">(</span><span class="n">_HeightTex</span><span class="p">,</span> <span class="n">currentUV</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">).</span><span class="n">r</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="c1">// 步进操作前，也就是当前UV</span>
+                <span class="n">float2</span> <span class="n">prevUV</span> <span class="o">=</span> <span class="n">currentUV</span> <span class="o">+</span> <span class="n">deltaUV</span><span class="p">;</span>
+
+                <span class="c1">//当前步进距离对高度值影响              </span>
+                <span class="kt">float</span> <span class="n">beforeDistance</span> <span class="o">=</span> <span class="n">prevHeight</span> <span class="o">-</span> <span class="n">prevLayerDistance</span><span class="p">;</span>
+                 
+                <span class="c1">//下一层，总步进距离对高度值影响</span>
+                <span class="kt">float</span> <span class="n">afterDistance</span> <span class="o">=</span> <span class="n">currentHeight</span> <span class="o">-</span> <span class="n">currentLayerDistance</span><span class="p">;</span>  
+    
+                <span class="c1">// 插值权重，两个端点之间的线性插值</span>
+                <span class="kt">float</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">afterDistance</span> <span class="o">/</span> <span class="p">(</span><span class="n">afterDistance</span> <span class="o">-</span> <span class="n">beforeDistance</span><span class="p">);</span>
+
+                <span class="c1">// 最终UV = 加权平均</span>
+                <span class="c1">// 对每一次步进的UV插值</span>
+                <span class="n">float2</span> <span class="n">finalUV</span> <span class="o">=</span> <span class="n">lerp</span><span class="p">(</span><span class="n">currentUV</span><span class="p">,</span> <span class="n">prevUV</span><span class="p">,</span> <span class="n">weight</span><span class="p">);</span>
+                <span class="c1">//float finalHeight = lerp(currentLayerDistance, prevLayerDistance, weight);</span>
+
+                <span class="c1">// === 自阴影循环 (Soft Shadows) ===</span>
+                <span class="kt">float</span> <span class="n">shadow</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+                
+                <span class="c1">//float lightAngleFade = smoothstep(0.05, 0.25, lightDirTS.z);</span>
+                <span class="kt">float</span> <span class="n">lightAngleFade</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="n">pow</span><span class="p">(</span><span class="n">lightDirTS</span><span class="p">.</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">));</span>
+                
+                <span class="k">if</span><span class="p">(</span><span class="n">_ShadowSoftness</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">angleFade</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span> <span class="o">&amp;&amp;</span> <span class="n">lightDirTS</span><span class="p">.</span><span class="n">z</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="kt">float</span> <span class="n">hitDepth</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">tex2Dgrad</span><span class="p">(</span><span class="n">_HeightTex</span><span class="p">,</span> <span class="n">finalUV</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">).</span><span class="n">r</span><span class="p">;</span>
+                    
+                    <span class="k">if</span><span class="p">(</span><span class="n">hitDepth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">.</span><span class="mo">001</span><span class="p">)</span>
+                    <span class="p">{</span>
+                        <span class="c1">// 计算完整的UV偏移方向（从交点到光源方向在UV上的投影）</span>
+                        <span class="n">float2</span> <span class="n">lightDirUV</span> <span class="o">=</span> <span class="n">lightDirTS</span><span class="p">.</span><span class="n">xy</span> <span class="o">/</span> <span class="n">max</span><span class="p">(</span><span class="n">lightDirTS</span><span class="p">.</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">001</span><span class="p">)</span> <span class="o">*</span> <span class="n">_HeightScale</span><span class="p">;</span>
+                        
+                        <span class="c1">// 限制最大追踪距离，防止低角度时偏移过大</span>
+                        <span class="kt">float</span> <span class="n">maxOffset</span> <span class="o">=</span> <span class="n">_HeightScale</span> <span class="o">*</span> <span class="mi">2</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+                        <span class="kt">float</span> <span class="n">offsetLen</span> <span class="o">=</span> <span class="n">length</span><span class="p">(</span><span class="n">lightDirUV</span><span class="p">);</span>
+                        <span class="k">if</span><span class="p">(</span><span class="n">offsetLen</span> <span class="o">&gt;</span> <span class="n">maxOffset</span><span class="p">)</span>
+                        <span class="p">{</span>
+                            <span class="n">lightDirUV</span> <span class="o">=</span> <span class="n">lightDirUV</span> <span class="o">/</span> <span class="n">offsetLen</span> <span class="o">*</span> <span class="n">maxOffset</span><span class="p">;</span>
+                        <span class="p">}</span>
+                        
+                        <span class="c1">// 按深度比例的总UV偏移</span>
+                        <span class="n">float2</span> <span class="n">totalUV</span> <span class="o">=</span> <span class="n">lightDirUV</span> <span class="o">*</span> <span class="n">hitDepth</span><span class="p">;</span>
+                        
+                        <span class="c1">// 均匀分配到每一步</span>
+                        <span class="n">float2</span> <span class="n">stepUV</span> <span class="o">=</span> <span class="n">totalUV</span> <span class="o">/</span> <span class="n">_ShadowSteps</span><span class="p">;</span>
+                        <span class="kt">float</span> <span class="n">stepDepth</span> <span class="o">=</span> <span class="n">hitDepth</span> <span class="o">/</span> <span class="n">_ShadowSteps</span><span class="p">;</span>
+                        
+                        <span class="kt">float</span> <span class="n">currentDepth</span> <span class="o">=</span> <span class="n">hitDepth</span><span class="p">;</span>
+                        <span class="n">float2</span> <span class="n">currentUV</span> <span class="o">=</span> <span class="n">finalUV</span><span class="p">;</span>
+                        
+                        <span class="p">[</span><span class="n">loop</span><span class="p">]</span>
+                        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">_ShadowSteps</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+                        <span class="p">{</span>
+                            <span class="n">currentDepth</span> <span class="o">-=</span> <span class="n">stepDepth</span><span class="p">;</span>
+                            <span class="n">currentUV</span> <span class="o">+=</span> <span class="n">stepUV</span><span class="p">;</span>
+                            
+                            <span class="k">if</span><span class="p">(</span><span class="n">currentDepth</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span>
+                                <span class="k">break</span><span class="p">;</span>
+                            
+                            <span class="kt">float</span> <span class="n">terrainDepth</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">tex2Dgrad</span><span class="p">(</span><span class="n">_HeightTex</span><span class="p">,</span> <span class="n">currentUV</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">).</span><span class="n">r</span><span class="p">;</span>
+                            
+                            <span class="k">if</span><span class="p">(</span><span class="n">terrainDepth</span> <span class="o">&lt;</span> <span class="n">currentDepth</span><span class="p">)</span>
+                            <span class="p">{</span>
+                                <span class="kt">float</span> <span class="n">occlusion</span> <span class="o">=</span> <span class="n">currentDepth</span> <span class="o">-</span> <span class="n">terrainDepth</span><span class="p">;</span>
+                                <span class="n">shadow</span> <span class="o">=</span> <span class="n">min</span><span class="p">(</span><span class="n">shadow</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">saturate</span><span class="p">(</span><span class="n">occlusion</span> <span class="o">*</span> <span class="n">_ShadowSoftness</span><span class="p">));</span>
+                                
+                                <span class="k">if</span><span class="p">(</span><span class="n">shadow</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span><span class="p">)</span>
+                                <span class="p">{</span>
+                                    <span class="n">shadow</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+                                    <span class="k">break</span><span class="p">;</span>
+                                <span class="p">}</span>
+                            <span class="p">}</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+                <span class="c1">// 根据淡出系数混合阴影</span>
+                <span class="n">shadow</span> <span class="o">=</span> <span class="n">lerp</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span> <span class="n">shadow</span><span class="p">,</span> <span class="n">angleFade</span> <span class="o">*</span> <span class="n">lightAngleFade</span><span class="p">);</span>
+                
+                <span class="c1">// 根据淡出系数混合阴影（让阴影也随视角淡出）</span>
+                <span class="c1">//shadow = lerp(1.0, shadow, angleFade);</span>
+
+                <span class="c1">//return finalUV;</span>
+                <span class="k">return</span> <span class="n">float3</span><span class="p">(</span><span class="n">finalUV</span><span class="p">,</span><span class="n">shadow</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="n">float2</span> <span class="n">EnvBRDFApprox</span><span class="p">(</span><span class="kt">float</span> <span class="n">roughness</span><span class="p">,</span> <span class="kt">float</span> <span class="n">NoV</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="c1">// Epic Games通过拟合大量数据得出的魔法系数</span>
+                <span class="k">const</span> <span class="n">float4</span> <span class="n">c0</span> <span class="o">=</span> <span class="n">float4</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">0</span><span class="p">.</span><span class="mo">0275</span><span class="p">,</span> <span class="o">-</span><span class="mi">0</span><span class="p">.</span><span class="mi">572</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">022</span><span class="p">);</span>
+                <span class="k">const</span> <span class="n">float4</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">float4</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">0425</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="o">-</span><span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">);</span>
+
+                <span class="n">float4</span> <span class="n">r</span> <span class="o">=</span> <span class="n">roughness</span> <span class="o">*</span> <span class="n">c0</span> <span class="o">+</span> <span class="n">c1</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">a004</span> <span class="o">=</span> <span class="n">min</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">r</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">exp2</span><span class="p">(</span><span class="o">-</span><span class="mi">9</span><span class="p">.</span><span class="mi">28</span> <span class="o">*</span> <span class="n">NoV</span><span class="p">))</span> <span class="o">*</span> <span class="n">r</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">r</span><span class="p">.</span><span class="n">y</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">AB</span> <span class="o">=</span> <span class="n">float2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mo">04</span><span class="p">)</span> <span class="o">*</span> <span class="n">a004</span> <span class="o">+</span> <span class="n">r</span><span class="p">.</span><span class="n">zw</span><span class="p">;</span>
+
+                <span class="k">return</span> <span class="n">AB</span><span class="p">;</span>  <span class="c1">// AB.x = scale, AB.y = bias</span>
+            <span class="p">}</span>
+
+            <span class="n">v2f</span> <span class="n">vert</span><span class="p">(</span><span class="n">appdata</span> <span class="n">v</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">v2f</span> <span class="n">o</span><span class="p">;</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">UnityObjectToClipPos</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">positionWS</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">unity_ObjectToWorld</span><span class="p">,</span> <span class="n">v</span><span class="p">.</span><span class="n">vertex</span><span class="p">);</span>
+
+                <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldNormal</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">normal</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">tangentWS</span> <span class="o">=</span> <span class="n">UnityObjectToWorldDir</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">tangent</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
+                <span class="c1">//* v.tangent.w处理平台差异</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">bitangentWS</span> <span class="o">=</span> <span class="n">cross</span><span class="p">(</span><span class="n">o</span><span class="p">.</span><span class="n">normalWS</span><span class="p">,</span> <span class="n">o</span><span class="p">.</span><span class="n">tangentWS</span><span class="p">)</span> <span class="o">*</span> <span class="n">v</span><span class="p">.</span><span class="n">tangent</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">texcoord</span> <span class="o">=</span> <span class="n">TRANSFORM_TEX</span><span class="p">(</span><span class="n">v</span><span class="p">.</span><span class="n">uv</span><span class="p">,</span><span class="n">_MainTex</span><span class="p">);</span>
+
+                <span class="c1">//ParallaxMapping_Basic start</span>
+                <span class="n">float3x3</span> <span class="n">TBN</span> <span class="o">=</span> <span class="n">float3x3</span><span class="p">(</span><span class="n">o</span><span class="p">.</span><span class="n">tangentWS</span><span class="p">,</span> <span class="n">o</span><span class="p">.</span><span class="n">bitangentWS</span><span class="p">,</span> <span class="n">o</span><span class="p">.</span><span class="n">normalWS</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">worldViewDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceCameraPos</span> <span class="o">-</span> <span class="n">o</span><span class="p">.</span><span class="n">positionWS</span><span class="p">);</span>       
+                <span class="n">o</span><span class="p">.</span><span class="n">viewDirTS</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">TBN</span><span class="p">,</span> <span class="n">worldViewDir</span><span class="p">);</span> 
+
+                <span class="n">half3</span> <span class="n">lightWS</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
+                <span class="n">o</span><span class="p">.</span><span class="n">lightDirTS</span><span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">TBN</span><span class="p">,</span> <span class="n">lightWS</span><span class="p">);</span> 
+
+                <span class="c1">//ParallaxMapping_Basic end</span>
+                <span class="n">TRANSFER_SHADOW</span><span class="p">(</span><span class="n">o</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">o</span><span class="p">;</span>
+            <span class="p">}</span>
+            
+
+            <span class="n">float4</span> <span class="n">frag</span><span class="p">(</span><span class="n">v2f</span> <span class="n">i</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
+            <span class="p">{</span>
+                <span class="c1">//vectors</span>
+                <span class="n">float3</span> <span class="n">positionWS</span> <span class="o">=</span> <span class="n">i</span><span class="p">.</span><span class="n">positionWS</span><span class="p">;</span> 
+                <span class="n">float3</span> <span class="n">normalWS</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">normalWS</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">tangentWS</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">tangentWS</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">bitangentWS</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">bitangentWS</span><span class="p">);</span>
+                <span class="n">float3x3</span> <span class="n">TBN</span> <span class="o">=</span> <span class="n">float3x3</span><span class="p">(</span><span class="n">tangentWS</span><span class="p">,</span> <span class="n">bitangentWS</span><span class="p">,</span> <span class="n">normalWS</span><span class="p">);</span>
+                <span class="n">half3</span> <span class="n">lightWS</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceLightPos0</span><span class="p">.</span><span class="n">xyz</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">viewDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">_WorldSpaceCameraPos</span> <span class="o">-</span> <span class="n">positionWS</span><span class="p">);</span>
+
+                <span class="n">half3</span> <span class="n">lightDirTS</span> <span class="o">=</span> <span class="n">i</span><span class="p">.</span><span class="n">lightDirTS</span><span class="p">;</span> 
+                <span class="c1">//************tex*************</span>
+                <span class="c1">//ParallaxMapping_Basic start</span>
+                <span class="c1">//float height = 1.0 - tex2D(_HeightTex, i.texcoord).r;</span>
+                <span class="c1">//float2 offset = i.viewDirTS.xy / i.viewDirTS.z * height * _ParallaxScale * 0.01;</span>
+                <span class="c1">//float2 texcoord = i.texcoord - offset;</span>
+                <span class="c1">//ParallaxMapping_Basic end</span>
+
+                <span class="n">float3</span> <span class="n">POMData</span> <span class="o">=</span> <span class="n">ParallaxOcclusionMapping</span><span class="p">(</span><span class="n">i</span><span class="p">.</span><span class="n">texcoord</span><span class="p">,</span> <span class="n">i</span><span class="p">.</span><span class="n">viewDirTS</span><span class="p">,</span>  <span class="n">lightDirTS</span><span class="p">);</span>
+                <span class="n">float2</span> <span class="n">texcoord</span> <span class="o">=</span> <span class="n">POMData</span><span class="p">.</span><span class="n">xy</span><span class="p">;</span>
+                <span class="kt">float</span>  <span class="n">POMShadow</span> <span class="o">=</span> <span class="n">POMData</span><span class="p">.</span><span class="n">z</span><span class="p">;</span>
+
+                <span class="n">float3</span> <span class="n">lightColor</span> <span class="o">=</span> <span class="n">_LightColor0</span><span class="p">.</span><span class="n">xyz</span><span class="p">;</span>
+                <span class="n">float4</span> <span class="n">baseCol</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">texcoord</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">normalMapData</span> <span class="o">=</span> <span class="n">UnpackNormal</span><span class="p">(</span><span class="n">tex2D</span><span class="p">(</span><span class="n">_NormalMap</span><span class="p">,</span> <span class="n">texcoord</span><span class="p">)).</span><span class="n">xyz</span><span class="p">;</span>
+                <span class="n">normalMapData</span><span class="p">.</span><span class="n">xy</span> <span class="o">*=</span> <span class="n">_NormalMapScale</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">metallic</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_MetallicTex</span><span class="p">,</span> <span class="n">texcoord</span><span class="p">).</span><span class="n">b</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">roughness</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_RoughnessTex</span><span class="p">,</span> <span class="n">texcoord</span><span class="p">).</span><span class="n">r</span> <span class="o">+</span> <span class="n">_RoughnessBoost</span><span class="p">;</span>
+
+                <span class="c1">//halfLambet</span>
+                <span class="n">float3</span> <span class="n">pixelNormal</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">mul</span><span class="p">(</span><span class="n">normalMapData</span><span class="p">,</span> <span class="n">TBN</span><span class="p">));</span>
+                <span class="kt">float</span> <span class="n">nol</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dot</span><span class="p">(</span><span class="n">pixelNormal</span><span class="p">,</span> <span class="n">lightWS</span><span class="p">));</span>
+                <span class="kt">float</span> <span class="n">halfLambet</span> <span class="o">=</span> <span class="n">nol</span><span class="o">*</span><span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">diffuseColor</span> <span class="o">=</span> <span class="n">baseCol</span> <span class="o">*</span> <span class="n">nol</span> <span class="o">*</span> <span class="n">lightColor</span><span class="p">;</span>
+                <span class="c1">//Specular</span>
+                <span class="c1">//phong</span>
+                <span class="n">half3</span> <span class="n">reflectDir</span> <span class="o">=</span> <span class="n">reflect</span><span class="p">(</span><span class="o">-</span><span class="n">lightWS</span><span class="p">,</span> <span class="n">pixelNormal</span><span class="p">);</span>
+                <span class="n">half</span> <span class="n">phongItem</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dot</span><span class="p">(</span><span class="n">reflectDir</span><span class="p">,</span> <span class="n">viewDir</span><span class="p">));</span>
+               
+                <span class="c1">//Blinn-phong</span>
+                <span class="n">half3</span> <span class="n">halfDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">lightWS</span> <span class="o">+</span> <span class="n">viewDir</span><span class="p">);</span>
+                <span class="n">half</span> <span class="n">blinnPhongItem</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dot</span><span class="p">(</span><span class="n">pixelNormal</span><span class="p">,</span> <span class="n">halfDir</span><span class="p">));</span>       
+
+               
+              
+                <span class="c1">//整体漫反射剔除金属的的漫反射(错误写法，能量不守恒)</span>
+                <span class="c1">//float3 pbrDiffuseColor = lerp(0.96 * diffuseColor, 0, metallic);</span>
+                
+                <span class="n">roughness</span> <span class="o">=</span> <span class="n">roughness</span> <span class="o">*</span> <span class="n">_RoughnessIntensity</span> <span class="o">+</span> <span class="n">_RoughnessBias</span><span class="p">;</span>
+                <span class="n">roughness</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="n">roughness</span><span class="p">,</span> <span class="n">_RoughnessRemapMin</span><span class="p">,</span> <span class="n">_RoughnessRemapMax</span><span class="p">);</span>
+
+                <span class="c1">//GGXSpecular</span>
+                <span class="n">float3</span> <span class="n">f0</span> <span class="o">=</span> <span class="n">lerp</span><span class="p">(</span><span class="n">float3</span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span><span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">,</span><span class="mi">0</span><span class="p">.</span><span class="mo">04</span><span class="p">),</span> <span class="n">baseCol</span><span class="p">,</span> <span class="n">metallic</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">roughness2</span> <span class="o">=</span> <span class="n">roughness</span> <span class="o">*</span> <span class="n">roughness</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">d</span> <span class="o">=</span> <span class="n">roughness2</span><span class="o">*</span><span class="n">roughness2</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="p">.</span><span class="mi">14159</span><span class="o">*</span><span class="p">(</span><span class="n">blinnPhongItem</span> <span class="o">*</span> <span class="n">blinnPhongItem</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness2</span> <span class="o">*</span> <span class="n">roughness2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">blinnPhongItem</span> <span class="o">*</span> <span class="n">blinnPhongItem</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness2</span> <span class="o">*</span> <span class="n">roughness2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span>
+
+                <span class="kt">float</span> <span class="n">k</span> <span class="o">=</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">nov</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dot</span><span class="p">(</span><span class="n">pixelNormal</span><span class="p">,</span> <span class="n">viewDir</span><span class="p">));</span>
+                <span class="kt">float</span> <span class="n">gv</span> <span class="o">=</span> <span class="n">nov</span> <span class="o">/</span> <span class="p">(</span><span class="n">nov</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">gl</span> <span class="o">=</span> <span class="n">nol</span> <span class="o">/</span> <span class="p">(</span><span class="n">nol</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gv</span> <span class="o">*</span> <span class="n">gl</span><span class="p">;</span> 
+                <span class="n">float3</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f0</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">f0</span><span class="p">)</span> <span class="o">*</span> <span class="n">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,(</span><span class="n">dot</span><span class="p">(</span><span class="n">viewDir</span><span class="p">,</span> <span class="n">halfDir</span><span class="p">))),</span> <span class="mi">5</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">KD_GGX</span> <span class="o">=</span>  <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="p">)</span><span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">metallic</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">ggxBRDF</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">g</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">nol</span> <span class="o">*</span> <span class="n">nov</span>  <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mo">001</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">pbrSpecularColor</span> <span class="o">=</span> <span class="n">ggxBRDF</span> <span class="o">*</span> <span class="n">_SpecularColor</span> <span class="o">*</span> <span class="n">lightColor</span> <span class="o">*</span> <span class="n">nol</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">pbrDiffuseColor</span> <span class="o">=</span>  <span class="n">baseCol</span> <span class="o">/</span><span class="mi">3</span><span class="p">.</span><span class="mi">14159</span> <span class="o">*</span> <span class="n">KD_GGX</span> <span class="o">*</span> <span class="n">nol</span> <span class="o">*</span> <span class="n">lightColor</span><span class="p">;</span>
+
+
+                <span class="c1">//******环境光处理**********</span>
+
+                <span class="cm">/******************漫反射环境光*********************/</span>
+                <span class="c1">//EnvironmentColor</span>
+                <span class="c1">//1.环境光（Unity 自动处理）</span>
+                <span class="n">fixed3</span> <span class="n">envColor</span> <span class="o">=</span> <span class="n">UNITY_LIGHTMODEL_AMBIENT</span><span class="p">.</span><span class="n">rgb</span> <span class="o">*</span> <span class="n">baseCol</span><span class="p">.</span><span class="n">rgb</span><span class="p">;</span>
+                <span class="c1">//               ^^^^^^^^^^^^^^^^^^^^^^^ Unity 内置的环境光颜色</span>
+                <span class="c1">//2.SH环境光（支持 Skybox/Gradient/Color）</span>
+                <span class="n">fixed3</span> <span class="n">envColorSH</span> <span class="o">=</span> <span class="n">ShadeSH9</span><span class="p">(</span><span class="n">half4</span><span class="p">(</span><span class="n">normalWS</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">))</span> <span class="o">*</span> <span class="n">baseCol</span><span class="p">.</span><span class="n">rgb</span><span class="p">;</span>
+                <span class="c1">//               ^^^^^^^ Unity 的球谐函数，根据法线方向采样环境光</span>
+                <span class="cm">/******************镜面反射环境光*********************/</span>
+                <span class="c1">//1.采样反射探针（Reflection Probe）</span>
+                <span class="n">half4</span> <span class="n">skyData</span> <span class="o">=</span> <span class="n">UNITY_SAMPLE_TEXCUBE</span><span class="p">(</span><span class="n">unity_SpecCube0</span><span class="p">,</span> <span class="n">reflectDir</span><span class="p">);</span>
+                <span class="n">half3</span> <span class="n">skyColor</span> <span class="o">=</span> <span class="n">DecodeHDR</span><span class="p">(</span><span class="n">skyData</span><span class="p">,</span> <span class="n">unity_SpecCube0_HDR</span><span class="p">);</span>
+                    
+                <span class="c1">// 计算反射方向</span>
+                <span class="n">float3</span> <span class="n">reflviewDir</span> <span class="o">=</span> <span class="n">reflect</span><span class="p">(</span><span class="o">-</span><span class="n">viewDir</span><span class="p">,</span> <span class="n">normalize</span><span class="p">(</span><span class="n">pixelNormal</span><span class="p">));</span>
+               
+                <span class="c1">//环境光漫反射</span>
+                <span class="n">float3</span> <span class="n">f_indirect</span> <span class="o">=</span> <span class="n">f0</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">f0</span><span class="p">)</span> <span class="o">*</span> <span class="n">pow</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,(</span><span class="n">dot</span><span class="p">(</span><span class="n">viewDir</span><span class="p">,</span> <span class="n">pixelNormal</span><span class="p">))),</span> <span class="mi">5</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">kD_indirect</span>  <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">f_indirect</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">metallic</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">indirectDiffuse</span>  <span class="o">=</span> <span class="n">kD_indirect</span> <span class="o">*</span> <span class="n">envColorSH</span><span class="p">;</span>
+                
+                <span class="c1">//环境光镜面漫反射</span>
+                <span class="kt">float</span> <span class="n">mipLevel</span> <span class="o">=</span> <span class="n">roughness</span><span class="o">*</span> <span class="mi">7</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+                <span class="n">float4</span> <span class="n">envSpecularRaw</span> <span class="o">=</span> <span class="n">texCUBElod</span><span class="p">(</span><span class="n">_CubeMap</span><span class="p">,</span> <span class="n">float4</span><span class="p">(</span><span class="n">reflviewDir</span><span class="p">,</span> <span class="n">mipLevel</span><span class="p">));</span>
+                <span class="n">half3</span> <span class="n">envSpecular</span> <span class="o">=</span> <span class="n">DecodeHDR</span><span class="p">(</span><span class="n">envSpecularRaw</span><span class="p">,</span> <span class="n">_CubeMap_HDR</span><span class="p">);</span> 
+
+                <span class="c1">//1.拟合BRDF(未使用)</span>
+                <span class="n">float2</span> <span class="n">envBRDF</span> <span class="o">=</span> <span class="n">EnvBRDFApprox</span><span class="p">(</span><span class="n">roughness</span><span class="p">,</span> <span class="n">nov</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">envSpecularEasy</span> <span class="o">=</span> <span class="n">envSpecular</span> <span class="o">*</span> <span class="n">f_indirect</span><span class="p">;</span>
+                <span class="c1">//2.采样BRDFLUT</span>
+                <span class="n">float2</span> <span class="n">brdfLUT</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">unity_NHxRoughness</span><span class="p">,</span> <span class="n">float2</span><span class="p">(</span><span class="n">roughness</span><span class="p">,</span> <span class="n">nov</span><span class="p">)).</span><span class="n">rg</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">CustombrdfLUT</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_CustomBRDFLUT</span><span class="p">,</span> <span class="n">float2</span><span class="p">(</span><span class="n">roughness</span><span class="p">,</span> <span class="n">nov</span><span class="p">)).</span><span class="n">rg</span><span class="p">;</span>
+                
+                <span class="k">if</span><span class="p">(</span><span class="n">_UseCustomLUT</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span>
+                <span class="p">{</span>
+                    <span class="n">brdfLUT</span> <span class="o">=</span> <span class="n">CustombrdfLUT</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="n">envSpecular</span> <span class="o">=</span>  <span class="n">envSpecular</span> <span class="o">*</span> <span class="p">(</span><span class="n">f0</span> <span class="o">*</span> <span class="n">brdfLUT</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">brdfLUT</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+                
+                <span class="c1">//AO</span>
+                <span class="kt">float</span> <span class="n">AO</span> <span class="o">=</span> <span class="n">tex2D</span><span class="p">(</span><span class="n">_AOTex</span><span class="p">,</span> <span class="n">texcoord</span><span class="p">).</span><span class="n">r</span><span class="p">;</span>
+                <span class="c1">//float fakeAO = saturate(dot(normalWS, float3(0,1,0))) * 0.6 + 0.4;</span>
+
+
+
+                <span class="c1">//Shadow</span>
+                <span class="kt">float</span> <span class="n">shadow</span> <span class="o">=</span> <span class="n">SHADOW_ATTENUATION</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+ 
+                <span class="c1">//output</span>
+                <span class="n">float3</span> <span class="n">finalColor</span> <span class="o">=</span> <span class="p">(</span><span class="n">pbrDiffuseColor</span> <span class="o">+</span> <span class="n">pbrSpecularColor</span><span class="p">)</span> <span class="o">*</span> <span class="n">shadow</span> <span class="o">+</span> <span class="p">(</span><span class="n">indirectDiffuse</span> <span class="o">+</span> <span class="n">envSpecular</span> <span class="p">)</span><span class="o">*</span> <span class="n">AO</span> <span class="o">*</span> <span class="n">POMShadow</span> <span class="p">;</span>
+
+
+                <span class="k">return</span> <span class="n">float4</span><span class="p">(</span><span class="n">finalColor</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> 
+            <span class="p">}</span>
+            <span class="n">ENDCG</span>
+        <span class="p">}</span>
+        
+    <span class="p">}</span><span class="n">FallBack</span><span class="s">"Diffuse"</span>
+
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h1 id="测试大致效果">测试大致效果</h1> <p><img src="/assets/img/TAMonth02/Pasted image 20260131201627.png" alt=""/></p> <p><img src="/assets/img/TAMonth02/Pasted image 20260131201844.png" alt=""/></p>]]></content><author><name></name></author><category term="TAMonth02"/><category term="unity"/><category term="shader"/><category term="rendering"/><summary type="html"><![CDATA[Lv.3 Unity主线：一个简单的PBRShader]]></summary></entry><entry><title type="html">理论支线：PBR - 基于图像的照明( image based lighting-IBL)</title><link href="https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBR-%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(-image-based-lighting-IBL)/" rel="alternate" type="text/html" title="理论支线：PBR - 基于图像的照明( image based lighting-IBL)"/><published>2026-01-24T00:00:00+00:00</published><updated>2026-01-24T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF%EF%BC%9APBR%20-%20%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(%20image%20based%20lighting-IBL)</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBR-%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(-image-based-lighting-IBL)/"><![CDATA[<h1 id="介绍">介绍</h1> <p>这通常通过作立方体贴图环境贴图（取自现实世界或从三维场景生成）实现，使我们能直接将其用于光照方程：将每个立方体贴图像素视为光发射体。这样我们就能有效捕捉环境的全局光照和整体感觉，让物体在环境中有更好的归属感。</p> <h2 id="ibl渲染方程方程">IBL渲染方程方程</h2> \[L_o(p,\omega_o) = \int\limits_{\Omega}(k_d\frac{c}{\pi} + k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)}) L_i(p,\omega_i) n \cdot \omega_i d\omega_i\] <p>这里可以拆分成两个部分</p> \[L_o(p,\omega_o) = \int\limits_{\Omega} (k_d\frac{c}{\pi}) L_i(p,\omega_i) n \cdot \omega_i d\omega_i + \int\limits_{\Omega} (k_s\frac{DFG}{4(\omega_o \cdot n)(\omega_i \cdot n)}) L_i(p,\omega_i) n \cdot \omega_i d\omega_i\] <p><strong>这里其实看公式可以知道这就是漫反射 + 镜面反射，这个内容和直接光是类似的</strong> <strong>那么环境光漫反射其实就是SH(球谐光照)，镜面反射则是源自于环境反射的HDR图，这里主要是讲镜面反射</strong></p> <h2 id="采样">采样</h2> <p><strong>通常采用是texCUBElod，因为需要将粗糙度和mipLevel相关联。</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
 </pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="n">mipLevel</span> <span class="o">=</span> <span class="n">roughness</span><span class="o">*</span> <span class="mi">7</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
@@ -1320,122 +2186,4 @@
     <span class="c1">// 步骤3：平方平滑</span>
     <span class="k">return</span> <span class="n">atten</span> <span class="o">*</span> <span class="n">atten</span><span class="p">;</span>
 <span class="p">}</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="聚光灯阴影性能">聚光灯阴影性能</h2> <p><strong>移动端优化建议：</strong></p> <ul> <li>限制聚光灯数量（≤ 3-5 个）</li> <li>使用较小的 Range</li> <li>避免重叠的聚光灯</li> <li>使用 Light Culling</li> </ul> <p>聚光灯阴影比点光源便宜，但比方向光昂贵：</p> <table> <thead> <tr> <th>光源类型</th> <th>Shadow Maps</th> <th>性能</th> <th>备注</th> </tr> </thead> <tbody> <tr> <td><strong>Directional</strong></td> <td>4 cascades</td> <td>中</td> <td>覆盖整个场景</td> </tr> <tr> <td><strong>Spot</strong></td> <td><strong>1 张</strong></td> <td><strong>好</strong></td> <td>只覆盖锥体</td> </tr> <tr> <td><strong>Point</strong></td> <td>6 张（Cubemap）</td> <td>差</td> <td>6个方向</td> </tr> </tbody> </table> <p><strong>优化建议：</strong></p> <ul> <li>只对主要聚光灯开启阴影</li> <li>使用合适的 Shadow Resolution（512-1024）</li> <li>考虑使用烘焙阴影</li> </ul>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><summary type="html"><![CDATA[理论支线：LightAttenuation 衰减]]></summary></entry><entry><title type="html">GGX_D(H)分布可视化</title><link href="https://xueqingzhe.github.io/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96/" rel="alternate" type="text/html" title="GGX_D(H)分布可视化"/><published>2025-12-27T00:00:00+00:00</published><updated>2025-12-27T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96/"><![CDATA[<iframe src="/assets/html/fig3_roughness_comparison.html" width="100%" height="1200px" frameborder="0"> </iframe>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><category term="math"/><summary type="html"><![CDATA[GGX_D(H)分布可视化]]></summary></entry><entry><title type="html">理论支线：PBRSpecular - GGX 速通</title><link href="https://xueqingzhe.github.io/blog/2025/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBRSpecular-GGX-%E9%80%9F%E9%80%9A/" rel="alternate" type="text/html" title="理论支线：PBRSpecular - GGX 速通"/><published>2025-12-27T00:00:00+00:00</published><updated>2025-12-27T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2025/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF%EF%BC%9APBRSpecular%20-%20GGX%20%E9%80%9F%E9%80%9A</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2025/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBRSpecular-GGX-%E9%80%9F%E9%80%9A/"><![CDATA[<h1 id="pbr-核心理论">PBR 核心理论</h1> <h2 id="什么是-pbr-physically-based-rendering">什么是 PBR (Physically Based Rendering)</h2> <p>PBR 是一种基于物理原理的渲染方法，目标是<strong>在任何光照条件下都能得到物理正确的结果</strong>。 PBR 的核心理念：漫反射 + 镜面反射 = 完整的表面反射 <strong>基于微表面理论这是重点</strong> \(f_r(l, v) = \underbrace{f_{diff}}_{\text{漫反射}} + \underbrace{f_{spec}}_{\text{镜面反射}}\) <strong>核心思想三要素：</strong></p> <ul> <li><strong>能量守恒</strong> (Energy Conservation)：反射光不能超过入射光</li> <li><strong>基于微表面理论</strong> (Microfacet Theory)：表面由无数微小镜面组成</li> <li><strong>使用真实物理参数</strong>：金属度(Metallic)、粗糙度(Roughness)替代传统的高光参数</li> </ul> <p><img src="/assets/img/TAMonth01/Pasted image 20251227192945.png" alt="图片"/></p> <h1 id="specular-brdf">Specular BRDF</h1> <p><strong>PBR与传统模型区别主要是在高光，漫反射其实还是Lambert</strong></p> \[f_{specColor}(l, v) = \frac{D(h) \cdot F(v, h) \cdot G(l, v, h)}{4 \cdot (n \cdot l) \cdot (n \cdot v)}\cdot NoL \cdot SpecularColor\] <h2 id="镜面反射-brdf-cook-torrance">镜面反射 BRDF (Cook-Torrance)</h2> \[f_{spec}(l, v) = \frac{D(h) \cdot F(v, h) \cdot G(l, v, h)}{4 \cdot (n \cdot l) \cdot (n \cdot v)}\] <p><strong>记忆口诀：DFG 除以 4NL·NV</strong> <strong>D</strong> - Distribution (法线分布) - 高光形状 <strong>F</strong> - Fresnel (菲涅尔) - 反射率 <strong>G</strong> - Geometry (几何项) - 遮挡 <strong>分母</strong> - 归一化因子</p> <p><strong>这里会考虑三个关键问题</strong> Cook-Torrance 的 D、F、G 三项分别回答：</p> <ol> <li><strong>D 项</strong>：微镜面法线如何分布？（高光形状）</li> <li><strong>F 项</strong>：每个微镜面反射多少光？（反射强度）</li> <li><strong>G 项</strong>：有多少微镜面被遮挡？（自遮挡修正）</li> </ol> <h3 id="d--distribution高光项公式">D- Distribution高光项公式</h3> <p><strong>问题</strong>：在给定方向 <code class="language-plaintext highlighter-rouge">h</code>（半程向量），有多少比例的微镜面法线指向 <code class="language-plaintext highlighter-rouge">h</code>？ 入射光 L 和反射光 V 的中间方向 = H (Half Vector) 只有法线 = H 的微镜面才能将 L 反射到 V D(h) = 在方向 h 附近的微镜面密度</p> <p><strong>这里使用的高光计算公式是 GGX/Trowbridge-Reitz 公式</strong></p> <p>\(D_{GGX}(h) = \frac{\alpha^2}{\pi \left[ (n \cdot h)^2 (\alpha^2 - 1) + 1 \right]^2}\) ​</p> <p><strong>参数：</strong></p> <ul> <li>α(粗糙度参数 / GGX 粗糙度)和粗糙度的平方相关\(α=roughness^2\)</li> <li>法线和半程向量的点积，这里其实就是Blinn-Phong\(n⋅h\)</li> </ul> <h3 id="f-项---fresnel菲涅尔">F 项 - Fresnel（菲涅尔）</h3> <p><strong>F0：</strong> Fresnel at 0 degrees，正入射时的反射率（垂直看表面时的反射率），简单来说就是视线和法线夹角为0度的时候的反射率</p> \[F_0​=lerp(0.04,baseColor,metallic)\] <ul> <li>非金属（metallic=0）：F0 = 0.04（灰色）</li> <li>金属（metallic=1）：F0 = baseColor（彩色）</li> </ul> <p><strong>F:</strong> 菲涅尔项 <strong>精确的公式</strong></p> \[F(v,h)=F_0​+(F_{90}−F_0​)⋅(1−(v⋅h))^5\] <p><strong>通常在视角和法线成90度也叫掠射角，可以理解为此时进入眼睛能观察的光线是与表面平行，那么相当于表面完全反射此部分的光线，所以几乎所有材质的F90反射率都是为1，所以红色可以化简</strong></p> \[F_{90} = 1\] <p><strong>这里需要注意，它的参数是v⋅h，并非宏观的下的fresnel（NoV），这里实际是取的微观表面的法线，不论宏观还是微观，它都满足入射角和出射角相等，那么L是入射，V是就是出射，那么微观平面法线就可以理解为L和V的角平分线也就是H(H=L+V)，这样就把fresnel（NoV）中的法线N替换，就是v⋅h了</strong></p> \[F(v,h)=F_0​+(1−F_0​)⋅(1−(v⋅h))^5\] <p><strong>因为入射和反射对称，所以用l⋅h也是对的</strong></p> \[F(v,h)=F_0​+(1−F_0​)⋅(1−(l⋅h))^5\] <h3 id="g-项---geometry几何函数">G 项 - Geometry（几何函数）</h3> <h4 id="公式smith-ggx">公式：Smith-GGX</h4> \[G(l, v, h) = G_1(l) \cdot G_1(v)\] <p>其中可视性遮蔽：</p> <p>\(G_1(v) = \frac{n \cdot v}{(n \cdot v) \cdot (1 - k) + k}\)​</p> <p>其中光线遮蔽：</p> \[G_1(l) = \frac{n \cdot l}{(n \cdot l) \cdot (1 - k) + k}\] <p><strong>k 的计算（直接光照）：</strong></p> \[k = \frac{(\text{roughness} + 1)^2}{8}\] <p><strong>环境光K</strong></p> <p>\(k = \frac{\text{roughness}^2}{2}\)​</p> <h1 id="对于d高光项计算公式的由来和解释">对于D高光项计算公式的由来和解释</h1> <p><strong>α 的定义</strong> α 是微表面斜率的标准差（Standard Deviation of Microfacet Slopes） 直白理解： <strong><em>就是GGX的专用粗糙度系数</em></strong> α 越大 → 微镜面法线越分散 → 高光越宽 α 越小 → 微镜面法线越集中 → 高光越尖 <strong>为什么要粗糙度的平方？</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-</pre></td><td class="rouge-code"><pre> <span class="c1">// 用户输入的粗糙度（线性感知） </span>
- <span class="kt">float</span> <span class="n">roughness</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">;</span> <span class="c1">// [0, 1] 范围 </span>
- <span class="c1">// GGX 使用的参数 </span>
- <span class="kt">float</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">roughness</span> <span class="o">*</span> <span class="n">roughness</span><span class="p">;</span> <span class="c1">// α = 0.25 </span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>原因：</strong></p> <ol> <li><strong>感知线性化</strong>（Perceptual Linearization）</li> </ol> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-</pre></td><td class="rouge-code"><pre>   <span class="err">人眼对粗糙度的感知不是线性的</span>  
-   <span class="n">roughness</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="err">时，看起来像</span><span class="s">"中等粗糙"</span>
-   <span class="err">但如果直接用</span> <span class="err">α</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="err">，视觉上会太粗糙</span>
-   <span class="err">平方后</span> <span class="err">α</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">25</span><span class="err">，视觉效果更符合直觉</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>Disney 的研究成果</strong></p> <ul> <li>Disney 在《Physically Based Shading at Disney》中提出</li> <li>测试发现：α=roughness2^ 的调节曲线最符合艺术家直觉</li> <li>现在成为行业标准</li> </ul> \[D_{GGX}(h) = \frac{\alpha^2}{\pi \left[ (n \cdot h)^2 (\alpha^2 - 1) + 1 \right]^2}\] <p>roughness ∈ $[0, 1]$ -&gt;平方 α ∈ $[0, 1]$ 但实际使用： roughness = 0.0 → α = 0.0 (完美镜面，会导致除零) roughness = 1.0 → α = 1.0 (完全粗糙) 所以通常会</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td><td class="rouge-code"><pre><span class="nl">clamp:</span> <span class="kt">float</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">roughness</span> <span class="o">*</span> <span class="n">roughness</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">001</span><span class="p">);</span> <span class="c1">// 避免除零 </span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="关于柯西公式">关于柯西公式</h2> <p><strong>标准柯西分布</strong>（Cauchy Distribution）：</p> <p>\(p(x) = \frac{1}{\pi (1 + x^2)}\)<strong>带尺度参数 γ (gamma)的柯西分布：</strong></p> <p>\(p(x; \gamma) = \frac{1}{\pi \gamma \left(1 + \frac{x^2}{\gamma^2}\right)}\)​</p> <p><strong>进一步变形：</strong></p> <p>\((x; \gamma) = \frac{1}{\pi \gamma} \cdot \frac{\gamma^2}{\gamma^2 + x^2}\)​</p> <p><strong>整理成分子分母：</strong></p> <p>\(p(x; \gamma) = \frac{\gamma^2}{\pi (\gamma^2 + x^2)}\)​ <strong>二维柯西公式</strong> \(p(m_x​,m_y​)=\frac{\gamma^2}{π(\gamma^2+m_x^2​+m_y^2​)^2}\)​</p> <p><strong>GGX高光的起点：假设微表面斜率服从带尺度参数 γ (gamma)柯西分布，这个尺度就是粗糙度参数</strong></p> <h2 id="如何描述微观平面的粗糙度变化量x">如何描述微观平面的粗糙度变化量X</h2> <p>真实表面是 <strong>“高度场”</strong>，不是 <strong>“角度场”</strong></p> <blockquote> <p><strong>真实世界里的粗糙表面是什么？</strong></p> </blockquote> <p>不管是：</p> <ul> <li> <p>打磨</p> </li> <li> <p>抛光</p> </li> <li> <p>拉丝</p> </li> <li> <p>喷砂</p> </li> </ul> <p>本质都是：</p> <blockquote> <p><strong>在一个平面上制造“高度起伏”</strong></p> </blockquote> <p><strong>问题：</strong> 如何描述表面的粗糙程度？ <strong>传统想法（错误）：</strong> 用法线的角度分布？ <strong>问题：</strong> 法线角度不直观，难以度量 <strong>正确方法：</strong> 用表面的高度变化！</p> <p><strong>因为是微观平面也就是微表面模型下，决定粗糙度与否的其实就是表面的高低起伏，也就是每一个微观平面与宏观平面所构成的斜率</strong> <img src="/assets/img/TAMonth01/ffb807b5-4259-4535-af3f-832a9eaf052a.png" alt="图片"/></p> <p>想象用手摸一个粗糙表面： - 光滑 → 高度变化小 → 斜率小 - 粗糙 → 高度起伏大 → 斜率大 <strong>斜率定义：</strong></p> \[p = \frac{\Delta x}{\Delta z}, \quad q = \frac{\Delta y}{\Delta z}\] <p>物理意义： - p：x 方向的坡度 - q：y 方向的坡度 - 斜率越大 → 表面越陡峭 → 越粗糙 <strong>这里的斜率其实是有两个分量方向的斜率的，图上仅画了x方向的斜率</strong></p> <p>\(p=\frac{Δx}{Δz}​,q=\frac{Δy}{Δz}\)​</p> <p><strong>所以现在X变量和尺度值α（粗糙度）都有了，如果代入公式就可以得到一个结果了。但是这里有一个问题，那就是现在的X变量其实是实际不存在的微表面参数空间下的变量，而非我们肉眼看见的宏观平面，那么这样的话我们就需要进行空间转换了。</strong> <strong><em>二维的柯西分布公式</em></strong></p> \[p(mx​,my​)=\frac{\gamma^2}{π(\gamma^2+mx^2​+my^2​)^2}\] <p><strong><em>但是我们需要的是二维的柯西分布公式，代入数值之后</em></strong></p> \[p(p,q)=\frac{α^2}{π(p^2+q^2+α^2)^2}\] <p><strong><em>这和最终的D_GGX公式还是差一点</em></strong></p> <p>\(D_{GGX}(h) = \frac{\alpha^2}{\pi \left[ (n \cdot h)^2 (\alpha^2 - 1) + 1 \right]^2}\)​</p> <p><strong>那么暂时总结一下就是下面几点：</strong> GGX 中使用的柯西分布最初定义在<strong>微表面斜率空间（slope plane）</strong> 上，<br/> 该空间并不是法线方向的半球；<br/> 而 BRDF 需要的是微表面法线在<strong>单位半球</strong>上的分布。<br/> 因此必须将<strong>斜率空间</strong>映射到<strong>方向空间</strong>，<br/> 并通过 <strong>Jacobian</strong> 修正映射过程中面积（权重）的变化。</p> <h2 id="雅可比jacobian-矩阵行列式">雅可比(Jacobian )矩阵/行列式</h2> <blockquote> <p><strong>Jacobian = 当我用新变量来描述同一批东西时，<br/> 一个“单位面积”被拉伸或压缩了多少，这里核心思想是描述局部线性变换</strong></p> </blockquote> <p><strong>为什么需要 Jacobian？</strong> 简单来说：我们有斜率空间 (p,q) 的分布， 但 BRDF 需要的是法线方向 (θ,φ) 的分布。 变量变换时，概率密度需要乘以一个”缩放因子”， 这个因子就是 Jacobian 行列式 |J|。</p> <p>斜率空间的分布： p(slope_x, slope_y) 需要转换到： D(法线方向 h) 工具： Jacobian 矩阵（变量变换）</p> <p>斜率定义转换到半球空间：</p> \[p = \frac{Δx}{Δz} = tan(θ) \cdot cos(φ)\] \[q = \frac{Δy}{Δz} = tan(θ)\cdot sin(φ)\] <p>其中： θ = 微平面法线与宏观法线 N 的夹角 φ = 方位角</p> <h3 id="求偏导">求偏导</h3> <h4 id="p-对-θ-的偏导">p 对 θ 的偏导</h4> <p><strong>将φ看成常数 - 得到 ∂p/∂θ 和 ∂p/∂φ</strong> 意思就是求原始p分量在变换后对θ分量的分别贡献</p> <p><strong>函数</strong></p> \[p = \tan(\theta) \cos(\phi)\] <p><strong>求偏导（φ 看作常数）：</strong></p> \[\frac{\partial p}{\partial \theta} = \frac{\partial}{\partial \theta}[\tan(\theta) \cos(\phi)]\] <p><strong>常数cosφ提出来</strong></p> \[=cos(ϕ)⋅\frac{∂}{θ∂}​[tan(θ)]\] <p><strong>tan(θ) 的导数</strong></p> \[= \cos(\phi) \cdot \sec^2(\theta)\] <p><strong>最终结果</strong></p> \[= \sec^2(\theta) \cdot \cos(\phi)\] <h4 id="p-对-φ-的偏导">p 对 φ 的偏导</h4> <p><strong>将θ看成常数 - 得到 ∂p/∂θ 和 ∂p/∂φ</strong> 意思就是求原始p分量在变换后对φ分量的分别贡献</p> <p><strong>函数</strong></p> \[p=tan(θ)cos(ϕ)\] <p><strong>求偏导（θ 看作常数）：</strong></p> \[\frac{\partial p}{\partial \phi} = \frac{\partial}{\partial \phi}[\tan(\theta) \cos(\phi)]\] <p><strong>常数tanθ提出来</strong></p> \[=\tan(\partial)⋅\frac{\partial}{\partial\phi​}[\cos(\phi)]\] <p><strong>cos(φ) 的导数</strong></p> \[= \tan(\theta) \cdot (-\sin(\phi))\] <p><strong>最终结果</strong></p> \[=-\tan(\theta) \sin(\phi)\] <p><strong>所以p对φ和θ方向的贡献就有了，也就是雅可比矩阵的第一行</strong></p> \[\begin{bmatrix}\frac{\partial p}{\partial \theta} &amp; \frac{\partial p}{\partial \phi} \end{bmatrix}\] \[\begin{bmatrix}\sec^2(\theta) \cos(\phi) &amp; -\tan(\theta) \sin(\phi)\end{bmatrix}\] <h4 id="q-对-θ-的偏导">q 对 θ 的偏导</h4> <p><strong>函数：</strong></p> \[q = \tan(\theta) \sin(\phi)\] <p><strong>求偏导（φ 看作常数）：</strong></p> \[\frac{\partial q}{\partial \theta} = \frac{\partial}{\partial \theta}[\tan(\theta) \sin(\phi)]\] <p><strong>常数sinφ提出来</strong></p> \[= \sin(\phi) \cdot \frac{\partial}{\partial \theta}[\tan(\theta)]\] <p><strong>tan(θ) 的导数</strong></p> \[= \sin(\phi) \cdot \sec^2(\theta)\] <p><strong>最终结果</strong></p> \[= \sec^2(\theta) \sin(\phi)\] <h4 id="q-对-φ-的偏导">q 对 φ 的偏导</h4> <p><strong>函数：</strong></p> \[q = \tan(\theta) \sin(\phi)\] <p><strong>求偏导（θ 看作常数）：</strong></p> \[\frac{\partial q}{\partial \phi} = \frac{\partial}{\partial \phi}[\tan(\theta) \sin(\phi)]\] <p><strong>常数提tanθ出来</strong></p> \[= \tan(\theta) \cdot \frac{\partial}{\partial \phi}[\sin(\phi)]\] <p><strong>sin(φ) 的导数</strong></p> \[= \tan(\theta) \cdot \cos(\phi)\] <p><strong>最终结果</strong></p> \[= \tan(\theta) \cos(\phi)\] <p><strong>所以q对φ和θ方向的贡献就有了，也就是雅可比矩阵的第二行</strong></p> \[\begin{bmatrix} \frac{\partial q}{\partial \theta} &amp; \frac{\partial q}{\partial \phi} \end{bmatrix}\] \[\begin{bmatrix} \sec^2(\theta) \sin(\phi) &amp; \tan(\theta) \cos(\phi) \end{bmatrix}\] <h3 id="组成雅可比jacobian-矩阵">组成雅可比Jacobian 矩阵</h3> \[J = \begin{bmatrix} \frac{\partial p}{\partial \theta} &amp; \frac{\partial p}{\partial \phi} \\ \frac{\partial q}{\partial \theta} &amp; \frac{\partial q}{\partial \phi} \end{bmatrix}\] \[J = \begin{bmatrix} \sec^2(\theta) \cos(\phi) &amp; -\tan(\theta) \sin(\phi) \\ \sec^2(\theta) \sin(\phi) &amp; \tan(\theta) \cos(\phi) \end{bmatrix}\] <p>因为我们处理的是一个<strong>面积缩放</strong>，需要的是一个缩放的<strong>标量</strong>，而非矩阵变换，所以此处对矩阵采用行列式形式计算提取一个值 应用 2×2 行列式公式</p> \[\begin{vmatrix} a &amp; b \\ c &amp; d \end{vmatrix} = ad - bc​\] \[|J| = \sec^2(\theta) \cos(\phi) \cdot \tan(\theta) \cos(\phi) - [-\tan(\theta) \sin(\phi)] \cdot \sec^2(\theta) \sin(\phi)\] \[= \sec^2(\theta) \tan(\theta) \cos^2(\phi) + \sec^2(\theta) \tan(\theta) \sin^2(\phi)\] <p><strong>化简（这是化简行列式，不是矩阵）</strong></p> \[|J| = \sec^2(\theta) \tan(\theta) \cos^2(\phi) + \sec^2(\theta) \tan(\theta) \sin^2(\phi)\] \[= \sec^2(\theta) \tan(\theta) [\cos^2(\phi) + \sin^2(\phi)]\] \[= \sec^2(\theta) \tan(\theta)\] \[= \frac{\sin(\theta)}{\cos^3(\theta)}\] <p><strong>单位面积的缩放：</strong></p> <p>输入空间：dθ × dφ（单位面积） ↓ 变换 输出空间：|J| × dθ × dφ（变换后面积）</p> <table> <tbody> <tr> <td>J</td> <td>= 面积放大/缩小因子</td> </tr> </tbody> </table> <p>概率守恒： \(p(θ, φ) dθ dφ = p(p, q) dp dq\)</p> \[p(θ, φ) dθ dφ= p(p,q) dθ dφ × |J|\] <p>所以：</p> \[p(p, q) = p(θ, φ) / |J|\] <p>代入</p> \[|J| = \frac{\sin(\theta)}{\cos^3(\theta)}\] <p>得到</p> <p>\(p(p, q) = p(\theta, \phi) \cdot \frac{\cos^3(\theta)}{\sin(\theta)}\)​</p> <p><strong>现在就有(p,q) → (θ,φ)最终的雅可比了，也就是已经转换到宏观空间了，但是还需要转换到球面空间</strong></p> <p><strong>立体角微元:</strong></p> \[dω = sin(θ) dθ dφ\] <p><strong>从 (p,q) 到立体角：</strong></p> \[dp \, dq = \frac{\sin(\theta)}{\cos^3(\theta)} d\theta \, d\phi\] \[=\frac{1}{\cos^3(\theta)} \cdot \sin(\theta) d\theta d\phi\] \[=\frac{1}{\cos^3(\theta)} \cdot d\omega\] \[= \frac{d\omega}{\cos^3(\theta)}\] <p><strong>还需要考虑单位球上投影：</strong> 投影到法线空间的”面积”元素需要除以 cos⁡(θ)：</p> \[dA_h = \frac{d\omega}{\cos(\theta)}\] <p>也就是</p> \[d\omega= \frac{dA_h}{\cos(\theta)}\] <p><strong>代入分布</strong></p> \[dp \, dq = \frac{d\omega}{\cos^3(\theta)}\] \[= \frac{dA_h / \cos(\theta)}{\cos^3(\theta)}\] \[=\frac{dA_h}{\cos^4(\theta)}\] <p><strong>所以最终得到结果是</strong></p> \[|J| =\frac{dA_h}{\cos^4(\theta)}\] <p><strong>概率密度变换</strong></p> \[p(p, q) \, dp \, dq = D(h) \, dA_h\] \[D(h) = p(p, q) \frac{dp \, dq}{dA_h}\] \[= p(p, q) \frac{dA_h / \cos^4(\theta)}{dA_h}\] \[= \frac{p(p, q)}{\cos^4(\theta)}\] <p><strong>根据点乘定义，这里定义n和h都是单位向量，所以结果是cos(θ)</strong></p> \[n \cdot h = cos(θ)\] <p><strong>所以有：</strong></p> \[\cos(\theta) = n \cdot h\] <p><strong>代入 cos(θ)，得到了最终的分布关系</strong></p> \[D(h) = \frac{p(p, q)}{(n \cdot h)^4}\] <h3 id="微表面斜率空间转到宏观法线">微表面斜率空间转到宏观法线</h3> <p><strong>当前微表面的法线表示是(p,q,1)，但是我们需要进行归一化</strong> <strong><em>归一化因子就是所有分量的平方相加在开方</em></strong></p> \[|h_{raw}| = \sqrt{p^2 + q^2 + 1^2} = \sqrt{p^2 + q^2 + 1}\] <p>\(h = \frac{h_{raw}}{|h_{raw}|} = \frac{(p, q, 1)}{\sqrt{p^2 + q^2 + 1}}\) <strong>即：</strong></p> \[h = \left( \frac{p}{\sqrt{p^2+q^2+1}}, \frac{q}{\sqrt{p^2+q^2+1}}, \frac{1}{\sqrt{p^2+q^2+1}} \right)\] <p><strong>点积计算</strong> <strong>这里左侧表示宏观计算noh,右侧则是微观的noh，它们在数值上应该相等</strong></p> \[n\cdot h = (0, 0, 1) \cdot \frac{(p, q, 1)}{\sqrt{p^2 + q^2 + 1}}\] <p><strong>展开点积：</strong></p> \[= \frac{0 \times p + 0 \times q + 1 \times 1}{\sqrt{p^2 + q^2 + 1}}\] \[= \frac{1}{\sqrt{p^2 + q^2 + 1}}\] <p>**现在就可以反向求解p和q</p> \[p^2 + q^2 = \frac{1 - (n \cdot h)^2}{(n \cdot h)^2}\] <p><strong>代入$p^2$+$q^2$</strong></p> <p>我们有： - 柯西分布：$p(p,q) = \frac{\alpha^2}{\pi(p^2+q^2+\alpha^2)^2}$ - 几何关系：$p^2 + q^2 = \frac{1-(n \cdot h)^2}{(n \cdot h)^2}$</p> \[p(p,q)=\frac{α^2}{π(p^2+q^2+α^2)^2}\] <p><strong>得到</strong></p> \[p(p, q) = \frac{\alpha^2 (n \cdot h)^4}{\pi [(n \cdot h)^2(\alpha^2 - 1) + 1]^2}\] <p>根据前面得到的关系</p> \[D(h) = \frac{p(p, q)}{(n \cdot h)^4}\] <p><strong>最终最终得到</strong></p> \[D_{GGX}(h) = \frac{\alpha^2}{\pi \left[ (n \cdot h)^2 (\alpha^2 - 1) + 1 \right]^2}\] <h1 id="对于f菲涅尔项的公式由来和解释">对于F菲涅尔项的公式由来和解释</h1> <h2 id="精确-fresnel-方程1823">精确 Fresnel 方程（1823）</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-</pre></td><td class="rouge-code"><pre><span class="err">发明者：</span><span class="n">Augustin</span><span class="o">-</span><span class="n">Jean</span> <span class="n">Fresnel</span><span class="err">（法国物理学家）</span>
-<span class="err">年代：</span>  <span class="mi">1823</span> <span class="err">年</span>
-<span class="err">用途：</span>  <span class="err">光学、物理学</span>
-
-<span class="err">公式：</span>
-  <span class="n">Rs</span> <span class="o">=</span> <span class="o">|</span><span class="n">n</span><span class="err">₁</span><span class="n">cos</span><span class="err">θᵢ</span> <span class="o">-</span> <span class="n">n</span><span class="err">₂</span><span class="n">cos</span><span class="err">θₜ</span><span class="o">|</span><span class="err">²</span>
-       <span class="o">|</span><span class="n">n</span><span class="err">₁</span><span class="n">cos</span><span class="err">θᵢ</span> <span class="o">+</span> <span class="n">n</span><span class="err">₂</span><span class="n">cos</span><span class="err">θₜ</span><span class="o">|</span>
-
-  <span class="n">Rp</span> <span class="o">=</span> <span class="o">|</span><span class="n">n</span><span class="err">₁</span><span class="n">cos</span><span class="err">θₜ</span> <span class="o">-</span> <span class="n">n</span><span class="err">₂</span><span class="n">cos</span><span class="err">θᵢ</span><span class="o">|</span><span class="err">²</span>
-       <span class="o">|</span><span class="n">n</span><span class="err">₁</span><span class="n">cos</span><span class="err">θₜ</span> <span class="o">+</span> <span class="n">n</span><span class="err">₂</span><span class="n">cos</span><span class="err">θᵢ</span><span class="o">|</span>
-
-  <span class="n">R</span> <span class="o">=</span> <span class="p">(</span><span class="n">Rs</span> <span class="o">+</span> <span class="n">Rp</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-
-<span class="err">需要：</span>
-  <span class="n">n</span><span class="err">₁</span> <span class="o">=</span> <span class="err">空气折射率</span> <span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span>
-  <span class="n">n</span><span class="err">₂</span> <span class="o">=</span> <span class="err">材质折射率</span> <span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">.</span><span class="mi">33</span><span class="p">,</span> <span class="p">...)</span>
-  <span class="err">θᵢ</span> <span class="o">=</span> <span class="err">入射角</span>
-  <span class="err">θₜ</span> <span class="o">=</span> <span class="err">折射角（由</span> <span class="n">Snell</span> <span class="err">定律算出）</span>
-  
-<span class="err">特点：</span>
-  <span class="err">✅</span> <span class="err">完全精确</span>
-  <span class="err">✅</span> <span class="err">物理正确</span>
-  <span class="err">❌</span> <span class="err">计算复杂</span>
-  <span class="err">❌</span> <span class="err">需要</span> <span class="n">IOR</span>
-  <span class="err">❌</span> <span class="err">需要</span> <span class="n">Snell</span> <span class="err">定律</span>
-  <span class="err">❌</span> <span class="n">GPU</span> <span class="err">上慢</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="schlick-近似1994">Schlick 近似（1994）</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-</pre></td><td class="rouge-code"><pre><span class="err">发明者：</span><span class="n">Christophe</span> <span class="n">Schlick</span>
-<span class="err">年代：</span>  <span class="mi">1994</span> <span class="err">年</span>
-<span class="err">用途：</span>  <span class="err">实时渲染、游戏</span>
-
-<span class="err">公式：</span>
-  <span class="n">F</span><span class="p">(</span><span class="err">θ</span><span class="p">)</span> <span class="o">=</span> <span class="n">F</span><span class="err">₀</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">F</span><span class="err">₀</span><span class="p">)(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cos</span><span class="err">θ</span><span class="p">)</span><span class="err">⁵</span>
-
-<span class="err">需要：</span>
-  <span class="n">F</span><span class="err">₀</span> <span class="o">=</span> <span class="err">基础反射率（可以从</span> <span class="n">IOR</span> <span class="err">预计算）</span>
-  <span class="n">cos</span><span class="err">θ</span> <span class="o">=</span> <span class="err">角度余弦（一个点积）</span>
-  
-<span class="err">特点：</span>
-  <span class="err">✅</span> <span class="err">简单（一个</span> <span class="n">pow</span><span class="err">）</span>
-  <span class="err">✅</span> <span class="err">快速（适合</span> <span class="n">GPU</span><span class="err">）</span>
-  <span class="err">✅</span> <span class="err">误差小（</span><span class="o">&lt;</span> <span class="mi">1</span><span class="o">%</span><span class="err">）</span>
-  <span class="err">❌</span> <span class="err">不是完全精确</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h1 id="对于g几何遮挡项的公式的由来和解释">对于G几何遮挡项的公式的由来和解释</h1> <p><strong>D</strong> 项说有微表面朝向 h和高光形状，<strong>F</strong> 项说它们会是否反射，但是因为有许多微平面，它们之间反射肯定会有遮挡关系，那么<strong>G</strong>项就是计算遮挡关系</p> <h2 id="公式smith-ggx-1">公式：Smith-GGX</h2> <p><strong>Height-Correlated Smith-GGX（完整版）：</strong></p> \[G_1(m) = \frac{2(n \cdot m)}{(n \cdot m) + \sqrt{\alpha^2 + (1-\alpha^2)(n \cdot m)^2}}\] <p><strong>其中：</strong></p> <ul> <li>m = 方向（可以是 v 或 l）</li> <li>α = 粗糙度参数（= roughness²）</li> </ul> <p><strong>因为原公式计算太过复杂所以有了简化公式：</strong> <strong>Christophe Schlick 提出的近似：</strong></p> \[G_1(m) \approx \frac{n \cdot m}{(n \cdot m)(1-k) + k}\] <p><strong>参数 k 的定义（Schlick 原始）：</strong></p> \[k = \frac{\alpha}{2}\] <p><strong>其中 $\alpha = roughness²$</strong></p> <p><strong>所以：</strong></p> \[k = \frac{\text{roughness}^2}{2}\] <p><strong>但是Schlick 的 k = α/2 在实际使用中有问题，如果粗糙度是0.5，掠射角看的时候偏亮，暗粗糙度变化不符合直觉</strong> <strong>问题：如果直接用 roughness²也就是α</strong> 当 roughness = 0.5（中等粗糙）时：</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-</pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="n">k</span> <span class="o">=</span> <span class="n">roughness</span> <span class="o">*</span> <span class="n">roughness</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// k = 0.125</span>
-<span class="err">掠射角（</span><span class="n">NoV</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="err">）：</span>
-<span class="n">G</span><span class="err">₁</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span> <span class="err">×</span> <span class="mi">0</span><span class="p">.</span><span class="mi">875</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">125</span><span class="p">)</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">47</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>边缘只暗了 53%，看起来不够粗糙，也就是反射还是太过明显</strong></p> <p><strong>Disney 的解决方案（2012）：</strong></p> <p><strong>重新映射 α：</strong></p> \[\alpha_{\text{remapped}} = \frac{\text{roughness} + 1}{2}\] <p><strong>然后：</strong></p> \[k = \frac{\alpha_{\text{remapped}}^2}{2}\] <p><strong>代入：</strong></p> \[k = \frac{\left(\frac{\text{roughness}+1}{2}\right)^2}{2}\] \[= \frac{(\text{roughness}+1)^2}{4 \times 2}\] \[= \frac{(\text{roughness}+1)^2}{8}\] <p><strong>Disney 的重映射：</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-</pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="n">k</span> <span class="o">=</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>  <span class="c1">// k = 0.281</span>
-
-<span class="err">掠射角（</span><span class="n">NoV</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="err">）：</span>
-  <span class="n">G</span><span class="err">₁</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span> <span class="err">×</span> <span class="mi">0</span><span class="p">.</span><span class="mi">719</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">281</span><span class="p">)</span>
-     <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">28</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>边缘暗了 72%，符合”中等粗糙”的预期</strong></p> <p><strong>所以k 的计算（直接光照）：</strong></p> \[k = \frac{(\text{roughness} + 1)^2}{8}\] <p>​<strong>对于环境光K</strong> 直接光（点光源）：</p> <ul> <li>光来自单一方向</li> <li>需要重映射以符合感知</li> <li>k = (α_remapped)² / 2 环境光（IBL）：</li> <li>光来自整个半球</li> <li>已经在预过滤时考虑了分布</li> <li>不需要重映射</li> <li>k = α² / 2（原始 Schlick） <strong>所以环境光K不用变</strong></li> </ul> \[k = \frac{\text{roughness}^2}{2}\] <p><strong>其中可视性遮蔽：</strong></p> <p>\(G_1(v) = \frac{n \cdot v}{(n \cdot v) \cdot (1 - k) + k}\)​</p> <p><strong>其中光线遮蔽：</strong></p> \[G_1(l) = \frac{n \cdot l}{(n \cdot l) \cdot (1 - k) + k}\] <p><strong>那么最终计算结果形式是</strong></p> \[G(l, v, h) = G_1(l) \cdot G_1(v)\] <h2 id="最终结果解释">最终结果解释</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20251227192921.png" alt="图片"/> 这里用乘法表示交集意思是<strong>满足光线能照射到</strong>且<strong>可视性遮蔽是可视的</strong> Smith 的核心假设 独立性假设： Shadowing 和 Masking 相互独立 概率论： P(可见) = P(光线不被挡) × P(视线不被挡) = G₁(l) × G₁(v) \(G(l, v, h) = G_1(l) \cdot G_1(v)\)</p> <h1 id="brdf的归一化分母">BRDF的归一化分母</h1> <ol> <li> <p>因子 <strong>4</strong>： 来源：立体角 Jacobian 变换 从微表面法线 h 到入射方向 l\(dω_h = dω_l / [4(v·h)]\)</p> </li> <li>因子 <strong>(n·l)</strong>： 来源：入射投影 光从 l 方向的有效强度 Lambert 余弦定律</li> <li>因子 <strong>(n·v)</strong>： 来源：出射投影 从 v 方向看的有效面积 Foreshortening 效应</li> </ol> <p><strong>(n·l) 和 (n·v)：</strong> 都是<strong>单位向量</strong>的点积 等于夹角的 cos 值 表示投影比例 代表”损失”或”缩减”</p> <h1 id="移动端的优化specularbrdf">移动端的优化SpecularBRDF</h1> <p><strong>标准的GGX高光计算</strong></p> \[f_{spec}(l, v) = \frac{D(h) \cdot F(v, h) \cdot G(l, v, h)}{4 \cdot (n \cdot l) \cdot (n \cdot v)}\cdot NoL \cdot SpecularColor\] <p><strong>替换几何项</strong></p> \[V(l,v,h)=\frac{G(l,v,h)}{4⋅(n⋅l)⋅(n⋅v)}\] <p><strong>近似</strong>​</p> <p>\(F⋅V≈\frac{1}{LoH_2⋅(roughness+0.5)}\)​</p> <p><strong>最终GGX高光完整公式：</strong></p> \[Specular = D \cdot \frac{1}{LoH^2 \cdot (roughness + 0.5)} \cdot NoL \cdot SpecularColor\] \[D_{GGX}(h) = \frac{\alpha^2}{\pi \left[ (n \cdot h)^2 (\alpha^2 - 1) + 1 \right]^2}\]]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><category term="math"/><summary type="html"><![CDATA[理论支线：PBRSpecular - GGX]]></summary></entry></feed>
+</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="聚光灯阴影性能">聚光灯阴影性能</h2> <p><strong>移动端优化建议：</strong></p> <ul> <li>限制聚光灯数量（≤ 3-5 个）</li> <li>使用较小的 Range</li> <li>避免重叠的聚光灯</li> <li>使用 Light Culling</li> </ul> <p>聚光灯阴影比点光源便宜，但比方向光昂贵：</p> <table> <thead> <tr> <th>光源类型</th> <th>Shadow Maps</th> <th>性能</th> <th>备注</th> </tr> </thead> <tbody> <tr> <td><strong>Directional</strong></td> <td>4 cascades</td> <td>中</td> <td>覆盖整个场景</td> </tr> <tr> <td><strong>Spot</strong></td> <td><strong>1 张</strong></td> <td><strong>好</strong></td> <td>只覆盖锥体</td> </tr> <tr> <td><strong>Point</strong></td> <td>6 张（Cubemap）</td> <td>差</td> <td>6个方向</td> </tr> </tbody> </table> <p><strong>优化建议：</strong></p> <ul> <li>只对主要聚光灯开启阴影</li> <li>使用合适的 Shadow Resolution（512-1024）</li> <li>考虑使用烘焙阴影</li> </ul>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><summary type="html"><![CDATA[理论支线：LightAttenuation 衰减]]></summary></entry><entry><title type="html">GGX_D(H)分布可视化</title><link href="https://xueqingzhe.github.io/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96/" rel="alternate" type="text/html" title="GGX_D(H)分布可视化"/><published>2025-12-27T00:00:00+00:00</published><updated>2025-12-27T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2025/GGX_D(H)%E5%88%86%E5%B8%83%E5%8F%AF%E8%A7%86%E5%8C%96/"><![CDATA[<iframe src="/assets/html/fig3_roughness_comparison.html" width="100%" height="1200px" frameborder="0"> </iframe>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><category term="math"/><summary type="html"><![CDATA[GGX_D(H)分布可视化]]></summary></entry></feed>

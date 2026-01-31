@@ -44,7 +44,18 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tags/";
           },
-        },{id: "post-理论支线-直接光漫反射与ggx高光的混合问题",
+        },{id: "post-lv-3-unity主线-一个简单的pbrshader",
+        
+          title: "Lv.3 Unity主线：一个简单的PBRShader",
+        
+        description: "Lv.3 Unity主线：一个简单的PBRShader",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/Lv.3-Unity%E4%B8%BB%E7%BA%BF-%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84PBRShader/";
+          
+        },
+      },{id: "post-理论支线-直接光漫反射与ggx高光的混合问题",
         
           title: "理论支线：直接光漫反射与GGX高光的混合问题",
         

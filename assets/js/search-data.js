@@ -278,6 +278,11 @@ ninja.data = [{
           description: "ZZZRendering-XingJianYa",
           section: "Projects",handler: () => {
               window.location.href = "/projects/1_project/";
+            },},{id: "projects-urp-pbr",
+          title: 'URP - PBR',
+          description: "基于 Cook-Torrance 模型手写完整 PBR",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/2_project/";
             },},{id: "tutorials-01-blender模型处理",
           title: '01_Blender模型处理',
           description: "01_Blender模型处理",

@@ -2,7 +2,7 @@
 layout: page
 title: URP - PBR
 description: 基于 Cook-Torrance 模型手写完整 PBR 
-img: assets\img\MyPJ\URP_PBR\Pasted image 20260310222758.png
+img: assets/img/MyPJ/URP_PBR/Pasted image 20260310222758.png
 importance: 1
 category: [rendering]
 related_publications: true
@@ -35,31 +35,34 @@ URP管线，不依赖内置函数，从零手写的完整 PBR 渲染管线，基
 # 粗糙度金属度矩阵图
 
 roughness × metallic 参数矩阵，验证 PBR 实现正确性
-![](assets/img/MyPJ/URP_PBR/Pasted image 20260310223319.png)
+![](/assets/img/MyPJ/URP_PBR/Pasted image 20260310223319.png)
 
 # 材质效果
 
 **石头、布料、金属等多种材质效果展示**
-![](assets/img/MyPJ/URP_PBR/Pasted image 20260310224605.png)
+![](/assets/img/MyPJ/URP_PBR/Pasted image 20260310224605.png)
 **单独模型材质效果测试**
-![](assets/img/MyPJ/URP_PBR/PBR材质效果预览-HD.mp4)
+
+<video width="100%" autoplay loop muted playsinline>
+  <source src="/assets/img/MyPJ/URP_PBR/PBR材质效果预览-HD.mp4" type="video/mp4">
+</video>
 
 # POM视差
 
 **实现了基于高度图的视差遮蔽映射，通过动态层数采样模拟表面凹凸的 视差效果，在低面数网格上实现真实的深度感。左图为普通法线贴图， 右图为POM效果。**
-![](assets/img/MyPJ/URP_PBR/Pasted image 20260310234712.png)
+![](/assets/img/MyPJ/URP_PBR/Pasted image 20260310234712.png)
 
 ## 自阴影
 
 **在POM基础上实现光线步进自阴影，凸起部分对相邻区域产生遮蔽， 增强了表面细节的真实感。支持软阴影和阴影强度调节。**
-![](assets/img/MyPJ/URP_PBR/视差自阴影.gif)
+![](/assets/img/MyPJ/URP_PBR/视差自阴影.gif)
 
 ## 视角衰减
 
 **视差随视角衰减**
-![](assets/img/MyPJ/URP_PBR/视差视角衰减 1.gif)
+![](/assets/img/MyPJ/URP_PBR/视差视角衰减 1.gif)
 
 # URP-SSAO
 
 **支持POM效果的SSAO**
-![](assets/img/MyPJ/URP_PBR/URP-SSAO.gif)
+![](/assets/img/MyPJ/URP_PBR/URP-SSAO.gif)

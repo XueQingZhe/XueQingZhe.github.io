@@ -7,6 +7,8 @@ nav: true
 nav_order: 3
 display_categories: [rendering, demo]
 horizontal: false
+images:
+  spotlight: true
 ---
 
 <!-- 页面头部 -->

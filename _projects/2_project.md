@@ -8,6 +8,8 @@ category: [rendering]
 related_publications: true
 images:
   spotlight: true
+toc:
+  sidebar: left # 目录
 ---
 
 URP管线，不依赖内置函数，从零手写的完整 PBR 渲染管线，基于 Cook-Torrance 模型手写完整 PBR 管线，不调用 UniversalFragmentPBR 内置光照函数，所有光照计算均自主实现，便于后续定制和扩展。

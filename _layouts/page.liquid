@@ -37,7 +37,7 @@ layout: default
   document.addEventListener('DOMContentLoaded', function() {
     {% if page.images.spotlight %}
     
-    const selector = 'article img:not([width]):not([style]):not([data-spotlight-converted])';
+    const selector = '.post img:not([data-spotlight-converted])';
     const images = document.querySelectorAll(selector);
     
     if (images.length === 0) return;

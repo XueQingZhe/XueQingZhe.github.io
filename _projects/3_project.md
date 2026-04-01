@@ -2,7 +2,7 @@
 layout: page
 title: Unity-绝区零橘福福
 description: Unity仿绝区零角色渲染——橘福福
-img: assets\img\MyPJ\ZZZJuFuFu\封面.png
+img: assets/img/MyPJ/ZZZJuFuFu/封面.png
 importance: 1
 category: [rendering,unity]
 related_publications: true

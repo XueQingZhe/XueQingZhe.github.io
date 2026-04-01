@@ -283,6 +283,11 @@ ninja.data = [{
           description: "基于 Cook-Torrance 模型手写完整 PBR",
           section: "Projects",handler: () => {
               window.location.href = "/projects/2_project/";
+            },},{id: "projects-unity-绝区零橘福福",
+          title: 'Unity-绝区零橘福福',
+          description: "Unity仿绝区零角色渲染——橘福福",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/3_project/";
             },},{id: "tutorials-01-blender模型处理",
           title: '01_Blender模型处理',
           description: "01_Blender模型处理",

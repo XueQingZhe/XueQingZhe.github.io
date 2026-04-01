@@ -5,7 +5,7 @@ permalink: /projects/
 description: 我的技术作品集
 nav: true
 nav_order: 3
-display_categories: [rendering, demo]
+display_categories: [rendering, 3D Art, Tools, Early Works]
 horizontal: false
 images:
   spotlight: true
@@ -19,7 +19,7 @@ images:
       <i class="fas fa-rocket"></i>
       项目作品集
     </h1>
-    <p class="hero-subtitle">展示我的技术实践与创作</p>
+    <p class="hero-subtitle">Something About Atrist</p>
   </div>
 </div>
 
@@ -35,8 +35,12 @@ images:
         <h2 class="category-title">
           {% if category == "rendering" %}
             <i class="fas fa-paint-brush"></i>
-          {% elsif category == "demo" %}
+          {% elsif category == "3D Art" %}
             <i class="fas fa-cube"></i>
+          {% elsif category == "Tools" %}
+            <i class="fas fa-wrench"></i>
+          {% elsif category == "Early Works" %}
+            <i class="fas fa-seedling"></i>
           {% else %}
             <i class="fas fa-folder-open"></i>
           {% endif %}

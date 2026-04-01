@@ -44,7 +44,18 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tags/";
           },
-        },{id: "post-lv-3-unity主线-一个简单的pbrshader",
+        },{id: "post-平滑法线处理-八面体映射",
+        
+          title: "平滑法线处理 - 八面体映射",
+        
+        description: "平滑法线处理 - 八面体映射",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86-%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84/";
+          
+        },
+      },{id: "post-lv-3-unity主线-一个简单的pbrshader",
         
           title: "Lv.3 Unity主线：一个简单的PBRShader",
         

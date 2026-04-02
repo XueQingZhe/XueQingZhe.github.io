@@ -3,6 +3,8 @@ layout: post
 title: URP - RendererFeature ：ScreenSpaceOutline
 date: 2026-04-02
 description: URP - RendererFeature ：ScreenSpaceOutline
+tags: [unity, shader, rendering]
+categories: [TAMonth04]
 featured: true
 toc:
   sidebar: left

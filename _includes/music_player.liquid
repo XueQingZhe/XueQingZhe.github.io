@@ -1,46 +1,27 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
 <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
 
-<div id="aplayer"></div>
+<div id="aplayer-container">
+  <meting-js
+    server="netease"
+    type="playlist" 
+    id="2072624795"
+    fixed="true" 
+    mini="true"
+    theme="#212121"
+    loop="all"
+    order="list"
+    preload="auto"
+    list-folded="true">
+  </meting-js>
+</div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const musicDir = '/assets/music/';
-    const audioFiles = [];
-    const lrcFiles = {};
-
-    // 1. 先扫描所有文件，分类音频和歌词
-    {% for file in site.static_files %}
-      {% if file.path contains '/assets/music/' %}
-        {% assign ext = file.extname | downcase %}
-        {% if ext == ".lrc" %}
-          lrcFiles['{{ file.basename }}'] = '{{ file.path | relative_url }}';
-        {% elsif ext == ".mp3" or ext == ".flac" or ext == ".m4a" or ext == ".wav" %}
-          audioFiles.push({
-            base: '{{ file.basename }}',
-            path: '{{ file.path | relative_url }}'
-          });
-        {% endif %}
-      {% endif %}
-    {% endfor %}
-
-    // 2. 构建播放列表
-    const playlist = audioFiles.map(audio => ({
-      name: audio.base.split('-')[1] || audio.base, // 尝试自动拆分歌手和歌名
-      artist: audio.base.split('-')[0] || 'Unknown',
-      url: audio.path,
-      lrc: lrcFiles[audio.base] || '', // 如果有同名LRC文件则加载
-      cover: 'https://via.placeholder.com/300?text=Music'
-    }));
-
-    if (playlist.length > 0) {
-      const ap = new APlayer({
-        container: document.getElementById('aplayer'),
-        fixed: true,
-        mini: true,
-        lrcType: 3, // 使用外部 LRC 文件模式
-        audio: playlist
-      });
-    }
-  });
-</script>
+<style>
+  /* 适配 al-folio 的 UI 层级 */
+  .aplayer.aplayer-fixed {
+    z-index: 10000 !important;
+  }
+  /* 如果你觉得默认图标太靠右挡住了返回顶部按钮，可以取消下面注释 */
+  /* .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body { left: 20px !important; } */
+</style>

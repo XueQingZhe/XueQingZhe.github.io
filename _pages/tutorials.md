@@ -705,9 +705,9 @@ nav_order: 5
 <div class="tutorials-hero">
   <h1 class="hero-title">
     <i class="fas fa-graduation-cap"></i>
-    教程系列
+    专题系列文章
   </h1>
-  <p class="hero-subtitle">系统化的技术学习路径，从入门到精通的完整知识体系</p>
+  <p class="hero-subtitle">系列博客文章，按序排列</p>
 </div>
 
 <div class="tutorials-grid">
@@ -783,7 +783,7 @@ nav_order: 5
             <div class="meta-icon">
               <i class="fas fa-book-reader"></i>
             </div>
-            <span>共 <strong>{{ series.chapters.size }}</strong> 节课程</span>
+            <span>共 <strong>{{ series.chapters.size }}</strong> 章</span>
           </div>
           <div class="meta-item">
             <div class="meta-icon">
@@ -798,7 +798,7 @@ nav_order: 5
       
       <!-- 章节列表 -->
       <div class="details-body">
-        <div class="chapter-section-title">课程目录</div>
+        <div class="chapter-section-title">章节目录</div>
         <div class="chapter-list">
           {% for chapter in series.chapters %}
           <a href="{{ series.base_url }}/{{ chapter.file | remove: '.md' }}/" class="chapter-link">

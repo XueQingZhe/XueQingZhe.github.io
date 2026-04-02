@@ -284,9 +284,9 @@ ninja.data = [{
           section: "News",},{id: "news-默认管线转到urp管线",
           title: '默认管线转到URP管线！',
           description: "",
-          section: "News",},{id: "projects-zzzrendering-xingjianya",
-          title: 'ZZZRendering-XingJianYa',
-          description: "ZZZRendering-XingJianYa",
+          section: "News",},{id: "projects-绝区零星见雅",
+          title: '绝区零星见雅',
+          description: "Unity,UE,Blender 仿绝区零角色渲染——星见雅",
           section: "Projects",handler: () => {
               window.location.href = "/projects/1_project/";
             },},{id: "projects-urp-pbr",

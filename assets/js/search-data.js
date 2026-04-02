@@ -44,7 +44,18 @@ ninja.data = [{
           handler: () => {
             window.location.href = "/tags/";
           },
-        },{id: "post-平滑法线处理-八面体映射",
+        },{id: "post-urp-rendererfeature-screenspaceoutline",
+        
+          title: "URP - RendererFeature ：ScreenSpaceOutline",
+        
+        description: "URP - RendererFeature ：ScreenSpaceOutline",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/blog/2026/URP-RendererFeature-ScreenSpaceOutline/";
+          
+        },
+      },{id: "post-平滑法线处理-八面体映射",
         
           title: "平滑法线处理 - 八面体映射",
         

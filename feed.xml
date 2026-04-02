@@ -1,4 +1,476 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2026-04-02T13:13:13+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">平滑法线处理 - 八面体映射</title><link href="https://xueqingzhe.github.io/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86-%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84/" rel="alternate" type="text/html" title="平滑法线处理 - 八面体映射"/><published>2026-04-01T00:00:00+00:00</published><updated>2026-04-01T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86%20-%20%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86-%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84/"><![CDATA[<p>游戏角色（尤其是NPR/卡通渲染）有个经典问题：硬表面的 <strong>split normal</strong>（分裂法线）在描边和阴影计算时会出现接缝。解决方案是额外烘培一套”平滑法线”——但模型的UV1已经用来存贴图坐标了，怎么传进Shader？</p> <h1 id="范数">范数</h1> <p><strong>在处理八面体之前需要先了解范数</strong></p> <h2 id="简单解释">简单解释</h2> <p>简单来说，它是“<strong>长度</strong>”或“<strong>距离</strong>”这一直觉概念在多维向量空间（甚至函数空间）中的一般化定义。 如果你把一个向量想象成空间中的一个点，那么范数就是描述这个点<strong>离原点有多远</strong>，或者这个<strong>向量有多大</strong>的一个数值。</p> <h2 id="范数的类型">范数的类型</h2> <p><strong>这里只介绍两种相关的范数</strong> <strong>L1范数</strong>（曼哈顿距离）： <strong><em>L1范数可以理解为出租车距离，也就是它的距离是由出租车行驶的每段距离相加，也就是各个分量之和</em></strong></p> \[|v| = |x| + |y| + |z|\] <p><strong>L2范数</strong>（欧几里得长度）： <strong><em>L2范数则是接触最多的，比如求两点之间的直线距离，直角三角形求斜边长度</em></strong></p> \[|v| = \sqrt{(x² + y² + z²)}\] <p><strong>在二维中图像表示如下图</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314195935.png" alt=""/> <img src="/assets/img/TAMonth04/Pasted image 20260314133155.png" alt=""/></p> <h1 id="八面体映射原理">八面体映射原理</h1> <h2 id="三维与二维">三维与二维</h2> <p><strong>从二维图到三维，就是加上Z轴，二维图像其实就是八面体的顶视图，这其实就引出一个问题，八面体是上下对称重叠的，那么如果将下半部分，也就是z&lt;0的部分展开，就可以变成一个平面数据，也就可以变相将三维数据存入二维了</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314195819.png" alt=""/></p> <h2 id="三维映射原理">三维映射原理</h2> <p><strong>对于模型的法线向量来说，归一化后它的范围就是一个球范围，那么如果要映射到八面体上，就可以让X和Y分量除以L1范数</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314201825.png" alt=""/></p> <p><strong>对于Z分量，则是另有用途，前面说过八面体上下是重叠，这里就需要使用Z分量进行处理，如果是在下方，那么X分量和Y分量则需要反转或者说折叠</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314201506.png" alt=""/></p> <h3 id="两种理解方法">两种理解方法</h3> <blockquote> <p>从公式入手推导</p> </blockquote> <p><strong>折叠其实就是相对于边界对称，这里则需要先计算点和边界的距离了，也就是点与直线的距离</strong></p> \[d = \frac{|Ax_0 + By_0 + C|}{\sqrt{A^2 + B^2}}\] <p>这里会有四条边界 第一象限（x&gt;0, y&gt;0）： x + y = 1 第二象限（x&lt;0, y&gt;0）： -x + y = 1 第三象限（x&lt;0, y&lt;0）： -x - y = 1 第四象限（x&gt;0, y&lt;0）： x - y = 1 那么原坐标沿着对称线法线方向移动2d，就可以得到对称的点坐标了，因为范围是0~1，从一象限来看，边界法线就是$(1,1)$，归一化后就是$(\frac{1}{\sqrt{2}},\frac{1}{\sqrt{2}})$,对于$\sqrt{A^2 + B^2}$实际上就是边界的长度，也就是$\sqrt{2}$， 假设原坐标为(a,b),那么对称的坐标就是$a-2d *\frac{1}{\sqrt{2}}$,化简之后，会得到变换后的坐标X分量是$(1-b)$ Y分量则是$(1-a)$，因为四条象限的法向量有正负之分，那么最终结果会取决于法向量的个分量的正负，但是这里的法向量正负正好符合象限X,Y的正负，也就是最终表达式是\(x = (1-|b|) * Sign(x)\)\(y = (1-|a|) * Sign(y)\) <img src="/assets/img/TAMonth04/Pasted image 20260314204827.png|897" alt=""/></p> <blockquote> <p>从边界限制条件入手</p> </blockquote> <p>这个约束来自<strong>折叠是镜像</strong>——边界上的点折叠前后位置不变。 取边界上任意一点 $(a,b)$，代入折叠公式后应该得到原点： 要让边界点不动，需要：</p> \[new_x = a\] \[new_y = b\] <table> <tbody> <tr> <td>但边界上点满足 $</td> <td>a</td> <td>+</td> <td>b</td> <td>= 1$，所以可以得到 $$a = (1 -</td> <td>b</td> <td>) * sign(a)$$</td> </tr> </tbody> </table> \[b = 1 - |a| * sign(b)\] <table> <tbody> <tr> <td>折叠后的点必须满足 $</td> <td>new_x</td> <td>+</td> <td>new_y</td> <td>&gt; 1$，即在菱形外侧。验证通过</td> </tr> </tbody> </table> \[|new_x| + |new_y|\] \[= (1 - |b|) + (1 - |a|)\] \[= 2 - (|a| + |b|)\] <h1 id="平滑法线">平滑法线</h1> <p><strong>可以理解为对法线进行权重影响，这个权重来自于角度，一个顶点的法线，由周边的所有三角形法线和经过角度加权之后得到</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314230833.png" alt=""/></p> <h1 id="平滑法线烘焙到uv">平滑法线烘焙到UV</h1> <p><strong>blender脚本</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="zh-CN"><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://xueqingzhe.github.io/feed.xml" rel="self" type="application/atom+xml"/><link href="https://xueqingzhe.github.io/" rel="alternate" type="text/html" hreflang="zh-CN"/><updated>2026-04-02T16:31:12+00:00</updated><id>https://xueqingzhe.github.io/feed.xml</id><title type="html">blank</title><subtitle>Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. </subtitle><entry><title type="html">URP - RendererFeature ：ScreenSpaceOutline</title><link href="https://xueqingzhe.github.io/blog/2026/URP-RendererFeature-ScreenSpaceOutline/" rel="alternate" type="text/html" title="URP - RendererFeature ：ScreenSpaceOutline"/><published>2026-04-02T00:00:00+00:00</published><updated>2026-04-02T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2026/URP%20-%20RendererFeature%20%EF%BC%9AScreenSpaceOutline</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2026/URP-RendererFeature-ScreenSpaceOutline/"><![CDATA[<h1 id="继承类别">继承类别</h1> <p><strong>对于RendererFeature就是C#脚本，不过继承类别是ScriptableRendererFeature和ScriptableRenderPass</strong> <strong>一个负责注册，一个负责执行</strong></p> <div class="language-c# highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre><span class="c1">// ========== Feature 类：负责创建和注册 Pass ==========</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">ScreenSpaceOutline</span> <span class="p">:</span> <span class="n">ScriptableRendererFeature</span>
+<span class="c1">// ========== Pass 类：负责实际渲染指令 ==========</span>
+<span class="k">internal</span> <span class="k">class</span> <span class="nc">ScreenSpaceOutlinePass</span> <span class="p">:</span> <span class="n">ScriptableRenderPass</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h1 id="固定必须实现的函数">固定必须实现的函数</h1> <h2 id="feature类">Feature类：</h2> <ul> <li><code class="language-plaintext highlighter-rouge">Create()</code> — 初始化。只跑一次（或资源变动时重跑）。在这里new Material、new Pass，做一切”准备工作”。</li> <li><code class="language-plaintext highlighter-rouge">AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)</code> — 注册。每帧跑一次。在这里把Pass加入渲染队列，顺便把当帧参数传给Pass。不做初始化，不发GPU指令。</li> </ul> <h2 id="pass类">Pass类：</h2> <ul> <li><code class="language-plaintext highlighter-rouge">Execute(ScriptableRenderContext context, ref RenderingData renderingData)</code> — 每帧到了指定的<code class="language-plaintext highlighter-rouge">renderPassEvent</code>时机就跑。在这里写CommandBuffer，发真正的GPU渲染指令。</li> </ul> <p>这三个不写会报编译错误，因为基类里是<code class="language-plaintext highlighter-rouge">abstract</code>的。</p> <h1 id="feature类-1">Feature类</h1> <h2 id="create">Create()</h2> <h3 id="初始化数据">初始化数据</h3> <p><strong>例如：</strong></p> <div class="language-c# highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre><span class="k">if</span> <span class="p">(</span><span class="n">outlineShader</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span> <span class="c1">// shader 没赋值就跳过</span>
+<span class="n">outlineMaterial</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">Material</span><span class="p">(</span><span class="n">outlineShader</span><span class="p">);</span>
+<span class="n">m_Pass</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ScreenSpaceOutlinePass</span><span class="p">(</span><span class="n">outlineMaterial</span><span class="p">);</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h3 id="指定插入时机">指定插入时机</h3> <p><img src="/assets/img/TAMonth04/Pasted image 20260402221720.png" alt=""/> <strong>除了初始化，还需要指定Feature的插入时机，这个成员是ScriptableRenderPass类下的renderPassEvent</strong></p> <div class="language-c# highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="c1">//控制 Pass 插入渲染队列的时机</span>
+<span class="n">m_Pass</span><span class="p">.</span><span class="n">renderPassEvent</span> <span class="p">=</span> <span class="n">RenderPassEvent</span><span class="p">.</span><span class="n">AfterRenderingTransparents</span><span class="p">;</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <ul> <li>需要深度图 → 至少<code class="language-plaintext highlighter-rouge">AfterRenderingPrePasses</code>之后</li> <li>需要完整场景画面 → <code class="language-plaintext highlighter-rouge">AfterRenderingOpaques</code>之后</li> <li>想让被Bloom等晕染 → <code class="language-plaintext highlighter-rouge">AfterRenderingTransparents</code></li> <li>想让不受后处理影响 → <code class="language-plaintext highlighter-rouge">AfterRenderingPostProcessing</code></li> </ul> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="n">BeforeRendering</span>                 <span class="c1">// 最早，什么都还没渲染</span>
+    <span class="err">↓</span>
+<span class="n">BeforeRenderingShadows</span>          <span class="c1">// Shadow Pass之前</span>
+<span class="n">AfterRenderingShadows</span>           <span class="c1">// Shadow Pass之后</span>
+    <span class="err">↓</span>
+<span class="n">BeforeRenderingPrePasses</span>        <span class="c1">// 深度预Pass之前</span>
+<span class="n">AfterRenderingPrePasses</span>         <span class="c1">// 深度预Pass之后（深度图已可用）</span>
+    <span class="err">↓</span>
+<span class="n">BeforeRenderingGbuffer</span>          <span class="c1">// G-Buffer之前</span>
+<span class="n">AfterRenderingGbuffer</span>           
+    <span class="err">↓</span>
+<span class="n">BeforeRenderingOpaques</span>          <span class="c1">// 不透明物体之前</span>
+<span class="n">AfterRenderingOpaques</span>           <span class="c1">// 不透明物体之后</span>
+    <span class="err">↓</span>
+<span class="n">BeforeRenderingSkybox</span>           <span class="c1">// 天空盒之前</span>
+<span class="n">AfterRenderingSkybox</span>            
+    <span class="err">↓</span>
+<span class="n">BeforeRenderingTransparents</span>     <span class="c1">// 透明物体之前</span>
+<span class="n">AfterRenderingTransparents</span>      <span class="c1">// 透明物体之后 ← 你现在用的</span>
+    <span class="err">↓</span>
+<span class="n">BeforeRenderingPostProcessing</span>   <span class="c1">// 后处理之前</span>
+<span class="n">AfterRenderingPostProcessing</span>    <span class="c1">// 后处理之后</span>
+    <span class="err">↓</span>
+<span class="n">AfterRendering</span>                  <span class="c1">// 最晚</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="addrenderpasses">AddRenderPasses()</h2> <h3 id="传参">传参</h3> <p><strong>每帧把参数写入 material，设渲染队列</strong> <img src="/assets/img/TAMonth04/Pasted image 20260403000337.png" alt=""/></p> <h1 id="pass-类">Pass 类</h1> <h2 id="初始化">初始化</h2> <p><strong>设置参数初始化</strong> <img src="/assets/img/TAMonth04/Pasted image 20260402221634.png" alt=""/></p> <h2 id="execute">Execute()</h2> <p><strong>指定RT和Pass，因为RT不能同时读取和写入，所以要先拷贝</strong> <img src="/assets/img/TAMonth04/Pasted image 20260402223608.png" alt=""/></p> <h1 id="c完整代码">C#完整代码</h1> <div class="language-c# highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+</pre></td><td class="rouge-code"><pre><span class="k">using</span> <span class="nn">UnityEngine</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">UnityEngine.Rendering</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">UnityEngine.Rendering.Universal</span><span class="p">;</span>
+
+<span class="c1">// ========== Feature 类：负责创建和注册 Pass ==========</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">ScreenSpaceOutline</span> <span class="p">:</span> <span class="n">ScriptableRendererFeature</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="n">Shader</span> <span class="n">outlineShader</span><span class="p">;</span>
+    <span class="p">[</span><span class="nf">Range</span><span class="p">(</span><span class="m">0.5f</span><span class="p">,</span> <span class="m">5f</span><span class="p">)]</span> <span class="k">public</span> <span class="kt">float</span> <span class="n">thickness</span> <span class="p">=</span> <span class="m">1f</span><span class="p">;</span>
+    <span class="p">[</span><span class="nf">Range</span><span class="p">(</span><span class="m">0f</span><span class="p">,</span> <span class="m">10f</span><span class="p">)]</span>   <span class="k">public</span> <span class="kt">float</span> <span class="n">_DepthThreshold</span> <span class="p">=</span> <span class="m">0.5f</span><span class="p">;</span>
+    <span class="p">[</span><span class="nf">Range</span><span class="p">(</span><span class="m">0f</span><span class="p">,</span> <span class="m">50f</span><span class="p">)]</span>   <span class="k">public</span> <span class="kt">float</span> <span class="n">_DepthSensitivity</span> <span class="p">=</span> <span class="m">10f</span><span class="p">;</span>
+    <span class="p">[</span><span class="nf">Range</span><span class="p">(</span><span class="m">0f</span><span class="p">,</span> <span class="m">20.0f</span><span class="p">)]</span>   <span class="k">public</span> <span class="kt">float</span> <span class="n">_NormalThreshold</span> <span class="p">=</span> <span class="m">0.5f</span><span class="p">;</span>
+    <span class="k">public</span> <span class="n">Color</span> <span class="n">outlineColor</span> <span class="p">=</span> <span class="n">Color</span><span class="p">.</span><span class="n">black</span><span class="p">;</span>
+
+    <span class="k">private</span> <span class="n">Material</span> <span class="n">outlineMaterial</span><span class="p">;</span>
+    <span class="k">private</span> <span class="n">ScreenSpaceOutlinePass</span> <span class="n">m_Pass</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">Create</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">outlineShader</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span> <span class="c1">// shader 没赋值就跳过，不崩</span>
+        <span class="n">outlineMaterial</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">Material</span><span class="p">(</span><span class="n">outlineShader</span><span class="p">);</span>
+        <span class="n">m_Pass</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ScreenSpaceOutlinePass</span><span class="p">(</span><span class="n">outlineMaterial</span><span class="p">);</span>
+        <span class="c1">//控制 Pass 插入渲染队列的时机</span>
+        <span class="n">m_Pass</span><span class="p">.</span><span class="n">renderPassEvent</span> <span class="p">=</span> <span class="n">RenderPassEvent</span><span class="p">.</span><span class="n">AfterRenderingTransparents</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">AddRenderPasses</span><span class="p">(</span><span class="n">ScriptableRenderer</span> <span class="n">renderer</span><span class="p">,</span> <span class="k">ref</span> <span class="n">RenderingData</span> <span class="n">renderingData</span><span class="p">)</span>
+    <span class="p">{</span>   
+        <span class="k">if</span> <span class="p">(</span><span class="n">m_Pass</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+        <span class="c1">// 每帧把参数写入 material</span>
+        <span class="n">outlineMaterial</span><span class="p">.</span><span class="nf">SetFloat</span><span class="p">(</span><span class="s">"_OutlineThickness"</span><span class="p">,</span> <span class="n">thickness</span><span class="p">);</span>
+        <span class="n">outlineMaterial</span><span class="p">.</span><span class="nf">SetFloat</span><span class="p">(</span><span class="s">"_DepthThreshold"</span><span class="p">,</span> <span class="n">_DepthThreshold</span><span class="p">);</span>
+        <span class="n">outlineMaterial</span><span class="p">.</span><span class="nf">SetFloat</span><span class="p">(</span><span class="s">"_DepthSensitivity"</span><span class="p">,</span> <span class="n">_DepthSensitivity</span><span class="p">);</span>
+        <span class="n">outlineMaterial</span><span class="p">.</span><span class="nf">SetFloat</span><span class="p">(</span><span class="s">"_NormalThreshold"</span><span class="p">,</span> <span class="n">_NormalThreshold</span><span class="p">);</span>
+        <span class="n">outlineMaterial</span><span class="p">.</span><span class="nf">SetColor</span><span class="p">(</span><span class="s">"_OutlineColor"</span><span class="p">,</span> <span class="n">outlineColor</span><span class="p">);</span>
+        <span class="c1">//分配RT</span>
+        <span class="n">m_Pass</span><span class="p">.</span><span class="nf">Setup</span><span class="p">(</span><span class="n">renderer</span><span class="p">.</span><span class="n">cameraColorTarget</span><span class="p">);</span>
+        <span class="c1">//加入渲染队列</span>
+        <span class="n">renderer</span><span class="p">.</span><span class="nf">EnqueuePass</span><span class="p">(</span><span class="n">m_Pass</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// ========== Pass 类：负责实际渲染指令 ==========</span>
+<span class="k">internal</span> <span class="k">class</span> <span class="nc">ScreenSpaceOutlinePass</span> <span class="p">:</span> <span class="n">ScriptableRenderPass</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="n">Material</span> <span class="n">material</span><span class="p">;</span>
+    <span class="k">private</span> <span class="n">RenderTargetIdentifier</span> <span class="n">cameraColorTarget</span><span class="p">;</span>
+
+    <span class="k">public</span> <span class="nf">ScreenSpaceOutlinePass</span><span class="p">(</span><span class="n">Material</span> <span class="n">mat</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">material</span> <span class="p">=</span> <span class="n">mat</span><span class="p">;</span>
+        
+        <span class="c1">//开启法线</span>
+        <span class="c1">//this.requiresIntermediateTexture = true;</span>
+        <span class="c1">// 告诉渲染管线此 Pass 需要颜色信息</span>
+        <span class="nf">ConfigureInput</span><span class="p">(</span><span class="n">ScriptableRenderPassInput</span><span class="p">.</span><span class="n">Color</span><span class="p">);</span>
+        <span class="nf">ConfigureInput</span><span class="p">(</span><span class="n">ScriptableRenderPassInput</span><span class="p">.</span><span class="n">Normal</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">void</span> <span class="nf">Setup</span><span class="p">(</span><span class="n">RenderTargetIdentifier</span> <span class="n">colorTarget</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">cameraColorTarget</span> <span class="p">=</span> <span class="n">colorTarget</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">override</span> <span class="k">void</span> <span class="nf">Execute</span><span class="p">(</span><span class="n">ScriptableRenderContext</span> <span class="n">context</span><span class="p">,</span> <span class="k">ref</span> <span class="n">RenderingData</span> <span class="n">renderingData</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">CommandBuffer</span> <span class="n">cmd</span> <span class="p">=</span> <span class="n">CommandBufferPool</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="s">"ScreenSpaceOutlinePass"</span><span class="p">);</span>
+
+        <span class="n">RenderTextureDescriptor</span> <span class="n">desc</span> <span class="p">=</span> <span class="n">renderingData</span><span class="p">.</span><span class="n">cameraData</span><span class="p">.</span><span class="n">cameraTargetDescriptor</span><span class="p">;</span>
+        <span class="c1">//申请不带深度的RT</span>
+        <span class="n">desc</span><span class="p">.</span><span class="n">depthBufferBits</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span>
+        <span class="c1">//申请临时RT</span>
+        <span class="n">cmd</span><span class="p">.</span><span class="nf">GetTemporaryRT</span><span class="p">(</span><span class="n">Shader</span><span class="p">.</span><span class="nf">PropertyToID</span><span class="p">(</span><span class="s">"_TempRT"</span><span class="p">),</span> <span class="n">desc</span><span class="p">);</span>
+        <span class="c1">//拷贝A-&gt;b</span>
+        <span class="n">cmd</span><span class="p">.</span><span class="nf">Blit</span><span class="p">(</span><span class="n">cameraColorTarget</span><span class="p">,</span> <span class="n">Shader</span><span class="p">.</span><span class="nf">PropertyToID</span><span class="p">(</span><span class="s">"_TempRT"</span><span class="p">));</span>
+
+        <span class="c1">// 把场景颜色显式绑定到 Pass的_MainTex</span>
+        <span class="n">cmd</span><span class="p">.</span><span class="nf">SetGlobalTexture</span><span class="p">(</span><span class="s">"_MainTex"</span><span class="p">,</span> <span class="n">Shader</span><span class="p">.</span><span class="nf">PropertyToID</span><span class="p">(</span><span class="s">"_TempRT"</span><span class="p">));</span>
+
+        <span class="c1">//Pass处理_TempRT后在拷贝回去</span>
+        <span class="n">cmd</span><span class="p">.</span><span class="nf">Blit</span><span class="p">(</span><span class="n">Shader</span><span class="p">.</span><span class="nf">PropertyToID</span><span class="p">(</span><span class="s">"_TempRT"</span><span class="p">),</span> <span class="n">cameraColorTarget</span><span class="p">,</span> <span class="n">material</span><span class="p">);</span>
+
+        <span class="c1">//释放内存</span>
+        <span class="n">cmd</span><span class="p">.</span><span class="nf">ReleaseTemporaryRT</span><span class="p">(</span><span class="n">Shader</span><span class="p">.</span><span class="nf">PropertyToID</span><span class="p">(</span><span class="s">"_TempRT"</span><span class="p">));</span>
+        
+        <span class="c1">//执行</span>
+        <span class="n">context</span><span class="p">.</span><span class="nf">ExecuteCommandBuffer</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+        <span class="c1">//释放内存</span>
+        <span class="n">CommandBufferPool</span><span class="p">.</span><span class="nf">Release</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h1 id="描边pass">描边Pass</h1> <p><strong>这里使用Sobel算子来计算，开销还是比较大的，可以换成其它算子</strong> <img src="/assets/img/TAMonth04/Pasted image 20260403000428.png" alt=""/></p> <h2 id="场景深度描边">场景深度描边</h2> <p><strong>正常情况下，如果阈值固定，深度计算出的描边会有瑕疵，过小平面会有问题</strong> <img src="/assets/img/TAMonth04/Pasted image 20260403000556.png" alt=""/> <strong>过大，近处描边则会缺失</strong> <img src="/assets/img/TAMonth04/Pasted image 20260403000907.png" alt=""/> <strong>这里使用深度进行适当放大阈值，可以较好解决这个问题</strong> <img src="/assets/img/TAMonth04/Pasted image 20260403000922.png" alt=""/></p> <h2 id="场景法线描边">场景法线描边</h2> <p><strong>至于细节方面使用场景法线描边进行混合，阈值小的话还是比较乱的</strong> <img src="/assets/img/TAMonth04/Pasted image 20260403001030.png" alt=""/></p> <h2 id="pass完整代码">Pass完整代码</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+</pre></td><td class="rouge-code"><pre><span class="n">Shader</span> <span class="s">"Hidden/ScreenSpaceOutline"</span>
+<span class="p">{</span>
+    <span class="n">SubShader</span>
+    <span class="p">{</span>
+        <span class="n">Tags</span> <span class="p">{</span> <span class="s">"RenderType"</span> <span class="o">=</span> <span class="s">"Opaque"</span> <span class="s">"RenderPipeline"</span> <span class="o">=</span> <span class="s">"UniversalPipeline"</span> <span class="p">}</span>
+        <span class="n">Cull</span> <span class="n">Off</span> <span class="n">ZWrite</span> <span class="n">Off</span> <span class="n">ZTest</span> <span class="n">Always</span>
+
+        <span class="n">Pass</span>
+        <span class="p">{</span>
+            <span class="n">HLSLPROGRAM</span>
+            <span class="cp">#pragma vertex vert
+</span>            <span class="cp">#pragma fragment frag
+</span>            <span class="cp">#include</span> <span class="cpf">"Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"</span><span class="cp">
+</span>            <span class="cp">#include</span> <span class="cpf">"Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareNormalsTexture.hlsl"</span><span class="cp">
+</span>
+            <span class="k">struct</span> <span class="n">Attributes</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">positionOS</span> <span class="o">:</span> <span class="n">POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">uv</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+            <span class="p">};</span>
+
+            <span class="k">struct</span> <span class="n">Varyings</span>
+            <span class="p">{</span>
+                <span class="n">float4</span> <span class="n">positionHCS</span> <span class="o">:</span> <span class="n">SV_POSITION</span><span class="p">;</span>
+                <span class="n">float2</span> <span class="n">uv</span> <span class="o">:</span> <span class="n">TEXCOORD0</span><span class="p">;</span>
+            <span class="p">};</span>
+
+            <span class="n">TEXTURE2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">);</span>
+            <span class="n">SAMPLER</span><span class="p">(</span><span class="n">sampler_MainTex</span><span class="p">);</span>
+
+            <span class="c1">// 描边参数</span>
+            <span class="kt">float</span> <span class="n">_OutlineThickness</span><span class="p">;</span>     <span class="c1">// 采样偏移距离（像素单位）</span>
+            <span class="kt">float</span> <span class="n">_DepthThreshold</span><span class="p">;</span>       <span class="c1">// 深度边缘判定阈值</span>
+            <span class="kt">float</span> <span class="n">_DepthSensitivity</span><span class="p">;</span>     <span class="c1">// 深度灵敏度</span>
+            <span class="kt">float</span> <span class="n">_NormalThreshold</span><span class="p">;</span>      <span class="c1">// 法线边缘判定阈值</span>
+            <span class="n">float4</span> <span class="n">_OutlineColor</span><span class="p">;</span>        <span class="c1">// 描边颜色</span>
+
+            <span class="n">Varyings</span> <span class="n">vert</span><span class="p">(</span><span class="n">Attributes</span> <span class="n">input</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="n">Varyings</span> <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">Varyings</span><span class="p">)</span><span class="mi">0</span><span class="p">;</span>
+                <span class="n">output</span><span class="p">.</span><span class="n">positionHCS</span> <span class="o">=</span> <span class="n">TransformObjectToHClip</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">positionOS</span><span class="p">);</span>
+                <span class="n">output</span><span class="p">.</span><span class="n">uv</span> <span class="o">=</span> <span class="n">input</span><span class="p">.</span><span class="n">uv</span><span class="p">;</span>
+                <span class="k">return</span> <span class="n">output</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="c1">// 采样深度并线性化</span>
+            <span class="kt">float</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">float2</span> <span class="n">uv</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="kt">float</span> <span class="n">rawDepth</span> <span class="o">=</span> <span class="n">SampleSceneDepth</span><span class="p">(</span><span class="n">uv</span><span class="p">);</span>
+                <span class="k">return</span> <span class="n">LinearEyeDepth</span><span class="p">(</span><span class="n">rawDepth</span><span class="p">,</span> <span class="n">_ZBufferParams</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="c1">//采样场景法线</span>
+            <span class="n">float3</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">float2</span> <span class="n">uv</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="n">SampleSceneNormals</span><span class="p">(</span><span class="n">uv</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="n">half4</span> <span class="n">frag</span><span class="p">(</span><span class="n">Varyings</span> <span class="n">input</span><span class="p">)</span> <span class="o">:</span> <span class="n">SV_Target</span>
+            <span class="p">{</span>
+                <span class="n">float2</span> <span class="n">texelSize</span> <span class="o">=</span> <span class="n">_OutlineThickness</span> <span class="o">/</span> <span class="n">_ScreenParams</span><span class="p">.</span><span class="n">xy</span><span class="p">;</span>
+                
+                <span class="c1">//默认深度</span>
+                <span class="kt">float</span> <span class="n">dBias</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span><span class="p">);</span>
+                <span class="c1">// 随着深度增加，允许的阈值应当变大，防止远景产生过多线段</span>
+                <span class="kt">float</span> <span class="n">depthThreshold</span> <span class="o">=</span> <span class="n">_DepthThreshold</span> <span class="o">*</span> <span class="n">dBias</span> <span class="o">*</span> <span class="n">_DepthSensitivity</span><span class="p">;</span>
+
+                <span class="c1">// Sobel 算子采样 8 邻域深度</span>
+                <span class="kt">float</span> <span class="n">d0</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">d1</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">d2</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">d3</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">d4</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">d5</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>  <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">d6</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span>  <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="kt">float</span> <span class="n">d7</span> <span class="o">=</span> <span class="n">SampleDepth</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span>  <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+
+                <span class="c1">// Sobel X 和 Y 方向梯度</span>
+                <span class="kt">float</span> <span class="n">sobelX</span> <span class="o">=</span> <span class="o">-</span><span class="n">d0</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">d3</span> <span class="o">-</span> <span class="n">d5</span> <span class="o">+</span> <span class="n">d2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">d4</span> <span class="o">+</span> <span class="n">d7</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">sobelY</span> <span class="o">=</span> <span class="o">-</span><span class="n">d0</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">d1</span> <span class="o">-</span> <span class="n">d2</span> <span class="o">+</span> <span class="n">d5</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">d6</span> <span class="o">+</span> <span class="n">d7</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">depthEdge</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">sobelX</span> <span class="o">*</span> <span class="n">sobelX</span> <span class="o">+</span> <span class="n">sobelY</span> <span class="o">*</span> <span class="n">sobelY</span><span class="p">);</span>
+
+
+                <span class="c1">// 法线Sobel采样8邻域</span>
+                <span class="n">float3</span> <span class="n">n0</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">n1</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">n3</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">n4</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">n5</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">n6</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+                <span class="n">float3</span> <span class="n">n7</span> <span class="o">=</span> <span class="n">SampleNormal</span><span class="p">(</span><span class="n">input</span><span class="p">.</span><span class="n">uv</span> <span class="o">+</span> <span class="n">float2</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">texelSize</span><span class="p">);</span>
+
+                <span class="n">float3</span> <span class="n">normalSobelX</span> <span class="o">=</span> <span class="o">-</span><span class="n">n0</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">n3</span> <span class="o">-</span> <span class="n">n5</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n4</span> <span class="o">+</span> <span class="n">n7</span><span class="p">;</span>
+                <span class="n">float3</span> <span class="n">normalSobelY</span> <span class="o">=</span> <span class="o">-</span><span class="n">n0</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">n1</span> <span class="o">-</span> <span class="n">n2</span> <span class="o">+</span> <span class="n">n5</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n6</span> <span class="o">+</span> <span class="n">n7</span><span class="p">;</span>
+                <span class="kt">float</span> <span class="n">normalEdge</span> <span class="o">=</span> <span class="n">length</span><span class="p">(</span><span class="n">normalSobelX</span><span class="p">)</span> <span class="o">+</span> <span class="n">length</span><span class="p">(</span><span class="n">normalSobelY</span><span class="p">);</span>
+
+                <span class="c1">// 深度和法线边缘合并</span>
+                <span class="kt">float</span> <span class="n">edge</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">step</span><span class="p">(</span><span class="n">depthThreshold</span><span class="p">,</span> <span class="n">depthEdge</span><span class="p">),</span> <span class="n">step</span><span class="p">(</span><span class="n">_NormalThreshold</span><span class="p">,</span> <span class="n">normalEdge</span><span class="p">));</span>
+
+                <span class="c1">//float edge = step(_DepthThreshold, depthEdge);</span>
+                <span class="c1">// 采样原始画面颜色</span>
+                <span class="n">half4</span> <span class="n">sceneColor</span> <span class="o">=</span> <span class="n">SAMPLE_TEXTURE2D</span><span class="p">(</span><span class="n">_MainTex</span><span class="p">,</span> <span class="n">sampler_MainTex</span><span class="p">,</span> <span class="n">input</span><span class="p">.</span><span class="n">uv</span><span class="p">);</span>
+
+                <span class="c1">// 超过阈值的地方叠加描边颜色</span>
+                <span class="kt">float</span> <span class="n">outline</span> <span class="o">=</span> <span class="n">edge</span><span class="p">;</span>
+                <span class="k">return</span> <span class="n">lerp</span><span class="p">(</span><span class="n">sceneColor</span><span class="p">,</span> <span class="n">_OutlineColor</span><span class="p">,</span> <span class="n">outline</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">ENDHLSL</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div> <h1 id="使用方法">使用方法</h1> <p><strong>找到URP设置指定上去就行</strong> <img src="/assets/img/TAMonth04/Pasted image 20260403001322.png" alt=""/></p>]]></content><author><name></name></author><summary type="html"><![CDATA[URP - RendererFeature ：ScreenSpaceOutline]]></summary></entry><entry><title type="html">平滑法线处理 - 八面体映射</title><link href="https://xueqingzhe.github.io/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86-%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84/" rel="alternate" type="text/html" title="平滑法线处理 - 八面体映射"/><published>2026-04-01T00:00:00+00:00</published><updated>2026-04-01T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86%20-%20%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86-%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84/"><![CDATA[<p>游戏角色（尤其是NPR/卡通渲染）有个经典问题：硬表面的 <strong>split normal</strong>（分裂法线）在描边和阴影计算时会出现接缝。解决方案是额外烘培一套”平滑法线”——但模型的UV1已经用来存贴图坐标了，怎么传进Shader？</p> <h1 id="范数">范数</h1> <p><strong>在处理八面体之前需要先了解范数</strong></p> <h2 id="简单解释">简单解释</h2> <p>简单来说，它是“<strong>长度</strong>”或“<strong>距离</strong>”这一直觉概念在多维向量空间（甚至函数空间）中的一般化定义。 如果你把一个向量想象成空间中的一个点，那么范数就是描述这个点<strong>离原点有多远</strong>，或者这个<strong>向量有多大</strong>的一个数值。</p> <h2 id="范数的类型">范数的类型</h2> <p><strong>这里只介绍两种相关的范数</strong> <strong>L1范数</strong>（曼哈顿距离）： <strong><em>L1范数可以理解为出租车距离，也就是它的距离是由出租车行驶的每段距离相加，也就是各个分量之和</em></strong></p> \[|v| = |x| + |y| + |z|\] <p><strong>L2范数</strong>（欧几里得长度）： <strong><em>L2范数则是接触最多的，比如求两点之间的直线距离，直角三角形求斜边长度</em></strong></p> \[|v| = \sqrt{(x² + y² + z²)}\] <p><strong>在二维中图像表示如下图</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314195935.png" alt=""/> <img src="/assets/img/TAMonth04/Pasted image 20260314133155.png" alt=""/></p> <h1 id="八面体映射原理">八面体映射原理</h1> <h2 id="三维与二维">三维与二维</h2> <p><strong>从二维图到三维，就是加上Z轴，二维图像其实就是八面体的顶视图，这其实就引出一个问题，八面体是上下对称重叠的，那么如果将下半部分，也就是z&lt;0的部分展开，就可以变成一个平面数据，也就可以变相将三维数据存入二维了</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314195819.png" alt=""/></p> <h2 id="三维映射原理">三维映射原理</h2> <p><strong>对于模型的法线向量来说，归一化后它的范围就是一个球范围，那么如果要映射到八面体上，就可以让X和Y分量除以L1范数</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314201825.png" alt=""/></p> <p><strong>对于Z分量，则是另有用途，前面说过八面体上下是重叠，这里就需要使用Z分量进行处理，如果是在下方，那么X分量和Y分量则需要反转或者说折叠</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314201506.png" alt=""/></p> <h3 id="两种理解方法">两种理解方法</h3> <blockquote> <p>从公式入手推导</p> </blockquote> <p><strong>折叠其实就是相对于边界对称，这里则需要先计算点和边界的距离了，也就是点与直线的距离</strong></p> \[d = \frac{|Ax_0 + By_0 + C|}{\sqrt{A^2 + B^2}}\] <p>这里会有四条边界 第一象限（x&gt;0, y&gt;0）： x + y = 1 第二象限（x&lt;0, y&gt;0）： -x + y = 1 第三象限（x&lt;0, y&lt;0）： -x - y = 1 第四象限（x&gt;0, y&lt;0）： x - y = 1 那么原坐标沿着对称线法线方向移动2d，就可以得到对称的点坐标了，因为范围是0~1，从一象限来看，边界法线就是$(1,1)$，归一化后就是$(\frac{1}{\sqrt{2}},\frac{1}{\sqrt{2}})$,对于$\sqrt{A^2 + B^2}$实际上就是边界的长度，也就是$\sqrt{2}$， 假设原坐标为(a,b),那么对称的坐标就是$a-2d *\frac{1}{\sqrt{2}}$,化简之后，会得到变换后的坐标X分量是$(1-b)$ Y分量则是$(1-a)$，因为四条象限的法向量有正负之分，那么最终结果会取决于法向量的个分量的正负，但是这里的法向量正负正好符合象限X,Y的正负，也就是最终表达式是\(x = (1-|b|) * Sign(x)\)\(y = (1-|a|) * Sign(y)\) <img src="/assets/img/TAMonth04/Pasted image 20260314204827.png|897" alt=""/></p> <blockquote> <p>从边界限制条件入手</p> </blockquote> <p>这个约束来自<strong>折叠是镜像</strong>——边界上的点折叠前后位置不变。 取边界上任意一点 $(a,b)$，代入折叠公式后应该得到原点： 要让边界点不动，需要：</p> \[new_x = a\] \[new_y = b\] <table> <tbody> <tr> <td>但边界上点满足 $</td> <td>a</td> <td>+</td> <td>b</td> <td>= 1$，所以可以得到 $$a = (1 -</td> <td>b</td> <td>) * sign(a)$$</td> </tr> </tbody> </table> \[b = 1 - |a| * sign(b)\] <table> <tbody> <tr> <td>折叠后的点必须满足 $</td> <td>new_x</td> <td>+</td> <td>new_y</td> <td>&gt; 1$，即在菱形外侧。验证通过</td> </tr> </tbody> </table> \[|new_x| + |new_y|\] \[= (1 - |b|) + (1 - |a|)\] \[= 2 - (|a| + |b|)\] <h1 id="平滑法线">平滑法线</h1> <p><strong>可以理解为对法线进行权重影响，这个权重来自于角度，一个顶点的法线，由周边的所有三角形法线和经过角度加权之后得到</strong> <img src="/assets/img/TAMonth04/Pasted image 20260314230833.png" alt=""/></p> <h1 id="平滑法线烘焙到uv">平滑法线烘焙到UV</h1> <p><strong>blender脚本</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
 2
 3
 4
@@ -2234,228 +2706,4 @@
 2
 </pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="n">distanceSqr</span> <span class="o">=</span> <span class="n">distance</span> <span class="o">*</span> <span class="n">distance</span><span class="p">;</span>
 <span class="kt">float</span> <span class="n">physicalAttenuation</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="n">max</span><span class="p">(</span><span class="n">distanceSqr</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span><span class="p">);</span>
-</pre></td></tr></tbody></table></code></pre></div> </div> <h2 id="伽马空间下的衰减补偿调整">伽马空间下的衰减补偿调整</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20260103174926.png" alt=""/> <strong>对于如果直接在Gamma Space下工作，直接使用物理衰减会导致过暗，因为Gamma Space相当于我们最终看到的效果，但是如果是渲染器渲染到屏幕最后还是会进行伽马矫正一次，那么渲染图像就会偏暗</strong> <strong>正确的物理衰减是</strong></p> </li> </ul> \[I = \frac{1.0}{d^2}\] <p><strong>伽马矫正就导致成了</strong></p> \[I = (\frac{1.0}{d^{2}})^{2.2}\] <p><strong>为了补偿，可以使用不正确的线性衰减</strong></p> \[I = \frac{1.0}{d}\] <p><strong>这样矫正后结果是</strong></p> \[I = (\frac{1.0}{d})^{2.2}\approx\frac{1.0}{d^2}\] <p><strong>这和正确的物理衰减会更加接近</strong></p> <p><strong>对于伽马空间的补偿方式其实可以忽略，因为现在游戏引擎都是使用线性空间工作，而不是伽马空间</strong></p> <h2 id="线性空间处理">线性空间处理</h2> <p><strong>如果是在线性空间下工作，可以直接使用符合物理正确的衰减公式，不需要管其它，渲染到屏幕上最终会自动进行伽马矫正</strong></p>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><summary type="html"><![CDATA[理论支线：Gamma Correction 伽马校正]]></summary></entry><entry><title type="html">理论支线：LightAttenuation 衰减</title><link href="https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-LightAttenuation-%E8%A1%B0%E5%87%8F/" rel="alternate" type="text/html" title="理论支线：LightAttenuation 衰减"/><published>2026-01-03T00:00:00+00:00</published><updated>2026-01-03T00:00:00+00:00</updated><id>https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF%EF%BC%9ALightAttenuation%20%E8%A1%B0%E5%87%8F</id><content type="html" xml:base="https://xueqingzhe.github.io/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-LightAttenuation-%E8%A1%B0%E5%87%8F/"><![CDATA[<h1 id="point-lights点光源">Point lights  点光源</h1> <h2 id="概述">概述</h2> <p>点光源的距离衰减控制了光照强度如何随距离变化。现代游戏引擎主要使用两种方法：</p> <ul> <li><strong>经典三参数公式</strong>（已过时，仅用于教学）</li> <li><strong>物理衰减 + 窗口函数</strong>（现代主流，Unity/UE使用）</li> </ul> <h2 id="经典三参数衰减公式历史方法">经典三参数衰减公式（历史方法）</h2> <p>⚠️ <strong>注意：现代引擎（Unity URP/HDRP、Unreal Engine）已不再使用此公式。</strong> <img src="/assets/img/TAMonth01/Pasted image 20251231195524.png" alt=""/> \(\begin{equation} F_{att} = \frac{1.0}{K_c + K_l * d + K_q * d^2} \end{equation}\)</p> <h2 id="常数项-k_c">常数项 $K_c$</h2> <p><strong>$K_c$ = 1.0</strong>，通常设置为 1.0 <strong>作用</strong>：防止分母为0，确保在距离为0时不会得到无穷大的亮度。</p> <blockquote> <p><strong>为什么是1.0？</strong></p> </blockquote> <p><strong>当 d = 0 时：</strong> Fatt = 1.0 / (1.0 + 0 + 0) = 1.0 意味着在光源位置，衰减系数为1（没有衰减）</p> <p><strong>如果 $K_c &lt; 1$，比如 0.5：</strong> 当 d = 0 时： Fatt = 1.0 / 0.5 = 2.0 ❌ 这会让光源位置的亮度增强2倍，不符合物理！</p> <h2 id="线性项-k_l">线性项 $K_l$</h2> <p>典型值：0.09, 0.07, 0.045 等 Kl = 0.09 <strong>作用</strong>：提供<strong>中等距离</strong>的线性衰减。 <strong>效果</strong>： 距离 d = 5: 线性贡献 = 0.09 * 5 = 0.45</p> <h2 id="二次项-k_q">二次项 $K_q$</h2> <p>典型值：0.032, 0.017, 0.0075 等 Kq = 0.032 <strong>作用</strong>：提供<strong>远距离</strong>的快速衰减。 距离 d = 10: 二次贡献 = 0.032 <em>10² = 3.2 距离 d = 20: 二次贡献 = 0.032</em> 20² = 12.8 <strong>关键特性</strong>：</p> <ul> <li><strong>距离小时</strong>：$d^2$ 很小，二次项贡献小</li> <li><strong>距离大时</strong>：$d^2$ 急剧增大，二次项主导衰减</li> </ul> <h2 id="设计取值思路">设计取值思路</h2> <h3 id="方法1基于目标距离反推参数">方法1：基于目标距离反推参数</h3> <p><strong>核心思路</strong> <strong>先确定你想要的”光照范围”，然后反推参数。</strong></p> <p>假设你想要光源在距离 <code class="language-plaintext highlighter-rouge">d = 50</code> 时衰减到某个阈值（比如5%亮度），可以这样计算：</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-</pre></td><td class="rouge-code"><pre><span class="err">目标：在</span> <span class="n">d</span> <span class="o">=</span> <span class="mi">50</span> <span class="err">时，</span><span class="n">Fatt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mo">05</span>
-
-<span class="mi">0</span><span class="p">.</span><span class="mo">05</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Kc</span> <span class="o">+</span> <span class="n">Kl</span> <span class="o">*</span> <span class="mi">50</span> <span class="o">+</span> <span class="n">Kq</span> <span class="o">*</span> <span class="mi">50</span><span class="err">²</span><span class="p">)</span>
-<span class="mi">0</span><span class="p">.</span><span class="mo">05</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span><span class="n">Kc</span> <span class="o">+</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span>
-
-<span class="err">反推：</span>
-<span class="n">Kc</span> <span class="o">+</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">20</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p>但这是<strong>一个方程，三个未知数</strong>，所以需要额外约束。</p> <h4 id="常用约束条件">常用约束条件</h4> <h5 id="约束1固定-kc--10">约束1：固定 Kc = 1.0</h5> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-</pre></td><td class="rouge-code"><pre><span class="err">理由：保证在光源位置（</span><span class="n">d</span><span class="o">=</span><span class="mi">0</span><span class="err">）亮度为</span><span class="mi">100</span><span class="o">%</span>
-<span class="err">简化方程：</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">20</span>
-         <span class="err">→</span> <span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">19</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h5 id="约束2定义半强度距离">约束2：定义”半强度距离”</h5> <p>假设你希望在 <code class="language-plaintext highlighter-rouge">d = 13</code> 时亮度衰减到50%：</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-</pre></td><td class="rouge-code"><pre><span class="mi">0</span><span class="p">.</span><span class="mi">5</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">13</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span>
-<span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">13</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="mi">13</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">1</span>  <span class="p">...</span> <span class="p">(</span><span class="err">方程</span><span class="n">A</span><span class="p">)</span>
-
-<span class="err">同时满足范围约束：</span>
-<span class="mi">50</span><span class="o">*</span><span class="n">Kl</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">19</span>  <span class="p">...</span> <span class="p">(</span><span class="err">方程</span><span class="n">B</span><span class="p">)</span>
-
-<span class="err">解这个二元一次方程组：</span>
-<span class="err">从</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">:</span> <span class="n">Kl</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span> <span class="o">/</span> <span class="mi">13</span>
-<span class="err">代入</span><span class="p">(</span><span class="n">B</span><span class="p">)</span><span class="o">:</span> <span class="mi">50</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">169</span><span class="o">*</span><span class="n">Kq</span><span class="p">)</span><span class="o">/</span><span class="mi">13</span> <span class="o">+</span> <span class="mi">2500</span><span class="o">*</span><span class="n">Kq</span> <span class="o">=</span> <span class="mi">19</span>
-        <span class="p">...</span>
-<span class="err">得到：</span><span class="n">Kq</span> <span class="err">≈</span> <span class="mi">0</span><span class="p">.</span><span class="mi">44</span><span class="p">,</span> <span class="n">Kl</span> <span class="err">≈</span> <span class="mi">0</span><span class="p">.</span><span class="mi">35</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h3 id="方法2查表">方法2：查表</h3> <table> <thead> <tr> <th>光照距离</th> <th>Kc</th> <th>Kl</th> <th>Kq</th> <th>用途场景</th> </tr> </thead> <tbody> <tr> <td><strong>7</strong></td> <td>1.0</td> <td>0.7</td> <td>1.8</td> <td>手电筒、小灯泡</td> </tr> <tr> <td><strong>13</strong></td> <td>1.0</td> <td>0.35</td> <td>0.44</td> <td>台灯、壁灯</td> </tr> <tr> <td><strong>20</strong></td> <td>1.0</td> <td>0.22</td> <td>0.20</td> <td>房间吊灯</td> </tr> <tr> <td><strong>32</strong></td> <td>1.0</td> <td>0.14</td> <td>0.07</td> <td>大厅灯光</td> </tr> <tr> <td><strong>50</strong></td> <td>1.0</td> <td>0.09</td> <td>0.032</td> <td>路灯</td> </tr> <tr> <td><strong>65</strong></td> <td>1.0</td> <td>0.07</td> <td>0.017</td> <td>广场灯</td> </tr> <tr> <td><strong>100</strong></td> <td>1.0</td> <td>0.045</td> <td>0.0075</td> <td>体育场灯光</td> </tr> <tr> <td><strong>160</strong></td> <td>1.0</td> <td>0.027</td> <td>0.0028</td> <td>大型场景</td> </tr> <tr> <td><strong>200</strong></td> <td>1.0</td> <td>0.022</td> <td>0.0019</td> <td>室外环境</td> </tr> <tr> <td><strong>325</strong></td> <td>1.0</td> <td>0.014</td> <td>0.0007</td> <td>超大场景</td> </tr> <tr> <td><strong>600</strong></td> <td>1.0</td> <td>0.007</td> <td>0.0002</td> <td>天空光</td> </tr> </tbody> </table> <h2 id="经典公式的问题">经典公式的问题</h2> <h3 id="-致命缺陷">❌ 致命缺陷</h3> <ol> <li><strong>没有明确的Range参数</strong> <ul> <li>美术师无法直接控制”光照范围是多少米”</li> <li>只能通过调整三个晦涩的参数间接影响</li> <li>需要反复测试才能达到想要的效果</li> </ul> </li> <li><strong>预设参数表太死板</strong> <ul> <li>表中没有的范围（如18米）需要手动计算</li> <li>参数之间相互耦合，改一个影响全部</li> <li>工作流程繁琐低效</li> </ul> </li> <li><strong>无法做性能优化</strong> <ul> <li>理论上衰减永远不为0（延伸到无穷远）</li> <li>GPU无法提前剔除超出范围的光源</li> <li>即使距离1000米也要计算</li> </ul> </li> <li><strong>无法做空间剔除</strong> <ul> <li>CPU端无法判断光源是否影响视锥体</li> <li>所有光源都要传给GPU处理</li> </ul> </li> </ol> <p><strong>这就是为什么现代引擎全部放弃了这个公式！</strong></p> <h2 id="基于物理的简化公式">基于物理的简化公式</h2> <h3 id="平方反比定律真实物理">平方反比定律（真实物理）</h3> <p>现实世界中，光照遵循：</p> \[I = \frac{I_0}{d^2}\] <p>其中：</p> <ul> <li>$I$ = 衰减后的光照强度</li> <li>$I_0$ = 光源初始强度</li> <li>$d$ = 距离光源的距离 也就是</li> </ul> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-</pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="n">distanceSqr</span> <span class="o">=</span> <span class="n">distance</span> <span class="o">*</span> <span class="n">distance</span><span class="p">;</span>
-<span class="kt">float</span> <span class="n">physicalAttenuation</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="n">max</span><span class="p">(</span><span class="n">distanceSqr</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span><span class="p">);</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p>但游戏中直接用会有问题：</p> <ul> <li>在 <code class="language-plaintext highlighter-rouge">d=0</code> 处会无穷大</li> <li>没有艺术控制范围的能力</li> </ul> <h2 id="关联点光源生效半径">关联点光源生效半径</h2> <p>对于整个衰减公式中有一点没有说明，就是<strong>关联点光源的生效半径</strong>，<strong>最上面的经典三参数衰减公式随着时代更替，实际上游戏引擎现在根本不用！！</strong> 而是采用平方反比定律（真实物理）的衰减。可是当前物理公式不论各多远都会计算也就是无限接近于0，这会导致很多性能浪费，所以需要进行截断操作。</p> <h2 id="现代引擎实现物理衰减--窗口函数">现代引擎实现：物理衰减 + 窗口函数</h2> <h3 id="设计哲学">设计哲学</h3> <p>现代引擎采用两阶段设计：</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-</pre></td><td class="rouge-code"><pre><span class="err">完整衰减</span> <span class="o">=</span> <span class="err">物理衰减</span> <span class="err">×</span> <span class="err">窗口函数（范围截断）</span>
-         <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">d</span><span class="err">²</span><span class="p">)</span>  <span class="err">×</span>  <span class="n">Window</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p>优点： ✓ 基于物理，视觉真实 ✓ 有明确的Range参数（艺术控制） ✓ 可提前剔除（性能优化） ✓ 边界平滑过渡（无硬边）</p> <h3 id="窗口函数衰减截断">窗口函数（衰减截断）</h3> <p><strong>这里对范围进行截断，截断操作就是叫窗口函数或者衰减函数也行，最简单的线性窗口就是到了半径之后就是截断，但是会导致硬边</strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="n">window</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">distance</span> <span class="o">/</span> <span class="n">range</span><span class="p">);</span> 
-</pre></td></tr></tbody></table></code></pre></div></div> <p>问题：在边界处导数不连续（有视觉”硬边”）</p> <p><strong>为了更加平滑的截断，在引擎中则是使用下方的窗口函数公式</strong></p> \[\text{Window}(d, R, n) = \left[\text{saturate}\left(1 - \left(\frac{d}{R}\right)^n\right)\right]^2\] <p>其中 d是距离，R是半径 <strong>图像如下</strong> <img src="/assets/img/TAMonth01/Pasted image 20260101235434.png" alt=""/> <strong>所以最终是窗口函数和物理衰减来进行混合,也就是$physicalAtten * windowAtten$</strong> <strong>在引擎中通常使用4次方来作为衰减，性能和效果比较合适，过小的话衰减过快，边界会很明显。过大衰减范围增加，计算量会增大</strong> \(\text{Window}(d, R, n) = \left[\text{saturate}\left(1 - \left(\frac{d}{R}\right)^4\right)\right]^2\) <strong>根据艺术需求：</strong></p> <ul> <li>卡通风格 → n=2（明确边界）</li> <li>写实风格 → n=6（柔和过渡）</li> <li>魔法效果 → n=8~10（力场感）</li> </ul> <h3 id="衰减函数">衰减函数</h3> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-</pre></td><td class="rouge-code"><pre><span class="c1">// 正确的衰减函数</span>
-<span class="kt">float</span> <span class="nf">CalculateAttenuation</span><span class="p">(</span><span class="n">float3</span> <span class="n">worldPos</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// 1. 距离平方</span>
-    <span class="n">float3</span> <span class="n">L</span> <span class="o">=</span> <span class="n">_LightPos</span> <span class="o">-</span> <span class="n">worldPos</span><span class="p">;</span>
-    <span class="kt">float</span> <span class="n">distSqr</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">);</span>
-    
-    <span class="c1">// 2. 物理衰减</span>
-    <span class="kt">float</span> <span class="n">physicalAtten</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="n">max</span><span class="p">(</span><span class="n">distSqr</span><span class="p">,</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mo">01</span><span class="p">);</span>
-    
-    <span class="c1">// 3. 窗口函数（无分支）</span>
-    <span class="kt">float</span> <span class="n">rangeSqr</span> <span class="o">=</span> <span class="n">_LightRange</span> <span class="o">*</span> <span class="n">_LightRange</span><span class="p">;</span>
-    <span class="kt">float</span> <span class="n">normDistSqr</span> <span class="o">=</span> <span class="n">distSqr</span> <span class="o">/</span> <span class="n">rangeSqr</span><span class="p">;</span>
-    <span class="kt">float</span> <span class="n">normDistQuad</span> <span class="o">=</span> <span class="n">normDistSqr</span> <span class="o">*</span> <span class="n">normDistSqr</span><span class="p">;</span>
-    <span class="kt">float</span> <span class="n">windowBase</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">-</span> <span class="n">normDistQuad</span><span class="p">);</span>
-    <span class="kt">float</span> <span class="n">windowAtten</span> <span class="o">=</span> <span class="n">windowBase</span> <span class="o">*</span> <span class="n">windowBase</span><span class="p">;</span>
-    
-    <span class="c1">// 4. 组合</span>
-    <span class="k">return</span> <span class="n">physicalAtten</span> <span class="o">*</span> <span class="n">windowAtten</span><span class="p">;</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h3 id="unity实际使用的代码lightinghlsl">Unity实际使用的代码（Lighting.hlsl）</h3> <p><img src="/assets/img/TAMonth01/Pasted image 20260102192433.png" alt=""/></p> <p>$\text{distanceAttenuation.x} = \frac{1}{R^2}$</p> <p>$\text{fadeDistance} = 0.64 \times R^2$</p> <p>$\text{distanceAttenuation.y} = \frac{-R^2}{0.64R^2 - R^2}$</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-</pre></td><td class="rouge-code"><pre><span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="n">f</span> <span class="o">/</span> <span class="p">(</span><span class="n">lightRange</span> <span class="o">*</span> <span class="n">lightRange</span><span class="p">);</span>
-
-<span class="kt">float</span> <span class="n">lightRangeSqr</span> <span class="o">=</span> <span class="n">lightRange</span> <span class="o">*</span> <span class="n">lightRange</span><span class="p">;</span>
-<span class="kt">float</span> <span class="n">fadeDistance</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">8</span><span class="n">f</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mi">8</span><span class="n">f</span> <span class="o">*</span> <span class="n">lightRangeSqr</span><span class="p">;</span> <span class="c1">// 80% 的范围开始衰减 </span>
-<span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="o">-</span><span class="n">lightRangeSqr</span> <span class="o">/</span> <span class="p">(</span><span class="n">fadeDistance</span> <span class="o">-</span> <span class="n">lightRangeSqr</span><span class="p">);</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-</pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="nf">DistanceAttenuation</span><span class="p">(</span><span class="kt">float</span> <span class="n">distanceSqr</span><span class="p">,</span> <span class="n">half2</span> <span class="n">distanceAttenuation</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">float</span> <span class="n">lightAtten</span> <span class="o">=</span> <span class="n">rcp</span><span class="p">(</span><span class="n">distanceSqr</span><span class="p">);</span> <span class="c1">// rcp(x) = 1/x</span>
-    
-    <span class="cp">#if SHADER_HINT_NICE_QUALITY
-</span>        <span class="c1">// 高质量：n=4</span>
-        <span class="n">half</span> <span class="n">factor</span> <span class="o">=</span> <span class="n">distanceSqr</span> <span class="o">*</span> <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-        <span class="n">half</span> <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="n">h</span> <span class="o">-</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">factor</span><span class="p">);</span>
-        <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">smoothFactor</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
-    <span class="cp">#else
-</span>        <span class="c1">// 标准质量：线性窗口（从80% range开始衰减）</span>
-        <span class="n">half</span> <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span>
-            <span class="n">distanceSqr</span> <span class="o">*</span> <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> 
-            <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">y</span>
-        <span class="p">);</span>
-    <span class="cp">#endif
-</span>    
-    <span class="k">return</span> <span class="n">lightAtten</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="完整对应表">完整对应表</h2> <table> <thead> <tr> <th>数学符号</th> <th>Unity 代码</th> <th>说明</th> </tr> </thead> <tbody> <tr> <td>$d$</td> <td><code class="language-plaintext highlighter-rouge">distance</code></td> <td>距离（通常不直接计算，避免sqrt）</td> </tr> <tr> <td>$d^2$</td> <td><code class="language-plaintext highlighter-rouge">distanceSqr</code></td> <td>距离平方</td> </tr> <tr> <td>$R$</td> <td><code class="language-plaintext highlighter-rouge">lightRange</code></td> <td>光源范围</td> </tr> <tr> <td>$R^2$</td> <td><code class="language-plaintext highlighter-rouge">rangeSqr</code></td> <td>范围平方</td> </tr> <tr> <td>$\frac{1}{R^2}$</td> <td><code class="language-plaintext highlighter-rouge">distanceAttenuation.x</code></td> <td>CPU预计算</td> </tr> <tr> <td>$\frac{d^2}{R^2}$</td> <td><code class="language-plaintext highlighter-rouge">factor</code></td> <td>归一化距离平方</td> </tr> <tr> <td>$\left(\frac{d^2}{R^2}\right)^2$</td> <td><code class="language-plaintext highlighter-rouge">factor * factor</code></td> <td>四次方项（用平方表示）</td> </tr> <tr> <td>$\left(\frac{d^2}{R^2}\right)^2$</td> <td><code class="language-plaintext highlighter-rouge">1.0h - factor * factor</code></td> <td>窗口函数基础</td> </tr> <tr> <td>$\text{saturate}(…)$</td> <td><code class="language-plaintext highlighter-rouge">saturate(...)</code></td> <td>钳制到[0,1]</td> </tr> <tr> <td>$[…]^2$</td> <td><code class="language-plaintext highlighter-rouge">smoothFactor * smoothFactor</code></td> <td>最后平方</td> </tr> </tbody> </table> <h1 id="spotlight-聚光灯">Spotlight 聚光灯</h1> <h2 id="基本概念">基本概念</h2> <p><strong>聚光灯 = 点光源 + 方向限制 + 角度衰减</strong> 点光源：向所有方向发光 聚光灯：只向一个锥形区域发光 <img src="/assets/img/TAMonth01/Pasted image 20260102221850.png" alt=""/> 从图中可以看到：</p> <table> <thead> <tr> <th>参数</th> <th>说明</th> <th>图中标注</th> </tr> </thead> <tbody> <tr> <td><strong>LightDir</strong></td> <td>从<strong>片元指向光源</strong>的向量</td> <td>蓝色线（从fragment到light）</td> </tr> <tr> <td><strong>SpotDir</strong></td> <td>聚光灯照射的方向（某个轴归一化）</td> <td>红色线（从light向下）</td> </tr> <tr> <td><strong>Phi (φ)</strong></td> <td>外锥角（Outer Cone）</td> <td>蓝色锥体边缘</td> </tr> <tr> <td><strong>Theta (θ)</strong></td> <td>LightDir 和 SpotDir 的夹角</td> <td>绿色标注</td> </tr> </tbody> </table> <h2 id="核心判断逻辑">核心判断逻辑</h2> <blockquote> <p><strong>片元是否在聚光灯照射范围内？</strong></p> </blockquote> <p><strong><em>只要片元的光向量夹角小于等于椎体角度的一半就行，但是直接使用角度需要使用反三角函数计算量很大，而角度最大也就是$\frac{\pi}{2}$,这表示cos肯定是正数1~0，角度越大cos越小，使用cos来比较更好的办法，这和相机的裁剪原理也是类似</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-</pre></td><td class="rouge-code"><pre><span class="c1">// 计算夹角的余弦值</span>
-<span class="kt">float</span> <span class="n">cosTheta</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">normalize</span><span class="p">(</span><span class="n">LightDir</span><span class="p">),</span> <span class="n">normalize</span><span class="p">(</span><span class="o">-</span><span class="n">SpotDir</span><span class="p">));</span>
-
-<span class="c1">// 判断是否在锥内</span>
-<span class="k">if</span> <span class="p">(</span><span class="n">cosTheta</span> <span class="o">&gt;</span> <span class="n">cos</span><span class="p">(</span><span class="n">Phi</span><span class="p">))</span> <span class="p">{</span>
-    <span class="c1">// 在聚光灯照射范围内</span>
-<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="c1">// 在聚光灯外，不受光照影响</span>
-<span class="p">}</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="衰减组成">衰减组成</h2> <p><strong>聚光灯衰减 = 距离衰减（和点光源相同）+ 角度衰减</strong></p> <h3 id="距离衰减">距离衰减</h3> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-</pre></td><td class="rouge-code"><pre><span class="kt">float</span> <span class="nf">DistanceAttenuation</span><span class="p">(</span><span class="kt">float</span> <span class="n">distanceSqr</span><span class="p">,</span> <span class="n">half2</span> <span class="n">distanceAttenuation</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="kt">float</span> <span class="n">lightAtten</span> <span class="o">=</span> <span class="n">rcp</span><span class="p">(</span><span class="n">distanceSqr</span><span class="p">);</span>  <span class="c1">// 1/d²</span>
-    
-    <span class="n">half</span> <span class="n">factor</span> <span class="o">=</span> <span class="n">distanceSqr</span> <span class="o">*</span> <span class="n">distanceAttenuation</span><span class="p">.</span><span class="n">x</span><span class="p">;</span>
-    <span class="n">half</span> <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="n">h</span> <span class="o">-</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">factor</span><span class="p">);</span>
-    <span class="n">smoothFactor</span> <span class="o">=</span> <span class="n">smoothFactor</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
-    
-    <span class="k">return</span> <span class="n">lightAtten</span> <span class="o">*</span> <span class="n">smoothFactor</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h3 id="角度衰减">角度衰减</h3> <blockquote> <p><strong>聚光灯的形状是怎样？</strong></p> </blockquote> <p><strong>在中心区域应该会被完全照亮，然后再向边缘衰减，并非和点光源一样的直接衰减，所以我们需要在这个范围内构建衰减</strong> Unity 使用<strong>两个角度</strong>来实现平滑过渡： InnerAngle (内锥角)：完全照亮区域 OuterAngle (外锥角)：光照边界</p> <p>线性插值的基本思路 我们想要一个函数，满足：</p> <p>  \(f(\theta) =\begin{cases} 1.0 &amp; \text{if } \theta \leq \phi_{\text{inner}} \\ \text{线性递减} &amp; \text{if } \phi_{\text{inner}} &lt; \theta &lt; \phi_{\text{outer}} \\ 0.0 &amp; \text{if } \theta \geq \phi_{\text{outer}} \end{cases}\)</p> <p><strong>标准线性插值公式</strong></p> <p>在两个端点之间线性插值：</p> \[f(x) = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}}\] <p>这给出：</p> <ul> <li>当 $x = x_{\text{min}}$ 时，$f(x) = 0$</li> <li>当 $x = x_{\text{max}}$ ​ 时，$f(x) = 1$</li> </ul> <p><strong>但我们需要反过来</strong></p> <p>对于聚光灯，我们希望：</p> <ul> <li>当$\theta = \phi_{\text{inner}}$ （小角度）时，衰减 = <strong>1.0</strong>（亮）</li> <li>当$\theta = \phi_{\text{outer}}$ （大角度）时，衰减 = <strong>0.0</strong>（暗）</li> </ul> <p>所以公式应该是：</p> \[f(\theta) = \frac{\phi_{\text{outer}} - \theta}{\phi_{\text{outer}} - \phi_{\text{inner}}}\] <p><strong>所以最终角度衰减公式：</strong> 线性插值得到的是直线过渡会产生硬边缘截断，为了更自然的视觉效果，对结果进行平方：</p> \[\text{AngleAttenuation} = \left[\text{saturate}\left(\frac{\cos\theta - \cos\phi_{\text{outer}}}{\cos\phi_{\text{inner}} - \cos\phi_{\text{outer}}}\right)\right]^2\] <p>其中：</p> <ul> <li>$\theta$= LightDir 和 SpotDir 的夹角</li> <li>$\phi_{\text{inner}}$​ = 内锥角</li> <li>$\phi_{\text{outer}}​$ = 外锥角</li> </ul> <p>平方是性能和效果的最佳平衡：</p> <table> <thead> <tr> <th>指数</th> <th>中点值</th> <th>指令数</th> <th>效果</th> <th>使用</th> </tr> </thead> <tbody> <tr> <td>t¹</td> <td>0.50</td> <td>0</td> <td>线性，太硬</td> <td>❌</td> </tr> <tr> <td><strong>t²</strong></td> <td><strong>0.25</strong></td> <td><strong>1</strong></td> <td><strong>适中</strong></td> <td><strong>✓ Unity/UE</strong></td> </tr> <tr> <td>t³</td> <td>0.125</td> <td>2</td> <td>过于激进</td> <td>特殊效果</td> </tr> <tr> <td>t⁴</td> <td>0.0625</td> <td>2</td> <td>极窄光束</td> <td>激光效果</td> </tr> </tbody> </table> <h3 id="衰减混合">衰减混合</h3> <p><strong>最终角度衰减公式是这样</strong> \(\text{AngleAttenuation} = \left[\text{saturate}\left(\frac{\cos\theta - \cos\phi_{\text{outer}}}{\cos\phi_{\text{inner}} - \cos\phi_{\text{outer}}}\right)\right]^2\) 放进 shader 后，每个像素至少需要：</p> <ol> <li> <p><code class="language-plaintext highlighter-rouge">cosInner</code>、<code class="language-plaintext highlighter-rouge">cosOuter</code>（通常从角度算 cos）</p> </li> <li> <p><code class="language-plaintext highlighter-rouge">cosInner - cosOuter</code></p> </li> <li> <p><code class="language-plaintext highlighter-rouge">(cosθ - cosOuter)</code></p> </li> <li> <p><strong>一次除法</strong></p> </li> <li> <p><code class="language-plaintext highlighter-rouge">saturate</code></p> </li> </ol> <p><strong>除法是 GPU 上的慢指令</strong>（尤其是老架构 / mobile） 所以为了优化，会把公式拆分使用<strong>MAD</strong>也就是乘法加法，在GPU运行更快,$\cos\theta$是必须片元计算的，其它两个参数就在灯光设置时交给cpu算了 \(A = \text{saturate} \left( \cos\theta \cdot \frac{1}{\cos\phi_{inner} - \cos\phi_{outer}} - \frac{\cos\phi_{outer}}{\cos\phi_{inner} - \cos\phi_{outer}} \right)\)</p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td><td class="rouge-code"><pre><span class="n">atten</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="n">SdotL</span> <span class="o">*</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <p><strong>最终的衰减就是 $DistanceAttenuation * AngleAttenuation$</strong></p> <h2 id="unity-shader-代码参考">Unity Shader 代码参考</h2> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-</pre></td><td class="rouge-code"><pre><span class="n">float3</span> <span class="n">lightToPixel</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">WorldPos</span> <span class="o">-</span> <span class="n">LightPos</span><span class="p">);</span>
-<span class="n">float3</span> <span class="n">spotDir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">SpotLightDirection</span><span class="p">);</span>
-<span class="kt">float</span> <span class="n">cosTheta</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">spotDir</span><span class="p">,</span> <span class="n">lightToPixel</span><span class="p">);</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-</pre></td><td class="rouge-code"><pre><span class="n">half</span> <span class="nf">AngleAttenuation</span><span class="p">(</span><span class="n">half3</span> <span class="n">spotDirection</span><span class="p">,</span> <span class="n">half3</span> <span class="n">lightDirection</span><span class="p">,</span> <span class="n">half2</span> <span class="n">spotAttenuation</span><span class="p">)</span>
-<span class="p">{</span>
-    <span class="c1">// Spot Attenuation with a linear falloff can be defined as</span>
-    <span class="c1">// (SdotL - cosOuterAngle) / (cosInnerAngle - cosOuterAngle)</span>
-    <span class="c1">// This can be rewritten as</span>
-    <span class="c1">// invAngleRange = 1.0 / (cosInnerAngle - cosOuterAngle)</span>
-    <span class="c1">// SdotL * invAngleRange + (-cosOuterAngle * invAngleRange)</span>
-    <span class="c1">// If we precompute the terms in a MAD instruction</span>
-    
-    <span class="c1">// 步骤1：计算 cos(θ)</span>
-    <span class="n">half</span> <span class="n">SdotL</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">spotDirection</span><span class="p">,</span> <span class="n">lightDirection</span><span class="p">);</span>
-    
-    <span class="c1">// 步骤2：线性插值（MAD 优化）</span>
-    <span class="c1">// 等价于：(SdotL - cosOuter) / (cosInner - cosOuter)</span>
-    <span class="n">half</span> <span class="n">atten</span> <span class="o">=</span> <span class="n">saturate</span><span class="p">(</span><span class="n">SdotL</span> <span class="o">*</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">spotAttenuation</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
-    
-    <span class="c1">// 步骤3：平方平滑</span>
-    <span class="k">return</span> <span class="n">atten</span> <span class="o">*</span> <span class="n">atten</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></td></tr></tbody></table></code></pre></div></div> <h2 id="聚光灯阴影性能">聚光灯阴影性能</h2> <p><strong>移动端优化建议：</strong></p> <ul> <li>限制聚光灯数量（≤ 3-5 个）</li> <li>使用较小的 Range</li> <li>避免重叠的聚光灯</li> <li>使用 Light Culling</li> </ul> <p>聚光灯阴影比点光源便宜，但比方向光昂贵：</p> <table> <thead> <tr> <th>光源类型</th> <th>Shadow Maps</th> <th>性能</th> <th>备注</th> </tr> </thead> <tbody> <tr> <td><strong>Directional</strong></td> <td>4 cascades</td> <td>中</td> <td>覆盖整个场景</td> </tr> <tr> <td><strong>Spot</strong></td> <td><strong>1 张</strong></td> <td><strong>好</strong></td> <td>只覆盖锥体</td> </tr> <tr> <td><strong>Point</strong></td> <td>6 张（Cubemap）</td> <td>差</td> <td>6个方向</td> </tr> </tbody> </table> <p><strong>优化建议：</strong></p> <ul> <li>只对主要聚光灯开启阴影</li> <li>使用合适的 Shadow Resolution（512-1024）</li> <li>考虑使用烘焙阴影</li> </ul>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><summary type="html"><![CDATA[理论支线：LightAttenuation 衰减]]></summary></entry></feed>
+</pre></td></tr></tbody></table></code></pre></div> </div> <h2 id="伽马空间下的衰减补偿调整">伽马空间下的衰减补偿调整</h2> <p><img src="/assets/img/TAMonth01/Pasted image 20260103174926.png" alt=""/> <strong>对于如果直接在Gamma Space下工作，直接使用物理衰减会导致过暗，因为Gamma Space相当于我们最终看到的效果，但是如果是渲染器渲染到屏幕最后还是会进行伽马矫正一次，那么渲染图像就会偏暗</strong> <strong>正确的物理衰减是</strong></p> </li> </ul> \[I = \frac{1.0}{d^2}\] <p><strong>伽马矫正就导致成了</strong></p> \[I = (\frac{1.0}{d^{2}})^{2.2}\] <p><strong>为了补偿，可以使用不正确的线性衰减</strong></p> \[I = \frac{1.0}{d}\] <p><strong>这样矫正后结果是</strong></p> \[I = (\frac{1.0}{d})^{2.2}\approx\frac{1.0}{d^2}\] <p><strong>这和正确的物理衰减会更加接近</strong></p> <p><strong>对于伽马空间的补偿方式其实可以忽略，因为现在游戏引擎都是使用线性空间工作，而不是伽马空间</strong></p> <h2 id="线性空间处理">线性空间处理</h2> <p><strong>如果是在线性空间下工作，可以直接使用符合物理正确的衰减公式，不需要管其它，渲染到屏幕上最终会自动进行伽马矫正</strong></p>]]></content><author><name></name></author><category term="TAMonth01"/><category term="shader"/><category term="rendering"/><summary type="html"><![CDATA[理论支线：Gamma Correction 伽马校正]]></summary></entry></feed>

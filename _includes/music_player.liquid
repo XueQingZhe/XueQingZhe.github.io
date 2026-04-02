@@ -18,10 +18,89 @@
 </div>
 
 <style>
-  /* 适配 al-folio 的 UI 层级 */
+  /* 基础布局：让它“浮动”起来 */
   .aplayer.aplayer-fixed {
     z-index: 10000 !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
-  /* 如果你觉得默认图标太靠右挡住了返回顶部按钮，可以取消下面注释 */
-  /* .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body { left: 20px !important; } */
+
+  /* 主体背景：深色磨砂玻璃 */
+  .aplayer {
+    background: rgba(28, 28, 28, 0.85) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+    color: #e0e0e0 !important;
+    font-family: inherit !important;
+  }
+
+  /* 歌单列表样式优化 */
+  .aplayer .aplayer-list ol li {
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: transparent !important;
+    padding: 10px 15px !important;
+    transition: all 0.2s ease;
+  }
+
+  /* 鼠标经过列表项 */
+  .aplayer .aplayer-list ol li:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  /* 当前播放中的歌曲高亮 */
+  .aplayer .aplayer-list ol li.aplayer-list-light {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .aplayer .aplayer-list ol li.aplayer-list-light .aplayer-list-cur {
+    background: #666 !important; /* 左侧指示条颜色 */
+  }
+
+  /* 文字颜色调整 */
+  .aplayer .aplayer-title, 
+  .aplayer .aplayer-list ol li .aplayer-list-title {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+  }
+
+  .aplayer .aplayer-author, 
+  .aplayer .aplayer-list ol li .aplayer-list-author {
+    color: #999 !important;
+  }
+
+  /* 进度条与控制按钮 */
+  .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar {
+    background: rgba(255, 255, 255, 0.1) !important; /* 进度条底色 */
+  }
+
+  .aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon path {
+    fill: #bbb !important; /* 图标颜色 */
+  }
+
+  /* 折叠状态下的按钮样式（解决你截图中最丑的地方） */
+  .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+    background: rgba(40, 40, 40, 0.9) !important;
+    border-radius: 8px !important;
+  }
+
+  .aplayer .aplayer-miniswitcher {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .aplayer .aplayer-miniswitcher .aplayer-icon path {
+    fill: #eee !important;
+  }
+
+  /* 歌词样式 */
+  .aplayer .aplayer-lrc {
+    text-shadow: none !important;
+  }
+  .aplayer .aplayer-lrc:before, .aplayer .aplayer-lrc:after {
+    display: none !important; /* 去掉歌词顶部虚化，保持干净 */
+  }
 </style>

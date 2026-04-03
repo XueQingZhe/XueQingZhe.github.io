@@ -18,6 +18,26 @@
 </div>
 
 <style>
+/* 强制显示播放器容器 */
+  #aplayer-container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* 调整吸附位置，防止被系统任务栏或页面元素遮挡 */
+  .aplayer.aplayer-fixed {
+    z-index: 999999 !important; /* 提到最高层级 */
+    bottom: 30px !important;    /* 稍微往上提一点 */
+    left: 30px !important;
+    background: rgba(28, 28, 28, 0.9) !important;
+  }
+  
+  /* 针对 Mini 模式的圆圈大小做检查 */
+  .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+    width: 66px !important;
+    height: 66px !important;
+  }
   /* 基础布局：让它“浮动”起来 */
   .aplayer.aplayer-fixed {
     z-index: 10000 !important;

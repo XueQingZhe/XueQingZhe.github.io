@@ -9,7 +9,7 @@
     id="2072624795"
     fixed="true" 
     mini="true"
-    theme="#111111"
+    theme="#212121"
     loop="all"
     order="list"
     preload="auto"
@@ -23,13 +23,90 @@
     z-index: 10000 !important;
   }
 
-  /* ── 圆角 ── */
-  .aplayer.aplayer-fixed:not(.aplayer-narrow) {
-    border-radius: 16px !important;
-    overflow: hidden !important;
+  /* ── 悬浮按钮：深色 + 微边框 ── */
+  .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
+    background: #111111 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.1),
+                0 4px 20px rgba(0,0,0,0.4) !important;
   }
-  .aplayer.aplayer-fixed .aplayer-list {
-    border-radius: 0 0 16px 16px !important;
-    overflow: hidden !important;
+
+  /* ── 展开面板：深色卡片风格 ── */
+  .aplayer:not(.aplayer-narrow) .aplayer-body {
+    background: #111111 !important;
+    border-radius: 12px 12px 0 0 !important;
   }
+
+  /* ── 进度条：纤细、低对比度 ── */
+  .aplayer .aplayer-bar-wrap .aplayer-bar {
+    height: 2px !important;
+    background: rgba(255,255,255,0.08) !important;
+  }
+  .aplayer .aplayer-bar-wrap .aplayer-played {
+    background: rgba(255,255,255,0.7) !important;
+  }
+  .aplayer .aplayer-bar-wrap .aplayer-thumb {
+    background: #fff !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    top: -3px !important;
+  }
+
+  /* ── 歌曲信息：更细腻的字色 ── */
+  .aplayer .aplayer-info .aplayer-music .aplayer-title {
+    color: rgba(255,255,255,0.9) !important;
+    font-size: 13px !important;
+  }
+  .aplayer .aplayer-info .aplayer-music .aplayer-author {
+    color: rgba(255,255,255,0.35) !important;
+    font-size: 11px !important;
+  }
+
+  /* ── 歌单：极细分割线 ── */
+  .aplayer .aplayer-list ol li {
+    border-bottom: 0.5px solid rgba(255,255,255,0.05) !important;
+  }
+  .aplayer .aplayer-list ol li.aplayer-list-light {
+    background: rgba(255,255,255,0.06) !important;
+  }
+  .aplayer .aplayer-list ol li span {
+    color: rgba(255,255,255,0.4) !important;
+  }
+  .aplayer .aplayer-list ol li .aplayer-list-title {
+    color: rgba(255,255,255,0.75) !important;
+  }
+
+  /* ── 控制按钮图标颜色 ── */
+  .aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon path {
+    fill: rgba(255,255,255,0.5) !important;
+  }
+  .aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon:hover path {
+    fill: rgba(255,255,255,0.9) !important;
+  }
+  /* ── 歌单容器背景 ── */
+.aplayer .aplayer-list {
+  background: #111111 !important;
+}
+.aplayer .aplayer-list ol {
+  background: #111111 !important;
+}
+.aplayer .aplayer-list ol li {
+  background: #111111 !important;
+  border-bottom: 0.5px solid rgba(255,255,255,0.05) !important;
+}
+.aplayer .aplayer-list ol li.aplayer-list-light {
+  background: rgba(255,255,255,0.06) !important;
+}
+
+/* ── 歌单文字：确保可见 ── */
+.aplayer .aplayer-list ol li .aplayer-list-title {
+  color: rgba(255,255,255,0.75) !important;
+}
+.aplayer .aplayer-list ol li .aplayer-list-author {
+  color: rgba(255,255,255,0.35) !important;
+}
+.aplayer .aplayer-list ol li span {
+  color: rgba(255,255,255,0.4) !important;
+}
 </style>

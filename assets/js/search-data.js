@@ -310,6 +310,11 @@ ninja.data = [{
           description: "Unity仿绝区零角色渲染——橘福福",
           section: "Projects",handler: () => {
               window.location.href = "/projects/3_project/";
+            },},{id: "projects-urp-screen-space-outline-renderfeature",
+          title: 'URP Screen Space Outline RenderFeature',
+          description: "URP Screen Space Outline RenderFeature",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/4_project/";
             },},{id: "tutorials-01-blender模型处理",
           title: '01_Blender模型处理',
           description: "01_Blender模型处理",

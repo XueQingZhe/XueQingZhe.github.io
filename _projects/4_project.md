@@ -104,7 +104,9 @@ toc:
 
 ### X光效果过渡混合
 
-![](/assets/img/MyPJ/Render Feature/ScreenSpaceOutline/QQ20260405-224658.mp4)
+<video width="100%" autoplay loop muted playsinline>
+  <source src="/assets/img/MyPJ/Render Feature/ScreenSpaceOutline/QQ20260405-224658.mp4" type="video/mp4">
+</video>
 
 ## 其他问题
 

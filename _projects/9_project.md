@@ -18,7 +18,7 @@ toc:
 ![](/assets/img/MyPJ/Demo/Model/Pasted image 20260420134445.png)
 ![](/assets/img/MyPJ/Demo/Model/Pasted image 20260415154825.png)
 
-![](/assets/img/MyPJ/Demo/Model/Pasted image 20260415154813.png|864)
+![](/assets/img/MyPJ/Demo/Model/Pasted image 20260415154813.png)
 
 ![](/assets/img/MyPJ/Demo/Model/Pasted image 20260415154829.png)
 ![](/assets/img/MyPJ/Demo/Model/Pasted image 20260415154836.png)

@@ -315,6 +315,31 @@ ninja.data = [{
           description: "URP Screen Space Outline RenderFeature",
           section: "Projects",handler: () => {
               window.location.href = "/projects/4_project/";
+            },},{id: "projects-blender-tool",
+          title: 'blender Tool',
+          description: "blender Tool",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/5_project/";
+            },},{id: "projects-风格化房间",
+          title: '风格化房间',
+          description: "风格化房间",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/6_project/";
+            },},{id: "projects-风格化场景",
+          title: '风格化场景',
+          description: "风格化场景",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/7_project/";
+            },},{id: "projects-ue废墟教室",
+          title: 'UE废墟教室',
+          description: "UE废墟教室",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/8_project/";
+            },},{id: "projects-blender建模渲染",
+          title: 'blender建模渲染',
+          description: "blender建模渲染",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/9_project/";
             },},{id: "tutorials-01-blender模型处理",
           title: '01_Blender模型处理',
           description: "01_Blender模型处理",

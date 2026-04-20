@@ -295,7 +295,22 @@ ninja.data = [{
           section: "News",},{id: "news-默认管线转到urp管线",
           title: '默认管线转到URP管线！',
           description: "",
-          section: "News",},{id: "projects-绝区零星见雅",
+          section: "News",},{id: "projects-ue5-5-逐材质半透明排序",
+          title: 'UE5.5 - 逐材质半透明排序',
+          description: "UE5.5 - 逐材质半透明排序",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/10_project/";
+            },},{id: "projects-ue5-5-逐材质stencil",
+          title: 'UE5.5 - 逐材质Stencil',
+          description: "UE5.5 - 逐材质Stencil",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/11_project/";
+            },},{id: "projects-ue5-5-逐材质overlaymaterial",
+          title: 'UE5.5 - 逐材质OverlayMaterial',
+          description: "UE5.5 - 逐材质OverlayMaterial",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/12_project/";
+            },},{id: "projects-绝区零星见雅",
           title: '绝区零星见雅',
           description: "Unity,UE,Blender 仿绝区零角色渲染——星见雅",
           section: "Projects",handler: () => {

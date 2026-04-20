@@ -5,7 +5,7 @@ permalink: /projects/
 description: 我的技术作品集
 nav: true
 nav_order: 3
-display_categories: [rendering, 3D Art, Tools, Early Works]
+display_categories: [rendering, Engine, 3D Art, Tools, Early Works]
 horizontal: false
 images:
   spotlight: true
@@ -35,6 +35,8 @@ images:
         <h2 class="category-title">
           {% if category == "rendering" %}
             <i class="fas fa-paint-brush"></i>
+          {% elsif category == "Engine" %}
+            <i class="fas fa-cog"></i>
           {% elsif category == "3D Art" %}
             <i class="fas fa-cube"></i>
           {% elsif category == "Tools" %}

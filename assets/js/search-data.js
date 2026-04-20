@@ -310,6 +310,11 @@ ninja.data = [{
           description: "UE5.5 - 逐材质OverlayMaterial",
           section: "Projects",handler: () => {
               window.location.href = "/projects/12_project/";
+            },},{id: "projects-碧蓝幻想角色渲染",
+          title: '碧蓝幻想角色渲染',
+          description: "碧蓝幻想角色渲染",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/13_project/";
             },},{id: "projects-绝区零星见雅",
           title: '绝区零星见雅',
           description: "Unity,UE,Blender 仿绝区零角色渲染——星见雅",

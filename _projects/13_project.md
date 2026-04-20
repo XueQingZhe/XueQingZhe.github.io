@@ -3,7 +3,7 @@ layout: post
 title: 碧蓝幻想角色渲染
 description: 碧蓝幻想角色渲染
 img: assets/img/MyPJ/Granblue Fantasy/Pasted image 20230913165507.png
-importance: 1
+importance: 4
 category: [rendering]
 related_publications: true
 images:

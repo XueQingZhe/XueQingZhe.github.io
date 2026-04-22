@@ -315,6 +315,11 @@ ninja.data = [{
           description: "碧蓝幻想角色渲染",
           section: "Projects",handler: () => {
               window.location.href = "/projects/13_project/";
+            },},{id: "projects-urp-rendererfeature-bloom",
+          title: 'URP - RendererFeature ：Bloom',
+          description: "URP - RendererFeature ：Bloom",
+          section: "Projects",handler: () => {
+              window.location.href = "/projects/14_project/";
             },},{id: "projects-绝区零星见雅",
           title: '绝区零星见雅',
           description: "Unity,UE,Blender 仿绝区零角色渲染——星见雅",

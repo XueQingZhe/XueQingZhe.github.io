@@ -81,7 +81,10 @@ Bloom也叫辉光，简单来说原理就是提取图中的亮度信息再与原
 ## 屏幕采样坐标问题
 
 **采样RT的时候，使用的屏幕像素大小，但是因为降采样的原因，这并不合适，因为降采样分辨率发生了变话，那么偏移程度理应也该变化，如果统一使用屏幕像素大小，则会导致有拖影或者说位移**
-![](/assets/img/MyPJ/Render Feature/Bloom/QQ20260421-222709-HD.mp4)
+<video width="100%" autoplay loop muted playsinline>
+  <source src="/assets/img/MyPJ/Render Feature/Bloom/QQ20260421-222709-HD.mp4" type="video/mp4">
+</video>
+
 **解决方法也比较简单，URP采用的方法是传入RT自身的像素大小，Shader中直接声明就行**
 ![](/assets/img/MyPJ/Render Feature/Bloom/Pasted image 20260421234045.png)
 **比如BoxBlur如下**

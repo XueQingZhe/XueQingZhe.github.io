@@ -2,7 +2,7 @@
 layout: post
 title:  URP - RendererFeature ：Bloom
 description:  URP - RendererFeature ：Bloom
-img: assets/img/MyPJ/Render Feature/Bloom/Pasted image 20260422195144
+img: assets/img/MyPJ/Render Feature/Bloom/Pasted image 20260422195144.png
 importance: 2
 category: [Tools]
 related_publications: true
@@ -12,22 +12,7 @@ toc:
   sidebar: left # 目录
 ---
 
----
-layout: post
-title: URP - RendererFeature ：Bloom
-date: 2026-04-22
-description: URP - RendererFeature ：Bloom
-tags: [unity, shader, rendering]
-categories: [TAMonth02]
-featured: true
-toc:
-  sidebar: left
-comments: true
-images:
-  spotlight: true
-giscus_comments: true
-related_posts: true
----
+
 
 # Bloom原理
 

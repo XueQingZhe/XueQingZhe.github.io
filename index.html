@@ -1,164 +1,233 @@
-<!DOCTYPE html> <html lang="zh-CN"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> 吟处雪 轻遮 </title> <meta name="author" content="吟处雪 轻遮"> <meta name="description" content="Technical Artist specializing in real-time rendering, toon shading, and PBR techniques. "> <meta name="keywords" content="technical-artist, shader, rendering, unity, unreal-engine, pbr, toon-shading"> <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04"> <link rel="stylesheet" href="/assets/libs/mdb/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5"> <link defer rel="stylesheet" href="/assets/css/scholar-icons.css?62b2ac103a88034e6882a5be5f3e2772"> <link defer rel="stylesheet" type="text/css" href="/assets/libs/google_fonts/google-fonts.css"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e"> <link rel="canonical" href="https://xueqingzhe.github.io/"> <script src="/assets/js/theme.js?a81d82887dd692e91686b43de4542f18"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
-    initTheme();
-  </script> </head> <body class="fixed-top-nav "> <link rel="preconnect" href="https://fonts.loli.net"> <link rel="preconnect" href="https://gstatic.loli.net" crossorigin> <link href="https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&amp;family=Noto+Serif+SC:wght@400;600;700&amp;display=swap" rel="stylesheet"> <style>.page-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--global-bg-color,#0d1117);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s cubic-bezier(0.4,0,0.2,1),visibility .8s;overflow:hidden}.page-loader.fade-out{opacity:0;visibility:hidden;pointer-events:none}.loader-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:loaderFadeIn .8s ease forwards;position:relative;z-index:2}@keyframes loaderFadeIn{from{opacity:0;transform:translateY(30px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}.loader-logo{font-size:clamp(2.2rem,6vw,3.5rem);font-weight:700;font-family:"Noto Serif SC","Source Han Serif SC","STSong",serif;background:linear-gradient(135deg,var(--global-text-color,#fff) 20%,var(--global-theme-color,#64b5f6) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem;letter-spacing:4px;text-shadow:0 0 60px rgba(var(--global-theme-color-rgb,100,181,246),0.3)}.loader-quote-container{margin-bottom:3rem;opacity:0;animation:quoteAppear .8s ease .4s forwards;text-align:center}.loader-quote-main{font-size:clamp(1rem,2.5vw,1.25rem);color:var(--global-text-color-light,rgba(255,255,255,0.7));font-family:"Noto Serif SC","Source Han Serif SC","STKaiti","KaiTi",serif;font-weight:400;letter-spacing:3px;margin-bottom:.8rem;line-height:1.8}.loader-quote-sub{font-size:clamp(0.75rem,1.5vw,0.9rem);color:var(--global-text-color-light,rgba(255,255,255,0.4));font-family:"Cormorant Garamond","Times New Roman",Georgia,serif;font-weight:300;font-style:italic;letter-spacing:1px;line-height:1.6}@keyframes quoteAppear{from{opacity:0;transform:translateY(10px)}to{opacity:.7;transform:translateY(0)}}.loader-progress-wrapper{display:flex;justify-content:center;width:100%}.loader-progress{width:220px;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;position:relative}.loader-progress-bar{height:100%;background:linear-gradient(90deg,var(--global-theme-color,#64b5f6),rgba(var(--global-theme-color-rgb,100,181,246),0.7),var(--global-theme-color,#64b5f6));background-size:200% 100%;border-radius:3px;width:0;animation:progressLoad 1.4s ease forwards,progressShine 1.5s ease-in-out infinite;box-shadow:0 0 20px rgba(var(--global-theme-color-rgb,100,181,246),0.6),0 0 40px rgba(var(--global-theme-color-rgb,100,181,246),0.3)}@keyframes progressLoad{0%{width:0}15%{width:25%}40%{width:50%}65%{width:75%}85%{width:90%}100%{width:100%}}@keyframes progressShine{0%{background-position:200% 0}100%{background-position:-200% 0}}.loader-bg-decoration{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}.loader-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(var(--global-theme-color-rgb,100,181,246),0.08) 0%,transparent 70%);border-radius:50%;animation:glowPulse 3s ease-in-out infinite}@keyframes glowPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}}.loader-particle{position:absolute;width:4px;height:4px;background:var(--global-theme-color,#64b5f6);border-radius:50%;opacity:.4}.loader-particle:nth-child(1){top:15%;left:10%;animation:particleFloat1 4s ease-in-out infinite}.loader-particle:nth-child(2){top:75%;left:15%;animation:particleFloat2 5s ease-in-out infinite .5s}.loader-particle:nth-child(3){top:20%;right:15%;animation:particleFloat1 4.5s ease-in-out infinite 1s}.loader-particle:nth-child(4){top:70%;right:10%;animation:particleFloat2 5.5s ease-in-out infinite .3s}.loader-particle:nth-child(5){top:50%;left:5%;animation:particleFloat1 6s ease-in-out infinite .7s}.loader-particle:nth-child(6){top:40%;right:8%;animation:particleFloat2 5s ease-in-out infinite 1.2s}@keyframes particleFloat1{0%,100%{transform:translateY(0) translateX(0) scale(1);opacity:.3}50%{transform:translateY(-30px) translateX(15px) scale(1.5);opacity:.7}}@keyframes particleFloat2{0%,100%{transform:translateY(0) translateX(0) scale(1);opacity:.3}50%{transform:translateY(25px) translateX(-10px) scale(1.3);opacity:.6}}.loader-line-top,.loader-line-bottom{position:absolute;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent 0,rgba(var(--global-theme-color-rgb,100,181,246),0.3) 50%,transparent 100%)}.loader-line-top{top:20%;animation:lineSlide 3s ease-in-out infinite}.loader-line-bottom{bottom:20%;animation:lineSlide 3s ease-in-out infinite 1.5s}@keyframes lineSlide{0%,100%{opacity:.3;transform:scaleX(0.5)}50%{opacity:.6;transform:scaleX(1)}}.page-content-wrapper{opacity:0;transition:opacity .6s ease .1s}.page-content-wrapper.loaded{opacity:1}@media(max-width:768px){.loader-logo{font-size:2rem;letter-spacing:2px}
-.loader-quote-main{font-size:.95rem;letter-spacing:2px}.loader-quote-sub{font-size:.7rem}.loader-quote-container{margin-bottom:2.5rem;padding:0 1rem}.loader-progress{width:180px}.loader-glow{width:300px;height:300px}}</style> <div class="page-loader" id="globalPageLoader"> <div class="loader-bg-decoration"> <div class="loader-glow"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-line-top"></div> <div class="loader-line-bottom"></div> </div> <div class="loader-content"> <div class="loader-logo">吟处雪 轻遮</div> <div class="loader-quote-container" id="loaderQuote"> <div class="loader-quote-main" id="quoteMain"></div> <div class="loader-quote-sub" id="quoteSub"></div> </div> <div class="loader-progress-wrapper"> <div class="loader-progress"> <div class="loader-progress-bar"></div> </div> </div> </div> </div> <script>
-(function() {
-  // 名言库 - 中文 + 外语对照
-  const quotes = [
-    {
-      main: "代码如诗，渲染如画",
-      sub: "Code is poetry, rendering is art."
-    },
-    {
-      main: "什么是恶？凡是源于虚弱的东西都是恶",
-      sub: "Was ist schlecht? — Alles, was aus der Schwäche stammt."
-    },
-    {
-      main: "凡不能毁灭我的，必使我强大",
-      sub: "What does not kill me makes me stronger."
-    },
-    {
-      main: "技术与美学的交汇点",
-      sub: "Where technology meets aesthetics."
-    },
-    {
-      main: "追光者永不止步",
-      sub: "Those who chase the light never stop."
-    },
-    {
-      main: "在像素中寻找无限可能",
-      sub: "Finding infinite possibilities in pixels."
-    },
-    {
-      main: "保持饥饿，保持愚蠢",
-      sub: "Stay hungry, Stay foolish."
-    },
-    {
-      main: "学习永不疲倦心灵",
-      sub: "Learning never exhausts the mind. — Leonardo da Vinci"
-    },
-    {
-      main: "预测未来最好的方式就是创造它",
-      sub: "The best way to predict the future is to create it."
-    },
-    {
-      main: "简约是终极的复杂",
-      sub: "Simplicity is the ultimate sophistication."
-    },
-    {
-      main: "每一帧都是艺术的追求",
-      sub: "Every frame is a pursuit of art."
-    },
-    {
-      main: "吾生也有涯，而知也无涯",
-      sub: "Life is finite, but knowledge is infinite. — Zhuangzi"
-    },
-    {
-      main: "路漫漫其修远兮，吾将上下而求索",
-      sub: "The road ahead is long; I shall seek high and low. — Qu Yuan"
-    },
-    {
-      main: "工欲善其事，必先利其器",
-      sub: "A craftsman must sharpen his tools first."
-    },
-    {
-      main: "光影是渲染的灵魂",
-      sub: "Light and shadow are the soul of rendering."
-    }
-  ];
-
-  // 根据页面类型选择相关语句
-  const pageQuotes = {
-    'tutorials': [
-      {
-        main: "知识的积累，从这里开始",
-        sub: "The accumulation of knowledge begins here."
-      },
-      {
-        main: "学而不思则罔，思而不学则殆",
-        sub: "Learning without thought is labor lost. — Confucius"
-      },
-      {
-        main: "千里之行，始于足下",
-        sub: "A journey of a thousand miles begins with a single step."
-      }
-    ],
-    'blog': [
-      {
-        main: "记录思考，分享成长",
-        sub: "Record thoughts, share growth."
-      },
-      {
-        main: "文字是思想的结晶",
-        sub: "Words are the crystallization of thoughts."
-      }
-    ],
-    'projects': [
-      {
-        main: "实践出真知",
-        sub: "Practice brings true knowledge."
-      },
-      {
-        main: "纸上得来终觉浅，绝知此事要躬行",
-        sub: "What you learn on paper is superficial; true understanding requires practice."
-      }
-    ]
-  };
-
-  // 获取当前页面类型
-  const path = window.location.pathname;
-  let selectedQuotes = quotes;
-  
-  for (const [key, value] of Object.entries(pageQuotes)) {
-    if (path.includes(key)) {
-      selectedQuotes = [...value, ...quotes.slice(0, 5)];
-      break;
-    }
+<!DOCTYPE html><html lang="zh-CN" data-space="portal"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
   }
-
-  // 随机选择一条语句
-  const randomQuote = selectedQuotes[Math.floor(Math.random() * selectedQuotes.length)];
-  
-  // 设置语句
-  const quoteMain = document.getElementById('quoteMain');
-  const quoteSub = document.getElementById('quoteSub');
-  
-  if (quoteMain && quoteSub) {
-    quoteMain.textContent = randomQuote.main;
-    quoteSub.textContent = randomQuote.sub;
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
   }
-
-  // 页面加载完成后隐藏 loader
-  function hideLoader() {
-    const loader = document.getElementById('globalPageLoader');
-    const content = document.querySelector('.page-content-wrapper');
-    
-    if (loader) {
-      loader.classList.add('fade-out');
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
     }
-    if (content) {
-      content.classList.add('loaded');
-    }
-    
-    // 完全移除 loader
-    setTimeout(function() {
-      if (loader) {
-        loader.style.display = 'none';
-      }
-    }, 800);
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
   }
-
-  // 监听真实的页面加载完成事件，而非固定延迟
-  if (document.readyState === 'complete') {
-    // 页面已经加载完毕（脚本较晚执行时）
-    hideLoader();
-  } else {
-    window.addEventListener('load', hideLoader);
-  }
-
-  // 保底机制：最多等待 3 秒，防止某个资源加载失败时 loader 永远卡住
-  setTimeout(hideLoader, 3000);
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
 })();
-</script> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse text-right" id="navbarNav"> <ul class="navbar-nav ml-auto flex-nowrap"> <li class="nav-item active"> <a class="nav-link" href="/">about <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/blog/">blog </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">projects </a> </li> <li class="nav-item "> <a class="nav-link" href="/books/">books </a> </li> <li class="nav-item "> <a class="nav-link" href="/tutorials/">tutorials </a> </li> <li class="nav-item "> <a class="nav-link" href="/tags/">tagsFilters </a> </li> <li class="nav-item"> <button id="search-toggle" title="Search" onclick="openSearchModal()"> <span class="nav-link">ctrl k <i class="ti ti-search"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" title="Change theme"> <i class="ti ti-sun-moon" id="light-toggle-system"></i> <i class="ti ti-moon-filled" id="light-toggle-dark"></i> <i class="ti ti-sun-filled" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="page-content-wrapper"> <div class="container mt-5" role="main"> <div class="post"> <header class="post-header"> <h1 class="post-title"> <span class="font-weight-bold">吟处雪</span> 轻遮 </h1> <p class="desc">Technical Artist | Shader Developer</p> </header> <article> <div class="profile float-right"> <figure> <picture> <img src="/assets/img/prof_pic.jpg?fa17ac64fdae20dffb91081e338157cd" class="img-fluid z-depth-1 rounded-circle" width="100%" height="auto" alt="prof_pic.jpg" loading="eager" onerror="this.onerror=null; $('.responsive-img-srcset').remove();"> </picture> </figure> <div class="more-info"> <p>专注实时渲染技术</p> <p>Unity · Unreal Engine</p> </div> </div> <div class="clearfix"> <div class="about-intro"> <p class="lead-text">你好，我是<strong>吟处雪轻遮</strong>，一名正在学习技术美术 (Technical Artist) 的开发者。</p> <p class="intro-desc">专注于实时渲染技术的学习与实践，目标是成为一名专业的 TA。在这个博客里，我分享 Shader 开发心得、渲染原理学习笔记、项目实践经验以及技术成长历程。</p> <p class="motto">"音起若梦期末来，樱吹似雪入我怀"</p> </div> <div class="divider"></div> <div class="section"> <h2> <i class="fas fa-code"></i> 技术栈</h2> <div class="stack-list"> <div class="stack-row"> <span class="stack-label">引擎平台</span> <div class="stack-tags"> <span class="tag primary">Unity URP</span> <span class="tag primary">Unreal Engine</span> <span class="tag">Built-in Pipeline</span> </div> </div> <div class="stack-row"> <span class="stack-label">编程语言</span> <div class="stack-tags"> <span class="tag primary">HLSL</span> <span class="tag primary">ShaderLab</span> <span class="tag">C#</span> <span class="tag">Blueprint</span> <span class="tag">Python</span> </div> </div> <div class="stack-row"> <span class="stack-label">专业领域</span> <div class="stack-tags"> <span class="tag primary">角色渲染</span> <span class="tag primary">卡通着色 (NPR)</span> <span class="tag primary">PBR 工作流</span> <span class="tag">实时光照</span> <span class="tag">后处理效果</span> </div> </div> <div class="stack-row"> <span class="stack-label">开发工具</span> <div class="stack-tags"> <span class="tag">Blender</span> <span class="tag">Substance Painter</span> <span class="tag">RenderDoc</span> <span class="tag">Git</span> <span class="tag">VS / Rider</span> </div> </div> </div> </div> <div class="divider"></div> <div class="section"> <h2> <i class="fas fa-compass"></i> 当前学习重点</h2> <ul class="goals-list"> <li> <strong>渲染管线深入研究</strong> <p>深入学习 Unity URP 和 Unreal 渲染管线架构，掌握 Render Features 和自定义 Pass 开发</p> </li> <li> <strong>PBR 与卡通渲染实践</strong> <p>实现能量守恒的 PBR 着色模型，研究卡通渲染中的描边、阴影、高光等技术</p> </li> <li> <strong>技术作品集建设</strong> <p>复刻商业级游戏渲染效果（绝区零、崩坏），积累实战经验，形成完整技术作品集</p> </li> <li> <strong>Unreal 渲染系统探索</strong> <p>学习 Unreal 材质系统、后处理框架，掌握蓝图可视化编程和引擎级渲染定制</p> </li> </ul> </div> <div class="divider"></div> <div class="section"> <h2> <i class="fas fa-book-open"></i> 博客内容</h2> <ul class="content-list"> <li> <strong>Shader 开发与技术探索</strong> — 编程技巧、渲染算法实现、图形学理论应用</li> <li> <strong>渲染原理学习笔记</strong> — 光照模型、BRDF、全局光照等核心概念</li> <li> <strong>项目实践与问题解决</strong> — 实际项目中的渲染问题与性能优化</li> <li> <strong>技术成长与学习路径</strong> — 学习历程、资源推荐、TA 职业发展思考</li> </ul> </div> <div class="divider"></div> <div class="section"> <h2> <i class="fas fa-paper-plane"></i> 联系方式</h2> <div class="contact-list"> <a href="mailto:1215422936@qq.com" class="contact-item"> <i class="fas fa-envelope"></i> <span>1215422936@qq.com</span> </a> <a href="https://qm.qq.com/q/kYwCma6AAY" target="_blank" class="contact-item" rel="external nofollow noopener"> <i class="fab fa-qq"></i> <span>QQ 群: 1038259915</span> </a> <a href="https://github.com/XueQingZhe" target="_blank" class="contact-item" rel="external nofollow noopener"> <i class="fab fa-github"></i> <span>GitHub</span> </a> <a href="https://www.zhihu.com/people/93-66-30-25" target="_blank" class="contact-item" rel="external nofollow noopener"> <i class="fab fa-zhihu"></i> <span>知乎</span> </a> <a href="https://afdian.com/a/AtristForMyDream" target="_blank" class="contact-item" rel="external nofollow noopener"> <i class="fas fa-heart"></i> <span>爱发电</span> </a> </div> <p class="contact-note">欢迎交流技术问题，分享学习心得，或讨论 TA 相关话题。</p> </div> <style>.about-intro{margin:2rem 0;line-height:1.8}.lead-text{font-size:1.15rem;color:var(--global-text-color);margin-bottom:.75rem}.lead-text strong{color:var(--global-theme-color)}.intro-desc{color:var(--global-text-color-light);font-size:1rem;margin-bottom:1rem}.motto{color:var(--global-text-color-light);font-style:italic;font-size:.95rem;opacity:.8;margin:1.5rem 0 0;padding-left:1rem;border-left:2px solid var(--global-theme-color)}.divider{height:1px;background:var(--global-divider-color);margin:2.5rem 0}.section{margin:2rem 0}.section h2{font-size:1.25rem;font-weight:600;color:var(--global-text-color);margin:0 0 1.25rem;display:flex;align-items:center;gap:.6rem}.section h2 i{color:var(--global-theme-color);font-size:1rem}.stack-list{display:flex;flex-direction:column;gap:1rem}.stack-row{display:flex;align-items:flex-start;gap:1.5rem}.stack-label{min-width:100px;font-weight:500;color:var(--global-text-color);font-size:.9rem;padding-top:.35rem}.stack-tags{display:flex;flex-wrap:wrap;gap:.5rem;flex:1}.tag{display:inline-block;padding:.35rem .75rem;background:var(--global-code-bg-color);border:1px solid var(--global-divider-color);border-radius:4px;font-size:.85rem;color:var(--global-text-color)}.tag.primary{background:rgba(var(--global-theme-color-rgb),0.1);border-color:rgba(var(--global-theme-color-rgb),0.3);color:var(--global-theme-color)}.goals-list{list-style:none;padding:0;margin:0}.goals-list li{margin-bottom:1.25rem;padding-left:1rem;border-left:2px solid var(--global-divider-color)}.goals-list li:hover{border-left-color:var(--global-theme-color)}.goals-list strong{display:block;font-size:1rem;color:var(--global-text-color);margin-bottom:.35rem}.goals-list p{font-size:.9rem;color:var(--global-text-color-light);line-height:1.6;margin:0}.content-list{list-style:none;padding:0;margin:0}.content-list li{padding:.5rem 0;font-size:.95rem;color:var(--global-text-color-light);border-bottom:1px solid var(--global-divider-color)}.content-list li:last-child{border-bottom:0}.content-list strong{color:var(--global-text-color)}.contact-list{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem}.contact-item{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;background:var(--global-code-bg-color);border:1px solid var(--global-divider-color);border-radius:6px;text-decoration:none;color:var(--global-text-color);font-size:.9rem;transition:all .2s ease}.contact-item:hover{border-color:var(--global-theme-color);color:var(--global-theme-color)}.contact-item i{font-size:1rem;color:var(--global-theme-color)}.contact-note{font-size:.9rem;color:var(--global-text-color-light);margin:1rem 0 0}@media(max-width:768px){.stack-row{flex-direction:column;gap:.5rem}.stack-label{min-width:auto}.contact-list{flex-direction:column}.contact-item{justify-content:flex-start}}.profile img{border:2px solid var(--global-theme-color);box-shadow:0 4px 12px rgba(0,0,0,0.1)}</style> </div> <h2> <a href="/news/" style="color: inherit">news</a> </h2> <div class="news"> <div class="table-responsive"> <table class="table table-sm table-borderless"> <tr> <th scope="row" style="width: 20%">Feb 08, 2026</th> <td> 默认管线转到URP管线！ </td> </tr> <tr> <th scope="row" style="width: 20%">Jan 03, 2026</th> <td> TAMonth01结束, TAMonth02开始！ </td> </tr> <tr> <th scope="row" style="width: 20%">Dec 20, 2025</th> <td> 🚀开始了TA学习计划！建立了个人技术博客和作品集网站。 </td> </tr> </table> </div> </div> <h2> <a href="/blog/" style="color: inherit">latest posts</a> </h2> <div class="news"> <div class="table-responsive" style="max-height: 60vw"> <table class="table table-sm table-borderless"> <tr> <th scope="row" style="width: 20%">Apr 02, 2026</th> <td> <a class="news-title" href="/blog/2026/URP-RendererFeature-ScreenSpaceOutline/">URP - RendererFeature ：ScreenSpaceOutline</a> </td> </tr> <tr> <th scope="row" style="width: 20%">Apr 01, 2026</th> <td> <a class="news-title" href="/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86-%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84/">平滑法线处理 - 八面体映射</a> </td> </tr> <tr> <th scope="row" style="width: 20%">Jan 31, 2026</th> <td> <a class="news-title" href="/blog/2026/Lv.3-Unity%E4%B8%BB%E7%BA%BF-%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84PBRShader/">Lv.3 Unity主线：一个简单的PBRShader</a> </td> </tr> </table> </div> </div> <div class="social"> <div class="contact-icons"> <a href="mailto:%31%32%31%35%34%32%32%39%33%36@%71%71.%63%6F%6D" title="email"><i class="fa-solid fa-envelope"></i></a> <a href="https://github.com/XueQingZhe" title="GitHub" rel="external nofollow noopener" target="_blank"><i class="fa-brands fa-github"></i></a> <a href="/feed.xml" title="RSS Feed"><i class="fa-solid fa-square-rss"></i></a> </div> <div class="contact-note">欢迎通过邮件或GitHub与我交流技术问题 </div> </div> </article> </div> </div> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css"> <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script> <div id="aplayer-container"> <meting-js server="netease" type="playlist" id="2072624795" fixed="true" mini="true" theme="#212121" loop="all" order="list" preload="auto" list-folded="true"> </meting-js> </div> <style>.aplayer.aplayer-fixed{z-index:10000!important}.aplayer.aplayer-fixed.aplayer-narrow .aplayer-body{background:#111!important;border-radius:50%!important;box-shadow:0 0 0 1px rgba(255,255,255,0.1),0 4px 20px rgba(0,0,0,0.4)!important}.aplayer:not(.aplayer-narrow) .aplayer-body{background:#111!important;border-radius:12px 12px 0 0!important}.aplayer .aplayer-bar-wrap .aplayer-bar{height:2px!important;background:rgba(255,255,255,0.08)!important}.aplayer .aplayer-bar-wrap .aplayer-played{background:rgba(255,255,255,0.7)!important}.aplayer .aplayer-bar-wrap .aplayer-thumb{background:#fff!important;width:8px!important;height:8px!important;border-radius:50%!important;top:-3px!important}.aplayer .aplayer-info .aplayer-music .aplayer-title{color:rgba(255,255,255,0.9)!important;font-size:13px!important}.aplayer .aplayer-info .aplayer-music .aplayer-author{color:rgba(255,255,255,0.35)!important;font-size:11px!important}.aplayer .aplayer-list ol li{border-bottom:.5px solid rgba(255,255,255,0.05)!important}.aplayer .aplayer-list ol li.aplayer-list-light{background:rgba(255,255,255,0.06)!important}.aplayer .aplayer-list ol li span{color:rgba(255,255,255,0.4)!important}.aplayer .aplayer-list ol li .aplayer-list-title{color:rgba(255,255,255,0.75)!important}.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon path{fill:rgba(255,255,255,0.5)!important}.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon:hover path{fill:rgba(255,255,255,0.9)!important}.aplayer .aplayer-list{background:#111!important}.aplayer .aplayer-list ol{background:#111!important}.aplayer .aplayer-list ol li{background:#111!important;border-bottom:.5px solid rgba(255,255,255,0.05)!important}.aplayer .aplayer-list ol li.aplayer-list-light{background:rgba(255,255,255,0.06)!important}.aplayer .aplayer-list ol li .aplayer-list-title{color:rgba(255,255,255,0.75)!important}.aplayer .aplayer-list ol li .aplayer-list-author{color:rgba(255,255,255,0.35)!important}.aplayer .aplayer-list ol li span{color:rgba(255,255,255,0.4)!important}</style> </div> <script src="/assets/libs/jquery/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> <script src="/assets/js/bootstrap.bundle.min.js"></script> <script src="/assets/libs/mdb/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script> <script defer src="/assets/libs/masonry/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="/assets/libs/imagesloaded/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?a0db7e5d5c70cc3252b3138b0c91dcaf" type="text/javascript"></script> <script defer src="/assets/libs/medium_zoom/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/js/zoom.js?85ddb88934d28b74e78031fd54cf8308"></script> <script src="/assets/js/no_defer.js?2781658a0a2b13ed609542042a859126"></script> <script defer src="/assets/js/common.js?c15de51d4bb57887caa2c21988d97279"></script> <script defer src="/assets/js/copy_code.js?c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?d9f17b6adc2311cbabd747f4538bb15f"></script> <script async src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script> <script async src="https://badge.dimensions.ai/badge.js"></script> <script defer type="text/javascript" id="MathJax-script" src="/assets/libs/mathjax/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/js/mathjax-setup.js?a5bb4e6a542c546dd929b24b8b236dfd"></script> <script defer src="/assets/libs/polyfill/polyfill.min.js" crossorigin="anonymous"></script> <script defer src="/assets/js/progress-bar.js?2f30e0e6801ea8f5036fa66e1ab0a71a" type="text/javascript"></script> <script src="/assets/js/vanilla-back-to-top.min.js?f40d453793ff4f64e238e420181a1d17"></script> <script>
-    addBackToTop();
-  </script> <script type="module" src="/assets/js/search/ninja-keys.min.js?a3446f084dcaecc5f75aa1757d087dcf"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/js/search-setup.js?6c304f7b1992d4b60f7a07956e52f04a"></script> <script src="/assets/js/search-data.js"></script> <script src="/assets/js/shortcut-key.js?6f508d74becd347268a7f822bca7309d"></script> </body> </html>
+</script><title>吟处雪轻遮 · 浮光游境</title><meta name="description" content="吟处雪轻遮的个人花园。记录技术美术、实时渲染与 Shader 学习，在代码与光影之间，慢慢构建自己的世界。"><link rel="canonical" href="https://xueqingzhe.github.io/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"><meta property="og:type" content="website"><meta property="og:title" content="吟处雪轻遮 · 浮光游境"><meta property="og:description" content="吟处雪轻遮的个人花园。记录技术美术、实时渲染与 Shader 学习，在代码与光影之间，慢慢构建自己的世界。"><meta property="og:url" content="https://xueqingzhe.github.io/"><meta property="og:image" content="https://xueqingzhe.github.io/og.png"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<style>.living-scene[data-astro-cid-fsmfkrmy]{position:absolute;inset:0;display:block;overflow:hidden;pointer-events:none;isolation:isolate}.living-scene[data-astro-cid-fsmfkrmy] canvas[data-astro-cid-fsmfkrmy],.scene-fallback[data-astro-cid-fsmfkrmy]{width:100%;height:100%;position:absolute;inset:0;display:block}.living-scene[data-astro-cid-fsmfkrmy] canvas[data-astro-cid-fsmfkrmy]{opacity:0;transition:opacity 1.5s ease}.living-scene[data-astro-cid-fsmfkrmy][data-renderer=webgl] canvas[data-astro-cid-fsmfkrmy]{opacity:1}.scene-fallback[data-astro-cid-fsmfkrmy]{background:radial-gradient(ellipse at 20% 20%,#eee4c7,transparent 55%),linear-gradient(155deg,#bcc6c6,#b0bdb1 48%,#657f73);transition:filter 1.5s ease}.fallback-sun[data-astro-cid-fsmfkrmy]{position:absolute;width:12vw;aspect-ratio:1;left:40%;top:12%;border-radius:50%;background:#f4e8b5;box-shadow:0 0 100px 50px #f5e8b640}.fallback-arch[data-astro-cid-fsmfkrmy]{position:absolute;width:18%;height:44%;right:18%;bottom:22%;border:clamp(10px,1.6vw,28px) solid #cfbd99;border-bottom:0;border-radius:45% 45% 0 0;box-shadow:inset -5px 3px #969581,6px 5px #7c978637;transform:rotate(-3deg)}.fallback-arch-back[data-astro-cid-fsmfkrmy]{width:14%;height:38%;right:7%;bottom:28%;opacity:.58;transform:rotate(7deg)}.fallback-water[data-astro-cid-fsmfkrmy]{position:absolute;left:0;right:0;height:29%;bottom:0;background:repeating-linear-gradient(176deg,transparent 0 19px,#b5e3c325 20px 21px,transparent 22px 38px),linear-gradient(transparent,#247c80a6)}.fallback-botanical[data-astro-cid-fsmfkrmy]{position:absolute;width:34%;height:42%;right:-12%;top:-14%;background:#2e6458;border-radius:48%;box-shadow:-3vw 2vw #397565,3vw 9vw #275f53,-5vw 6vw #4a8066;filter:blur(2px)}.living-scene[data-astro-cid-fsmfkrmy]:not([data-variant=portal]) .fallback-arch[data-astro-cid-fsmfkrmy]{display:none}.living-scene[data-astro-cid-fsmfkrmy]:not([data-variant=portal]):not([data-variant=about]) .fallback-botanical[data-astro-cid-fsmfkrmy]{opacity:.2}.fallback-object[data-astro-cid-fsmfkrmy]{position:absolute;right:18%;top:27%;width:17%;height:34%}.living-scene[data-astro-cid-fsmfkrmy][data-variant=work] .fallback-object[data-astro-cid-fsmfkrmy]{border:5px solid #a29773;background:radial-gradient(circle at 50% 47%,#638f81 0 22%,transparent 23%),#b9c5ae;box-shadow:11vw 4vw 0 -1vw #769587,-11vw 4vw 0 -1vw #bdba96;transform:rotate(3deg)}.living-scene[data-astro-cid-fsmfkrmy][data-variant=notes] .fallback-object[data-astro-cid-fsmfkrmy]{background:repeating-linear-gradient(transparent 0 14%,#6f9d9740 14% 14.4%,transparent 14.4% 18%),#d6d9c8;transform:rotate(11deg);box-shadow:8vw 3vw 0 -1vw #b6cac0,-8vw -1vw 0 -1vw #d4ddce}.living-scene[data-astro-cid-fsmfkrmy][data-variant=study] .fallback-object[data-astro-cid-fsmfkrmy]{border:1px solid #c2d5ba;border-radius:50%;transform:rotate(35deg);box-shadow:0 0 30px #9ab9a220,inset 0 0 30px #9ab9a220}.living-scene[data-astro-cid-fsmfkrmy][data-variant=study] .fallback-object[data-astro-cid-fsmfkrmy]:after{content:"";position:absolute;inset:20% -20%;border:1px solid #c2d5ba;border-radius:50%;transform:rotate(80deg)}.living-scene[data-astro-cid-fsmfkrmy][data-variant=about] .fallback-botanical[data-astro-cid-fsmfkrmy]{top:23%;right:12%;width:25%;height:23%;border-radius:45% 55% 50% 50%;box-shadow:-4vw 2vw #397565,2vw 2vw #275f53}.living-scene[data-astro-cid-fsmfkrmy][data-variant=about] .fallback-object[data-astro-cid-fsmfkrmy]{top:42%;right:24%;width:2px;height:30%;background:#466958;box-shadow:0 0 26px #d5b78466}html[data-theme=dark] .scene-fallback[data-astro-cid-fsmfkrmy]{filter:brightness(.29) saturate(.8) hue-rotate(30deg)}@media(prefers-reduced-motion:reduce){.living-scene[data-astro-cid-fsmfkrmy] canvas[data-astro-cid-fsmfkrmy],.scene-fallback[data-astro-cid-fsmfkrmy]{transition:none}}
+</style>
+<link rel="stylesheet" href="/bundle/index.CPSVoqbI.css"></head><body class="portal-mode">  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/"><span>作品</span><small>WORK</small></a><a href="/notes/"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra">  <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page portal-page" id="main" tabindex="-1"> <section class="portal-shell" aria-labelledby="portal-title"> <living-scene data-variant="portal" data-renderer="fallback" aria-hidden="true" data-astro-cid-fsmfkrmy="true" class="living-scene"> <div class="scene-fallback" data-astro-cid-fsmfkrmy> <div class="fallback-sun" data-astro-cid-fsmfkrmy></div> <div class="fallback-arch fallback-arch-back" data-astro-cid-fsmfkrmy></div> <div class="fallback-arch" data-astro-cid-fsmfkrmy></div> <div class="fallback-object" data-astro-cid-fsmfkrmy></div> <div class="fallback-water" data-astro-cid-fsmfkrmy></div> <div class="fallback-botanical" data-astro-cid-fsmfkrmy></div> </div> <canvas data-astro-cid-fsmfkrmy></canvas> </living-scene>  <script type="module" src="/bundle/LivingScene.astro_astro_type_script_index_0_lang.CJYix3eD.js"></script> <div class="portal-wash" aria-hidden="true"></div> <div class="portal-vignette" aria-hidden="true"></div> <div class="portal-lines" aria-hidden="true"><span></span><span></span></div> <div class="portal-story"> <div class="portal-eyebrow"><span class="live-dot"></span><span>吟处雪轻遮的光影水庭</span><span class="edition">EST. IN CURIOSITY</span></div> <h1 class="portal-title" id="portal-title" aria-label="浮光游境"><span class="art-line" data-kinetic data-kinetic-style="ink">浮光</span><span class="art-line second-line" data-kinetic data-kinetic-style="ink">游境</span><span class="title-seal" aria-hidden="true">雪轻遮</span></h1> <div class="portal-type" data-variable aria-hidden="true"><span data-kinetic data-kinetic-style="wide">LIGHT IN</span><span class="hollow-type" data-kinetic data-kinetic-style="wide">THE MAKING.</span></div> <p class="portal-description">在代码与想象的边界，<br>让光有形，让灵感发生。</p> <div class="portal-tags"><span>TECHNICAL ART</span><i></i><span>SHADER & NPR</span></div> </div> <div class="scene-poem" aria-live="off"><span class="poem-line" id="scene-poem">有风经过的地方，光正在生长。</span><span>AN EVER-CHANGING LITTLE WORLD</span></div> <div class="scene-coordinate" aria-hidden="true"><span>光</span><i></i><small>LIGHT / SPACE / TIME</small></div> <nav class="portal-dock" aria-label="选择探索空间"> <a class="room-link" href="/work/" data-room="work" data-poem="一束光，成为一种可能。" data-magnetic><div class="room-top"><span class="room-number">01</span><svg class="room-symbol" viewBox="0 0 60 60" fill="none" aria-hidden="true"><path d="M13 47V25a17 17 0 0 1 34 0v22M21 47V25a9 9 0 0 1 18 0v22M8 47h44"></path><circle cx="30" cy="29" r="3"></circle></svg><span class="room-count">08 件作品</span></div><div class="room-heading"><h2>造境</h2><span class="room-en"><span>WORK</span><span aria-hidden="true">WORK</span></span></div><p>把想象，雕琢成画面</p><span class="room-edge" aria-hidden="true"></span></a><a class="room-link" href="/notes/" data-room="notes" data-poem="每个念头，都有它的回声。" data-magnetic><div class="room-top"><span class="room-number">02</span><svg class="room-symbol" viewBox="0 0 60 60" fill="none" aria-hidden="true"><path d="m14 15 31-5-2 34-30 7 1-36Zm6 9 16-3m-16 11 16-3m-16 11 10-2"></path><path d="m47 18 4 29-29 5"></path></svg><span class="room-count">26 篇手记</span></div><div class="room-heading"><h2>拾光</h2><span class="room-en"><span>JOURNAL</span><span aria-hidden="true">JOURNAL</span></span></div><p>收集思绪生长的痕迹</p><span class="room-edge" aria-hidden="true"></span></a><a class="room-link" href="/tutorials/" data-room="study" data-poem="让好奇心，画出自己的轨道。" data-magnetic><div class="room-top"><span class="room-number">03</span><svg class="room-symbol" viewBox="0 0 60 60" fill="none" aria-hidden="true"><ellipse cx="30" cy="30" rx="23" ry="10" transform="rotate(-35 30 30)"></ellipse><ellipse cx="30" cy="30" rx="23" ry="10" transform="rotate(35 30 30)"></ellipse><circle cx="30" cy="30" r="3"></circle><circle cx="49" cy="17" r="3"></circle></svg><span class="room-count">38 个章节</span></div><div class="room-heading"><h2>寻径</h2><span class="room-en"><span>STUDY</span><span aria-hidden="true">STUDY</span></span></div><p>沿着好奇，走得更远</p><span class="room-edge" aria-hidden="true"></span></a><a class="room-link" href="/about/" data-room="about" data-poem="很高兴，在这里遇见你。" data-magnetic><div class="room-top"><span class="room-number">04</span><svg class="room-symbol" viewBox="0 0 60 60" fill="none" aria-hidden="true"><path d="m9 38 14-22 18 8 9 20M23 16l5 29 13-21M9 38l19 7 22-1"></path><circle cx="23" cy="16" r="3"></circle><circle cx="41" cy="24" r="3"></circle><circle cx="28" cy="45" r="3"></circle></svg><span class="room-count">关于我</span></div><div class="room-heading"><h2>回声</h2><span class="room-en"><span>ABOUT</span><span aria-hidden="true">ABOUT</span></span></div><p>认识这个世界的记录者</p><span class="room-edge" aria-hidden="true"></span></a> </nav> <div class="portal-floor"><span class="interaction-hint"><span class="hint-ring" aria-hidden="true"></span><span>轻触水面，泛起涟漪</span></span><span class="floor-signature">不急着抵达，先让好奇发生。</span><button class="motion-control" id="motion-toggle" type="button" aria-label="暂停场景动效" aria-pressed="false"><span class="motion-indicator" aria-hidden="true"><i></i><i></i><i></i></span><span class="motion-text">风正在吹</span></button></div> </section> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.B5sdHiUr.js"></script> </body></html> <script type="module" src="/bundle/index.astro_astro_type_script_index_0_lang.BEEibqVF.js"></script>

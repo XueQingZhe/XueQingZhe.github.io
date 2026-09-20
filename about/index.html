@@ -1,0 +1,234 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="about"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>关于我 · 吟处雪轻遮</title><meta name="description" content="吟处雪轻遮，一名正在学习与探索的技术美术。"><link rel="canonical" href="https://xueqingzhe.github.io/about/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"><meta property="og:type" content="website"><meta property="og:title" content="关于我 · 吟处雪轻遮"><meta property="og:description" content="吟处雪轻遮，一名正在学习与探索的技术美术。"><meta property="og:url" content="https://xueqingzhe.github.io/about/"><meta property="og:image" content="https://xueqingzhe.github.io/og.png"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<style>.living-scene[data-astro-cid-fsmfkrmy]{position:absolute;inset:0;display:block;overflow:hidden;pointer-events:none;isolation:isolate}.living-scene[data-astro-cid-fsmfkrmy] canvas[data-astro-cid-fsmfkrmy],.scene-fallback[data-astro-cid-fsmfkrmy]{width:100%;height:100%;position:absolute;inset:0;display:block}.living-scene[data-astro-cid-fsmfkrmy] canvas[data-astro-cid-fsmfkrmy]{opacity:0;transition:opacity 1.5s ease}.living-scene[data-astro-cid-fsmfkrmy][data-renderer=webgl] canvas[data-astro-cid-fsmfkrmy]{opacity:1}.scene-fallback[data-astro-cid-fsmfkrmy]{background:radial-gradient(ellipse at 20% 20%,#eee4c7,transparent 55%),linear-gradient(155deg,#bcc6c6,#b0bdb1 48%,#657f73);transition:filter 1.5s ease}.fallback-sun[data-astro-cid-fsmfkrmy]{position:absolute;width:12vw;aspect-ratio:1;left:40%;top:12%;border-radius:50%;background:#f4e8b5;box-shadow:0 0 100px 50px #f5e8b640}.fallback-arch[data-astro-cid-fsmfkrmy]{position:absolute;width:18%;height:44%;right:18%;bottom:22%;border:clamp(10px,1.6vw,28px) solid #cfbd99;border-bottom:0;border-radius:45% 45% 0 0;box-shadow:inset -5px 3px #969581,6px 5px #7c978637;transform:rotate(-3deg)}.fallback-arch-back[data-astro-cid-fsmfkrmy]{width:14%;height:38%;right:7%;bottom:28%;opacity:.58;transform:rotate(7deg)}.fallback-water[data-astro-cid-fsmfkrmy]{position:absolute;left:0;right:0;height:29%;bottom:0;background:repeating-linear-gradient(176deg,transparent 0 19px,#b5e3c325 20px 21px,transparent 22px 38px),linear-gradient(transparent,#247c80a6)}.fallback-botanical[data-astro-cid-fsmfkrmy]{position:absolute;width:34%;height:42%;right:-12%;top:-14%;background:#2e6458;border-radius:48%;box-shadow:-3vw 2vw #397565,3vw 9vw #275f53,-5vw 6vw #4a8066;filter:blur(2px)}.living-scene[data-astro-cid-fsmfkrmy]:not([data-variant=portal]) .fallback-arch[data-astro-cid-fsmfkrmy]{display:none}.living-scene[data-astro-cid-fsmfkrmy]:not([data-variant=portal]):not([data-variant=about]) .fallback-botanical[data-astro-cid-fsmfkrmy]{opacity:.2}.fallback-object[data-astro-cid-fsmfkrmy]{position:absolute;right:18%;top:27%;width:17%;height:34%}.living-scene[data-astro-cid-fsmfkrmy][data-variant=work] .fallback-object[data-astro-cid-fsmfkrmy]{border:5px solid #a29773;background:radial-gradient(circle at 50% 47%,#638f81 0 22%,transparent 23%),#b9c5ae;box-shadow:11vw 4vw 0 -1vw #769587,-11vw 4vw 0 -1vw #bdba96;transform:rotate(3deg)}.living-scene[data-astro-cid-fsmfkrmy][data-variant=notes] .fallback-object[data-astro-cid-fsmfkrmy]{background:repeating-linear-gradient(transparent 0 14%,#6f9d9740 14% 14.4%,transparent 14.4% 18%),#d6d9c8;transform:rotate(11deg);box-shadow:8vw 3vw 0 -1vw #b6cac0,-8vw -1vw 0 -1vw #d4ddce}.living-scene[data-astro-cid-fsmfkrmy][data-variant=study] .fallback-object[data-astro-cid-fsmfkrmy]{border:1px solid #c2d5ba;border-radius:50%;transform:rotate(35deg);box-shadow:0 0 30px #9ab9a220,inset 0 0 30px #9ab9a220}.living-scene[data-astro-cid-fsmfkrmy][data-variant=study] .fallback-object[data-astro-cid-fsmfkrmy]:after{content:"";position:absolute;inset:20% -20%;border:1px solid #c2d5ba;border-radius:50%;transform:rotate(80deg)}.living-scene[data-astro-cid-fsmfkrmy][data-variant=about] .fallback-botanical[data-astro-cid-fsmfkrmy]{top:23%;right:12%;width:25%;height:23%;border-radius:45% 55% 50% 50%;box-shadow:-4vw 2vw #397565,2vw 2vw #275f53}.living-scene[data-astro-cid-fsmfkrmy][data-variant=about] .fallback-object[data-astro-cid-fsmfkrmy]{top:42%;right:24%;width:2px;height:30%;background:#466958;box-shadow:0 0 26px #d5b78466}html[data-theme=dark] .scene-fallback[data-astro-cid-fsmfkrmy]{filter:brightness(.29) saturate(.8) hue-rotate(30deg)}@media(prefers-reduced-motion:reduce){.living-scene[data-astro-cid-fsmfkrmy] canvas[data-astro-cid-fsmfkrmy],.scene-fallback[data-astro-cid-fsmfkrmy]{transition:none}}
+.page-stage{position:relative;isolation:isolate;overflow:hidden;margin-bottom:55px;background:var(--surface-2);border:1px solid var(--line)}.page-stage>.stage-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--ground) 92%,transparent),color-mix(in srgb,var(--ground) 65%,transparent) 44%,transparent 90%)}.page-stage .stage-index{z-index:2;font:9px/1.7 var(--font-mono);letter-spacing:1.7px;color:var(--ink-3)}.editorial-width{max-width:1120px;margin-inline:auto}.editorial-filter{display:flex;align-items:center;flex-wrap:wrap;gap:7px}.editorial-filter button{font:500 11px/1.8 var(--font-body);padding:6px 15px;background:transparent;color:var(--ink-2);border:1px solid var(--line);border-radius:100px;transition:background .25s,color .25s,border-color .25s}.editorial-filter button b{font:9px var(--font-mono);color:var(--ink-3);margin-left:5px}.editorial-filter button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink-3)}.editorial-filter button[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:var(--ground)}.editorial-filter button[aria-pressed=true] b{color:inherit;opacity:.65}.editorial-result{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:27px 0 32px;color:var(--ink-3);font-size:11px}.editorial-reset{color:var(--accent);border:0;padding:3px 0;background:none;border-bottom:1px solid var(--line);font-size:11px}.editorial-empty{padding:50px 0 70px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-2)}@media(max-width:700px){.page-stage{margin-bottom:35px}.editorial-filter{gap:6px}.editorial-filter button{font-size:10px;padding:5px 11px}.editorial-result{margin:22px 0 28px}}
+</style>
+<link rel="stylesheet" href="/bundle/about.DQ7yATvJ.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/"><span>作品</span><small>WORK</small></a><a href="/notes/"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/" aria-current="page"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <header class="page-stage signal-stage" data-astro-cid-kh7btl4r><living-scene data-variant="about" data-renderer="fallback" aria-hidden="true" data-astro-cid-fsmfkrmy="true" class="living-scene"> <div class="scene-fallback" data-astro-cid-fsmfkrmy> <div class="fallback-sun" data-astro-cid-fsmfkrmy></div> <div class="fallback-arch fallback-arch-back" data-astro-cid-fsmfkrmy></div> <div class="fallback-arch" data-astro-cid-fsmfkrmy></div> <div class="fallback-object" data-astro-cid-fsmfkrmy></div> <div class="fallback-water" data-astro-cid-fsmfkrmy></div> <div class="fallback-botanical" data-astro-cid-fsmfkrmy></div> </div> <canvas data-astro-cid-fsmfkrmy></canvas> </living-scene>  <script type="module" src="/bundle/LivingScene.astro_astro_type_script_index_0_lang.CJYix3eD.js"></script><div class="stage-scrim" aria-hidden="true" data-astro-cid-kh7btl4r></div><div class="signal-copy" data-astro-cid-kh7btl4r><span class="stage-index" data-astro-cid-kh7btl4r>04 / HELLO FROM HERE</span><h1 data-kinetic data-kinetic-style="wide" data-astro-cid-kh7btl4r>SIGNAL</h1><p class="stage-subtitle" data-kinetic data-kinetic-style="ink" data-astro-cid-kh7btl4r>关于我</p><p class="signal-description" data-astro-cid-kh7btl4r>在技术与画面之间，<br data-astro-cid-kh7btl4r>寻找自己的语言。</p></div><div class="signal-chart" aria-hidden="true" data-astro-cid-kh7btl4r><svg viewBox="0 0 440 410" data-astro-cid-kh7btl4r><defs data-astro-cid-kh7btl4r><radialGradient id="signal-glow" data-astro-cid-kh7btl4r><stop stop-color="currentColor" stop-opacity=".16" data-astro-cid-kh7btl4r></stop><stop offset="1" stop-color="currentColor" stop-opacity="0" data-astro-cid-kh7btl4r></stop></radialGradient></defs><circle cx="225" cy="205" r="180" fill="url(#signal-glow)" data-astro-cid-kh7btl4r></circle><circle class="signal-ring" cx="225" cy="205" r="155" data-astro-cid-kh7btl4r></circle><circle class="signal-ring signal-ring-inner" cx="225" cy="205" r="113" data-astro-cid-kh7btl4r></circle><path class="signal-path" d="M92 172 169 93 278 110 355 220 289 322 193 283 128 335 M169 93 193 283 278 110 M92 172 355 220 193 283 M278 110 289 322" data-astro-cid-kh7btl4r></path><g class="signal-star" style="--star-delay:0s" data-astro-cid-kh7btl4r><circle cx="92" cy="172" r="3" data-astro-cid-kh7btl4r></circle><circle class="signal-star-halo" cx="92" cy="172" r="11" data-astro-cid-kh7btl4r></circle></g><g class="signal-star" style="--star-delay:0.5s" data-astro-cid-kh7btl4r><circle cx="169" cy="93" r="3" data-astro-cid-kh7btl4r></circle><circle class="signal-star-halo" cx="169" cy="93" r="11" data-astro-cid-kh7btl4r></circle></g><g class="signal-star" style="--star-delay:1s" data-astro-cid-kh7btl4r><circle cx="278" cy="110" r="6" data-astro-cid-kh7btl4r></circle><circle class="signal-star-halo" cx="278" cy="110" r="11" data-astro-cid-kh7btl4r></circle></g><g class="signal-star" style="--star-delay:1.5s" data-astro-cid-kh7btl4r><circle cx="355" cy="220" r="3" data-astro-cid-kh7btl4r></circle><circle class="signal-star-halo" cx="355" cy="220" r="11" data-astro-cid-kh7btl4r></circle></g><g class="signal-star" style="--star-delay:2s" data-astro-cid-kh7btl4r><circle cx="289" cy="322" r="3" data-astro-cid-kh7btl4r></circle><circle class="signal-star-halo" cx="289" cy="322" r="11" data-astro-cid-kh7btl4r></circle></g><g class="signal-star" style="--star-delay:2.5s" data-astro-cid-kh7btl4r><circle cx="193" cy="283" r="3" data-astro-cid-kh7btl4r></circle><circle class="signal-star-halo" cx="193" cy="283" r="11" data-astro-cid-kh7btl4r></circle></g><g class="signal-star" style="--star-delay:3s" data-astro-cid-kh7btl4r><circle cx="128" cy="335" r="3" data-astro-cid-kh7btl4r></circle><circle class="signal-star-halo" cx="128" cy="335" r="11" data-astro-cid-kh7btl4r></circle></g><path class="signal-signature" d="M125 227 C149 204 163 176 163 183 C158 210 126 258 143 248 C166 233 182 210 195 207 C175 234 176 250 194 239 C212 229 225 196 236 193 L217 242 L252 208 L237 239 C261 225 279 211 293 205 L272 237 L309 220" data-astro-cid-kh7btl4r></path><text x="333" y="88" class="signal-label" data-astro-cid-kh7btl4r>MAKE</text><text x="58" y="283" class="signal-label" data-astro-cid-kh7btl4r>LEARN</text><text x="310" y="342" class="signal-label" data-astro-cid-kh7btl4r>REPEAT</text></svg></div></header> <article class="about-layout" data-astro-cid-kh7btl4r> <aside class="about-margin" aria-label="个人简介" data-astro-cid-kh7btl4r><div class="profile-name" data-kinetic data-kinetic-style="ink" data-astro-cid-kh7btl4r>吟处<br data-astro-cid-kh7btl4r>雪轻遮</div><p class="profile-intro" data-astro-cid-kh7btl4r>正在学习与探索的技术美术，<br data-astro-cid-kh7btl4r>这些手记的记录者。</p><div class="profile-status" data-astro-cid-kh7btl4r><span data-astro-cid-kh7btl4r></span>保持好奇，持续探索</div><p data-astro-cid-kh7btl4r>TECHNICAL ART<br data-astro-cid-kh7btl4r>SHADER & NPR<br data-astro-cid-kh7btl4r>ALWAYS LEARNING</p></aside> <div class="about-copy" data-astro-cid-kh7btl4r> <section data-reveal data-astro-cid-kh7btl4r><span class="eyebrow" data-astro-cid-kh7btl4r>THE THINGS I CARE ABOUT</span><h2 data-astro-cid-kh7btl4r>好看的画面，总让人想再靠近一点。</h2><p data-astro-cid-kh7btl4r>我喜欢风格化的角色与场景，也好奇它们背后的实现：一道描边如何贴合轮廓，阴影怎样保留表情，光照又如何把颜色连成一个整体。</p><p data-astro-cid-kh7btl4r>于是从建模与场景练习出发，慢慢走向实时渲染、NPR 卡通着色与 Shader。现在的探索围绕 Unity URP、Unreal Engine 与 Blender 展开，既关心最终的画面，也关心让这些画面成为可能的数学、代码与工具。</p></section> <section data-reveal data-astro-cid-kh7btl4r><span class="eyebrow" data-astro-cid-kh7btl4r>A PLACE TO KEEP THINGS</span><h2 data-astro-cid-kh7btl4r>给学习留下痕迹。</h2><p data-astro-cid-kh7btl4r>这个小站收纳作品，也收纳过程。做出来的效果、拆解过的算法、走过的弯路，都值得留在这里。文章可能带着当时理解的局限，之后有了新的认识，再回来补上。</p><div class="about-paths" data-astro-cid-kh7btl4r><a href="/work/" data-astro-cid-kh7btl4r><span data-astro-cid-kh7btl4r>看作品</span><p data-astro-cid-kh7btl4r>角色渲染、管线实验与工具实践</p></a><a href="/notes/" data-astro-cid-kh7btl4r><span data-astro-cid-kh7btl4r>读手记</span><p data-astro-cid-kh7btl4r>推导、源码阅读和问题记录</p></a><a href="/tutorials/" data-astro-cid-kh7btl4r><span data-astro-cid-kh7btl4r>一起学习</span><p data-astro-cid-kh7btl4r>沿着专题，把理解一点点搭起来</p></a></div></section> <section id="visual" data-reveal data-astro-cid-kh7btl4r><span class="eyebrow" data-astro-cid-kh7btl4r>ON THE WORK</span><h2 data-astro-cid-kh7btl4r>关于这里的作品。</h2><p data-astro-cid-kh7btl4r>这里的项目包含个人练习、渲染复现与工具制作。涉及游戏角色、模型和其他原作素材时，原作权利属于各自的创作者；具体的实现过程与引用信息请以对应文章为准。</p></section> <section id="contact" data-reveal data-astro-cid-kh7btl4r><span class="eyebrow" data-astro-cid-kh7btl4r>LET'S KEEP IN TOUCH</span><h2 data-astro-cid-kh7btl4r>如果你也对这些感兴趣。</h2><p data-astro-cid-kh7btl4r>欢迎交流图形学与技术美术，也欢迎指出文章里的疏漏。</p><div class="contact-links" data-astro-cid-kh7btl4r><a href="https://github.com/XueQingZhe" data-astro-cid-kh7btl4r>GitHub</a><a href="https://www.zhihu.com/people/93-66-30-25" data-astro-cid-kh7btl4r>知乎</a><a href="mailto:1215422936@qq.com" data-astro-cid-kh7btl4r>写封邮件</a><a href="https://qm.qq.com/q/kYwCma6AAY" data-astro-cid-kh7btl4r>QQ 交流群</a><a href="/rss.xml" data-astro-cid-kh7btl4r>订阅 RSS</a></div></section> <p class="about-signature" data-kinetic data-astro-cid-kh7btl4r>吟处雪轻遮<span data-astro-cid-kh7btl4r>谢谢你在这里停留。</span></p> <p class="visual-credit" data-astro-cid-kh7btl4r>水庭入口与栏目景观由网页中的图形程序实时绘制。项目图像、模型素材与引用信息见对应文章。</p> </div> </article> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.B5sdHiUr.js"></script> </body></html> 

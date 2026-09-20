@@ -1,281 +1,414 @@
-<!DOCTYPE html> <html lang="zh-CN"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> 09_添加PBR高光 | 吟处雪 轻遮 </title> <meta name="author" content="吟处雪 轻遮"> <meta name="description" content="09_添加PBR高光"> <meta name="keywords" content="technical-artist, shader, rendering, unity, unreal-engine, pbr, toon-shading"> <link rel="stylesheet" href="/assets/css/bootstrap.min.css?a4b3f509e79c54a512b890d73235ef04"> <link rel="stylesheet" href="/assets/libs/mdb/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="/assets/css/academicons.min.css?f0b7046b84e425c55f3463ac249818f5"> <link defer rel="stylesheet" href="/assets/css/scholar-icons.css?62b2ac103a88034e6882a5be5f3e2772"> <link defer rel="stylesheet" type="text/css" href="/assets/libs/google_fonts/google-fonts.css"> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-github.css?591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link defer href="/assets/css/bootstrap-toc.min.css?6f5af0bb9aab25d79b2448143cbeaa88" rel="stylesheet"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%E2%9A%9B%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/assets/css/main.css?d41d8cd98f00b204e9800998ecf8427e"> <link rel="canonical" href="https://xueqingzhe.github.io/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/09_%E6%B7%BB%E5%8A%A0PBR%E9%AB%98%E5%85%89/"> <script src="/assets/js/theme.js?a81d82887dd692e91686b43de4542f18"></script> <link defer rel="stylesheet" href="/assets/css/jekyll-pygments-themes-native.css?5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
-    initTheme();
-  </script> <link defer rel="stylesheet" href="/assets/libs/spotlight/spotlight.min.css" integrity="sha256-Dsvkx8BU8ntk9Iv+4sCkgHRynYSQQFP6gJfBN5STFLY=" crossorigin="anonymous"> </head> <body class="fixed-top-nav "> <link rel="preconnect" href="https://fonts.loli.net"> <link rel="preconnect" href="https://gstatic.loli.net" crossorigin> <link href="https://fonts.loli.net/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&amp;family=Noto+Serif+SC:wght@400;600;700&amp;display=swap" rel="stylesheet"> <style>.page-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--global-bg-color,#0d1117);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s cubic-bezier(0.4,0,0.2,1),visibility .8s;overflow:hidden}.page-loader.fade-out{opacity:0;visibility:hidden;pointer-events:none}.loader-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:loaderFadeIn .8s ease forwards;position:relative;z-index:2}@keyframes loaderFadeIn{from{opacity:0;transform:translateY(30px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}.loader-logo{font-size:clamp(2.2rem,6vw,3.5rem);font-weight:700;font-family:"Noto Serif SC","Source Han Serif SC","STSong",serif;background:linear-gradient(135deg,var(--global-text-color,#fff) 20%,var(--global-theme-color,#64b5f6) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1.5rem;letter-spacing:4px;text-shadow:0 0 60px rgba(var(--global-theme-color-rgb,100,181,246),0.3)}.loader-quote-container{margin-bottom:3rem;opacity:0;animation:quoteAppear .8s ease .4s forwards;text-align:center}.loader-quote-main{font-size:clamp(1rem,2.5vw,1.25rem);color:var(--global-text-color-light,rgba(255,255,255,0.7));font-family:"Noto Serif SC","Source Han Serif SC","STKaiti","KaiTi",serif;font-weight:400;letter-spacing:3px;margin-bottom:.8rem;line-height:1.8}.loader-quote-sub{font-size:clamp(0.75rem,1.5vw,0.9rem);color:var(--global-text-color-light,rgba(255,255,255,0.4));font-family:"Cormorant Garamond","Times New Roman",Georgia,serif;font-weight:300;font-style:italic;letter-spacing:1px;line-height:1.6}@keyframes quoteAppear{from{opacity:0;transform:translateY(10px)}to{opacity:.7;transform:translateY(0)}}.loader-progress-wrapper{display:flex;justify-content:center;width:100%}.loader-progress{width:220px;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;position:relative}.loader-progress-bar{height:100%;background:linear-gradient(90deg,var(--global-theme-color,#64b5f6),rgba(var(--global-theme-color-rgb,100,181,246),0.7),var(--global-theme-color,#64b5f6));background-size:200% 100%;border-radius:3px;width:0;animation:progressLoad 1.4s ease forwards,progressShine 1.5s ease-in-out infinite;box-shadow:0 0 20px rgba(var(--global-theme-color-rgb,100,181,246),0.6),0 0 40px rgba(var(--global-theme-color-rgb,100,181,246),0.3)}@keyframes progressLoad{0%{width:0}15%{width:25%}40%{width:50%}65%{width:75%}85%{width:90%}100%{width:100%}}@keyframes progressShine{0%{background-position:200% 0}100%{background-position:-200% 0}}.loader-bg-decoration{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}.loader-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,rgba(var(--global-theme-color-rgb,100,181,246),0.08) 0%,transparent 70%);border-radius:50%;animation:glowPulse 3s ease-in-out infinite}@keyframes glowPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}}.loader-particle{position:absolute;width:4px;height:4px;background:var(--global-theme-color,#64b5f6);border-radius:50%;opacity:.4}.loader-particle:nth-child(1){top:15%;left:10%;animation:particleFloat1 4s ease-in-out infinite}.loader-particle:nth-child(2){top:75%;left:15%;animation:particleFloat2 5s ease-in-out infinite .5s}.loader-particle:nth-child(3){top:20%;right:15%;animation:particleFloat1 4.5s ease-in-out infinite 1s}.loader-particle:nth-child(4){top:70%;right:10%;animation:particleFloat2 5.5s ease-in-out infinite .3s}.loader-particle:nth-child(5){top:50%;left:5%;animation:particleFloat1 6s ease-in-out infinite .7s}.loader-particle:nth-child(6){top:40%;right:8%;animation:particleFloat2 5s ease-in-out infinite 1.2s}@keyframes particleFloat1{0%,100%{transform:translateY(0) translateX(0) scale(1);opacity:.3}50%{transform:translateY(-30px) translateX(15px) scale(1.5);opacity:.7}}@keyframes particleFloat2{0%,100%{transform:translateY(0) translateX(0) scale(1);opacity:.3}50%{transform:translateY(25px) translateX(-10px) scale(1.3);opacity:.6}}.loader-line-top,.loader-line-bottom{position:absolute;left:0;width:100%;height:1px;background:linear-gradient(90deg,transparent 0,rgba(var(--global-theme-color-rgb,100,181,246),0.3) 50%,transparent 100%)}.loader-line-top{top:20%;animation:lineSlide 3s ease-in-out infinite}.loader-line-bottom{bottom:20%;animation:lineSlide 3s ease-in-out infinite 1.5s}@keyframes lineSlide{0%,100%{opacity:.3;transform:scaleX(0.5)}50%{opacity:.6;transform:scaleX(1)}}.page-content-wrapper{opacity:0;transition:opacity .6s ease .1s}.page-content-wrapper.loaded{opacity:1}@media(max-width:768px){.loader-logo{font-size:2rem;letter-spacing:2px}
-.loader-quote-main{font-size:.95rem;letter-spacing:2px}.loader-quote-sub{font-size:.7rem}.loader-quote-container{margin-bottom:2.5rem;padding:0 1rem}.loader-progress{width:180px}.loader-glow{width:300px;height:300px}}</style> <div class="page-loader" id="globalPageLoader"> <div class="loader-bg-decoration"> <div class="loader-glow"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-particle"></div> <div class="loader-line-top"></div> <div class="loader-line-bottom"></div> </div> <div class="loader-content"> <div class="loader-logo">吟处雪 轻遮</div> <div class="loader-quote-container" id="loaderQuote"> <div class="loader-quote-main" id="quoteMain"></div> <div class="loader-quote-sub" id="quoteSub"></div> </div> <div class="loader-progress-wrapper"> <div class="loader-progress"> <div class="loader-progress-bar"></div> </div> </div> </div> </div> <script>
-(function() {
-  // 名言库 - 中文 + 外语对照
-  const quotes = [
-    {
-      main: "代码如诗，渲染如画",
-      sub: "Code is poetry, rendering is art."
-    },
-    {
-      main: "什么是恶？凡是源于虚弱的东西都是恶",
-      sub: "Was ist schlecht? — Alles, was aus der Schwäche stammt."
-    },
-    {
-      main: "凡不能毁灭我的，必使我强大",
-      sub: "What does not kill me makes me stronger."
-    },
-    {
-      main: "技术与美学的交汇点",
-      sub: "Where technology meets aesthetics."
-    },
-    {
-      main: "追光者永不止步",
-      sub: "Those who chase the light never stop."
-    },
-    {
-      main: "在像素中寻找无限可能",
-      sub: "Finding infinite possibilities in pixels."
-    },
-    {
-      main: "保持饥饿，保持愚蠢",
-      sub: "Stay hungry, Stay foolish."
-    },
-    {
-      main: "学习永不疲倦心灵",
-      sub: "Learning never exhausts the mind. — Leonardo da Vinci"
-    },
-    {
-      main: "预测未来最好的方式就是创造它",
-      sub: "The best way to predict the future is to create it."
-    },
-    {
-      main: "简约是终极的复杂",
-      sub: "Simplicity is the ultimate sophistication."
-    },
-    {
-      main: "每一帧都是艺术的追求",
-      sub: "Every frame is a pursuit of art."
-    },
-    {
-      main: "吾生也有涯，而知也无涯",
-      sub: "Life is finite, but knowledge is infinite. — Zhuangzi"
-    },
-    {
-      main: "路漫漫其修远兮，吾将上下而求索",
-      sub: "The road ahead is long; I shall seek high and low. — Qu Yuan"
-    },
-    {
-      main: "工欲善其事，必先利其器",
-      sub: "A craftsman must sharpen his tools first."
-    },
-    {
-      main: "光影是渲染的灵魂",
-      sub: "Light and shadow are the soul of rendering."
-    }
-  ];
-
-  // 根据页面类型选择相关语句
-  const pageQuotes = {
-    'tutorials': [
-      {
-        main: "知识的积累，从这里开始",
-        sub: "The accumulation of knowledge begins here."
-      },
-      {
-        main: "学而不思则罔，思而不学则殆",
-        sub: "Learning without thought is labor lost. — Confucius"
-      },
-      {
-        main: "千里之行，始于足下",
-        sub: "A journey of a thousand miles begins with a single step."
-      }
-    ],
-    'blog': [
-      {
-        main: "记录思考，分享成长",
-        sub: "Record thoughts, share growth."
-      },
-      {
-        main: "文字是思想的结晶",
-        sub: "Words are the crystallization of thoughts."
-      }
-    ],
-    'projects': [
-      {
-        main: "实践出真知",
-        sub: "Practice brings true knowledge."
-      },
-      {
-        main: "纸上得来终觉浅，绝知此事要躬行",
-        sub: "What you learn on paper is superficial; true understanding requires practice."
-      }
-    ]
-  };
-
-  // 获取当前页面类型
-  const path = window.location.pathname;
-  let selectedQuotes = quotes;
-  
-  for (const [key, value] of Object.entries(pageQuotes)) {
-    if (path.includes(key)) {
-      selectedQuotes = [...value, ...quotes.slice(0, 5)];
-      break;
-    }
+<!DOCTYPE html><html lang="zh-CN" data-space="study" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
   }
-
-  // 随机选择一条语句
-  const randomQuote = selectedQuotes[Math.floor(Math.random() * selectedQuotes.length)];
-  
-  // 设置语句
-  const quoteMain = document.getElementById('quoteMain');
-  const quoteSub = document.getElementById('quoteSub');
-  
-  if (quoteMain && quoteSub) {
-    quoteMain.textContent = randomQuote.main;
-    quoteSub.textContent = randomQuote.sub;
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
   }
-
-  // 页面加载完成后隐藏 loader
-  function hideLoader() {
-    const loader = document.getElementById('globalPageLoader');
-    const content = document.querySelector('.page-content-wrapper');
-    
-    if (loader) {
-      loader.classList.add('fade-out');
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
     }
-    if (content) {
-      content.classList.add('loaded');
-    }
-    
-    // 完全移除 loader
-    setTimeout(function() {
-      if (loader) {
-        loader.style.display = 'none';
-      }
-    }, 800);
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
   }
-
-  // 监听真实的页面加载完成事件，而非固定延迟
-  if (document.readyState === 'complete') {
-    // 页面已经加载完毕（脚本较晚执行时）
-    hideLoader();
-  } else {
-    window.addEventListener('load', hideLoader);
-  }
-
-  // 保底机制：最多等待 3 秒，防止某个资源加载失败时 loader 永远卡住
-  setTimeout(hideLoader, 3000);
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
 })();
-</script> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/"> <span class="font-weight-bold">吟处雪</span> 轻遮 </a> <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse text-right" id="navbarNav"> <ul class="navbar-nav ml-auto flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/">about </a> </li> <li class="nav-item "> <a class="nav-link" href="/blog/">blog </a> </li> <li class="nav-item "> <a class="nav-link" href="/projects/">projects </a> </li> <li class="nav-item "> <a class="nav-link" href="/books/">books </a> </li> <li class="nav-item active"> <a class="nav-link" href="/tutorials/">tutorials <span class="sr-only">(current)</span> </a> </li> <li class="nav-item "> <a class="nav-link" href="/tags/">tagsFilters </a> </li> <li class="nav-item"> <button id="search-toggle" title="Search" onclick="openSearchModal()"> <span class="nav-link">ctrl k <i class="ti ti-search"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" title="Change theme"> <i class="ti ti-sun-moon" id="light-toggle-system"></i> <i class="ti ti-moon-filled" id="light-toggle-dark"></i> <i class="ti ti-sun-filled" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="page-content-wrapper"> <div class="container mt-5" role="main"> <div class="row"> <div class="col-sm-3"> <nav id="toc-sidebar" class="sticky-top"></nav> </div> <div class="col-sm-9"> <div class="post"> <header class="post-header"> <h1 class="post-title">09_添加PBR高光</h1> <p class="post-meta"> Created on January 08, 2026 </p> <p class="post-tags"> <i class="fa-solid fa-calendar fa-sm"></i> 2026   ·   <i class="fa-solid fa-hashtag fa-sm"></i> shader   <i class="fa-solid fa-hashtag fa-sm"></i> rendering   <i class="fa-solid fa-hashtag fa-sm"></i> tutorials   <i class="fa-solid fa-hashtag fa-sm"></i> ue   ·   <i class="fa-solid fa-tag fa-sm"></i> tutorials   <i class="fa-solid fa-tag fa-sm"></i> ZZZ渲染复刻 </p> </header> <article class="post-content"> <div id="markdown-content"> <h2 id="添加pbr高光">添加PBR高光</h2> <h3 id="贴图信息">贴图信息</h3> <p><strong><em>金属Mask和高光遮罩在下方贴图中</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318213854.png" alt=""> <strong><em>金属图，G通道</em></strong> <strong><em>注意这里的金属度图并非是非0和1，大概是64/255这个样子，应该是想表达带漆面的金属效果一类</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318214043.png" alt=""> <strong><em>高光Mask，B通道</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318214114.png" alt=""> <strong><em>光滑度信息在下方的贴图的G通道中</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318213735.png" alt=""> <strong><em>Smoothnesss，G通道</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318213804.png" alt=""></p> <h3 id="pbr金属高光和漫反射划分">PBR金属高光和漫反射划分</h3> <p><strong><em>获取对应的金属信息和高光遮罩</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224050.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250316145231.png" alt=""> <strong><em>pbrDiffuseColor进行金属与非金属的划分，非金属的最大漫反射比例是0.96，0.96 x GammColor就是非金属的漫反射，而金属部分是只有镜面反射的没有漫反射，所以漫反射为0。pbrSpecularColor镜面反射，非金属的镜面反射比例就是1-0.96，因为非金属的镜面反射颜色不受本身颜色影响仅受材料的反射率影响，所以这里给上0.04固定颜色。而金属部分，金属的镜面反射是受颜色影响的所以反射原本的颜色</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318221516.png" alt=""></p> <h3 id="高光的一般计算方法">高光的一般计算方法</h3> <p><strong><em>高光的常规计算方式是Phong和BlinnPhong</em></strong></p> <h4 id="phong-brdf">Phong BRDF</h4> <p><strong><em>公式：</em></strong> <strong><em>K是指SpecularIntensity高光强度，R是灯光向量（-L）的反射向量，V是观察向量，这里需要指明一点这里参加计算的灯光向量是物体指向灯光的向量，也就是-L</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317140026.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141340.png" alt=""> <strong><em>常规计算代码：</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
-<td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-</pre></td> <td class="rouge-code"><pre><span class="n">float3</span> <span class="n">reflect_dir</span> <span class="o">=</span> <span class="n">reflect</span><span class="p">(</span><span class="o">-</span><span class="n">light_dir</span><span class="p">,</span> <span class="n">normal_dir</span><span class="p">);</span> <span class="c1">//获取灯光反射向量</span>
-<span class="kt">float</span> <span class="n">RdotV</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">reflect_dir</span><span class="p">,</span> <span class="n">view_dir</span><span class="p">);</span><span class="c1">//数值范围在-1~1所以需要限制</span>
-<span class="n">float3</span> <span class="n">specular</span> <span class="o">=</span> <span class="n">pow</span><span class="p">(</span><span class="n">max</span><span class="p">(</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span> <span class="n">RdotV</span><span class="p">),</span> <span class="n">_Shininess</span><span class="p">)</span> <span class="o">*</span> <span class="n">_SpecularIntensity</span><span class="p">;</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <h4 id="blinn-phong-brdf">Blinn-Phong BRDF</h4> <p><strong><em>K是指SpecularIntensity高光强度，H是半角向量是L和V之间的向量，V是观察向量,它不需要计算反射所以性能被Phong更好</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141812.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141851.png" alt=""></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
-<td class="rouge-gutter gl"><pre class="lineno">1
-2
-</pre></td> <td class="rouge-code"><pre><span class="n">half3</span> <span class="n">half_dir</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="n">light_dir</span> <span class="o">+</span> <span class="n">view_dir</span><span class="p">);</span><span class="c1">//获得灯光与视角中间的半角向量</span>
-<span class="n">half</span> <span class="n">NdotH</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">normal_dir</span><span class="p">,</span> <span class="n">half_dir</span><span class="p">);</span><span class="c1">///数值范围在-1~1所以需要限制</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <h4 id="pbr中-ggx-brdf高光计算">PBR中 GGX BRDF高光计算</h4> <p><strong><em>相关资料</em></strong> https://community.arm.com/cfs-file/__key/communityserver-blogs-components-weblogfiles/00-00-00-20-66/siggraph2015_2D00_mmg_2D00_renaldas_2D00_notes.pdf <strong><em>公式：</em></strong> <strong><em>公式看起来太复杂了，说人话就是D是像NoH粗糙度影响然后乘上SpecularMask得到高光形状（这部分可以由我们自己调整），F是菲涅尔系数，G是物体表面的遮蔽。F和G是固定公式</em></strong> <strong><em>GGX高光计算</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151131.png" alt=""> <strong><em>不乘上面末尾的NoL就是BRDF计算的结果</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317145043.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317150032.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317150839.png" alt=""></p> <p><strong><em>Unity中URP的BRDF.hlsl文件中也有介绍,但这里是使用的优化版的减少计算量</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317144917.png" alt=""> <strong><em>简化方式简单来说就是将F(菲涅尔项)与G(几何遮蔽项)变成了V点乘F</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151101.png" alt=""> <strong><em>将含G的这部分式子替换成V了</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151351.png" alt=""> <strong><em>不需要纠结怎么简化的，反正最后优化成近似的结果，V乘F公式就变成了下面这个,L是光向量，H是半角向量</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
-<td class="rouge-gutter gl"><pre class="lineno">1
-</pre></td> <td class="rouge-code"><pre><span class="n">V</span> <span class="o">*</span> <span class="n">F</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span> <span class="n">LoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="p">)</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>计算公式就变成了</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
-<td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-</pre></td> <td class="rouge-code"><pre><span class="n">BRDFspec</span> <span class="o">=</span> <span class="p">(</span><span class="n">D</span> <span class="o">*</span> <span class="n">V</span> <span class="o">*</span> <span class="n">F</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span>
-
-<span class="n">Finalspec</span> <span class="o">=</span> <span class="p">(</span><span class="n">D</span> <span class="o">*</span> <span class="n">V</span> <span class="o">*</span> <span class="n">F</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span> <span class="o">*</span> <span class="n">NoL</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>UE中对应也有节点GGXSpecular</em></strong> <strong><em>原理和上面差不多</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318223606.png" alt=""></p> <h3 id="高光参数新增">高光参数新增</h3> <p><strong><em>这里对应是球形法线开关，球形高光范围缩放</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222126.png" alt=""> <strong><em>卡通高光的软硬参数，高光强度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222303.png" alt=""> <strong><em>额外的高光强度参数针对物体大小调整的参数</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222451.png" alt=""> <strong><em>高光染色参数</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222507.png" alt=""></p> <h3 id="饰品类pbr卡通高光计算">饰品类PBR卡通高光计算</h3> <h4 id="计算半角向量">计算半角向量</h4> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318223930.png" alt=""></p> <h4 id="计算loh">计算LoH</h4> <p><strong><em>根据公式需要，这里计算LoH和LoH的平方参数，对LoH也进行重映射，因为希望保持高光一直在最暗的时候也存在</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224434.png" alt=""></p> <h4 id="计算nol">计算NoL</h4> <p><strong><em>根据公式需要，最后需要乘上NoL，所以这里计算NoL并重映射提高暗处的亮度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224550.png" alt=""></p> <h4 id="计算noh">计算NoH</h4> <p><strong><em>根据公式，计算高光项NoH并进行重映射</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224626.png" alt=""></p> <h4 id="头发和其余部分法线区分计算">头发和其余部分法线区分计算</h4> <p><strong><em>头发部分使用球形法线，其余部分使用贴图法线，使用顶点位置减去球心HeadCenter位置就可以得到球状法线，使用HeadSphereRang进行控制范围计算出球形法线的一个遮罩，使用遮罩对贴图法线和球形法线混合输出</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318225028.png" alt=""> <strong><em>判断是否HeadSphereRang有效，无效的话说明不需要球状法线就直接输出贴图法线</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318225421.png" alt=""></p> <h4 id="头发和其余部分衰减区分计算">头发和其余部分衰减区分计算</h4> <p><strong><em>当HeadSphereRang有效，就使用混合过的ShapeNormal进行计算NoL衰减。反之使用贴图法线计算的衰减</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318225656.png" alt=""> <strong><em>上面开方和重映射都是为了调整曲线，增加高光的有效范围，开放可以使高光的衰减变平缓</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250317154915.png" alt=""></p> <h4 id="最终计算">最终计算</h4> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
-<td class="rouge-gutter gl"><pre class="lineno">1
-2
-</pre></td> <td class="rouge-code"><pre><span class="n">V</span> <span class="o">*</span> <span class="n">F</span> <span class="o">=</span> <span class="mi">1</span><span class="p">.</span><span class="mi">0</span> <span class="o">/</span> <span class="p">(</span> <span class="n">LoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="p">)</span>
-<span class="n">Finalspec</span> <span class="o">=</span> <span class="p">(</span><span class="n">D</span> <span class="o">*</span> <span class="n">V</span> <span class="o">*</span> <span class="n">F</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span> <span class="o">*</span> <span class="n">NoL</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <p><strong><em>回忆公式，这里VxF项中Roughness直接给1，然后直接使用公式计算</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318230337.png" alt=""> <strong><em>当前的高光，我调过参数所以会亮一点</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318230651.png" alt=""></p> <h3 id="衣服类的pbr高光计算">衣服类的PBR高光计算</h3> <p><strong><em>这里直接照抄GGX就行</em></strong></p> <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
-<td class="rouge-gutter gl"><pre class="lineno">1
-2
-3
-</pre></td> <td class="rouge-code"><pre><span class="err"> </span><span class="n">brdfData</span><span class="p">.</span><span class="n">normalizationTerm</span> <span class="o">=</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span>
-<span class="err"> </span>
-<span class="err"> </span><span class="n">Final</span> <span class="n">BRDFspec</span> <span class="o">=</span> <span class="n">roughness</span><span class="o">^</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span> <span class="n">NoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span><span class="o">^</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">LoH</span><span class="o">^</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">roughness</span> <span class="o">+</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">.</span><span class="mi">0</span><span class="p">)</span>
-</pre></td> </tr></tbody></table></code></pre></div></div> <p><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318234656.png" alt=""></p> <h4 id="获取光滑度信息">获取光滑度信息</h4> <p><strong><em>对于写实类高光，需要粗糙度进行计算，这里是光滑度，先提取出来</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318231935.png" alt=""></p> <h4 id="粗糙度相关参数计算">粗糙度相关参数计算</h4> <p><strong><em>这里计算Roughness的相关参数。光滑度转粗糙度是1-Smoothness在平方，1-Smoothness是感知粗糙度，真正参与计算的是它的平方，也就是粗糙度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318234441.png" alt=""></p> <h4 id="计算ggx">计算GGX</h4> <p><strong><em>根据公式可以计算出GGX高光</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318235044.png" alt=""><strong><em>这里也可以直接使用GGX节点，计算出来实际上差不多</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250318235229.png" alt=""></p> <h4 id="ggx混合参数">GGX混合参数</h4> <p><strong><em>计算完GGX后减去光滑度，降低光滑表面的高光强度，然后乘上光照衰减，钳制到0~1。除以粗糙度这里在提高粗糙表面的高光强度。最后使用两个参数控制高光强度然后乘上高光遮罩后就得到了高光，末尾的乘法相当于提高了高光的硬度</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319000648.png" alt=""></p> <h3 id="两种高光混合">两种高光混合</h3> <p><strong><em>使用是否开启了球形法线为判断来混合，后面使用SpecularIntensity进行整体的强度控制，然后染色，因为高光在面部眼睛是没有的，所以使用身体开关判断</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319001733.png" alt=""> <strong><em>最终混合输出</em></strong> <strong><em>高光和漫反射分别计算在相加即可</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319002023.png" alt=""></p> <h3 id="当前效果">当前效果</h3> <p><strong><em>记得开启饰品和头发的球形高光开关，这里我感觉亮度太低了所以给了0.2强度，默认是0.1</em></strong> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319002413.png" alt=""> <img src="/assets/img/ZZZRendering/Pasted%20image%2020250319002140.png" alt=""></p> <hr> <div class="tutorial-navigation"> <h3>章节导航</h3> <div class="nav-container"> <a href="/tutorials/" class="nav-btn nav-home"> <i class="fas fa-home"></i> <span>返回目录</span> </a> <div class="nav-spacer"></div> <a href="/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ//08_%E9%A2%9C%E8%89%B2%E9%94%90%E5%8C%96%E5%A4%84%E7%90%86/" class="nav-btn nav-prev"> <i class="fas fa-arrow-left"></i> <span>第八章 颜色锐化处理</span> </a> <a href="/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ//10_%E6%B7%BB%E5%8A%A0%E7%8E%AF%E5%A2%83%E5%85%89/" class="nav-btn nav-next"> <span>第十章 添加环境光</span> <i class="fas fa-arrow-right"></i> </a> </div> <div class="nav-progress"> <div class="progress-bar"> <div class="progress-fill" style="width: 69%"></div> </div> <span class="progress-text">第 9 章 / 共 13 章</span> </div> </div> <style>.tutorial-navigation{margin:3rem 0;padding:2rem;background:var(--global-code-bg-color);border-radius:8px;border-left:4px solid var(--global-theme-color)}.tutorial-navigation h3{margin-top:0;margin-bottom:1.5rem;color:var(--global-theme-color)}.nav-container{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem}.nav-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.25rem;background:var(--global-bg-color);border:1px solid var(--global-divider-color);border-radius:6px;color:var(--global-text-color);text-decoration:none;transition:all .3s ease;font-weight:500}.nav-btn:hover{background:var(--global-theme-color);color:white;border-color:var(--global-theme-color);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}.nav-home{background:var(--global-theme-color);color:white;border-color:var(--global-theme-color)}.nav-spacer{flex:1}.nav-progress{display:flex;align-items:center;gap:1rem}.progress-bar{flex:1;height:8px;background:var(--global-divider-color);border-radius:4px;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,var(--global-theme-color),var(--global-hover-color));transition:width .3s ease}.progress-text{font-size:.9rem;color:var(--global-text-color-light);font-weight:500;white-space:nowrap}@media(max-width:768px){.nav-container{flex-wrap:wrap}.nav-spacer{display:none}.nav-btn{flex:1;min-width:45%;justify-content:center}.nav-home{flex-basis:100%}}</style> </div> </article> <h2 class="text-3xl font-semibold mb-4 mt-12">Enjoy Reading This Article?</h2> <p class="mb-2">Here are some more articles you might like to read next:</p> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/URP-RendererFeature-ScreenSpaceOutline/">URP - RendererFeature ：ScreenSpaceOutline</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/%E5%B9%B3%E6%BB%91%E6%B3%95%E7%BA%BF%E5%A4%84%E7%90%86-%E5%85%AB%E9%9D%A2%E4%BD%93%E6%98%A0%E5%B0%84/">平滑法线处理 - 八面体映射</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/Lv.3-Unity%E4%B8%BB%E7%BA%BF-%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84PBRShader/">Lv.3 Unity主线：一个简单的PBRShader</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-%E7%9B%B4%E6%8E%A5%E5%85%89%E6%BC%AB%E5%8F%8D%E5%B0%84%E4%B8%8EGGX%E9%AB%98%E5%85%89%E7%9A%84%E6%B7%B7%E5%90%88%E9%97%AE%E9%A2%98/">理论支线：直接光漫反射与GGX高光的混合问题</a> </li> <li class="my-2"> <a class="text-pink-700 underline font-semibold hover:text-pink-800" href="/blog/2026/%E7%90%86%E8%AE%BA%E6%94%AF%E7%BA%BF-PBR-%E5%9F%BA%E4%BA%8E%E5%9B%BE%E5%83%8F%E7%9A%84%E7%85%A7%E6%98%8E(-image-based-lighting-IBL)/">理论支线：PBR - 基于图像的照明( image based lighting-IBL)</a> </li> <div id="giscus_thread"> <script defer src="/assets/js/giscus-setup.js"></script> <noscript> Please enable JavaScript to view the <a href="http://giscus.app/?ref_noscript" rel="external nofollow noopener" target="_blank">comments powered by giscus.</a> </noscript> </div> </div> # # <script>
-# (function() {
-#   'use strict';
-  
-#   document.addEventListener('DOMContentLoaded', function() {
-#     // 检查 Medium Zoom 是否可用
-#     if (typeof mediumZoom !== 'undefined') {
-#       // 使用 Medium Zoom
-#       mediumZoom('.post-content img:not([width]):not([style])', {
-#         margin: 24,
-#         background: 'rgba(0, 0, 0, 0.9)',
-#         scrollOffset: 0
-#       });
-#       console.log('Medium Zoom enabled');
-#     } else {
-#       // 如果没有 Medium Zoom，手动添加点击事件
-#       const images = document.querySelectorAll('.post-content img:not([width]):not([style])');
-#       images.forEach(function(img) {
-#         img.style.cursor = 'zoom-in';
-#         img.addEventListener('click', function() {
-#           // 简单的全屏显示
-#           const overlay = document.createElement('div');
-#           overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;';
-          
-#           const enlargedImg = document.createElement('img');
-#           enlargedImg.src = this.src;
-#           enlargedImg.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;';
-          
-#           overlay.appendChild(enlargedImg);
-#           document.body.appendChild(overlay);
-          
-#           overlay.addEventListener('click', function() {
-#             document.body.removeChild(overlay);
-#           });
-#         });
-#       });
-#       console.log('Manual zoom enabled for', images.length, 'images');
-#     }
-#   });
-# })();
-# </script> <script>
-(function() {
-  'use strict';
-  
-  document.addEventListener('DOMContentLoaded', function() {
-    
-    
-    const selector = '.post-content img:not([width]):not([style]):not([data-spotlight-converted])';
-    const images = document.querySelectorAll(selector);
-    
-    if (images.length === 0) {
-      console.log('Spotlight: No images to convert');
-      return;
+</script><title>09_添加PBR高光 · 吟处雪轻遮</title><meta name="description" content="09_添加PBR高光"><link rel="canonical" href="https://xueqingzhe.github.io/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/09_%E6%B7%BB%E5%8A%A0PBR%E9%AB%98%E5%85%89/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="09_添加PBR高光 · 吟处雪轻遮"><meta property="og:description" content="09_添加PBR高光"><meta property="og:url" content="https://xueqingzhe.github.io/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/09_%E6%B7%BB%E5%8A%A0PBR%E9%AB%98%E5%85%89/"><meta property="og:image" content="https://xueqingzhe.github.io/og.png"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.C2HMbhgX.css">
+<link rel="stylesheet" href="/bundle/_legacy_.CLrWxMdY.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/"><span>作品</span><small>WORK</small></a><a href="/notes/"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/" aria-current="page"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-q7kxohas><span id="reading-progress-bar" data-astro-cid-q7kxohas></span></div> <header class="article-header reading-room-header has-outline" data-astro-cid-q7kxohas> <div class="reading-breadcrumb" data-astro-cid-q7kxohas><a class="article-back" href="/tutorials/" data-astro-cid-q7kxohas><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M7 4H4v14h14v-3M8 4h10v10H8zM11 8h4M11 11h4" data-astro-cid-q7kxohas></path></svg><span data-astro-cid-q7kxohas>返回研习目录</span></a><span class="reading-edition" data-astro-cid-q7kxohas>STUDY / FIELD JOURNAL</span></div> <p class="eyebrow reading-kicker" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><span data-astro-cid-q7kxohas>STUDY NOTES / UE-绝区零角色渲染-星见雅</span></p> <h1 data-pagefind-meta="title" data-kinetic data-astro-cid-q7kxohas>09_添加PBR高光</h1> <p class="article-summary" data-astro-cid-q7kxohas>09_添加PBR高光</p> <div class="article-meta" data-astro-cid-q7kxohas><time datetime="2026-01-08T00:00:00.000Z" data-astro-cid-q7kxohas>2026 / 01 / 08</time><span class="reading-time" data-astro-cid-q7kxohas><svg viewBox="0 0 18 18" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><circle cx="9" cy="9" r="6.2" data-astro-cid-q7kxohas></circle><path d="M9 5.2V9l2.6 1.7" data-astro-cid-q7kxohas></path></svg>约 6 分钟阅读</span><span data-astro-cid-q7kxohas>shader · rendering · tutorials · ue</span></div> <div class="reading-tools" data-reading-tools data-scope=".article-body" data-canonical-path="/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/09_添加PBR高光/" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <div class="article-grid has-contents" data-astro-cid-q7kxohas> <details class="reading-outline" open data-astro-cid-q7kxohas><summary data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>本篇目录</span><small data-astro-cid-q7kxohas>23 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M4 6l4 4 4-4" data-astro-cid-q7kxohas></path></svg></summary><aside class="toc" data-scope=".article-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 文章目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#添加pbr高光" data-to="添加pbr高光" data-astro-cid-6t6zfk7k> 添加PBR高光 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#贴图信息" data-to="贴图信息" data-astro-cid-6t6zfk7k> 贴图信息 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#pbr金属高光和漫反射划分" data-to="pbr金属高光和漫反射划分" data-astro-cid-6t6zfk7k> PBR金属高光和漫反射划分 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#高光的一般计算方法" data-to="高光的一般计算方法" data-astro-cid-6t6zfk7k> 高光的一般计算方法 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#phong-brdf" data-to="phong-brdf" data-astro-cid-6t6zfk7k> Phong BRDF </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#blinn-phong-brdf" data-to="blinn-phong-brdf" data-astro-cid-6t6zfk7k> Blinn-Phong BRDF </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#pbr中-ggx-brdf高光计算" data-to="pbr中-ggx-brdf高光计算" data-astro-cid-6t6zfk7k> PBR中 GGX BRDF高光计算 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#高光参数新增" data-to="高光参数新增" data-astro-cid-6t6zfk7k> 高光参数新增 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#饰品类pbr卡通高光计算" data-to="饰品类pbr卡通高光计算" data-astro-cid-6t6zfk7k> 饰品类PBR卡通高光计算 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#计算半角向量" data-to="计算半角向量" data-astro-cid-6t6zfk7k> 计算半角向量 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#计算loh" data-to="计算loh" data-astro-cid-6t6zfk7k> 计算LoH </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#计算nol" data-to="计算nol" data-astro-cid-6t6zfk7k> 计算NoL </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#计算noh" data-to="计算noh" data-astro-cid-6t6zfk7k> 计算NoH </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#头发和其余部分法线区分计算" data-to="头发和其余部分法线区分计算" data-astro-cid-6t6zfk7k> 头发和其余部分法线区分计算 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#头发和其余部分衰减区分计算" data-to="头发和其余部分衰减区分计算" data-astro-cid-6t6zfk7k> 头发和其余部分衰减区分计算 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#最终计算" data-to="最终计算" data-astro-cid-6t6zfk7k> 最终计算 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#衣服类的pbr高光计算" data-to="衣服类的pbr高光计算" data-astro-cid-6t6zfk7k> 衣服类的PBR高光计算 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#获取光滑度信息" data-to="获取光滑度信息" data-astro-cid-6t6zfk7k> 获取光滑度信息 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#粗糙度相关参数计算" data-to="粗糙度相关参数计算" data-astro-cid-6t6zfk7k> 粗糙度相关参数计算 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#计算ggx" data-to="计算ggx" data-astro-cid-6t6zfk7k> 计算GGX </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#ggx混合参数" data-to="ggx混合参数" data-astro-cid-6t6zfk7k> GGX混合参数 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#两种高光混合" data-to="两种高光混合" data-astro-cid-6t6zfk7k> 两种高光混合 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#当前效果" data-to="当前效果" data-astro-cid-6t6zfk7k> 当前效果 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
     }
-    
-    images.forEach(function(img) {
-      if (img.parentElement.classList.contains('spotlight')) {
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>阅读进度</span><span data-reading-percent data-astro-cid-q7kxohas>0%</span></div></details> <div class="article-column" data-astro-cid-q7kxohas> <article class="prose body article-body" data-pagefind-body data-astro-cid-q7kxohas><h2 id="添加pbr高光">添加PBR高光</h2>
+<h3 id="贴图信息">贴图信息</h3>
+<p><em><strong>金属Mask和高光遮罩在下方贴图中</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318213854.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="739" height="256"></span></figure><p>
+<em><strong>金属图，G通道</strong></em>
+<em><strong>注意这里的金属度图并非是非0和1，大概是64/255这个样子，应该是想表达带漆面的金属效果一类</strong></em>
+</p><figure class="fig" style="max-width:602px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318214043.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="642" height="661"></span></figure><p>
+<em><strong>高光Mask，B通道</strong></em>
+</p><figure class="fig" style="max-width:655px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318214114.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="789" height="747"></span></figure><p>
+<em><strong>光滑度信息在下方的贴图的G通道中</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318213735.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1029" height="258"></span></figure><p>
+<em><strong>Smoothnesss，G通道</strong></em>
+</p><figure class="fig" style="max-width:655px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318213804.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="713" height="675"></span></figure>
+<h3 id="pbr金属高光和漫反射划分">PBR金属高光和漫反射划分</h3>
+<p><em><strong>获取对应的金属信息和高光遮罩</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224050.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1066" height="639"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250316145231.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="900" height="471"></span></figure><p>
+<em><strong>pbrDiffuseColor进行金属与非金属的划分，非金属的最大漫反射比例是0.96，0.96 x  GammColor就是非金属的漫反射，而金属部分是只有镜面反射的没有漫反射，所以漫反射为0。pbrSpecularColor镜面反射，非金属的镜面反射比例就是1-0.96，因为非金属的镜面反射颜色不受本身颜色影响仅受材料的反射率影响，所以这里给上0.04固定颜色。而金属部分，金属的镜面反射是受颜色影响的所以反射原本的颜色</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318221516.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="968" height="430"></span></figure>
+<h3 id="高光的一般计算方法">高光的一般计算方法</h3>
+<p><em><strong>高光的常规计算方式是Phong和BlinnPhong</strong></em></p>
+<h4 id="phong-brdf">Phong BRDF</h4>
+<p><em><strong>公式：</strong></em>
+<em><strong>K是指SpecularIntensity高光强度，R是灯光向量（-L）的反射向量，V是观察向量，这里需要指明一点这里参加计算的灯光向量是物体指向灯光的向量，也就是-L</strong></em>
+</p><figure class="fig fig--sm" style="max-width:346px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317140026.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="346" height="60"></span></figure><figure class="fig fig--sm" style="max-width:336px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141340.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="336" height="46"></span></figure><p>
+<em><strong>常规计算代码：</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">float3 reflect_dir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> reflect</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8">light_dir, normal_dir);</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //获取灯光反射向量</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> RdotV </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(reflect_dir, view_dir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">//数值范围在-1~1所以需要限制</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">float3 specular </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> pow</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, RdotV), _Shininess) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _SpecularIntensity;</span></span></code></pre>
+<h4 id="blinn-phong-brdf">Blinn-Phong BRDF</h4>
+<p><em><strong>K是指SpecularIntensity高光强度，H是半角向量是L和V之间的向量，V是观察向量,它不需要计算反射所以性能被Phong更好</strong></em>
+</p><figure class="fig fig--sm" style="max-width:389px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141812.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="389" height="54"></span></figure><figure class="fig fig--sm" style="max-width:337px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317141851.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="337" height="67"></span></figure>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 half_dir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(light_dir </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> view_dir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">//获得灯光与视角中间的半角向量</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half NdotH </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normal_dir, half_dir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">///数值范围在-1~1所以需要限制</span></span></code></pre>
+<h4 id="pbr中-ggx-brdf高光计算">PBR中 GGX BRDF高光计算</h4>
+<p><em><strong>相关资料</strong></em>
+<a href="https://community.arm.com/cfs-file/__key/communityserver-blogs-components-weblogfiles/00-00-00-20-66/siggraph2015_2D00_mmg_2D00_renaldas_2D00_notes.pdf">https://community.arm.com/cfs-file/__key/communityserver-blogs-components-weblogfiles/00-00-00-20-66/siggraph2015_2D00_mmg_2D00_renaldas_2D00_notes.pdf</a>
+<em><strong>公式：</strong></em>
+<em><strong>公式看起来太复杂了，说人话就是D是像NoH粗糙度影响然后乘上SpecularMask得到高光形状（这部分可以由我们自己调整），F是菲涅尔系数，G是物体表面的遮蔽。F和G是固定公式</strong></em>
+<em><strong>GGX高光计算</strong></em>
+</p><figure class="fig" style="max-width:516px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151131.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="516" height="53"></span></figure><p>
+<em><strong>不乘上面末尾的NoL就是BRDF计算的结果</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317145043.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="903" height="466"></span></figure><figure class="fig fig--sm" style="max-width:397px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317150032.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="397" height="43"></span></figure><figure class="fig" style="max-width:690px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317150839.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="690" height="154"></span></figure>
+<p><em><strong>Unity中URP的BRDF.hlsl文件中也有介绍,但这里是使用的优化版的减少计算量</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317144917.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1063" height="422"></span></figure><p>
+<em><strong>简化方式简单来说就是将F(菲涅尔项)与G(几何遮蔽项)变成了V点乘F</strong></em>
+</p><figure class="fig" style="max-width:516px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151101.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="516" height="53"></span></figure><p>
+<em><strong>将含G的这部分式子替换成V了</strong></em>
+</p><figure class="fig fig--sm" style="max-width:245px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317151351.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="245" height="61"></span></figure><p>
+<em><strong>不需要纠结怎么简化的，反正最后优化成近似的结果，V乘F公式就变成了下面这个,L是光向量，H是半角向量</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">V </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> F </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> /</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ( LoH</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (roughness </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) )</span></span></code></pre>
+<p><em><strong>计算公式就变成了</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">BRDFspec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (D </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> V </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> F) </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 4.0</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Finalspec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (D </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> V </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> F) </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 4.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NoL</span></span></code></pre>
+<p><em><strong>UE中对应也有节点GGXSpecular</strong></em>
+<em><strong>原理和上面差不多</strong></em>
+</p><figure class="fig" style="max-width:627px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318223606.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="627" height="233"></span></figure>
+<h3 id="高光参数新增">高光参数新增</h3>
+<p><em><strong>这里对应是球形法线开关，球形高光范围缩放</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222126.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1288" height="478"></span></figure><p>
+<em><strong>卡通高光的软硬参数，高光强度</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222303.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1260" height="400"></span></figure><p>
+<em><strong>额外的高光强度参数针对物体大小调整的参数</strong></em>
+</p><figure class="fig" style="max-width:652px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222451.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="652" height="435"></span></figure><p>
+<em><strong>高光染色参数</strong></em>
+</p><figure class="fig" style="max-width:531px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318222507.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="791" height="923"></span></figure>
+<h3 id="饰品类pbr卡通高光计算">饰品类PBR卡通高光计算</h3>
+<h4 id="计算半角向量">计算半角向量</h4>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318223930.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="758" height="471"></span></figure>
+<h4 id="计算loh">计算LoH</h4>
+<p><em><strong>根据公式需要，这里计算LoH和LoH的平方参数，对LoH也进行重映射，因为希望保持高光一直在最暗的时候也存在</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224434.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1705" height="314"></span></figure>
+<h4 id="计算nol">计算NoL</h4>
+<p><em><strong>根据公式需要，最后需要乘上NoL，所以这里计算NoL并重映射提高暗处的亮度</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224550.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1128" height="332"></span></figure>
+<h4 id="计算noh">计算NoH</h4>
+<p><em><strong>根据公式，计算高光项NoH并进行重映射</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318224626.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1273" height="384"></span></figure>
+<h4 id="头发和其余部分法线区分计算">头发和其余部分法线区分计算</h4>
+<p><em><strong>头发部分使用球形法线，其余部分使用贴图法线，使用顶点位置减去球心HeadCenter位置就可以得到球状法线，使用HeadSphereRang进行控制范围计算出球形法线的一个遮罩，使用遮罩对贴图法线和球形法线混合输出</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318225028.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1613" height="441"></span></figure><p>
+<em><strong>判断是否HeadSphereRang有效，无效的话说明不需要球状法线就直接输出贴图法线</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318225421.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1273" height="482"></span></figure>
+<h4 id="头发和其余部分衰减区分计算">头发和其余部分衰减区分计算</h4>
+<p><em><strong>当HeadSphereRang有效，就使用混合过的ShapeNormal进行计算NoL衰减。反之使用贴图法线计算的衰减</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318225656.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1403" height="336"></span></figure><p>
+<em><strong>上面开方和重映射都是为了调整曲线，增加高光的有效范围，开放可以使高光的衰减变平缓</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250317154915.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="924" height="613"></span></figure>
+<h4 id="最终计算">最终计算</h4>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">V </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> F </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> /</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ( LoH</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (roughness </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) )</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Finalspec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (D </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> V </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> F) </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 4.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NoL</span></span></code></pre>
+<p><em><strong>回忆公式，这里VxF项中Roughness直接给1，然后直接使用公式计算</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318230337.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1609" height="460"></span></figure><p>
+<em><strong>当前的高光，我调过参数所以会亮一点</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318230651.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1101" height="612"></span></figure>
+<h3 id="衣服类的pbr高光计算">衣服类的PBR高光计算</h3>
+<p><em><strong>这里直接照抄GGX就行</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> brdfData.normalizationTerm </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (roughness </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 4.0</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> Final BRDFspec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> roughness</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#D73A49;--shiki-dark:#F97583"> /</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ( NoH</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (roughness</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> )</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (LoH</span><span style="color:#D73A49;--shiki-dark:#F97583">^</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (roughness </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 4.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318234656.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="852" height="91"></span></figure>
+<h4 id="获取光滑度信息">获取光滑度信息</h4>
+<p><em><strong>对于写实类高光，需要粗糙度进行计算，这里是光滑度，先提取出来</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318231935.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1284" height="561"></span></figure>
+<h4 id="粗糙度相关参数计算">粗糙度相关参数计算</h4>
+<p><em><strong>这里计算Roughness的相关参数。光滑度转粗糙度是1-Smoothness在平方，1-Smoothness是感知粗糙度，真正参与计算的是它的平方，也就是粗糙度</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318234441.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1154" height="556"></span></figure>
+<h4 id="计算ggx">计算GGX</h4>
+<p><em><strong>根据公式可以计算出GGX高光</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318235044.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1350" height="409"></span></figure><p><em><strong>这里也可以直接使用GGX节点，计算出来实际上差不多</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250318235229.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="759" height="209"></span></figure>
+<h4 id="ggx混合参数">GGX混合参数</h4>
+<p><em><strong>计算完GGX后减去光滑度，降低光滑表面的高光强度，然后乘上光照衰减，钳制到0~1。除以粗糙度这里在提高粗糙表面的高光强度。最后使用两个参数控制高光强度然后乘上高光遮罩后就得到了高光，末尾的乘法相当于提高了高光的硬度</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319000648.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1678" height="349"></span></figure>
+<h3 id="两种高光混合">两种高光混合</h3>
+<p><em><strong>使用是否开启了球形法线为判断来混合，后面使用SpecularIntensity进行整体的强度控制，然后染色，因为高光在面部眼睛是没有的，所以使用身体开关判断</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319001733.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1650" height="440"></span></figure><p>
+<em><strong>最终混合输出</strong></em>
+<em><strong>高光和漫反射分别计算在相加即可</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319002023.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="901" height="411"></span></figure>
+<h3 id="当前效果">当前效果</h3>
+<p><em><strong>记得开启饰品和头发的球形高光开关，这里我感觉亮度太低了所以给了0.2强度，默认是0.1</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319002413.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="949" height="348"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/ZZZRendering/Pasted%20image%2020250319002140.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1189" height="665"></span></figure></article> <div class="article-end" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><p data-astro-cid-q7kxohas>记录于此，探索继续。</p><a href="#main" data-astro-cid-q7kxohas>回到开篇</a></div> <nav class="article-pager" aria-label="相邻文章" data-astro-cid-q7kxohas><a href="/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/08_颜色锐化处理/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas> 上一篇</small><span data-astro-cid-q7kxohas>08_颜色锐化处理</span></a><a href="/tutorials/ZZZRendering/XingJianYa(Miyabi)/UEPJ/10_添加环境光/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas>下一篇 </small><span data-astro-cid-q7kxohas>10_添加环境光</span></a></nav> </div> </div> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         return;
       }
-      
-      const link = document.createElement('a');
-      link.className = 'spotlight';
-      link.href = img.src;
-      
-      if (img.alt) {
-        link.setAttribute('data-description', img.alt);
-      }
-      
-      img.setAttribute('data-spotlight-converted', 'true');
-      
-      // 强制设置样式（防止被覆盖）
-      img.style.cssText = 'max-width: 75% !important; display: block !important; margin: 1em auto !important; cursor: zoom-in !important;';
-      
-      const parent = img.parentNode;
-      parent.insertBefore(link, img);
-      link.appendChild(img);
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
     });
-    
-    console.log('Spotlight: Converted', images.length, 'images');
-    
-    
-  });
-})();
-</script> </div> </div> </div> <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css"> <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script> <script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script> <div id="aplayer-container"> <meting-js server="netease" type="playlist" id="2072624795" fixed="true" mini="true" theme="#212121" loop="all" order="list" preload="auto" list-folded="true"> </meting-js> </div> <style>.aplayer.aplayer-fixed{z-index:10000!important}.aplayer.aplayer-fixed.aplayer-narrow .aplayer-body{background:#111!important;border-radius:50%!important;box-shadow:0 0 0 1px rgba(255,255,255,0.1),0 4px 20px rgba(0,0,0,0.4)!important}.aplayer:not(.aplayer-narrow) .aplayer-body{background:#111!important;border-radius:12px 12px 0 0!important}.aplayer .aplayer-bar-wrap .aplayer-bar{height:2px!important;background:rgba(255,255,255,0.08)!important}.aplayer .aplayer-bar-wrap .aplayer-played{background:rgba(255,255,255,0.7)!important}.aplayer .aplayer-bar-wrap .aplayer-thumb{background:#fff!important;width:8px!important;height:8px!important;border-radius:50%!important;top:-3px!important}.aplayer .aplayer-info .aplayer-music .aplayer-title{color:rgba(255,255,255,0.9)!important;font-size:13px!important}.aplayer .aplayer-info .aplayer-music .aplayer-author{color:rgba(255,255,255,0.35)!important;font-size:11px!important}.aplayer .aplayer-list ol li{border-bottom:.5px solid rgba(255,255,255,0.05)!important}.aplayer .aplayer-list ol li.aplayer-list-light{background:rgba(255,255,255,0.06)!important}.aplayer .aplayer-list ol li span{color:rgba(255,255,255,0.4)!important}.aplayer .aplayer-list ol li .aplayer-list-title{color:rgba(255,255,255,0.75)!important}.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon path{fill:rgba(255,255,255,0.5)!important}.aplayer .aplayer-info .aplayer-controller .aplayer-time .aplayer-icon:hover path{fill:rgba(255,255,255,0.9)!important}.aplayer .aplayer-list{background:#111!important}.aplayer .aplayer-list ol{background:#111!important}.aplayer .aplayer-list ol li{background:#111!important;border-bottom:.5px solid rgba(255,255,255,0.05)!important}.aplayer .aplayer-list ol li.aplayer-list-light{background:rgba(255,255,255,0.06)!important}.aplayer .aplayer-list ol li .aplayer-list-title{color:rgba(255,255,255,0.75)!important}.aplayer .aplayer-list ol li .aplayer-list-author{color:rgba(255,255,255,0.35)!important}.aplayer .aplayer-list ol li span{color:rgba(255,255,255,0.4)!important}</style> </div> <script src="/assets/libs/jquery/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> <script src="/assets/js/bootstrap.bundle.min.js"></script> <script src="/assets/libs/mdb/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script> <script defer src="/assets/libs/masonry/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="/assets/libs/imagesloaded/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/assets/js/masonry.js?a0db7e5d5c70cc3252b3138b0c91dcaf" type="text/javascript"></script> <script defer src="/assets/libs/medium_zoom/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/assets/js/zoom.js?85ddb88934d28b74e78031fd54cf8308"></script> <script defer src="/assets/js/bootstrap-toc.min.js?c82ff4de8b0955d6ff14f5b05eed7eb6"></script> <script src="/assets/js/no_defer.js?2781658a0a2b13ed609542042a859126"></script> <script defer src="/assets/js/common.js?c15de51d4bb57887caa2c21988d97279"></script> <script defer src="/assets/js/copy_code.js?c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/assets/js/jupyter_new_tab.js?d9f17b6adc2311cbabd747f4538bb15f"></script> <script async src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script> <script async src="https://badge.dimensions.ai/badge.js"></script> <script defer type="text/javascript" id="MathJax-script" src="/assets/libs/mathjax/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/assets/js/mathjax-setup.js?a5bb4e6a542c546dd929b24b8b236dfd"></script> <script defer src="/assets/libs/polyfill/polyfill.min.js" crossorigin="anonymous"></script> <script defer src="/assets/js/progress-bar.js?2f30e0e6801ea8f5036fa66e1ab0a71a" type="text/javascript"></script> <script defer src="/assets/libs/spotlight/spotlight.bundle.min.js" crossorigin="anonymous"></script> <script src="/assets/js/vanilla-back-to-top.min.js?f40d453793ff4f64e238e420181a1d17"></script> <script>
-    addBackToTop();
-  </script> <script type="module" src="/assets/js/search/ninja-keys.min.js?a3446f084dcaecc5f75aa1757d087dcf"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/assets/js/search-setup.js?6c304f7b1992d4b60f7a07956e52f04a"></script> <script src="/assets/js/search-data.js"></script> <script src="/assets/js/shortcut-key.js?6f508d74becd347268a7f822bca7309d"></script> </body> </html>
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.B5sdHiUr.js"></script> </body></html> <script type="module">const n=document.querySelector(".article-body"),u=document.querySelector("#reading-progress-bar"),a=document.querySelector(".reading-outline"),o=matchMedia("(max-width: 1149px)");a&&(a.open=!o.matches,o.addEventListener("change",()=>{a.open=!o.matches}));const d=document.querySelector("[data-reading-percent]"),s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

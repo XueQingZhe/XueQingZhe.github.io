@@ -1,0 +1,312 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="work" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>早期作品 · 场景与建模 · 吟处雪轻遮</title><meta name="description" content="转向 TA 之前的练习：风格化房间与场景、UE 废墟教室、Blender 建模渲染。留档用，不代表现在的水平。"><link rel="canonical" href="https://xueqingzhe.github.io/work/early-works/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="早期作品 · 场景与建模 · 吟处雪轻遮"><meta property="og:description" content="转向 TA 之前的练习：风格化房间与场景、UE 废墟教室、Blender 建模渲染。留档用，不代表现在的水平。"><meta property="og:url" content="https://xueqingzhe.github.io/work/early-works/"><meta property="og:image" content="https://xueqingzhe.github.io/covers/generated/e73953331aa737c2.webp"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.C2HMbhgX.css">
+<link rel="stylesheet" href="/bundle/_slug_.DKhjeYyP.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/" aria-current="page"><span>作品</span><small>WORK</small></a><a href="/notes/"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-qwekciqp><span id="case-reading-progress" data-astro-cid-qwekciqp></span></div> <article class="project-case" data-pagefind-body data-work-detail="early-works" data-astro-cid-qwekciqp> <!-- 1 · 头 --> <header class="hd reading-room-header" data-astro-cid-qwekciqp> <div class="reading-breadcrumb" data-astro-cid-qwekciqp><a class="back tele" href="/work/" data-work-return data-astro-cid-qwekciqp><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-qwekciqp><path d="M4 4h6v6H4zM13 4h5v6h-5zM4 13h6v5H4zM13 13h5v5h-5z" data-astro-cid-qwekciqp></path></svg><span data-astro-cid-qwekciqp>返回作品索引</span></a><span class="reading-edition" data-astro-cid-qwekciqp>WORK / CASE STUDY</span></div> <span class="eyebrow reading-kicker" data-astro-cid-qwekciqp><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-qwekciqp><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-qwekciqp></path><circle cx="21" cy="9" r="1.5" data-astro-cid-qwekciqp></circle></svg><span data-astro-cid-qwekciqp>美术</span></span> <h1 data-pagefind-meta="title" data-work-detail-title data-astro-cid-qwekciqp>早期作品 · 场景与建模</h1> <p class="sum" data-astro-cid-qwekciqp>转向 TA 之前的练习：风格化房间与场景、UE 废墟教室、Blender 建模渲染。留档用，不代表现在的水平。</p>  <div class="reading-tools" data-reading-tools data-scope=".case-body" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <!-- 2 · 主视觉 --> <div class="hero case-visual" data-astro-cid-qwekciqp> <div class="shot" data-astro-cid-qwekciqp> <img src="/covers/generated/e73953331aa737c2.webp" alt="早期作品 · 场景与建模" width="1600" height="900" data-work-cover data-work-key="early-works" fetchpriority="high" data-zoom tabindex="0" data-astro-cid-qwekciqp> </div> <div class="case-visual-caption" data-astro-cid-qwekciqp><span data-astro-cid-qwekciqp>作品主视觉</span><span data-astro-cid-qwekciqp>点击画面，查看细节</span></div> </div> <!-- 3 · 规格栏 --> <dl class="specs" data-astro-cid-qwekciqp> <div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>ENGINE</dt> <dd data-astro-cid-qwekciqp>Unreal 5 · Blender</dd> </div><div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>TECH</dt> <dd data-astro-cid-qwekciqp>Art</dd> </div><div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>ROLE</dt> <dd data-astro-cid-qwekciqp>美术</dd> </div><div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>YEAR</dt> <dd data-astro-cid-qwekciqp>2024</dd> </div>  </dl> <!-- 4 · 媒体画廊 -->  <!-- 5 · 正文（长文配侧边目录，和笔记页同一套） --> <div class="lower" data-toc="true" data-astro-cid-qwekciqp> <details class="reading-outline" open data-astro-cid-qwekciqp><summary data-astro-cid-qwekciqp><span data-astro-cid-qwekciqp>案例目录</span><small data-astro-cid-qwekciqp>4 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-qwekciqp><path d="M4 6l4 4 4-4" data-astro-cid-qwekciqp></path></svg></summary><aside class="toc" data-scope=".case-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 案例目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#风格化房间" data-to="风格化房间" data-astro-cid-6t6zfk7k> 风格化房间 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#风格化场景" data-to="风格化场景" data-astro-cid-6t6zfk7k> 风格化场景 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#ue-废墟教室" data-to="ue-废墟教室" data-astro-cid-6t6zfk7k> UE 废墟教室 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#blender-建模渲染" data-to="blender-建模渲染" data-astro-cid-6t6zfk7k> Blender 建模渲染 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-qwekciqp><span data-astro-cid-qwekciqp>阅读进度</span><span data-reading-percent data-astro-cid-qwekciqp>0%</span></div></details> <div class="rcol" data-astro-cid-qwekciqp> <div class="prose body case-body" data-astro-cid-qwekciqp><h2 id="风格化房间">风格化房间</h2>
+<p><strong>早期跟教程制作，Blender制作模型，Zbrush制作高模，SP低模烘焙法线贴图绘制贴图，进入UE完成场景搭建渲染</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415153852.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="865" height="484"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415153838.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="865" height="484"></span></figure>
+<h2 id="风格化场景">风格化场景</h2>
+<p><strong>早期跟教程制作，Blender制作模型，Zbrush制作高模，SP低模烘焙法线贴图绘制贴图，山体使用WorldCreater制作，树木使用SpeedTree制作。进入UE完成场景搭建渲染，因为当时美术较为薄弱，效果还是差一点，自己摆东西都比较随意</strong></p>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415154155.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="864" height="453"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415154201.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="863" height="449"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415154223.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="863" height="394"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415154306.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="863" height="394"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415154237.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="863" height="394"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415154318.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="863" height="394"></span></figure>
+<h2 id="ue-废墟教室">UE 废墟教室</h2>
+<p><strong>早期跟教程制作，Blender制作模型，SP绘制贴图，进入UE完成渲染</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415153504.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="865" height="484"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Scene/Pasted%20image%2020260415153512.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="865" height="325"></span></figure>
+<h2 id="blender-建模渲染">Blender 建模渲染</h2>
+<p><strong>早期学习建模跟练作品</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/Pasted%20image%2020260420134245.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1882" height="567"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/Pasted%20image%2020260420134445.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1857" height="543"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/Pasted%20image%2020260415154825.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="864" height="486"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/Pasted%20image%2020260415154813.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="864" height="486"></span></figure>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/Pasted%20image%2020260415154829.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="864" height="486"></span></figure><figure class="fig" style="max-width:310px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/Pasted%20image%2020260415154836.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="392" height="784"></span></figure>
+<figure class="fig" style="max-width:349px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/Pasted%20image%2020260415154848.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="425" height="756"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Demo/Model/%E5%9C%B0%E9%93%81.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="4096" height="2160"></span></figure></div> <!-- 6 · 关联笔记 —— 跟着正文列走，不然会和正文差出一个目录的宽度 -->  </div> </div> <!-- 7 · 上下篇 --> <nav class="pn" aria-label="相邻作品" data-astro-cid-qwekciqp> <a class="p" href="/work/blender-ta-tools/" data-astro-cid-qwekciqp> <span class="tele" data-astro-cid-qwekciqp> 上一件作品</span> <span class="pt" data-astro-cid-qwekciqp>Blender TA 工具集</span> </a>  </nav> </article> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.B5sdHiUr.js"></script> </body></html> <script type="module">const n=document.querySelector(".case-body"),u=document.querySelector("#case-reading-progress"),d=document.querySelector("[data-reading-percent]"),o=document.querySelector(".reading-outline"),a=matchMedia("(max-width: 1149px)");o&&(o.open=!a.matches,a.addEventListener("change",()=>{o.open=!a.matches}));const s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

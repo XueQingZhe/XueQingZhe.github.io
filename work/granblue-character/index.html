@@ -1,0 +1,876 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="work" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>碧蓝幻想角色渲染 · 吟处雪轻遮</title><meta name="description" content="头 / 身 / 武器分离的角色卡渲：多套配色贴图、A 通道区分皮肤 Mask、顶点色驱动分区控制，附完整 Shader 代码。"><link rel="canonical" href="https://xueqingzhe.github.io/work/granblue-character/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="碧蓝幻想角色渲染 · 吟处雪轻遮"><meta property="og:description" content="头 / 身 / 武器分离的角色卡渲：多套配色贴图、A 通道区分皮肤 Mask、顶点色驱动分区控制，附完整 Shader 代码。"><meta property="og:url" content="https://xueqingzhe.github.io/work/granblue-character/"><meta property="og:image" content="https://xueqingzhe.github.io/covers/generated/granblue-final.webp"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.C2HMbhgX.css">
+<link rel="stylesheet" href="/bundle/_slug_.DKhjeYyP.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/" aria-current="page"><span>作品</span><small>WORK</small></a><a href="/notes/"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-qwekciqp><span id="case-reading-progress" data-astro-cid-qwekciqp></span></div> <article class="project-case" data-pagefind-body data-work-detail="granblue-character" data-astro-cid-qwekciqp> <!-- 1 · 头 --> <header class="hd reading-room-header" data-astro-cid-qwekciqp> <div class="reading-breadcrumb" data-astro-cid-qwekciqp><a class="back tele" href="/work/" data-work-return data-astro-cid-qwekciqp><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-qwekciqp><path d="M4 4h6v6H4zM13 4h5v6h-5zM4 13h6v5H4zM13 13h5v5h-5z" data-astro-cid-qwekciqp></path></svg><span data-astro-cid-qwekciqp>返回作品索引</span></a><span class="reading-edition" data-astro-cid-qwekciqp>WORK / CASE STUDY</span></div> <span class="eyebrow reading-kicker" data-astro-cid-qwekciqp><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-qwekciqp><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-qwekciqp></path><circle cx="21" cy="9" r="1.5" data-astro-cid-qwekciqp></circle></svg><span data-astro-cid-qwekciqp>Shader</span></span> <h1 data-pagefind-meta="title" data-work-detail-title data-astro-cid-qwekciqp>碧蓝幻想角色渲染</h1> <p class="sum" data-astro-cid-qwekciqp>头 / 身 / 武器分离的角色卡渲：多套配色贴图、A 通道区分皮肤 Mask、顶点色驱动分区控制，附完整 Shader 代码。</p>  <div class="reading-tools" data-reading-tools data-scope=".case-body" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <!-- 2 · 主视觉 --> <div class="hero case-visual" data-astro-cid-qwekciqp> <div class="shot" data-astro-cid-qwekciqp> <img src="/covers/generated/granblue-final.webp" alt="碧蓝幻想角色最终渲染：青色星空背景中的粉发持刀角色" width="1600" height="900" data-work-cover data-work-key="granblue-character" fetchpriority="high" data-zoom tabindex="0" data-astro-cid-qwekciqp> </div> <div class="case-visual-caption" data-astro-cid-qwekciqp><span data-astro-cid-qwekciqp>作品主视觉</span><span data-astro-cid-qwekciqp>点击画面，查看细节</span></div> </div> <!-- 3 · 规格栏 --> <dl class="specs" data-astro-cid-qwekciqp> <div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>ENGINE</dt> <dd data-astro-cid-qwekciqp>Unity · URP</dd> </div><div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>TECH</dt> <dd data-astro-cid-qwekciqp>NPR · Shader · HLSL</dd> </div><div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>ROLE</dt> <dd data-astro-cid-qwekciqp>Shader</dd> </div><div class="sp" data-astro-cid-qwekciqp> <dt class="tele" data-astro-cid-qwekciqp>YEAR</dt> <dd data-astro-cid-qwekciqp>2026</dd> </div>  </dl> <!-- 4 · 媒体画廊 -->  <!-- 5 · 正文（长文配侧边目录，和笔记页同一套） --> <div class="lower" data-toc="true" data-astro-cid-qwekciqp> <details class="reading-outline" open data-astro-cid-qwekciqp><summary data-astro-cid-qwekciqp><span data-astro-cid-qwekciqp>案例目录</span><small data-astro-cid-qwekciqp>40 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-qwekciqp><path d="M4 6l4 4 4-4" data-astro-cid-qwekciqp></path></svg></summary><aside class="toc" data-scope=".case-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 案例目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#模型" data-to="模型" data-astro-cid-6t6zfk7k> 模型 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#贴图" data-to="贴图" data-astro-cid-6t6zfk7k> 贴图 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#nrm_base基本颜色贴图" data-to="nrm_base基本颜色贴图" data-astro-cid-6t6zfk7k> NRM_base基本颜色贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#贴图-1" data-to="贴图-1" data-astro-cid-6t6zfk7k> 贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#预览" data-to="预览" data-astro-cid-6t6zfk7k> 预览 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#nrm_sss贴图" data-to="nrm_sss贴图" data-astro-cid-6t6zfk7k> NRM_Sss贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#贴图-2" data-to="贴图-2" data-astro-cid-6t6zfk7k> 贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#预览-1" data-to="预览-1" data-astro-cid-6t6zfk7k> 预览 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#nrm_ilm贴图" data-to="nrm_ilm贴图" data-astro-cid-6t6zfk7k> NRM_ilm贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#贴图-3" data-to="贴图-3" data-astro-cid-6t6zfk7k> 贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#预览-2" data-to="预览-2" data-astro-cid-6t6zfk7k> 预览 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#nrm_detail贴图" data-to="nrm_detail贴图" data-astro-cid-6t6zfk7k> NRM_detail贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#贴图-4" data-to="贴图-4" data-astro-cid-6t6zfk7k> 贴图 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#预览-3" data-to="预览-3" data-astro-cid-6t6zfk7k> 预览 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#顶点色" data-to="顶点色" data-astro-cid-6t6zfk7k> 顶点色 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#r通道-2" data-to="r通道-2" data-astro-cid-6t6zfk7k> R通道 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#g通道-2" data-to="g通道-2" data-astro-cid-6t6zfk7k> G通道 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#b通道-2" data-to="b通道-2" data-astro-cid-6t6zfk7k> B通道 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#a通道-6" data-to="a通道-6" data-astro-cid-6t6zfk7k> A通道 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#shader实现" data-to="shader实现" data-astro-cid-6t6zfk7k> Shader实现 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#获得基本diffuse颜色" data-to="获得基本diffuse颜色" data-astro-cid-6t6zfk7k> 获得基本Diffuse颜色 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#卡通渲染二值化" data-to="卡通渲染二值化" data-astro-cid-6t6zfk7k> 卡通渲染二值化 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#简易实现二值化方法" data-to="简易实现二值化方法" data-astro-cid-6t6zfk7k> 简易实现二值化方法 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#替换方法" data-to="替换方法" data-astro-cid-6t6zfk7k> 替换方法 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#获得基本卡通光影" data-to="获得基本卡通光影" data-astro-cid-6t6zfk7k> 获得基本卡通光影 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#混合阴影输出颜色" data-to="混合阴影输出颜色" data-astro-cid-6t6zfk7k> 混合阴影输出颜色 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#简单的阴影提亮方式" data-to="简单的阴影提亮方式" data-astro-cid-6t6zfk7k> 简单的阴影提亮方式 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#碧蓝幻想暗部颜色采样" data-to="碧蓝幻想暗部颜色采样" data-astro-cid-6t6zfk7k> 碧蓝幻想暗部颜色采样 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#使用nrm_ilm贴图g通道" data-to="使用nrm_ilm贴图g通道" data-astro-cid-6t6zfk7k> 使用NRM_ilm贴图(G通道) </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#控制阴影偏移g通道" data-to="控制阴影偏移g通道" data-astro-cid-6t6zfk7k> 控制阴影偏移(G通道) </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#添加ao" data-to="添加ao" data-astro-cid-6t6zfk7k> 添加AO </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#高光计算" data-to="高光计算" data-astro-cid-6t6zfk7k> 高光计算 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#一般高光计算" data-to="一般高光计算" data-astro-cid-6t6zfk7k> 一般高光计算 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#特殊高光算法" data-to="特殊高光算法" data-astro-cid-6t6zfk7k> 特殊高光算法 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#贴图描线添加" data-to="贴图描线添加" data-astro-cid-6t6zfk7k> 贴图描线添加 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#最终颜色混合" data-to="最终颜色混合" data-astro-cid-6t6zfk7k> 最终颜色混合 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#外轮廓线描边添加" data-to="外轮廓线描边添加" data-astro-cid-6t6zfk7k> 外轮廓线描边添加 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#边缘补光可选做主要是demo展示用" data-to="边缘补光可选做主要是demo展示用" data-astro-cid-6t6zfk7k> 边缘补光（可选做，主要是Demo展示用） </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#最终效果" data-to="最终效果" data-astro-cid-6t6zfk7k> 最终效果 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#完整shader代码" data-to="完整shader代码" data-astro-cid-6t6zfk7k> 完整Shader代码 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-qwekciqp><span data-astro-cid-qwekciqp>阅读进度</span><span data-reading-percent data-astro-cid-qwekciqp>0%</span></div></details> <div class="rcol" data-astro-cid-qwekciqp> <div class="prose body case-body" data-astro-cid-qwekciqp><h2 id="模型">模型</h2>
+<p><em><strong>头部，身体，武器分离，动画分离。</strong></em>
+</p><figure class="fig fig--sm" style="max-width:338px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911213119.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="338" height="139"></span></figure>
+<h2 id="贴图">贴图</h2>
+<p><em><strong>基础（默认）的一套贴图加各类不同的配色贴图</strong></em>
+</p><figure class="fig" style="max-width:546px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911213247.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="546" height="382"></span></figure>
+<h3 id="nrm_base基本颜色贴图">NRM_base基本颜色贴图</h3>
+<h4 id="贴图-1">贴图</h4>
+<h5 id="rgb通道">RGB通道</h5>
+<p><em><strong>颜色信息</strong></em>
+</p><figure class="fig" style="max-width:591px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911215532.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="591" height="401"></span></figure>
+<h5 id="a通道">A通道</h5>
+<p><em><strong>区分皮肤和非皮肤区域的Mask</strong></em>
+</p><figure class="fig" style="max-width:560px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911215703.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="560" height="384"></span></figure>
+<h4 id="预览">预览</h4>
+<h5 id="rgb通道-1">RGB通道</h5>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911215757.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="857" height="473"></span></figure>
+<h5 id="a通道-1">A通道</h5>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911215741.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="909" height="480"></span></figure>
+<h3 id="nrm_sss贴图">NRM_Sss贴图</h3>
+<h4 id="贴图-2">贴图</h4>
+<h5 id="rgb通道-2">RGB通道</h5>
+<p><em><strong>含颜色信息，相较于NRM_base贴图，亮度降低，为暗部颜色</strong></em>
+</p><figure class="fig" style="max-width:605px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911215933.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="605" height="408"></span></figure>
+<h5 id="a通道-2">A通道</h5>
+<p><em><strong>可以用于控制边缘光强度</strong></em>
+</p><figure class="fig" style="max-width:592px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911220412.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="592" height="414"></span></figure>
+<h4 id="预览-1">预览</h4>
+<h5 id="rgb通道-3">RGB通道</h5>
+<p><em><strong>含颜色信息，相较于NRM_base贴图，亮度降低，为暗部颜色</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911220234.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="868" height="479"></span></figure>
+<h5 id="a通道-3">A通道</h5>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911220154.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="828" height="488"></span></figure>
+<h3 id="nrm_ilm贴图">NRM_ilm贴图</h3>
+<h4 id="贴图-3">贴图</h4>
+<h5 id="rgba">RGBA</h5>
+<figure class="fig" style="max-width:587px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911215356.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="587" height="405"></span></figure>
+<h5 id="r通道">R通道</h5>
+<p><em><strong>高光强度信息</strong></em>
+</p><figure class="fig" style="max-width:585px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214514.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="585" height="408"></span></figure>
+<h5 id="g通道">G通道</h5>
+<p><em><strong>用于偏移阴影</strong></em>
+</p><figure class="fig" style="max-width:584px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214559.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="584" height="379"></span></figure>
+<h5 id="b通道">B通道</h5>
+<p><em><strong>高光范围大小，类光滑度</strong></em>
+</p><figure class="fig" style="max-width:596px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214628.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="596" height="390"></span></figure>
+<h5 id="a通道-4">A通道</h5>
+<p><em><strong>内描边信息</strong></em>
+<em>这里的描线是作为主体，较为严格，要求横平竖直</em>
+</p><figure class="fig" style="max-width:596px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214645.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="596" height="408"></span></figure>
+<h4 id="预览-2">预览</h4>
+<h5 id="r通道-1">R通道</h5>
+<p><em><strong>高光强度信息</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214802.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="898" height="504"></span></figure>
+<h5 id="g通道-1">G通道</h5>
+<p><em><strong>用于偏移阴影，因为偏移阴影有正负之分，所以选择中灰度为不偏移，小于0.5和大于0.5都会偏移</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214822.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="871" height="503"></span></figure>
+<h5 id="b通道-1">B通道</h5>
+<p><em><strong>高光范围大小，类光滑度</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214839.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="882" height="456"></span></figure>
+<h5 id="a通道-5">A通道</h5>
+<p><em><strong>内描边信息</strong></em>
+<em>这里的描线是作为主体，较为严格，要求横平竖直</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911214908.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="886" height="497"></span></figure>
+<h3 id="nrm_detail贴图">NRM_detail贴图</h3>
+<h4 id="贴图-4">贴图</h4>
+<p><em><strong>含有部部分细节描边信息以及面部的渐变色</strong></em>
+<em>这里的描线是作为点缀使用，较为随意，没有要求横平竖直，但是为了避免锯齿所以像素要求更大，为2048x2048</em>
+<strong>注意：此贴图采用第二套UV进行采样</strong>
+</p><figure class="fig" style="max-width:606px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911220513.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="606" height="436"></span></figure>
+<h4 id="预览-3">预览</h4>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911220554.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="831" height="479"></span></figure><figure class="fig" style="max-width:695px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911220645.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="695" height="440"></span></figure>
+<h2 id="顶点色">顶点色</h2>
+<h3 id="r通道-2">R通道</h3>
+<p><em><strong>存入了AO信息，控制遮挡关系</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911221312.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="882" height="525"></span></figure><figure class="fig" style="max-width:499px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911221331.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="499" height="548"></span></figure>
+<h3 id="g通道-2">G通道</h3>
+<p><em><strong>空</strong></em></p>
+<h3 id="b通道-2">B通道</h3>
+<p><em><strong>此通道是利用顶点色控制描边的深度</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911221643.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="947" height="477"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911221627.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="818" height="517"></span></figure>
+<h3 id="a通道-6">A通道</h3>
+<p><em><strong>空</strong></em></p>
+<h2 id="shader实现">Shader实现</h2>
+<h3 id="获得基本diffuse颜色">获得基本Diffuse颜色</h3>
+<p><em><strong>采用NdotV获得光照信息，获得值范围为-1~1</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912094236.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1015" height="311"></span></figure>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//向量</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 normalDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i.normal_world);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 lightDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_WorldSpaceLightPos0.xyz);            </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//diffuse</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, lightDir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">//-1~1结果</span></span></code></pre>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912094112.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="969" height="791"></span></figure>
+<h3 id="卡通渲染二值化">卡通渲染二值化</h3>
+<h4 id="简易实现二值化方法">简易实现二值化方法</h4>
+<p><em>此方法控制性较低</em>
+<em><strong>阴影二值化可以使用Step函数进行实现</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912094433.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1616" height="604"></span></figure>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> step</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, NdotL);</span><span style="color:#6A737D;--shiki-dark:#6A737D">//色阶化(阴影二值化)</span></span></code></pre>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912094505.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1149" height="839"></span></figure>
+<h4 id="替换方法">替换方法</h4>
+<p><em><strong>_ToonThesHold表示阴影偏移阈值，控制阴影偏移</strong></em>
+<em><strong>ToonHardness表示阴影软硬度，控制阴影软硬</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">_ToonThesHold</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ToonThesHold"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">_ToonHardness</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ToonHardness"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Float) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 20.0</span></span></code></pre>
+<p><em><strong>将原来的NdotV替换为半兰伯特half_lambert，实际就是重映射到了0~1，取值范围仅原有的一半</strong></em>
+<em><strong>使用half_lambert减去_ToonThesHold即可控制阴影偏移，乘上_ToonHardness并进行钳制到0~1，增大_ToonHardness时小数则会越来越少即可达到边缘变硬</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//diffuse</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, lightDir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">          //-1~1结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">        //0~1结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> _ToonHardness</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); </span></span></code></pre>
+<p><em><strong>_ToonThesHold = 0.5；
+_ToonHardness = 20；时</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912100246.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1151" height="794"></span></figure><p>
+<em><strong>_ToonThesHold = 0.7；
+_ToonHardness = 20；时阴影偏移</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912100440.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1097" height="796"></span></figure><p>
+<em><strong>_ToonThesHold = 0.7；
+_ToonHardness = 40；时阴影边缘变硬</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912100532.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1164" height="838"></span></figure>
+<h3 id="获得基本卡通光影">获得基本卡通光影</h3>
+<h4 id="混合阴影输出颜色">混合阴影输出颜色</h4>
+<p><em><strong>将基本颜色贴图颜色和光影颜色混合</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sample the texture</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half4 base_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BaseMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_map.rgb;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//diffuse</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, lightDir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">          //-1~1结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">        //0~1结果</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//色阶化(阴影二值化)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> _ToonHardness</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">******************************************************************</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//最终颜色</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 final_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(final_color, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre>
+<p><em><strong>此时获得了基本的卡通光照，但阴影部分还是死黑的，所以需要后续处理</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912101412.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1179" height="833"></span></figure>
+<h4 id="简单的阴影提亮方式">简单的阴影提亮方式</h4>
+<p><em>此方法精细度稍差，所以碧蓝幻想采用了SSS贴图进行采样黑色部分</em>
+<em><strong>将Toon_diffuse直接加上0.5，这样原本死黑的部分变为中灰度0.5，会显示原本颜色的0.5亮度</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> _ToonHardness</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">******************************************************************</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//最终颜色</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 final_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(final_color, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912102041.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="990" height="739"></span></figure>
+<h4 id="碧蓝幻想暗部颜色采样">碧蓝幻想暗部颜色采样</h4>
+<p><em><strong>采样了NRM_Sss贴图的颜色信息，使用toon_diffuse作为lerp函数的Alpha值控制输出亮部和暗部的颜色</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// sample the texture</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half4 base_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BaseMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_map.rgb;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half4 sss_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_SSSMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 sss_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sss_map.rgb;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//diffuse</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, lightDir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">          //-1~1结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">        //0~1结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> _ToonHardness</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);   </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">*****************************************************************************</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 final_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sss_color, base_color, toon_diffuse);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(final_color, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre>
+<p><em><strong>可以看出阴影部分颜色要精细很多</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912102850.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1067" height="788"></span></figure>
+<h3 id="使用nrm_ilm贴图g通道">使用NRM_ilm贴图(G通道)</h3>
+<h4 id="控制阴影偏移g通道">控制阴影偏移(G通道)</h4>
+<p>*<strong>使用half_lambert+diffuse_control对原阴影进行偏移</strong></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//ILM贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half4 ilm_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_ILMMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half spec_intensity </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.r;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  //高光强度</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half diffuse_control </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.g;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //阴影偏移控制</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half spec_size </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.b;</span><span style="color:#6A737D;--shiki-dark:#6A737D">       //高光大小</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half inner_line </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.a;</span><span style="color:#6A737D;--shiki-dark:#6A737D">      //内描线</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">********************************************************************</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half half_lambert_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((half_lambert_term </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#E36209;--shiki-dark:#FFAB70"> _ToonHardness</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre>
+<p><em><strong>此时结果可见不正常，阴影不见了，原因是half_lambert取值范围是0<del>1，diffuse_control虽然是0</del>1的取值范围，但偏移值是按中灰度计算的，所以需要重映射到-1~1</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912105452.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1092" height="854"></span></figure><p>
+<em><strong>重映射</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half diffuse_control </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.g </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //阴影偏移控制</span></span></code></pre>
+<p><em><strong>此时阴影恢复，头发有了阴影结构，如果阴影依旧不对则需要调整贴图，查看是否为127的中灰度值，应该是偏移数值有问题</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912110714.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1176" height="799"></span></figure>
+<h3 id="添加ao">添加AO</h3>
+<p><em><strong>获取顶点色</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//appdata</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">float4 color: Color;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//v2f</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">float4 vertex_color : TEXCOORD3;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//v2f vert (appdata v)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">o.vertex_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color;</span></span></code></pre>
+<p><em><strong>取得顶点色R通道（AO信息）</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i.vertex_color.r;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //AO</span></span></code></pre>
+<p><em><strong>混合AO</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8"> half half_lambert_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span></code></pre>
+<p><em><strong>此时阴影细节更加丰富，已经达到初步效果</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912112111.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1091" height="774"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912112428.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1043" height="744"></span></figure>
+<h3 id="高光计算">高光计算</h3>
+<h4 id="一般高光计算">一般高光计算</h4>
+<p><em><strong>传统方式使用Bulinphong进行计算高光</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912094236.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1015" height="311"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912170719.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1289" height="434"></span></figure>
+<h4 id="特殊高光算法">特殊高光算法</h4>
+<p><em><strong>使用NdotV获得菲涅尔遮罩，并映射到0~1范围</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//spec</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NdotV </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, viewDir) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre>
+<p><em>NdotV结果如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912172801.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1190" height="923"></span></figure><p>
+<em><strong>因为有AO和阴影偏移影响所以需要混合AO信息和加上偏移</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NdotV </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span></code></pre>
+<p><em>spec_term结果如下：</em>
+<em><strong>此时的阴影信息仅会收到视角影响，而正常情况下光照方向也会影响阴影位置，所以需要对正常光照下的阴影进行混合</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912173526.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1125" height="774"></span></figure><p>
+<em><strong>高光项取9:1的比例混合 half_lambert 和 spec_term</strong></em>
+<em><strong>ps：此处使用偏移后的half_lambert_term更为合理，但两者结果一样可以不用修改</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half half_lambert_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span></code></pre>
+<hr>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.9</span><span style="color:#D73A49;--shiki-dark:#F97583"> +</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">********************************************************************</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> half_lambert_term </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.9</span><span style="color:#D73A49;--shiki-dark:#F97583"> +</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre>
+<p><em>half_lambert结果如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912173331.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1093" height="751"></span></figure><p>
+<em>混合后spec_term结果如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912174053.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1165" height="842"></span></figure><p>
+<em><strong>spec_term - (1 - spec_size * _SpecSize)可以获得高光mask，spec_term减去高光区域（黑色）的即减去一个负数，该区域会变亮，减去白色区域则会变黑，最后求出高光区域，此处500是控制边缘软硬度</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_spec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_size </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _SpecSize)) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 500</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre>
+<p><em>NRM_ilm贴图(B通道)spec_size</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230912174259.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1398" height="845"></span></figure><p>
+<em>1 - spec_size * _SpecSize</em></p>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913093215.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1216" height="757"></span></figure><p>
+<em>toon_spec</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913093903.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1339" height="804"></span></figure><p>
+<em><strong>设置将要混合的高光颜色</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 spec_color  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (_SpecColor.xyz </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span></code></pre>
+<p><em>此时高光颜色为红色</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913094231.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="931" height="128"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913094210.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1238" height="707"></span></figure><p>
+<em><strong>将高光区域mask混合高光颜色和控制强度</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 final_spec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_spec </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_intensity; </span></span></code></pre>
+<p><em>最终高光结果</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913094319.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1266" height="734"></span></figure>
+<h3 id="贴图描线添加">贴图描线添加</h3>
+<p><em><strong>读取NRM_ilm贴图(A通道)和NRM_detail贴图，即内描线和细节描线</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//ILM贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half4 ilm_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_ILMMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half spec_intensity </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.r;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  //高光强度</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half diffuse_control </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.g </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //阴影偏移控制</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half spec_size </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.b;</span><span style="color:#6A737D;--shiki-dark:#6A737D">       //高光大小</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half inner_line </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.a;</span><span style="color:#6A737D;--shiki-dark:#6A737D">      //内描线</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//Detail贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half4 detail_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_DetialMap, uv2);</span><span style="color:#6A737D;--shiki-dark:#6A737D">//细节描线</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">*******************************************************</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//描线</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 inner_line_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), inner_line);</span></span></code></pre>
+<p><em>inner_line，内描线如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913103228.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1225" height="751"></span></figure><p>
+<em><strong>使用lerp函数，白色输出依旧为白色（1,1,1），而黑色部分输出原本颜色的0.2强度，即可获得混合原本颜色的描线</strong></em>
+<em>inner_line_color如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913103536.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1481" height="854"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913104642.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1428" height="792"></span></figure><p>
+<em><strong>同理对细节描写进行颜色混合</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 detail_line_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), detail_map.xyz);</span></span></code></pre>
+<p>*detail_map.xyz如下：
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913103702.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1230" height="801"></span></figure><p>
+*detail_line_color如下：
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913104042.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1392" height="701"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913104608.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1489" height="722"></span></figure><p>
+<em><strong>将两种描线混合，因为两种线并不会有重复，所以乘法混合即可</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 final_line </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> inner_line_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> detail_line_color;</span></span></code></pre>
+<p><em>final_line如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913104218.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1173" height="853"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913104527.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1219" height="783"></span></figure>
+<h3 id="最终颜色混合">最终颜色混合</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 final_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (final_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> final_spec) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> final_line;</span></span></code></pre>
+<p><em>final_color如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913105407.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1169" height="805"></span></figure><p>
+<em><strong>碧蓝幻想在末尾做了一个类色调映射的计算，来压低亮度提高对比度</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">final_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sqrt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exp2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">log2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(final_color,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //色彩调整</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(final_color, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre>
+<p><em>函数图如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913105729.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="765" height="243"></span></figure>
+<hr>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913105706.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1242" height="1056"></span></figure><p>
+<em><strong>效果预览</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913105841.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="982" height="823"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913105906.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1404" height="873"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913105928.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1146" height="669"></span></figure>
+<h3 id="外轮廓线描边添加">外轮廓线描边添加</h3>
+<p><em><strong>复制Pass，删除多余代码，添加正面剔除，去除光照头文件</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Cull Front</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">CGPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">#include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "UnityCG.cginc"</span></span></code></pre>
+<p><em><strong>修改顶点Shader，进行顶点偏移设置</strong></em>
+<em><strong>获取顶点位置，加上顶点法线方向的单位向量x位于长度，即可按法线放大原来模型顶点，开启正面剔除后就可以获得轮廓描线。这俩乘上一个0.0001是控制_OutlineWidth的强度，使其更可控</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">v2f </span><span style="color:#6F42C1;--shiki-dark:#B392F0">vert</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (appdata </span><span style="color:#E36209;--shiki-dark:#FFAB70">v</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	v2f o;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">	//******************世界空间处理***********</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">	// float3 pos_world = mul(unity_ObjectToWorld, v.vertex).xyz;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">	// float3 normal_world = normalize(UnityObjectToWorldNormal(v.normal));</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">	// pos_world += normal_world * _Outline; </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">	// o.pos = mul(UNITY_MATRIX_VP, float4(pos_world, 1.0));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">	//*******************观察空间处理**************</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	float3 pos_view </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> UnityObjectToViewPos</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.vertex);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	float3 normal_world </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> UnityObjectToWorldNormal</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.normal);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	float3 outlinDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((float3x3)UNITY_MATRIX_V,normal_world));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	pos_view </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> outlinDir </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineWidth </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0001</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	o.pos </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(UNITY_MATRIX_P, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pos_view, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	o.uv </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.texcoord0;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">	o.vertex_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">	return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> o;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<p><em><strong>修改片元Shader，为描线混合颜色</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (v2f </span><span style="color:#E36209;--shiki-dark:#FFAB70">i</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // *****sample the texture******</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    //Base贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    half4 base_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BaseMap, i.uv);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    half3 base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_map.rgb;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//此段混合颜色算法</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    half maxComponent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color.r, base_color.g), base_color.b) </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.004</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    half3 saturatedColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> step</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(maxComponent.rrr, base_color) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    saturatedColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color.rgb, saturatedColor, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.6</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    half3 outlineColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.8</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> saturatedColor </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineColor.xyz;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(outlineColor, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<p><em>此时轮廓描线如下：</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913111753.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1326" height="882"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913112244.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1085" height="836"></span></figure><p>
+<em><strong>此时描线均为同样粗细和深度，所以需要处理</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913112148.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1403" height="854"></span></figure><p>
+<em><strong>使用顶点色，使用A通道进行绘制描边粗细的权重</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">pos_view </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> outlinDir </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineWidth </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0001</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color.a; </span></span></code></pre>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913143605.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1251" height="589"></span></figure><p>
+<em><strong>混合顶点色B通道，对描边进行Z轴深度控制</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">_OutlineZbias</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Outline Zbias"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Float) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">10.0</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">**********************************************</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineZbias;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">********************************************</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">outlinDir.z </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineZbias </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color.b);</span></span></code></pre>
+<p><em>顶点色B通道如下：</em>**
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230911221627.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="818" height="517"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913145630.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1369" height="883"></span></figure>
+<h3 id="边缘补光可选做主要是demo展示用">边缘补光（可选做，主要是Demo展示用）</h3>
+<p><em><strong>新增灯光向量，和灯光颜色参数</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">_RimLightDir</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RimLight Dir"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, vector) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">_RimLightColor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RimLight Color"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Color) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre>
+<p><em><strong>将补充灯光转换到视图空间，使其随视角变化，当前为世界空间</strong></em>
+<em>unity_MatrixInvV为世界空间到视图空间逆矩阵</em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">//补光</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">float3 lightDir_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((float3x3)</span><span style="color:#E36209;--shiki-dark:#FFAB70">unity_MatrixInvV</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ,_RimLightDir.xyz));</span></span></code></pre>
+<p><em><strong>按照NdoL算法求出边缘光，base_mask是皮肤区域mask，toon_diffuse是控制在无光照地方不产生补光，sss_alpha控制每个区域补光强度不同</strong></em></p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half NdotL_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, lightDir_rim) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;      </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half rimlight_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NdotL_rim  </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half toon_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((rimlight_term </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 20</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 rim_color  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (_RimLightColor.rgb </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sss_alpha;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">half3 final_rim_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rim_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_mask </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _RimLightColor.a;</span></span></code></pre>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913163520.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1614" height="790"></span></figure>
+<h3 id="最终效果">最终效果</h3>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913163609.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="2677" height="1828"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913163627.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="2550" height="1815"></span></figure><p>
+<em><strong>脸部法线处理后效果</strong></em>
+<em>使用法线传递进行修改面部法线</em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913165824.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1880" height="810"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913165729.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1710" height="1162"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913165635.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1672" height="1164"></span></figure><p>
+<em><strong>修改前</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913170215.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="2518" height="1844"></span></figure><p>
+<em><strong>修改后</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Granblue%20Fantasy/Pasted%20image%2020230913165507.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="2776" height="1802"></span></figure>
+<h2 id="完整shader代码">完整Shader代码</h2>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Shader </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Unlit/Toon"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Properties</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _BaseMap</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Base Map"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "white"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _SSSMap</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"SSS Map"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "black"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _ILMMap</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ILM Map"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "gray"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _DetialMap</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Detial Map"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "white"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _ToonThesHold</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ToonThesHold"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _ToonHardness</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ToonHardness"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Float) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 20.0</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _SpecColor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"SpecColor"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Color) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _SpecSize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"SpecSize"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _RimLightDir</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RimLight Dir"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, vector) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _RimLightColor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RimLight Color"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Color) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _OutlineWidth</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Outline Width"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">20</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 7.0</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _OutlineColor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Outline Color"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,Color) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _OutlineZbias</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Outline Zbias"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, Float) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">10.0</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    SubShader</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Tags { </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RenderType"</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Opaque"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        LOD </span><span style="color:#005CC5;--shiki-dark:#79B8FF">100</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Tags { </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"LightMode"</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"ForWardBase"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            CGPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> multi_compile_fwdbase</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "UnityCG.cginc"</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "AutoLight.cginc"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> appdata</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 vertex : POSITION;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 texcoord0 : TEXCOORD0;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 texcoord1 : TEXCOORD1;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 normal : NORMAL;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 color: Color;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v2f</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 pos : SV_POSITION;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 uv : TEXCOORD0;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 pos_world : TEXCOORD1;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 normal_world : TEXCOORD2;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 vertex_color : TEXCOORD3;</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">                SHADOW_COORDS</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sampler2D _BaseMap;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sampler2D _SSSMap;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sampler2D _ILMMap;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sampler2D _DetialMap;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonHardness;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _SpecSize;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 _SpecColor;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 _RimLightDir;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 _RimLightColor;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            v2f </span><span style="color:#6F42C1;--shiki-dark:#B392F0">vert</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (appdata v)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                v2f o;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.pos </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> UnityObjectToClipPos</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.vertex);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.uv </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.texcoord0, v.texcoord1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.pos_world </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(unity_ObjectToWorld, v.vertex).xyz;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.normal_world </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">UnityObjectToWorldNormal</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.normal));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.vertex_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color;</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">                TRANSFER_SHADOW</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(o)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> o;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            half4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (v2f i) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half2 uv1 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i.uv.xy;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half2 uv2 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i.uv.zw;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //向量</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 normalDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i.normal_world);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 lightDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_WorldSpaceLightPos0.xyz);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 viewDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_WorldSpaceCameraPos.xyz </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i.pos_world);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // *****sample the texture******</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //Base贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half4 base_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BaseMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_map.rgb;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half base_mask </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_map.a;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //区分皮肤区域mask</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //SSS贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half4 sss_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_SSSMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 sss_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sss_map.rgb;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //暗部颜色</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half sss_alpha </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sss_map.a;</span><span style="color:#6A737D;--shiki-dark:#6A737D">   //边缘光强度控制</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //ILM贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half4 ilm_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_ILMMap, uv1);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half spec_intensity </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.r;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  //高光强度</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half diffuse_control </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.g </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //阴影偏移控制</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half spec_size </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.b;</span><span style="color:#6A737D;--shiki-dark:#6A737D">       //高光大小</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half inner_line </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ilm_map.a;</span><span style="color:#6A737D;--shiki-dark:#6A737D">      //内描线</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //Detail贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half4 detail_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_DetialMap, uv2);</span><span style="color:#6A737D;--shiki-dark:#6A737D">//细节描线</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //AO</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i.vertex_color.r;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //AO</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> atten </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SHADOW_ATTENUATION</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i);</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //阴影衰减</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //diffuse</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, lightDir);</span><span style="color:#6A737D;--shiki-dark:#6A737D">          //-1~1结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (NdotL </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">        //0~1结果</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half half_lambert_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> atten </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((half_lambert_term </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonHardness);</span><span style="color:#6A737D;--shiki-dark:#6A737D">           //色阶化(阴影二值化)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 final_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sss_color, base_color, toon_diffuse);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //spec</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NdotV </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, viewDir) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NdotV </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> half_lambert </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.9</span><span style="color:#D73A49;--shiki-dark:#F97583"> +</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half test </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_size </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _SpecSize;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half toon_spec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((spec_term </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_size </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _SpecSize)) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 500</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 spec_color  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (_SpecColor.rgb </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 final_spec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_spec </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> spec_intensity; </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //描线</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 inner_line_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), inner_line);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 detail_line_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), detail_map.xyz);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 final_line </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> inner_line_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> detail_line_color;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //补光</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 lightDir_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((float3x3)unity_MatrixInvV ,_RimLightDir.xyz));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half NdotL_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalDir, lightDir_rim) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;      </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half rimlight_term </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> NdotL_rim  </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> diffuse_control;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half toon_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> saturate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((rimlight_term </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ToonThesHold) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 20</span><span style="color:#24292E;--shiki-dark:#E1E4E8">); </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 rim_color  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (_RimLightColor.rgb </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sss_alpha;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 final_rim_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_rim </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rim_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_mask </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> toon_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _RimLightColor.a;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 final_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (final_diffuse </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> final_spec </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> final_rim_color) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> final_line;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                final_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sqrt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">exp2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">log2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(final_color,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span><span style="color:#6A737D;--shiki-dark:#6A737D"> //色彩调整</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(final_color, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ENDCG</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Cull Front</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            CGPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "UnityCG.cginc"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> appdata</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 vertex : POSITION;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 texcoord0 : TEXCOORD0;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 texcoord1 : TEXCOORD1;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 normal : NORMAL;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 color: Color;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v2f</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 pos : SV_POSITION;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 uv : TEXCOORD0;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 vertex_color : TEXCOORD3;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sampler2D _BaseMap;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sampler2D _SSSMap;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sampler2D _ILMMap;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineWidth;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 _OutlineColor;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineZbias;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            v2f </span><span style="color:#6F42C1;--shiki-dark:#B392F0">vert</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (appdata v)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                v2f o;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //******************世界空间处理***********</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // float3 pos_world = mul(unity_ObjectToWorld, v.vertex).xyz;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // float3 normal_world = normalize(UnityObjectToWorldNormal(v.normal));</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // pos_world += normal_world * _Outline; </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // o.pos = mul(UNITY_MATRIX_VP, float4(pos_world, 1.0));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //*******************观察空间处理**************</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 pos_view </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> UnityObjectToViewPos</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.vertex);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 normal_world </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> UnityObjectToWorldNormal</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.normal);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 outlinDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((float3x3)UNITY_MATRIX_V,normal_world));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                outlinDir.z </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineZbias </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color.b);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                pos_view </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> outlinDir </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineWidth </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0001</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color.a; </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.pos </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(UNITY_MATRIX_P, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pos_view, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.uv </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.texcoord0;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.vertex_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.color;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> o;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            half4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (v2f i) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">      </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // *****sample the texture******</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //Base贴图</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half4 base_map </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> tex2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BaseMap, i.uv);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_map.rgb;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half maxComponent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color.r, base_color.g), base_color.b) </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.004</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 saturatedColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> step</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(maxComponent.rrr, base_color) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                saturatedColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(base_color.rgb, saturatedColor, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.6</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                half3 outlineColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.8</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> saturatedColor </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> base_color </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _OutlineColor.xyz;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(outlineColor, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ENDCG</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Fallback </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Diffuse"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre></div> <!-- 6 · 关联笔记 —— 跟着正文列走，不然会和正文差出一个目录的宽度 -->  </div> </div> <!-- 7 · 上下篇 --> <nav class="pn" aria-label="相邻作品" data-astro-cid-qwekciqp> <span data-astro-cid-qwekciqp></span> <a class="n" href="/work/zzz-xingjianya/" data-astro-cid-qwekciqp> <span class="tele" data-astro-cid-qwekciqp>下一件作品 </span> <span class="pt" data-astro-cid-qwekciqp>绝区零 · 星见雅</span> </a> </nav> </article> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.B5sdHiUr.js"></script> </body></html> <script type="module">const n=document.querySelector(".case-body"),u=document.querySelector("#case-reading-progress"),d=document.querySelector("[data-reading-percent]"),o=document.querySelector(".reading-outline"),a=matchMedia("(max-width: 1149px)");o&&(o.open=!a.matches,a.addEventListener("change",()=>{o.open=!a.matches}));const s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

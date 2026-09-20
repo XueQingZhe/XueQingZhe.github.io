@@ -1,0 +1,533 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="notes" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>UE5.5 逐材质半透明排序 · 吟处雪轻遮</title><meta name="description" content="UE 的半透明排序走 SortPriority > Distance > MeshIdInPrimitive，这篇把排序下放到材质粒度的完整源码改动。"><link rel="canonical" href="https://xueqingzhe.github.io/notes/ue5-translucency-sort/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="UE5.5 逐材质半透明排序 · 吟处雪轻遮"><meta property="og:description" content="UE 的半透明排序走 SortPriority > Distance > MeshIdInPrimitive，这篇把排序下放到材质粒度的完整源码改动。"><meta property="og:url" content="https://xueqingzhe.github.io/notes/ue5-translucency-sort/"><meta property="og:image" content="https://xueqingzhe.github.io/og.png"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.C2HMbhgX.css">
+<link rel="stylesheet" href="/bundle/_legacy_.CLrWxMdY.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/"><span>作品</span><small>WORK</small></a><a href="/notes/" aria-current="page"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-q7kxohas><span id="reading-progress-bar" data-astro-cid-q7kxohas></span></div> <header class="article-header reading-room-header has-outline" data-astro-cid-q7kxohas> <div class="reading-breadcrumb" data-astro-cid-q7kxohas><a class="article-back" href="/notes/" data-astro-cid-q7kxohas><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M7 4H4v14h14v-3M8 4h10v10H8zM11 8h4M11 11h4" data-astro-cid-q7kxohas></path></svg><span data-astro-cid-q7kxohas>返回手记目录</span></a><span class="reading-edition" data-astro-cid-q7kxohas>NOTES / FIELD JOURNAL</span></div> <p class="eyebrow reading-kicker" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><span data-astro-cid-q7kxohas>FROM THE NOTEBOOK</span></p> <h1 data-pagefind-meta="title" data-kinetic data-astro-cid-q7kxohas>UE5.5 逐材质半透明排序</h1> <p class="article-summary" data-astro-cid-q7kxohas>UE 的半透明排序走 SortPriority &gt; Distance &gt; MeshIdInPrimitive，这篇把排序下放到材质粒度的完整源码改动。</p> <div class="article-meta" data-astro-cid-q7kxohas><time datetime="2026-09-14T00:00:00.000Z" data-astro-cid-q7kxohas>2026 / 09 / 14</time><span class="reading-time" data-astro-cid-q7kxohas><svg viewBox="0 0 18 18" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><circle cx="9" cy="9" r="6.2" data-astro-cid-q7kxohas></circle><path d="M9 5.2V9l2.6 1.7" data-astro-cid-q7kxohas></path></svg>约 12 分钟阅读</span><span data-astro-cid-q7kxohas>Pipeline · Shader</span></div> <div class="reading-tools" data-reading-tools data-scope=".article-body" data-canonical-path="/notes/ue5-translucency-sort/" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <div class="article-grid has-contents" data-astro-cid-q7kxohas> <details class="reading-outline" open data-astro-cid-q7kxohas><summary data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>本篇目录</span><small data-astro-cid-q7kxohas>49 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M4 6l4 4 4-4" data-astro-cid-q7kxohas></path></svg></summary><aside class="toc" data-scope=".article-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 文章目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#逐材质半透明排序" data-to="逐材质半透明排序" data-astro-cid-6t6zfk7k> 逐材质半透明排序 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#排序规则" data-to="排序规则" data-astro-cid-6t6zfk7k> 排序规则 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#meshidinprimtive" data-to="meshidinprimtive" data-astro-cid-6t6zfk7k> MeshIdInPrimtive </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#distance" data-to="distance" data-astro-cid-6t6zfk7k> Distance </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#priority" data-to="priority" data-astro-cid-6t6zfk7k> Priority </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#交互层" data-to="交互层" data-astro-cid-6t6zfk7k> 交互层 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinterfaceh" data-to="materialinterfaceh" data-astro-cid-6t6zfk7k> MaterialInterface.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinterfacecpp" data-to="materialinterfacecpp" data-astro-cid-6t6zfk7k> MaterialInterface.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialh" data-to="materialh" data-astro-cid-6t6zfk7k> Material.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinstanceh" data-to="materialinstanceh" data-astro-cid-6t6zfk7k> MaterialInstance.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialh-1" data-to="materialh-1" data-astro-cid-6t6zfk7k> Material.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialcpp" data-to="materialcpp" data-astro-cid-6t6zfk7k> Material.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinstanceh-1" data-to="materialinstanceh-1" data-astro-cid-6t6zfk7k> MaterialInstance.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinstancecpp" data-to="materialinstancecpp" data-astro-cid-6t6zfk7k> MaterialInstance.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinstancebasepropertyoverridesh" data-to="materialinstancebasepropertyoverridesh" data-astro-cid-6t6zfk7k> MaterialInstanceBasePropertyOverrides.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinstancecpp-1" data-to="materialinstancecpp-1" data-astro-cid-6t6zfk7k> MaterialInstance.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialsharedcpp" data-to="materialsharedcpp" data-astro-cid-6t6zfk7k> MaterialShared.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialinstancecpp-2" data-to="materialinstancecpp-2" data-astro-cid-6t6zfk7k> MaterialInstance.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#previewmaterialcpp" data-to="previewmaterialcpp" data-astro-cid-6t6zfk7k> PreviewMaterial.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialeditorinstancedetailcustomizationh" data-to="materialeditorinstancedetailcustomizationh" data-astro-cid-6t6zfk7k> MaterialEditorInstanceDetailCustomization.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialeditorinstancedetailcustomizationcpp" data-to="materialeditorinstancedetailcustomizationcpp" data-astro-cid-6t6zfk7k> MaterialEditorInstanceDetailCustomization.cpp </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#渲染层" data-to="渲染层" data-astro-cid-6t6zfk7k> 渲染层 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialsharedh" data-to="materialsharedh" data-astro-cid-6t6zfk7k> MaterialShared.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#materialsharedcpp-1" data-to="materialsharedcpp-1" data-astro-cid-6t6zfk7k> MaterialShared.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#basepassrenderingcpp" data-to="basepassrenderingcpp" data-astro-cid-6t6zfk7k> BasePassRendering.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#primitivesceneproxyh" data-to="primitivesceneproxyh" data-astro-cid-6t6zfk7k> PrimitiveSceneProxy.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#primitivesceneproxycpp" data-to="primitivesceneproxycpp" data-astro-cid-6t6zfk7k> PrimitiveSceneProxy.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#staticmeshsceneproxyh" data-to="staticmeshsceneproxyh" data-astro-cid-6t6zfk7k> StaticMeshSceneProxy.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#staticmeshrendercpp" data-to="staticmeshrendercpp" data-astro-cid-6t6zfk7k> StaticMeshRender.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#staticmeshsceneproxyh-1" data-to="staticmeshsceneproxyh-1" data-astro-cid-6t6zfk7k> StaticMeshSceneProxy.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#staticmeshrendercpp-1" data-to="staticmeshrendercpp-1" data-astro-cid-6t6zfk7k> StaticMeshRender.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#scenemanagementcpp" data-to="scenemanagementcpp" data-astro-cid-6t6zfk7k> SceneManagement.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#scenemanagementh" data-to="scenemanagementh" data-astro-cid-6t6zfk7k> SceneManagement.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#scenemanagementcpp-1" data-to="scenemanagementcpp-1" data-astro-cid-6t6zfk7k> SceneManagement.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#staticmeshrendercpp-2" data-to="staticmeshrendercpp-2" data-astro-cid-6t6zfk7k> StaticMeshRender.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#skeletalmeshsceneproxyh" data-to="skeletalmeshsceneproxyh" data-astro-cid-6t6zfk7k> SkeletalMeshSceneProxy.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#skeletalmeshcpp" data-to="skeletalmeshcpp" data-astro-cid-6t6zfk7k> SkeletalMesh.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#skeletalmeshsceneproxyh-1" data-to="skeletalmeshsceneproxyh-1" data-astro-cid-6t6zfk7k> SkeletalMeshSceneProxy.h </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#skeletalmeshcpp-1" data-to="skeletalmeshcpp-1" data-astro-cid-6t6zfk7k> SkeletalMesh.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#basepassrenderingcpp-1" data-to="basepassrenderingcpp-1" data-astro-cid-6t6zfk7k> BasePassRendering.cpp </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#当前效果及测试" data-to="当前效果及测试" data-astro-cid-6t6zfk7k> 当前效果及测试 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#静态网格体测试" data-to="静态网格体测试" data-astro-cid-6t6zfk7k> 静态网格体测试 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialtranslucencysortpriority测试" data-to="materialtranslucencysortpriority测试" data-astro-cid-6t6zfk7k> MaterialTranslucencySortPriority测试 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialtranslucencysectionpriority测试" data-to="materialtranslucencysectionpriority测试" data-astro-cid-6t6zfk7k> MaterialTranslucencySectionPriority测试 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#对比测试" data-to="对比测试" data-astro-cid-6t6zfk7k> 对比测试 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#骨骼网格体测试" data-to="骨骼网格体测试" data-astro-cid-6t6zfk7k> 骨骼网格体测试 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialtranslucencysortpriority测试-1" data-to="materialtranslucencysortpriority测试-1" data-astro-cid-6t6zfk7k> MaterialTranslucencySortPriority测试 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialtranslucencysectionpriority测试-1" data-to="materialtranslucencysectionpriority测试-1" data-astro-cid-6t6zfk7k> MaterialTranslucencySectionPriority测试 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#对比测试-1" data-to="对比测试-1" data-astro-cid-6t6zfk7k> 对比测试 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>阅读进度</span><span data-reading-percent data-astro-cid-q7kxohas>0%</span></div></details> <div class="article-column" data-astro-cid-q7kxohas> <article class="prose body article-body" data-pagefind-body data-astro-cid-q7kxohas><h2 id="逐材质半透明排序">逐材质半透明排序</h2>
+<h3 id="排序规则">排序规则</h3>
+<p><em><strong>UE的半透明排序是根据SortPriority > Distance > MeshIdInPrimtive(SectionPriority)来判断的。</strong></em></p>
+<h4 id="meshidinprimtive">MeshIdInPrimtive</h4>
+<p><em><strong>UE同一个Mesh上不同部位可以赋予不同的材质，UE管它们叫做Section，一般情况下MeshIdInPrimtive就是按照模型Section的Id来进行设置的。</strong></em></p>
+<h4 id="distance">Distance</h4>
+<p><em><strong>这个是根据每个Mesh到摄像机的距离计算的，从远到近排序，离相机越远Distance值越小，保证离相机近的Mesh较后渲染。</strong></em></p>
+<h4 id="priority">Priority</h4>
+<p><em><strong>这个就是我们在Mesh上设置的TranslucencySortPriority</strong></em></p>
+<h2 id="交互层">交互层</h2>
+<h3 id="materialinterfaceh">MaterialInterface.h</h3>
+<p><em><strong>因为接口类应该保证轻量化，所以不应该存储大量变量数据，数据应该是在子类中存储，接口类设置Get方法就行，因为是虚函数，所以运行时会自动查找子类已经实现的方法进行调用。UMaterialInterface中添加MaterialTranslucencySortPriority和MaterialTranslucencySectionPriority成员变量的获取函数但不声明变量成员，前者负责控制整体排序，后者控制在多个材质在Mesh中的前后顺序</strong></em>
+<em><strong>在下面声明获取函数，类型为int32</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250420113129.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1501" height="392"></span></figure>
+<h3 id="materialinterfacecpp">MaterialInterface.cpp</h3>
+<p><em><strong>在CPP文件内进行函数实现，因为没有函数成员，所以返回0就行</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250420113528.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="822" height="406"></span></figure>
+<h3 id="materialh">Material.h</h3>
+<p><em><strong>UMaterial继承自MaterialInterface，在这里进行数据存储，声明变量成员</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250420113808.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1098" height="531"></span></figure>
+<h3 id="materialinstanceh">MaterialInstance.h</h3>
+<p><em><strong>与UMaterial同理，UMaterialInstance继承自MaterialInterface，进行变量声明</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250420114047.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1111" height="401"></span></figure>
+<h3 id="materialh-1">Material.h</h3>
+<p><em><strong>UMaterial继承自MaterialInterface，所以需要对虚函数进行重写。这里进行声明</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250414151544.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1040" height="458"></span></figure>
+<h3 id="materialcpp">Material.cpp</h3>
+<p><em><strong>CPP文件进行函数实现</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250414152047.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1018" height="482"></span></figure>
+<h3 id="materialinstanceh-1">MaterialInstance.h</h3>
+<p><em><strong>与UMaterial同理，UMaterialInstance继承自MaterialInterface，所以需要对虚函数进行重写。这里进行函数声明</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250414152608.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1028" height="444"></span></figure>
+<h3 id="materialinstancecpp">MaterialInstance.cpp</h3>
+<p><em><strong>CPP文件进行函数实现</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250414154844.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1053" height="485"></span></figure>
+<h3 id="materialinstancebasepropertyoverridesh">MaterialInstanceBasePropertyOverrides.h</h3>
+<p><em><strong>这里是负责比对数据的类，这里声明比对对应的bool。因为是bool，这里变量类型是uint8</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250414155429.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="855" height="413"></span></figure><p>
+<em><strong>作为数据比对的类，自然也需要有对应变量，所以在下面继续添加相关变量。注意这里变量类型是int32</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250414155604.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1157" height="431"></span></figure>
+<h3 id="materialinstancecpp-1">MaterialInstance.cpp</h3>
+<p><em><strong>对材质实例的判断是否覆写的函数修改，UMaterialInstance和父类UMaterialInterface数据比较来判断是否重写数据</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415110000.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1078" height="601"></span></figure>
+<h3 id="materialsharedcpp">MaterialShared.cpp</h3>
+<p><em><strong>初始化结构体中的bool参数和属性默认值，这里需要注意顺序，之前MaterialInstanceBasePropertyOverrides中声明位置顺序需要与这里对应</strong></em>
+</p><figure class="fig" style="max-width:680px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250420161019.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="887" height="809"></span></figure><p>
+<em><strong>重写等等操作符的时候需要追加判断，上面是判断Bool是否相等，而下面是判断值是否相对</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250419132240.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1029" height="779"></span></figure>
+<h3 id="materialinstancecpp-2">MaterialInstance.cpp</h3>
+<p><em><strong>设置UMaterialInstance的更新函数中MaterialTranslucencySortPriority和MaterialTranslucencySectionPriority的初始值</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415111738.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="969" height="696"></span></figure><p>
+<em><strong>在初始化下面一点设置更新逻辑</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415111854.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1013" height="521"></span></figure>
+<h3 id="previewmaterialcpp">PreviewMaterial.cpp</h3>
+<p><em><strong>这里对应的是参数面板中的材质预览使用的材质的处理。材质预览材质对内部材质实例之间的数据拷贝，预览材质直接使用材质实例的参数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415112506.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1126" height="437"></span></figure>
+<h3 id="materialeditorinstancedetailcustomizationh">MaterialEditorInstanceDetailCustomization.h</h3>
+<p><em><strong>UI操作</strong></em>
+<em><strong>这里其实是相当于调用宏直接声明两个函数，一个是 Enabled()函数，表示可以进行覆写的bool，一个是Changed(bool)函数，表示开始进行传值也就是Change。后续作为UI更改的判断依据</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415131808.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1034" height="571"></span></figure>
+<h3 id="materialeditorinstancedetailcustomizationcpp">MaterialEditorInstanceDetailCustomization.cpp</h3>
+<p><em><strong>之前声明了现在进行函数实现，这里也是使用宏进行函数实现，这里传入一个是需要覆写的变量名，还有个额外的我们手动控制的参数bRequiresPermutation来控制是否开启覆写和传值功能，默认是开启所以给true</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415133010.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="946" height="197"></span></figure><p>
+<em><strong>对应的宏内容是这个，其实就是封装的函数体</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415160642.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1083" height="363"></span></figure><p>
+<em><strong>对于函数体这里还有一点，这里是使用的编辑器对象的内容去判断是否发生Changed操作</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415160610.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1100" height="536"></span></figure><p>
+<em><strong>对于材质面板的参数判断其实分了层，感觉是真的繁琐，虽然我们是在面版上直接输入，但实际上UE将我们在面版上输入的值是存起来了也就是UMaterialInstanceConstant这个类型中，它继承UMaterialInstance，然后在与材质实例的参数值进行比对，最后在进行覆写操作。</strong></em>
+<em><strong>上面图中的DoesSourceMaterialInstanceDisallowStaticParameterPermutation函数，它是判断复选框是否开启的时候材质是否为静态参数，NewValue是我们在面版上输入的值，它与默认值bDisallowStaticParameterPermutations组合进行判断，bDisallowStaticParameterPermutations如果为true，那么表示该材质为静态，不得修改，这个参数是在UMaterialInstance.h中，默认情况下是值为false</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415164201.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="860" height="66"></span></figure><p>
+<em><strong>上面说的如果不理解，那么看下面这个图就可以理解了，Changed函数内if判断实际上也是对应这里的复选框，如果复选框勾选材质且实例不为静态且我们手动控制的bRequiresPermutation是true，那么就对MaterialEditorInstance中的bOverride_PropertyVariableName设置为我们复选框的输入的bool值，后面就可以进行传值操作</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415161804.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="777" height="202"></span></figure><p>
+<em><strong>创建UI以及UI的执行逻辑</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415133204.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1170" height="476"></span></figure><p>
+<em><strong>对应的宏内容是这样的</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415154137.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1222" height="564"></span></figure><p>
+<em><strong>里面有两个Lambda判断操作，第一个就是是否显示重置按钮，也就是下面编辑面板这个图标。第二Lambda则是对应点击这个重置按钮会执行什么操作，其实就是从父类直接拿默认值数据过来</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415150816.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="812" height="184"></span></figure><p>
+<em><strong>这里代码根本上是在调用下面这个函数，第一个是参数名称，第二个和第三个是不是很眼熟，其实就是前面创建过函数作为UI参数。三和四就是上面说的Lambda判断，最后一个则是控制是否显示当前UI，默认是true</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415154634.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="761" height="199"></span></figure><p>
+<em><strong>上面函数中的IsOverriddenAndVisibleFn对应是这里，默认是true，bShowOnlyOverrides它的值在MaterialEditorInstanceConstant.h中可以找到，但是这里的的是否显示我们并不能精准控制每一条属性的隐藏或显示，它是编辑器进行整体设定的</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415170448.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="962" height="172"></span></figure><p>
+<em><strong>对应就是材质面版里的各种显示设置</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415171147.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="782" height="355"></span></figure>
+<h2 id="渲染层">渲染层</h2>
+<h3 id="materialsharedh">MaterialShared.h</h3>
+<p><em><strong>找到FMaterial类，FMaterial做的工作就是实时查询UMaterial和UMaterialInstance的参数并进行进行处理（其实并不是它而是它的子类），所以自然需要读取我们创建的属性，那么就需要创获取函数来读取，注意这里需要给默认的函数实现返回0</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415172426.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1150" height="419"></span></figure><p>
+***<em><strong>找到FMaterialResource类，它继承FMaterial类，负责真正的数据处理</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403232649.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="873" height="335"></span></figure><p>
+<em><strong>声明继承过来的需要重写的虚函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415172812.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1102" height="440"></span></figure>
+<h3 id="materialsharedcpp-1">MaterialShared.cpp</h3>
+<p><em><strong>对虚函数进行实现，作比对看是返回UMaterial还是UMaterialInstance的值去渲染</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415174511.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1261" height="628"></span></figure>
+<h3 id="basepassrenderingcpp">BasePassRendering.cpp</h3>
+<p><em><strong>如果想简单实现半透明排序MaterialTranslucencySortPriority，那么在这里直接将默认的排序覆盖掉就行，也可以整合到CalculateTranslucentMeshStaticSortKey中去设置。找到对应计算半透明排序的位置，直接用材质上的排序给他覆盖掉就行</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250415180940.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1201" height="455"></span></figure><p>
+<em><strong>对应这里类型转换的计算方法，直接照抄原本的就行</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250408111606.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1079" height="216"></span></figure>
+<h3 id="primitivesceneproxyh">PrimitiveSceneProxy.h</h3>
+<p><em><strong>接下来做网格体内的排序处理MaterialTranslucencySectionPriority，也就是不论是静态网格体还是骨骼网格体的代理都是继承自PrimitiveSceneProxy，两个都引入了PrimitiveSceneProxy.h的。所以直接在这里声明共有文件就行</strong></em>
+</p><figure class="fig" style="max-width:591px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416113649.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="591" height="399"></span></figure><p>
+<em><strong>因为需要做排序，所以方便起见直接声明一个结构体来方便使用，当然直接声明在PrimitiveSceneProxy.h和SkeletalMeshSceneProxy.h中也可以，只不过需要声明两次。</strong></em>
+<em><strong>找到这个类</strong></em>
+</p><figure class="fig" style="max-width:437px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416122502.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="437" height="94"></span></figure><p>
+<em><strong>将结构体丢在上面一点就行，不要放在类里面</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416124100.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1119" height="556"></span></figure><p>
+<em><strong>然后就是计算排序的方法，因为静态网格和骨骼网格体的排序方法不一样，它们是继承一个父类，所以函数之直接在父类FPrimitiveSceneProxy中声明虚函数就行。这里声明一个排序函数和一个获取函数。因为排序不在父类实现所以设置为虚函数，获取函数的话直接是静态函数就行。</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416133650.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1180" height="294"></span></figure>
+<h3 id="primitivesceneproxycpp">PrimitiveSceneProxy.cpp</h3>
+<p><em><strong>在CPP文件需要实现获取的静态函数，使用未排序的序列和排序后的序列进行比对，如果有相同的就返回排序后的值也就i，反之返回默认的索引，这里其实直接return i； 也就排序后的索引其实最精简，但是防止bug加上了判断和return SectionIndex;</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416133747.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1119" height="383"></span></figure>
+<h3 id="staticmeshsceneproxyh">StaticMeshSceneProxy.h</h3>
+<p><em><strong>先处理静态网格体数据。因为继承关系，现在进行声明需要重写负责排序的虚函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416133129.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1102" height="324"></span></figure>
+<h3 id="staticmeshrendercpp">StaticMeshRender.cpp</h3>
+<p><em><strong>虽然名字不一样但是它是StaticMeshSceneProxy.h的cpp文件，这里对排序函数实现。，这里进行排序使用Lambda表达式结合自定义排序规则，MaterialTranslucencySectionPriority是设置在材质面板上的让它优先排序然后再根据默认的SectionIndex排序</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416134229.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1201" height="696"></span></figure><p>
+<em><strong>根据流程，需找到获取Mesh元素的函数</strong></em>
+</p><figure class="fig" style="max-width:515px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416135451.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="515" height="239"></span></figure><p>
+<em><strong>Mesh元素在GetDynamicMeshElements这里处理</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416135614.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1391" height="178"></span></figure><p>
+<em><strong>对于排序位置是根据MeshIdInPrimitive来设定的，现在已经有了进行索引排序处理，但是索引需要给到OutMeshBatch.MeshIdInPrimitive，MeshIdInPrimitive处理是在函数GetMeshElement中。GetDynamicMeshElements中调用了GetMeshElement函数</strong></em>
+</p><figure class="fig" style="max-width:670px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416135217.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="670" height="199"></span></figure><p>
+<em><strong>对应MeshIdInPrimitive位置如下</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416135249.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="806" height="268"></span></figure>
+<h3 id="staticmeshsceneproxyh-1">StaticMeshSceneProxy.h</h3>
+<p><em><strong>为了将我们排序后的索引给到MeshIdInPrimitive，直接对GetMeshElement函数进行重载，这里进行函数声明，将排序好的索引传入。</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416140315.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="986" height="398"></span></figure>
+<h3 id="staticmeshrendercpp-1">StaticMeshRender.cpp</h3>
+<p><em><strong>重载的GetMeshElement函数直接调用原本GetMeshElement函数，最后将将我们排序后的索引给到MeshIdInPrimitive就行</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416140710.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1275" height="577"></span></figure><p>
+<em><strong>再次找到获取动态Mesh元素的函数GetDynamicMeshElements</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250408195557.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="895" height="220"></span></figure><p>
+<em><strong>找到GetMeshElement位置，替换成重载过的GetMeshElement即可，将排序好的索引传入</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416141359.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1430" height="593"></span></figure><p>
+<em><strong>到这里GetDynamicMeshElements函数其实已经改完了，但是在函数末尾Collector.AddMesh会将我们设置的MeshIdInPrimitive给覆盖掉，所以需要做额外处理</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416141840.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1043" height="281"></span></figure>
+<h3 id="scenemanagementcpp">SceneManagement.cpp</h3>
+<p><em><strong>Collector.AddMesh定义在SceneManagement.cpp中，SceneManagement负责处理FStaticMeshSceneProxy和FSkeletalMeshSceneProxy等相关数据。找到对应函数</strong></em>
+</p><figure class="fig" style="max-width:638px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416142215.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="638" height="51"></span></figure><p>
+<em><strong>在函数内部可以找到，这里把我们设置的MeshIdInPrimitive给覆盖掉了</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416142247.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="908" height="327"></span></figure>
+<h3 id="scenemanagementh">SceneManagement.h</h3>
+<p><em><strong>为了解决值覆盖，这里对AddMesh进行重载，新增一个bool来控制是否覆盖</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416142533.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1009" height="286"></span></figure>
+<h3 id="scenemanagementcpp-1">SceneManagement.cpp</h3>
+<p><em><strong>AddMesh重载函数实现直接拷贝一份默认的AddMesh就行，位移修改就是使用bool判断赋值</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416142654.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1035" height="432"></span></figure>
+<h3 id="staticmeshrendercpp-2">StaticMeshRender.cpp</h3>
+<p><em><strong>找到GetDynamicMeshElements末尾的AddMesh函数替换成重载过的AddMesh重载函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416142833.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="998" height="201"></span></figure><p>
+<em><strong>最后找到绘制静态元素的地方，这里需要做和GetDynamicMeshElements相似的处理</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250408194422.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="742" height="147"></span></figure>
+<p><em><strong>索引排序以及调用重载的GetMeshElement函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416143526.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1329" height="511"></span></figure><p>
+<em><strong>再下面一点也需要修改，同样的进行索引排序</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416144013.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1205" height="303"></span></figure><p>
+<em><strong>以及调用重载的GetMeshElement函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416144244.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1294" height="346"></span></figure><p>
+<em><strong>现在静态网格就修改完毕了</strong></em></p>
+<h3 id="skeletalmeshsceneproxyh">SkeletalMeshSceneProxy.h</h3>
+<p><em><strong>骨骼网格体也需要修改，因为继承关系，对排序函数进行重写声明</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416145051.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1128" height="241"></span></figure>
+<h3 id="skeletalmeshcpp">SkeletalMesh.cpp</h3>
+<p><em><strong>排序函数实现</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416150746.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1203" height="856"></span></figure><p>
+<em><strong>流程和静态网格体其实差不多，先找到Collector.AddMesh在哪里调用，最终可以定位到GetDynamicElementsSection函数，如果想简单的修改，那么直接像下图一样修改原函数就行，直接赋值，然后更改Collector.AddMesh就行。我测试过是没有问题的</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416153152.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1281" height="905"></span></figure>
+<h3 id="skeletalmeshsceneproxyh-1">SkeletalMeshSceneProxy.h</h3>
+<p><em><strong>直接修改原函数比较快但没有留下原来的函数，还是不太好，所以最好还是重载一个新GetDynamicElementsSection方法</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416153722.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1354" height="409"></span></figure>
+<h3 id="skeletalmeshcpp-1">SkeletalMesh.cpp</h3>
+<p><em><strong>函数实现直接拷贝原来的就好</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416154317.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1443" height="292"></span></figure><p>
+<em><strong>内部还需要修改，将排序的索引指定给MeshIdInPrimitive</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416154253.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1008" height="368"></span></figure><p>
+<em><strong>将Collector.AddMesh换成我们重载过的</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416155813.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1296" height="867"></span></figure><p>
+<em><strong>找到GetDynamicMeshElements函数</strong></em>
+</p><figure class="fig" style="max-width:607px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416160036.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="607" height="77"></span></figure><p>
+<em><strong>它调用了GetDynamicElementsSection，所以需要换成我们重载过的，这里先进行排序索引</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416160403.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1163" height="345"></span></figure><p>
+<em><strong>替换函数，将排序索引传入</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416160524.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1507" height="368"></span></figure><p>
+<em><strong>最后找到DrawStaticElements函数进行处理，如果不处理这部分，那么你在骨骼网格体资产预览是对的，但放在场景中却不生效</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416160706.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="793" height="273"></span></figure><p>
+<em><strong>计算排序索引</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416160836.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1016" height="239"></span></figure><p>
+<em><strong>将排序好的索引指定给MeshIdInPrimitive</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416160932.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1142" height="413"></span></figure>
+<h3 id="basepassrenderingcpp-1">BasePassRendering.cpp</h3>
+<p><em><strong>现在就完成了模型内的半透明排序了，可以进行编译了。回头来看之前的MaterialTranslucencySortPriority这里，其实就是在MaterialTranslucencySectionPriority排序完成后，如果有值，就覆盖掉</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416161822.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1218" height="365"></span></figure>
+<h2 id="当前效果及测试">当前效果及测试</h2>
+<h3 id="静态网格体测试">静态网格体测试</h3>
+<h4 id="materialtranslucencysortpriority测试">MaterialTranslucencySortPriority测试</h4>
+<p><em><strong>这里是一个带两个材质槽的模型，给上两个半透明材质实例</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416224949.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="812" height="469"></span></figure><p>
+<em><strong>材质上全部都勾选MaterialTranslucencySortPriority，值都为0，状态不变和上图一样</strong></em>
+</p><figure class="fig" style="max-width:627px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416224618.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="627" height="139"></span></figure><p>
+<em><strong>调整红色材质MaterialTranslucencySortPriority值为1，排序发生改变，因为红色数值更大，渲染更靠后，在蓝色之后渲染再叠加</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416224932.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="933" height="473"></span></figure>
+<h4 id="materialtranslucencysectionpriority测试">MaterialTranslucencySectionPriority测试</h4>
+<p><em><strong>同样勾选MaterialTranslucencySectionPriority，值默认的0</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416225218.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="722" height="198"></span></figure><p>
+<em><strong>当前状态</strong></em>
+</p><figure class="fig" style="max-width:717px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416225257.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="717" height="445"></span></figure><p>
+<em><strong>将红色材质MaterialTranslucencySectionPriority值设为1</strong></em>
+</p><figure class="fig" style="max-width:566px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416225334.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="566" height="178"></span></figure><p>
+<em><strong>此时排序发生改变</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416225411.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="863" height="500"></span></figure>
+<h4 id="对比测试">对比测试</h4>
+<p><em><strong>这里看似MaterialTranslucencySectionPriority是和MaterialTranslucencySortPriority效果相同，实际上并不一样。这里在追加一个绿色半透明模型放在前方，默认什么都不开的状态如下</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416225840.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1015" height="512"></span></figure><p>
+<em><strong>先将红色材质MaterialTranslucencySectionPriority值设为1</strong></em>
+</p><figure class="fig" style="max-width:660px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416225929.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="660" height="107"></span></figure><p>
+<em><strong>现在的状态是红色盖住蓝色，但是没有超过绿色</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416230010.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="989" height="507"></span></figure><p>
+<em><strong>现在红色材质换成改MaterialTranslucencySortPriority值为1</strong></em>
+</p><figure class="fig" style="max-width:680px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416230154.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="680" height="143"></span></figure><p>
+<em><strong>这里是红色直接覆盖了蓝色和绿色</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416230212.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="969" height="513"></span></figure>
+<h3 id="骨骼网格体测试">骨骼网格体测试</h3>
+<h4 id="materialtranslucencysortpriority测试-1">MaterialTranslucencySortPriority测试</h4>
+<p><em><strong>默认情况</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416231422.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1043" height="659"></span></figure><p>
+<em><strong>修改红色材质MaterialTranslucencySortPriority值为1，排序更改生效</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416231443.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="960" height="607"></span></figure>
+<h4 id="materialtranslucencysectionpriority测试-1">MaterialTranslucencySectionPriority测试</h4>
+<p><em><strong>默认情况</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416231532.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="898" height="697"></span></figure><p>
+<em><strong>修改红色材质MaterialTranslucencySectionPriority值为1，排序更改生效</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416231604.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="963" height="730"></span></figure>
+<h3 id="对比测试-1">对比测试</h3>
+<p><em><strong>增加一个绿色半透明模型放在前面，默认情况如下图</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416231841.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="885" height="502"></span></figure><p>
+<em><strong>修改红色材质MaterialTranslucencySortPriority值为1，因为不受模型距离排序控制，所以红色会叠在最前方</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416231933.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="942" height="731"></span></figure><p>
+<em><strong>修改红色材质MaterialTranslucencySectionPriority值为1，红色会叠在蓝色前方，但不会超过其他模型</strong></em>
+</p><figure class="fig" style="max-width:718px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250416232115.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="774" height="668"></span></figure></article> <div class="article-end" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><p data-astro-cid-q7kxohas>记录于此，探索继续。</p><a href="#main" data-astro-cid-q7kxohas>回到开篇</a></div> <nav class="article-pager" aria-label="相邻文章" data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas></span><a href="/notes/ue5-per-material-stencil/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas>下一篇 </small><span data-astro-cid-q7kxohas>UE5.5 逐材质 Stencil</span></a></nav> </div> </div> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.B5sdHiUr.js"></script> </body></html> <script type="module">const n=document.querySelector(".article-body"),u=document.querySelector("#reading-progress-bar"),a=document.querySelector(".reading-outline"),o=matchMedia("(max-width: 1149px)");a&&(a.open=!o.matches,o.addEventListener("change",()=>{a.open=!o.matches}));const d=document.querySelector("[data-reading-percent]"),s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

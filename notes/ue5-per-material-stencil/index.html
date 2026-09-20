@@ -1,0 +1,389 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="notes" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>UE5.5 逐材质 Stencil · 吟处雪轻遮</title><meta name="description" content="UE 默认逐 Mesh 的 Stencil 会逼着拆模型。从 MaterialInterface 到渲染层的改法。"><link rel="canonical" href="https://xueqingzhe.github.io/notes/ue5-per-material-stencil/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="UE5.5 逐材质 Stencil · 吟处雪轻遮"><meta property="og:description" content="UE 默认逐 Mesh 的 Stencil 会逼着拆模型。从 MaterialInterface 到渲染层的改法。"><meta property="og:url" content="https://xueqingzhe.github.io/notes/ue5-per-material-stencil/"><meta property="og:image" content="https://xueqingzhe.github.io/og.png"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.C2HMbhgX.css">
+<link rel="stylesheet" href="/bundle/_legacy_.CLrWxMdY.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/"><span>作品</span><small>WORK</small></a><a href="/notes/" aria-current="page"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-q7kxohas><span id="reading-progress-bar" data-astro-cid-q7kxohas></span></div> <header class="article-header reading-room-header has-outline" data-astro-cid-q7kxohas> <div class="reading-breadcrumb" data-astro-cid-q7kxohas><a class="article-back" href="/notes/" data-astro-cid-q7kxohas><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M7 4H4v14h14v-3M8 4h10v10H8zM11 8h4M11 11h4" data-astro-cid-q7kxohas></path></svg><span data-astro-cid-q7kxohas>返回手记目录</span></a><span class="reading-edition" data-astro-cid-q7kxohas>NOTES / FIELD JOURNAL</span></div> <p class="eyebrow reading-kicker" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><span data-astro-cid-q7kxohas>FROM THE NOTEBOOK</span></p> <h1 data-pagefind-meta="title" data-kinetic data-astro-cid-q7kxohas>UE5.5 逐材质 Stencil</h1> <p class="article-summary" data-astro-cid-q7kxohas>UE 默认逐 Mesh 的 Stencil 会逼着拆模型。从 MaterialInterface 到渲染层的改法。</p> <div class="article-meta" data-astro-cid-q7kxohas><time datetime="2026-09-14T00:00:00.000Z" data-astro-cid-q7kxohas>2026 / 09 / 14</time><span class="reading-time" data-astro-cid-q7kxohas><svg viewBox="0 0 18 18" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><circle cx="9" cy="9" r="6.2" data-astro-cid-q7kxohas></circle><path d="M9 5.2V9l2.6 1.7" data-astro-cid-q7kxohas></path></svg>约 5 分钟阅读</span><span data-astro-cid-q7kxohas>Pipeline · Shader</span></div> <div class="reading-tools" data-reading-tools data-scope=".article-body" data-canonical-path="/notes/ue5-per-material-stencil/" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <div class="article-grid has-contents" data-astro-cid-q7kxohas> <details class="reading-outline" open data-astro-cid-q7kxohas><summary data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>本篇目录</span><small data-astro-cid-q7kxohas>21 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M4 6l4 4 4-4" data-astro-cid-q7kxohas></path></svg></summary><aside class="toc" data-scope=".article-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 文章目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#逐材质stencil" data-to="逐材质stencil" data-astro-cid-6t6zfk7k> 逐材质Stencil </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#交互层" data-to="交互层" data-astro-cid-6t6zfk7k> 交互层 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialinterfaceh" data-to="materialinterfaceh" data-astro-cid-6t6zfk7k> MaterialInterface.h </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialinterfacecpp" data-to="materialinterfacecpp" data-astro-cid-6t6zfk7k> MaterialInterface.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialh" data-to="materialh" data-astro-cid-6t6zfk7k> Material.h </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialcpp" data-to="materialcpp" data-astro-cid-6t6zfk7k> Material.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialinstanceh" data-to="materialinstanceh" data-astro-cid-6t6zfk7k> MaterialInstance.h </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialinstancecpp" data-to="materialinstancecpp" data-astro-cid-6t6zfk7k> MaterialInstance.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialinstancebasepropertyoverridesh" data-to="materialinstancebasepropertyoverridesh" data-astro-cid-6t6zfk7k> MaterialInstanceBasePropertyOverrides.h </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialinstancecpp-1" data-to="materialinstancecpp-1" data-astro-cid-6t6zfk7k> MaterialInstance.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialsharedcpp" data-to="materialsharedcpp" data-astro-cid-6t6zfk7k> MaterialShared.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialinstancecpp-2" data-to="materialinstancecpp-2" data-astro-cid-6t6zfk7k> MaterialInstance.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#previewmaterialcpp" data-to="previewmaterialcpp" data-astro-cid-6t6zfk7k> PreviewMaterial.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialeditorinstancedetailcustomizationh" data-to="materialeditorinstancedetailcustomizationh" data-astro-cid-6t6zfk7k> MaterialEditorInstanceDetailCustomization.h </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialeditorinstancedetailcustomizationcpp" data-to="materialeditorinstancedetailcustomizationcpp" data-astro-cid-6t6zfk7k> MaterialEditorInstanceDetailCustomization.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#渲染层" data-to="渲染层" data-astro-cid-6t6zfk7k> 渲染层 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialsharedh" data-to="materialsharedh" data-astro-cid-6t6zfk7k> MaterialShared.h </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#materialsharedcpp-1" data-to="materialsharedcpp-1" data-astro-cid-6t6zfk7k> MaterialShared.cpp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#customdepthrenderingcpp" data-to="customdepthrenderingcpp" data-astro-cid-6t6zfk7k> CustomDepthRendering.cpp </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#stencil的项目设置" data-to="stencil的项目设置" data-astro-cid-6t6zfk7k> Stencil的项目设置 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#当前效果" data-to="当前效果" data-astro-cid-6t6zfk7k> 当前效果 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>阅读进度</span><span data-reading-percent data-astro-cid-q7kxohas>0%</span></div></details> <div class="article-column" data-astro-cid-q7kxohas> <article class="prose body article-body" data-pagefind-body data-astro-cid-q7kxohas><p><em><strong>启动项设置</strong></em>
+</p><figure class="fig" style="max-width:477px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250402124853.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="851" height="1106"></span></figure><p>
+<em><strong>注意事项，启动项选择</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250402124909.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="819" height="338"></span></figure>
+<h2 id="逐材质stencil">逐材质Stencil</h2>
+<p><em><strong>Stencil对应就是这里，UE默认是逐Mesh的Stencil，很不方便，会影响模型拆分。这里进行源码修改</strong></em>
+</p><figure class="fig" style="max-width:518px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403234906.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="518" height="186"></span></figure>
+<h3 id="交互层">交互层</h3>
+<h4 id="materialinterfaceh">MaterialInterface.h</h4>
+<p><em><strong>找到这个类，它是所以有材质的基类</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250402224054.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="804" height="136"></span></figure><p>
+<em><strong>声明Stencil成员变量，丢在LightmassSetting后面就行</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250402224905.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="822" height="233"></span></figure><p>
+<em><strong>找到重写的函数类进行声明一个获取函数来获取刚才声明的受保护成员变量</strong></em>
+</p><figure class="fig" style="max-width:699px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403144153.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="699" height="174"></span></figure>
+<h4 id="materialinterfacecpp">MaterialInterface.cpp</h4>
+<p><em><strong>cpp文件内对声明的获取函数进行实现</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403144302.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="932" height="289"></span></figure>
+<h4 id="materialh">Material.h</h4>
+<p><em><strong>Material是MaterialInterface的子类，Material继承了MaterialInterface中声明的成员变量MaterialStencilValue所以不用再次声明，但是获取函数是虚函数所以需要重写，这里进行声明</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403144428.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="819" height="222"></span></figure>
+<h4 id="materialcpp">Material.cpp</h4>
+<p><em><strong>重写函数，但内容其实是一样的，就是获取MaterialStencilValue值</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403144825.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="999" height="346"></span></figure>
+<h4 id="materialinstanceh">MaterialInstance.h</h4>
+<p><em><strong>材质实例继承基类MaterialInterface，所以需要进行和Material同样操作，进行重写虚函数。</strong></em>
+</p><figure class="fig" style="max-width:645px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250405151044.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="645" height="266"></span></figure><p><em><strong>这里需要提一点，MaterialInstance并不是继承Material而是继承基类MaterialInterface，材质和材质实例是同级的</strong></em>
+<em><strong>声明获取函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403152852.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="738" height="198"></span></figure>
+<h4 id="materialinstancecpp">MaterialInstance.cpp</h4>
+<p><em><strong>函数实现</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403153209.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="879" height="347"></span></figure>
+<h4 id="materialinstancebasepropertyoverridesh">MaterialInstanceBasePropertyOverrides.h</h4>
+<p><em><strong>声明需要重写的值，是否重写的Bool，不太清楚为什么使用int类型不直接用Bool，可能还有其他用途或者防止内容溢出之类的</strong></em>
+<em><strong>顺带一提这个文件是没有Cpp文件的，仅做声明变量使用，里面的变量实际上是做为材质和材质实例之间的成员比对类来使用，意思是比较材质和实例都包含这个类成员，所以直接比对材质和材质实例中这个类就行</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403153347.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="999" height="496"></span></figure><p>
+<em><strong>既然是中转变量，所以自然需要再声明一个变量，跟其他变量写法差不多，直接用和之前在材质接口中声明的MaterialStencilValue同名就行，愿意加个Temp前缀也行，源码没加我就没加</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403153422.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1195" height="342"></span></figure><p>
+<em><strong>FMaterialInstanceBasePropertyOverrides这里是材质实例中的引用参数，MaterialInstance.h中可以看到材质参数更新就靠这里，传入参数是FMaterialInstanceBasePropertyOverrides。</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250402230040.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1497" height="328"></span></figure>
+<h4 id="materialinstancecpp-1">MaterialInstance.cpp</h4>
+<p><em><strong>是否需要更新参数取决于材质实例文件中怎么实现，这里有更新判断函数做判断，判断材质实例参数面板的值是否和父类，因为材质和材质实例都是继承同一父类，这里也可以理解成判断材质实例和材质的参数是否相等，得到的Bool值用于后续更新判断</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403153537.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1111" height="500"></span></figure>
+<h4 id="materialsharedcpp">MaterialShared.cpp</h4>
+<p><em><strong>MaterialShared负责底层渲染数据的传递处理，材质实例和父类的比对在这里进行</strong></em>
+<em><strong>这里对MaterialInstanceBasePropertyOverrides中的所有参数进行初始化，这里使用的是初始化列表写法，就是在类后面加冒号”：”，然后进行赋值，末尾函数体实际是空的</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250405151801.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="923" height="549"></span></figure><p>
+<em><strong>重写等等判断符，进行比较，对根材质和中间重写的值进行比较</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250405164651.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1061" height="630"></span></figure>
+<h4 id="materialinstancecpp-2">MaterialInstance.cpp</h4>
+<p><em><strong>进行判断，如果父类不为空，则先初始化材质实例的所有值，如果有重写的值就直接读取重写的值，反之读取父类的值</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403220652.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="957" height="822"></span></figure>
+<h4 id="previewmaterialcpp">PreviewMaterial.cpp</h4>
+<p><em><strong>这里进行判断，如果没有发现重写，就读取材质实例的值给重写的值</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403220931.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="828" height="423"></span></figure>
+<h4 id="materialeditorinstancedetailcustomizationh">MaterialEditorInstanceDetailCustomization.h</h4>
+<p><em><strong>这里进行声明UI函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403222251.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="855" height="442"></span></figure>
+<h4 id="materialeditorinstancedetailcustomizationcpp">MaterialEditorInstanceDetailCustomization.cpp</h4>
+<p><em><strong>找到创建UI的函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403222728.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1141" height="95"></span></figure><p>
+<em><strong>这里进行生创建UI</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403222504.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="944" height="332"></span></figure><p>
+<em><strong>简单来说生成就是材质实例面板</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403223237.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="790" height="287"></span></figure><p>
+<em><strong>创建UI还需要有赋值操作，使用宏来实现，这里直接参考裁剪值来写就行</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403222645.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="833" height="336"></span></figure><p>
+<em><strong>函数实现就是这个宏，将新值传给材质实例编辑类</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403224015.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="851" height="331"></span></figure>
+<h3 id="渲染层">渲染层</h3>
+<p><em><strong>交互层改完后现在进行渲染层的修改，材质渲染这里，FMaterial做的工作就是实时查询UMaterial和UMaterialInstance的参数并进行进行处理，然后继承给FMaterialResource进行渲染</strong></em></p>
+<h4 id="materialsharedh">MaterialShared.h</h4>
+<p><em><strong>找到FMaterial类，前面说过，FMaterial做的工作就是实时查询UMaterial和UMaterialInstance的参数并进行进行处理，所以自然需要读取我们创建的MaterialStencil，那么就需要创获取函数来读取</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403232147.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1023" height="228"></span></figure><p>
+<em><strong>声明获取函数，注意这里不能完全参照下面的GetOpacityMaskClipValue来写了，不能设为纯虚函数，因为还有其他文件继承它，所以这里给一个默认实现返回0</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250405165510.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="905" height="372"></span></figure><p>
+<em><strong>找到FMaterialResource类，它继承FMaterial类</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403232649.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="873" height="335"></span></figure><p>
+<em><strong>声明继承过来的需要重写的虚函数</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403232722.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1002" height="360"></span></figure>
+<h4 id="materialsharedcpp-1">MaterialShared.cpp</h4>
+<p><em><strong>对虚函数进行实现，作比对看是返回UMaterial还是UMaterialInstance的值去渲染</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403233249.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1099" height="283"></span></figure>
+<h4 id="customdepthrenderingcpp">CustomDepthRendering.cpp</h4>
+<p><em><strong>修改自定义深度渲染，因为自定义深度和自定义Stencil在UE中是绑定在一起的，默认就可以获取到CustomDepthStencilValue，所以只需要把我们创建的材质中的MaterialStencilValue传给它就行。有这里找到位置将注释地方更换掉，如果MaterialStencilValue大于0就直接输出给CustomDepthStencilValue</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250403234411.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1228" height="590"></span></figure>
+<h3 id="stencil的项目设置">Stencil的项目设置</h3>
+<p><em><strong>如果需要使用和查看Stencil，必须更改项目设置</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250405193935.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="922" height="237"></span></figure><p>
+<em><strong>预览参数选择</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250413144054.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="942" height="681"></span></figure><p>
+<em><strong>在预览之前需要在材质中设置自定义深度写入，否则是不会生效的</strong></em>
+</p><figure class="fig" style="max-width:570px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250413144615.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="570" height="264"></span></figure>
+<h3 id="当前效果">当前效果</h3>
+<p><em><strong>这里是使用的一个有两个材质的模型，两个材质分别设置Stencil值</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250413145615.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="800" height="390"></span></figure><p>
+<em><strong>现在预览可以看到逐材质Stencil生效了</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/assets/img/MyPJ/Engine/Pasted%20image%2020250413150053.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="859" height="452"></span></figure></article> <div class="article-end" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><p data-astro-cid-q7kxohas>记录于此，探索继续。</p><a href="#main" data-astro-cid-q7kxohas>回到开篇</a></div> <nav class="article-pager" aria-label="相邻文章" data-astro-cid-q7kxohas><a href="/notes/ue5-translucency-sort/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas> 上一篇</small><span data-astro-cid-q7kxohas>UE5.5 逐材质半透明排序</span></a><a href="/notes/ue5-overlay-material/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas>下一篇 </small><span data-astro-cid-q7kxohas>UE5.5 逐材质 OverlayMaterial</span></a></nav> </div> </div> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.B5sdHiUr.js"></script> </body></html> <script type="module">const n=document.querySelector(".article-body"),u=document.querySelector("#reading-progress-bar"),a=document.querySelector(".reading-outline"),o=matchMedia("(max-width: 1149px)");a&&(a.open=!o.matches,o.addEventListener("change",()=>{a.open=!o.matches}));const d=document.querySelector("[data-reading-percent]"),s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

@@ -32,7 +32,7 @@ const texts=await Promise.all(files.map(f=>fs.readFile('content/published/notes/
  t.after(async()=>{if(child.exitCode===null){const stopped=once(child,'exit');child.kill();await stopped}await fs.rm(root,{recursive:true,force:true,maxRetries:4,retryDelay:200})});
  await Promise.race([once(child.stdout,'data'),once(child,'exit').then(()=>{throw Error(log)})]);
  const base=`http://127.0.0.1:${port}`;
- assert.deepEqual(await fetch(base+'/api/health').then(r=>r.json()),{service:'garden-publisher',site,previewUrl:'http://127.0.0.1:4325/'});
+ const health=await fetch(base+'/api/health').then(r=>r.json());assert.match(health.version,/^[a-f0-9]{64}$/);assert.deepEqual({...health,version:undefined},{service:'garden-publisher',site,previewUrl:'http://127.0.0.1:4325/',version:undefined});
  const html=await fetch(base).then(r=>r.text()),token=html.match(/const token='([a-f0-9]+)'/)[1];
  assert.match(html,/href="http:\/\/127\.0\.0\.1:4325\/"/);
  const call=async(route,data)=>{const response=await fetch(base+'/api/'+route,{method:data===undefined?'GET':'POST',headers:{'X-Publisher-Token':token,...(data===undefined?{}:{Origin:base,'Content-Type':'application/json'})},...(data===undefined?{}:{body:JSON.stringify(data)})});const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));return body};

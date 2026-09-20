@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { publisherVersion } from './publisher/version.mjs';
 
 const site = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let previewPort = Number(process.env.SITE_PORT || 4325);
@@ -30,7 +31,7 @@ async function availablePort(preferred, service, explicit) {
   for(let port=preferred;port<=preferred+(explicit?0:20);port++) {
     if(!await listening(port))return port;
     const current=await identity(port);
-    if(current?.service===service&&path.resolve(current.site||'.')===site)return port;
+    if(current?.service===service&&path.resolve(current.site||'.')===site&&(service!=='garden-publisher'||current.version===publisherVersion))return port;
   }
   throw Error(`端口 ${preferred} 附近没有可用地址，请指定其他端口。`);
 }
@@ -47,6 +48,7 @@ async function ensureService(port,script,service,label) {
     const current=await identity(port);
     if(current?.service!==service||path.resolve(current.site||'.')!==site) throw Error(`${label}端口 ${port} 被其他服务或旧版服务占用，请关闭旧窗口后重试。`);
     if(service==='garden-publisher'&&current.previewUrl.replace(/\/$/,'')!==previewUrl.replace(/\/$/,'')) throw Error('现有发布管理器的预览地址不一致，请关闭旧窗口后重试。');
+    if(service==='garden-publisher'&&current.version!==publisherVersion)throw Error('此端口上的管理器版本较旧，请换一个端口或关闭旧启动窗口。');
     console.log(`${label}已运行，沿用现有服务。`);return;
   }
   const child=spawn(process.execPath,[path.join(site,script)],{cwd:site,stdio:'inherit',windowsHide:true,env:{...process.env,SITE_ROOT:site,PUBLISHER_SITE:site,SITE_PORT:String(previewPort),PUBLISHER_PORT:String(publisherPort),PUBLISHER_PREVIEW_URL:previewUrl}});

@@ -107,7 +107,10 @@ export class GitPublisher {
       if (result.commits.some(commit => !this.record.ownedCommits.includes(commit.sha))) result.blockers.push('存在文章发布工具之外的未上传提交，请先单独发布这些网站修改。');
       await this.git(['var', 'GIT_AUTHOR_IDENT']);
       result.upToDate = !result.changes.length && remoteHead === snapshot.head;
-      const retryMonitor = result.upToDate && this.record.commit === snapshot.head && this.record.pushed && this.record.phase !== 'success';
+      // A push may reach GitHub even when the connection drops before Git reports success.
+      // The remote SHA is authoritative; our persisted ownership proves this is our job.
+      const uploaded = this.record.pushed || this.record.ownedCommits.includes(snapshot.head);
+      const retryMonitor = result.upToDate && this.record.commit === snapshot.head && uploaded && this.record.phase !== 'success';
       result.canPublish = !result.blockers.length && (!!result.changes.length || !!result.commits.length || retryMonitor);
       this.reviews.clear(); this.reviews.set(result.id, { ...result, snapshot, remoteHead });
     } catch (error) { result.blockers.push(clean(error.message)); }

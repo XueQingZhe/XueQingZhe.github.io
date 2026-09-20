@@ -89,6 +89,26 @@ test('monitoring failure keeps uploaded state and resumes without another commit
   assert.equal((await publish(resumed)).phase, 'success'); assert.equal(await git(f.remote, 'rev-parse', 'main'), commit);
 });
 
+test('a push accepted remotely before a connection error resumes monitoring without another push', async t => {
+  const f = await fixture(t); await f.write('src/content/note.md', 'article');
+  const normalGit = f.publisher.git.bind(f.publisher);
+  f.publisher.git = async (args, options) => {
+    const result = await normalGit(args, options);
+    if (args[0] === 'push') throw Error('connection lost after remote accepted push');
+    return result;
+  };
+  assert.equal((await publish(f.publisher)).phase, 'error'); assert.equal(f.publisher.status().pushed, false);
+  const commit = await git(f.site, 'rev-parse', 'HEAD'); assert.equal(await git(f.remote, 'rev-parse', 'main'), commit);
+  let monitors = 0, pushes = 0;
+  const resumed = await new GitPublisher({ site: f.site, state: f.state, allowLocalRemote: true, monitor: async () => { monitors++; } }).init();
+  const resumedGit = resumed.git.bind(resumed);
+  resumed.git = (args, options) => { if (args[0] === 'push') { pushes++; throw Error('unexpected repeated push'); } return resumedGit(args, options); };
+  const review = await resumed.review(); assert.equal(review.upToDate, true); assert.equal(review.canPublish, true); assert.equal(review.commits.length, 0);
+  await resumed.start(review.id); await resumed._job;
+  assert.equal(resumed.status().phase, 'success'); assert.equal(resumed.status().pushed, true);
+  assert.equal(await git(f.site, 'rev-parse', 'HEAD'), commit); assert.equal(pushes, 0); assert.equal(monitors, 1);
+});
+
 test('a failed recovery validation preserves the uploaded commit for another monitoring retry', async t => {
   const f = await fixture(t, { monitor: async () => { throw Error('monitor offline'); } }); await f.write('src/content/note.md', 'article');
   await publish(f.publisher); const commit = f.publisher.status().commit;

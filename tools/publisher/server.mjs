@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { Publisher } from './core.mjs';
 import { GitPublisher } from './deploy.mjs';
+import { publisherVersion } from './version.mjs';
 import { spawn } from 'node:child_process';
 import sharp from 'sharp';
 
@@ -38,7 +39,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.headers.host !== `127.0.0.1:${port}`) return json(403, { error: '仅接受本机地址' });
     const url = new URL(req.url, origin);
-    if (req.method === 'GET' && url.pathname === '/api/health') return json(200, { service: 'garden-publisher', site, previewUrl });
+    if (req.method === 'GET' && url.pathname === '/api/health') return json(200, { service: 'garden-publisher', site, previewUrl, version: publisherVersion });
     if (req.method === 'GET' && url.pathname === '/') {
       const html = (await fs.readFile(path.join(here, 'index.html'), 'utf8')).replace('__TOKEN__', token).replace('__PREVIEW_URL__', previewUrl.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;'));
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);

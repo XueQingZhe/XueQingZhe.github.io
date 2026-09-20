@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 900 1100" fill="none">
+  <defs>
+    <linearGradient id="ribbon" x1="536" y1="415" x2="777" y2="560" gradientUnits="userSpaceOnUse"><stop stop-color="#b8bacb"/><stop offset=".24" stop-color="#fae3c8"/><stop offset=".51" stop-color="#d9c9d5"/><stop offset=".75" stop-color="#b4b6d0"/><stop offset="1" stop-color="#efd2c9"/></linearGradient>
+    <linearGradient id="sash" x1="449" y1="532" x2="584" y2="783" gradientUnits="userSpaceOnUse"><stop stop-color="#e9decf"/><stop offset=".45" stop-color="#bcc7dd"/><stop offset=".73" stop-color="#ebe7e6"/><stop offset="1" stop-color="#9daccc"/></linearGradient>
+    <linearGradient id="rim" x1="542" y1="432" x2="763" y2="560" gradientUnits="userSpaceOnUse"><stop stop-color="#f6d9b3"/><stop offset="1" stop-color="#efcdd8" stop-opacity=".4"/></linearGradient>
+  </defs>
+  <!-- The low hair tie, not a second bundle or twin-tail. -->
+  <path d="M546 425C555 419 572 421 581 431L575 447C562 451 549 445 542 438Z" fill="#bbc0d2" stroke="#7b84a7" stroke-width="1.1"/>
+  <path d="M548 427C555 430 568 433 577 432M545 433C554 438 565 440 576 438" stroke="#edcfaa" stroke-width="1.4"/>
+  <path d="M567 434C590 404 608 405 607 421C606 438 589 441 567 439C593 445 605 458 595 465C582 472 567 453 563 441Z" fill="url(#ribbon)" stroke="#8b91b0" stroke-width="1"/>
+  <path d="M573 435C585 422 595 417 602 418M571 442C580 447 589 455 592 460" stroke="#f1d8b8" stroke-width="1.2"/>
+  <path d="M572 439C608 442 624 466 658 470C686 473 712 452 741 462C762 469 776 489 788 510C768 495 753 478 734 480C706 481 691 503 660 495C625 487 611 458 570 446Z" fill="url(#ribbon)" stroke="#9698b5" stroke-width=".85"/>
+  <path d="M660 470C686 473 712 452 741 462C756 467 768 480 779 495C763 483 749 475 734 478C707 477 687 491 663 486Z" fill="#f3dbce" opacity=".63"/>
+  <path d="M570 444C594 461 601 487 622 506C646 528 675 530 696 548C677 544 661 550 645 542C616 529 608 507 591 486C580 471 571 460 559 448Z" fill="url(#ribbon)" stroke="#9a9cba" stroke-width=".9"/>
+  <path d="M577 450C599 467 607 491 627 508C644 523 664 529 680 537" stroke="url(#rim)" stroke-width="1.5"/>
+  <path d="M578 441C609 447 629 477 655 479C682 484 710 462 738 469C751 473 765 485 772 493" stroke="url(#rim)" stroke-width="1.2"/>
+</svg>

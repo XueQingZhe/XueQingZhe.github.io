@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1100" viewBox="0 0 900 1100" fill="none">
+  <defs>
+    <linearGradient id="front" x1="379" y1="99" x2="514" y2="339" gradientUnits="userSpaceOnUse"><stop stop-color="#7378a3"/><stop offset=".21" stop-color="#4c5588"/><stop offset=".56" stop-color="#333c70"/><stop offset=".79" stop-color="#626b9b"/><stop offset="1" stop-color="#8993b3"/></linearGradient>
+    <linearGradient id="fringe" x1="391" y1="102" x2="462" y2="199" gradientUnits="userSpaceOnUse"><stop stop-color="#9a94b5"/><stop offset=".48" stop-color="#515b8d"/><stop offset="1" stop-color="#394979"/></linearGradient>
+    <linearGradient id="edge" x1="365" y1="90" x2="518" y2="353" gradientUnits="userSpaceOnUse"><stop stop-color="#e8c9b6"/><stop offset=".27" stop-color="#c0b6c9"/><stop offset=".65" stop-color="#909ec4"/><stop offset="1" stop-color="#b8b2c9" stop-opacity=".15"/></linearGradient>
+  </defs>
+  <!-- A side part exposes both eyes; the flowing front locks belong to a single low-gathered hairstyle. -->
+  <path d="M350 184C347 139 373 102 412 88C448 74 492 81 524 106C551 128 565 162 560 197C557 226 543 251 527 267C536 238 531 214 514 196C503 182 487 169 476 151C453 178 429 193 400 199C414 188 424 176 429 163C412 183 393 194 377 206C364 217 360 235 363 253C349 234 345 210 350 184Z" fill="url(#front)" stroke="#343c68" stroke-width="1.25"/>
+  <path d="M440 95C424 110 420 130 407 148C393 168 374 178 366 197C362 181 371 161 385 144C402 123 413 107 440 95Z" fill="url(#fringe)"/>
+  <path d="M462 93C452 118 449 139 432 158C420 172 407 182 392 188C414 165 422 153 428 133C434 113 445 100 462 93Z" fill="#7680ad" opacity=".58"/>
+  <path d="M465 99C463 130 445 155 422 176C441 169 461 157 476 139C482 164 504 177 515 196C510 168 492 155 486 134C482 121 478 107 465 99Z" fill="#354475"/>
+  <path d="M487 100C506 117 510 138 520 155C535 180 538 201 534 220C550 194 545 163 533 143C521 122 507 108 487 100Z" fill="#8486af" opacity=".45"/>
+  <path d="M511 184C522 207 517 229 514 250C511 273 521 292 522 312C523 336 511 355 493 366C505 349 505 332 498 317C488 296 493 270 497 251C502 230 500 215 492 203Z" fill="url(#front)" stroke="#414976" stroke-width="1.1"/>
+  <path d="M507 203C514 226 504 249 504 270C504 292 516 314 510 332" stroke="url(#edge)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M506 220C507 244 494 269 500 291C507 314 509 331 499 350" stroke="#9197bf" stroke-width=".85" opacity=".6"/>
+  <path d="M380 189C370 211 373 233 381 250C390 270 393 290 389 308C385 327 390 344 406 355C386 353 373 338 373 320C375 296 370 279 365 262C357 236 362 207 380 189Z" fill="url(#front)" stroke="#3d4776" stroke-width="1.1"/>
+  <path d="M371 219C369 244 383 263 382 282C381 302 377 320 387 337" stroke="url(#edge)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M478 94C506 99 532 125 540 151" stroke="url(#edge)" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
+  <path d="M362 163C371 132 391 111 419 100" stroke="url(#edge)" stroke-width="3" stroke-linecap="round" opacity=".65"/>
+  <g stroke="url(#edge)" stroke-linecap="round">
+    <path d="M455 96C438 107 435 130 424 145C413 162 396 176 382 183" stroke-width="1.2"/>
+    <path d="M447 98C428 109 423 131 409 148C398 162 384 172 376 187" stroke-width=".8"/>
+    <path d="M468 101C470 121 472 144 490 160C507 176 515 187 519 199" stroke-width="1.25"/>
+    <path d="M475 100C481 118 482 137 498 152C516 169 526 188 525 205" stroke-width=".8"/>
+    <path d="M443 122C437 143 423 163 405 177" stroke-width=".7"/>
+    <path d="M407 110C384 127 369 149 366 171" stroke-width=".85"/>
+    <path d="M525 149C539 177 541 200 532 220" stroke-width=".8"/>
+  </g>
+  <g stroke="#252e60" stroke-linecap="round" opacity=".5">
+    <path d="M453 108C446 135 429 157 411 170M493 115C498 139 514 151 523 171M372 227C373 249 384 268 384 290" stroke-width="1.1"/>
+  </g>
+  <!-- A small antique flower pin, drawn without icon or font dependencies. -->
+  <g transform="translate(533 191) rotate(18)">
+    <path d="M-2 15L-4 49M2 17L5 47" stroke="#c5b295" stroke-width="1.3"/>
+    <path d="M0 0C-12-14-19-4-10 3C-21 10-12 20-3 12C0 27 10 24 10 12C21 18 25 6 13 1C22-9 9-15 4-5C4-17-9-15 0 0Z" fill="#9aa8be" stroke="#eed4a7" stroke-width="1"/>
+    <path d="M0 0L-7 5L-1 10L7 8L10 2L4-3Z" fill="#c6bcae"/>
+    <circle cx="3" cy="4" r="3" fill="#f1d2a0"/>
+    <path d="M-4 46L-1 50L-4 54L-7 50ZM5 43L8 47L5 51L2 47Z" fill="#c4d1da" stroke="#e0c9a5" stroke-width=".75"/>
+  </g>
+</svg>

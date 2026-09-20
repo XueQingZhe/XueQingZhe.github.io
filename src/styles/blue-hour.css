@@ -1,0 +1,221 @@
+/* The same garden is read in two kinds of light. Illustration colours stay intact. */
+html[data-space="blue-hour"] {
+  --ground: #eee9d4;
+  --blue-paper: #273f35;
+  --blue-muted: #425649;
+  --blue-gold: #796544;
+  --blue-line: #5366493d;
+  --blue-soft: #53634f;
+  --blue-panel: #f7f2de73;
+  --blue-hover: #faf6e3a1;
+  --blue-nav-panel: #f7f2de85;
+}
+
+html[data-theme="dark"][data-space="blue-hour"] {
+  --ground: #0c1737;
+  --blue-paper: #f4e8d6;
+  --blue-muted: #d7d7e3;
+  --blue-gold: #e7c79a;
+  --blue-line: #d9d6e53b;
+  --blue-soft: #c1c4d5;
+  --blue-panel: #101a3b6e;
+  --blue-hover: #72769d21;
+  --blue-nav-panel: #12203980;
+}
+
+.blue-hour-shell {
+  position: relative;
+  isolation: isolate;
+  min-height: 900px;
+  height: 100svh;
+  overflow: hidden;
+  color: var(--blue-paper);
+  background: #eee9d4;
+}
+
+.blue-hour-shell > blue-hour-scene,
+.blue-hour-shell > .blue-hour-scene { position: absolute; inset: 0; }
+
+.blue-hour-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, #f4efdadb 0%, #f4efda24 14%, transparent 24%),
+    linear-gradient(90deg, #f3f0dbb8 0%, #f3f0db9c 25%, #f3f0db35 42%, transparent 60%),
+    linear-gradient(0deg, #eee9d4fa 0%, #eee9d4d6 17%, #eee9d42b 34%, transparent 44%);
+  transition: background 1s;
+}
+
+.blue-hour-edition {
+  position: absolute;
+  left: 5.6vw;
+  top: 174px;
+  z-index: 2;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  writing-mode: vertical-rl;
+  font: 10px/1 var(--font-mono);
+  letter-spacing: 2px;
+  color: var(--blue-soft);
+}
+.blue-hour-edition i { height: 72px; width: 1px; background: var(--blue-line); }
+
+.blue-hour-story {
+  position: relative;
+  z-index: 2;
+  width: min(490px, 46vw);
+  margin-left: 11vw;
+  padding-top: clamp(146px, 16.5vh, 195px);
+  pointer-events: none;
+}
+.blue-hour-eyebrow { display: flex; align-items: center; gap: 12px; margin: 0 0 27px 5px; color: var(--blue-muted); font-size: 11px; letter-spacing: 2.6px; }
+.blue-hour-eyebrow > span { width: 5px; height: 5px; border-radius: 50%; background: var(--blue-gold); box-shadow: 0 0 14px #e5bc7473; }
+.blue-hour-title {
+  position: relative;
+  width: max-content;
+  margin: 0;
+  color: var(--blue-paper);
+  font: 400 clamp(116px, 10.1vw, 174px)/.91 var(--font-art);
+  letter-spacing: -.055em;
+  transform: rotate(-4deg);
+  text-shadow: 0 2px 24px #f8f3dc40;
+  pointer-events: auto;
+}
+.blue-hour-title > span { display: block; }
+.blue-hour-title > span:nth-child(2) { margin: 9px 0 0 .46em; }
+.blue-hour-flower { position: absolute; right: -45px; bottom: 10px; width: 52px; height: 67px; color: var(--blue-gold); stroke: currentColor; stroke-width: .8; transform: rotate(14deg); opacity: .85; }
+.blue-hour-english { display: flex; align-items: center; gap: 19px; margin: 26px 0 0 9px; font: 500 clamp(17px, 1.75vw, 25px)/1.3 var(--font-display); letter-spacing: .12em; color: var(--blue-gold); pointer-events: auto; }
+.blue-hour-rule { width: 42px; height: 1px; background: linear-gradient(90deg, var(--blue-gold), transparent); opacity: .6; }
+.blue-hour-description { margin: 18px 0 0 10px; font-size: 13px; line-height: 2.05; letter-spacing: 1.6px; color: var(--blue-muted); }
+.blue-hour-practice { margin: 17px 0 0 11px; font: 9px/1.5 var(--font-mono); letter-spacing: 1.45px; color: var(--blue-soft); }
+.blue-hour-practice span { padding: 0 5px; color: var(--blue-gold); }
+
+.blue-hour-bottom { position: absolute; z-index: 3; bottom: 25px; left: 10vw; right: 10vw; }
+.blue-hour-index-label { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; padding-inline: 1px; color: var(--blue-muted); font-size: 11px; letter-spacing: 1.8px; }
+.blue-hour-index-label > span:last-child { font: 9px var(--font-mono); letter-spacing: 1.6px; color: var(--blue-soft); }
+.blue-hour-index { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--blue-line); border-bottom: 1px solid var(--blue-line); background: var(--blue-panel); backdrop-filter: blur(8px); }
+.blue-hour-room { position: relative; display: block; padding: 17px 27px 18px; color: inherit; text-decoration: none; transition: background .45s; }
+.blue-hour-room + .blue-hour-room { border-left: 1px solid var(--blue-line); }
+.blue-hour-room::after { content: ''; position: absolute; inset: auto 27px -1px; height: 1px; background: var(--blue-gold); transform: scaleX(0); transform-origin: left; transition: transform .55s cubic-bezier(.22,.68,.2,1); }
+.blue-hour-room:hover, .blue-hour-room:focus-visible { background: var(--blue-hover); }
+.blue-hour-room:focus-visible { outline: 2px solid var(--blue-gold); outline-offset: 5px; }
+.blue-hour-room:hover::after, .blue-hour-room:focus-visible::after { transform: scaleX(1); }
+.blue-hour-room-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font: 10px var(--font-mono); letter-spacing: .8px; color: var(--blue-soft); }
+.blue-hour-room-meta > span:last-child { font-family: var(--font-body); font-size: 10px; letter-spacing: .5px; }
+.blue-hour-room-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.blue-hour-room-heading h2 { font: 400 35px/1.1 var(--font-art); letter-spacing: 2px; margin: 0; }
+.blue-hour-room-flower { width: 27px; height: 27px; color: var(--blue-gold); stroke: currentColor; stroke-width: .8; opacity: .65; transform: rotate(-15deg); transition: opacity .5s, transform .7s cubic-bezier(.22,.68,.2,1); }
+.blue-hour-room:hover .blue-hour-room-flower, .blue-hour-room:focus-visible .blue-hour-room-flower { opacity: 1; transform: rotate(30deg) scale(1.13); }
+.blue-hour-room p { margin: 10px 0; font-size: 11px; line-height: 1.6; letter-spacing: .5px; color: var(--blue-muted); }
+.blue-hour-room-en { display: block; font: 9px/1.4 var(--font-display); letter-spacing: 1.6px; color: var(--blue-soft); }
+.blue-hour-colophon { display: flex; justify-content: space-between; align-items: center; gap: 25px; margin-top: 18px; min-height: 30px; }
+.blue-hour-season { color: var(--blue-muted); font-size: 11px; letter-spacing: 1.4px; }
+.blue-hour-worlds { display: flex; gap: 15px; align-items: center; font-size: 11px; letter-spacing: 1px; }
+.blue-hour-worlds > span:first-child { color: var(--blue-soft); font-size: 10px; margin-right: 6px; letter-spacing: 1px; }
+.blue-hour-worlds a { color: var(--blue-muted); text-decoration: none; display: inline-flex; align-items: center; min-height: 36px; padding: 2px; transition: color .3s; }
+.blue-hour-worlds a:hover, .blue-hour-worlds a[aria-current="page"] { color: var(--blue-gold); }
+.blue-hour-worlds a[aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 1px; }
+.blue-hour-world-divider { width: 1px; height: 9px; background: var(--blue-line); }
+.blue-hour-signature { font: 9px var(--font-mono); letter-spacing: 1.1px; color: var(--blue-soft); }
+
+html[data-space="blue-hour"] .portal-mode .site-nav a,
+html[data-space="blue-hour"] .portal-mode .site-nav button { color: var(--blue-paper); }
+html[data-space="blue-hour"] .portal-mode .site-nav small { color: var(--blue-muted); }
+html[data-space="blue-hour"] .portal-mode .site-mark { color: var(--blue-gold); }
+html[data-space="blue-hour"] .portal-mode .theme-toggle { background: var(--blue-nav-panel); border-color: var(--blue-line); }
+html[data-space="blue-hour"] .portal-mode .site-nav nav { border-color: var(--blue-line); }
+html[data-space="blue-hour"] .portal-mode .site-nav nav a::after { background: var(--blue-gold); }
+html[data-space="blue-hour"] .portal-mode .site-nav nav a small { font-size: 9px; letter-spacing: .8px; }
+html[data-space="blue-hour"] .portal-mode .brand small { font-size: 8px; letter-spacing: 1.1px; }
+
+html[data-theme="dark"] .blue-hour-shell { background: #0c1737; }
+html[data-theme="dark"] .blue-hour-wash { background: linear-gradient(180deg, #080f29a8 0%, transparent 20%), linear-gradient(90deg, #0b183d70 0%, #10224a3b 30%, transparent 54%), linear-gradient(0deg, #080f28f7 0%, #0d1838c4 17%, #101c3b0a 37%, transparent 47%); }
+html[data-theme="dark"] .blue-hour-title { text-shadow: 0 2px 30px #09142c60; }
+
+@media (min-width: 1700px) {
+  .blue-hour-story { margin-left: 13vw; }
+  .blue-hour-title { font-size: 177px; }
+  .blue-hour-bottom { left: 13vw; right: 13vw; bottom: 30px; }
+  .blue-hour-room { padding-top: 21px; padding-bottom: 23px; }
+  .blue-hour-room-heading h2 { font-size: 41px; }
+  .blue-hour-room p { font-size: 12px; }
+}
+
+@media (max-height: 820px) and (min-width: 801px) {
+  .blue-hour-shell { min-height: 840px; }
+  .blue-hour-story { padding-top: 130px; }
+  .blue-hour-title { font-size: 118px; }
+  .blue-hour-eyebrow { margin-bottom: 22px; }
+  .blue-hour-english { margin-top: 20px; font-size: 18px; }
+  .blue-hour-description { font-size: 12px; margin-top: 14px; }
+  .blue-hour-practice { margin-top: 12px; }
+  .blue-hour-bottom { bottom: 20px; }
+  .blue-hour-room { padding-top: 14px; padding-bottom: 14px; }
+  .blue-hour-colophon { margin-top: 15px; }
+}
+
+@media (max-width: 1100px) {
+  .blue-hour-story { margin-left: 9vw; }
+  .blue-hour-title { font-size: 124px; }
+  .blue-hour-bottom { left: 6.5vw; right: 6.5vw; }
+  .blue-hour-room { padding-left: 19px; padding-right: 19px; }
+  .blue-hour-room::after { left: 19px; right: 19px; }
+  .blue-hour-room-heading h2 { font-size: 32px; }
+  .blue-hour-room p { font-size: 10px; letter-spacing: .15px; }
+  .blue-hour-room-en { font-size: 8px; letter-spacing: 1px; }
+  .blue-hour-signature { display: none; }
+  html[data-space="blue-hour"] .portal-mode .site-nav nav { gap: 22px; }
+}
+
+@media (max-width: 700px), (max-aspect-ratio: 17/20) {
+  .blue-hour-shell { min-height: 1320px; }
+  .blue-hour-story { margin-left: 9vw; padding-top: 157px; width: 82vw; }
+  .blue-hour-eyebrow { font-size: 10px; letter-spacing: 1.5px; gap: 9px; margin-left: 3px; margin-bottom: 25px; }
+  .blue-hour-title { font-size: clamp(61px, 17.5vw, 83px); display: flex; gap: .1em; }
+  .blue-hour-title > span:nth-child(2) { margin-left: 0; margin-top: 5px; }
+  .blue-hour-flower { display: none; }
+  .blue-hour-english { margin-left: 4px; margin-top: 22px; font-size: 16px; letter-spacing: .12em; gap: 14px; }
+  .blue-hour-rule { width: 30px; }
+  .blue-hour-description { margin-left: 5px; margin-top: 16px; font-size: 12px; line-height: 2.05; letter-spacing: .8px; }
+  .blue-hour-practice { margin: 13px 0 0 5px; font-size: 8px; letter-spacing: .8px; }
+  .blue-hour-edition { display: none; }
+  .blue-hour-bottom { left: 24px; right: 24px; bottom: 20px; }
+  .blue-hour-index-label { font-size: 10px; letter-spacing: .6px; margin-bottom: 12px; }
+  .blue-hour-index-label > span:last-child { font-size: 8px; letter-spacing: .6px; }
+  .blue-hour-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .blue-hour-room { padding: 15px 15px 16px; }
+  .blue-hour-room + .blue-hour-room { border-left: 0; }
+  .blue-hour-room:nth-child(even) { border-left: 1px solid var(--blue-line); }
+  .blue-hour-room:nth-child(n+3) { border-top: 1px solid var(--blue-line); }
+  .blue-hour-room::after { left: 15px; right: 15px; }
+  .blue-hour-room-meta, .blue-hour-room-meta > span:last-child { font-size: 9px; }
+  .blue-hour-room-heading { margin-top: 10px; }
+  .blue-hour-room-heading h2 { font-size: 31px; }
+  .blue-hour-room-flower { width: 24px; height: 24px; }
+  .blue-hour-room p { font-size: 10px; margin-top: 8px; margin-bottom: 9px; letter-spacing: 0; }
+  .blue-hour-room-en { font-size: 8px; letter-spacing: .7px; }
+  .blue-hour-colophon { margin-top: 12px; gap: 10px; }
+  .blue-hour-season { font-size: 10px; letter-spacing: .3px; }
+  .blue-hour-worlds { gap: 12px; font-size: 11px; }
+  .blue-hour-worlds > span:first-child { display: none; }
+  .blue-hour-wash, html[data-theme="dark"] .blue-hour-wash { background: none; }
+  html[data-space="blue-hour"] .portal-mode .site-nav nav { gap: 12px; }
+  html[data-space="blue-hour"] .portal-mode .site-nav nav a { font-size: 12px; }
+  html[data-space="blue-hour"] .portal-mode .site-nav nav a small { display: none; }
+  html[data-space="blue-hour"] .portal-mode .brand small { font-size: 7px; letter-spacing: .7px; }
+}
+
+@media (max-width: 360px) {
+  .blue-hour-bottom { left: 18px; right: 18px; }
+  .blue-hour-index-label > span:last-child { display: none; }
+  .blue-hour-room { padding-inline: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blue-hour-shell *, .blue-hour-shell *::after { animation: none !important; transition: none !important; }
+  .blue-hour-room:hover .blue-hour-room-flower, .blue-hour-room:focus-visible .blue-hour-room-flower { transform: none; }
+}
+html[data-motion="paused"] .blue-hour-room-flower { transition: opacity .2s; transform: none; }

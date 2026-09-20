@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import LivingScene from '../components/LivingScene.astro';
+import {getCollection} from 'astro:content';
+import {allNotes,tutorials} from '../lib/content';
+import '../styles/home.css';
+const workCount=(await getCollection('work')).filter(w=>!w.data.draft).length;
+const notes=await allNotes();const chapters=await tutorials();
+const rooms=[
+ {id:'work',href:'/work/',number:'01',name:'造境',en:'WORK',description:'把想象，雕琢成画面',count:`${String(workCount).padStart(2,'0')} 件作品`,caption:'一束光，成为一种可能。'},
+ {id:'notes',href:'/notes/',number:'02',name:'拾光',en:'JOURNAL',description:'收集思绪生长的痕迹',count:`${notes.length} 篇手记`,caption:'每个念头，都有它的回声。'},
+ {id:'study',href:'/tutorials/',number:'03',name:'寻径',en:'STUDY',description:'沿着好奇，走得更远',count:`${chapters.length} 个章节`,caption:'让好奇心，画出自己的轨道。'},
+ {id:'about',href:'/about/',number:'04',name:'回声',en:'ABOUT',description:'认识这个世界的记录者',count:'关于我',caption:'很高兴，在这里遇见你。'}
+];
+---
+<Base title="home">
+  <section class="portal-shell" aria-labelledby="portal-title">
+    <LivingScene variant="portal"/>
+    <div class="portal-wash" aria-hidden="true"></div>
+    <div class="portal-vignette" aria-hidden="true"></div>
+    <div class="portal-lines" aria-hidden="true"><span></span><span></span></div>
+    <div class="portal-story">
+      <div class="portal-eyebrow"><span class="live-dot"></span><span>吟处雪轻遮的光影水庭</span><span class="edition">EST. IN CURIOSITY</span></div>
+      <h1 class="portal-title" id="portal-title" aria-label="浮光游境"><span class="art-line" data-kinetic data-kinetic-style="ink">浮光</span><span class="art-line second-line" data-kinetic data-kinetic-style="ink">游境</span><span class="title-seal" aria-hidden="true">雪轻遮</span></h1>
+      <div class="portal-type" data-variable aria-hidden="true"><span data-kinetic data-kinetic-style="wide">LIGHT IN</span><span class="hollow-type" data-kinetic data-kinetic-style="wide">THE MAKING.</span></div>
+      <p class="portal-description">在代码与想象的边界，<br/>让光有形，让灵感发生。</p>
+      <div class="portal-tags"><span>TECHNICAL ART</span><i></i><span>SHADER & NPR</span></div>
+    </div>
+    <div class="scene-poem" aria-live="off"><span class="poem-line" id="scene-poem">有风经过的地方，光正在生长。</span><span>AN EVER-CHANGING LITTLE WORLD</span></div>
+    <div class="scene-coordinate" aria-hidden="true"><span>光</span><i></i><small>LIGHT / SPACE / TIME</small></div>
+    <nav class="portal-dock" aria-label="选择探索空间">
+      {rooms.map(room=><a class="room-link" href={room.href} data-room={room.id} data-poem={room.caption} data-magnetic><div class="room-top"><span class="room-number">{room.number}</span><svg class="room-symbol" viewBox="0 0 60 60" fill="none" aria-hidden="true">{room.id==='work'?<><path d="M13 47V25a17 17 0 0 1 34 0v22M21 47V25a9 9 0 0 1 18 0v22M8 47h44"/><circle cx="30" cy="29" r="3"/></>:room.id==='notes'?<><path d="m14 15 31-5-2 34-30 7 1-36Zm6 9 16-3m-16 11 16-3m-16 11 10-2"/><path d="m47 18 4 29-29 5"/></>:room.id==='study'?<><ellipse cx="30" cy="30" rx="23" ry="10" transform="rotate(-35 30 30)"/><ellipse cx="30" cy="30" rx="23" ry="10" transform="rotate(35 30 30)"/><circle cx="30" cy="30" r="3"/><circle cx="49" cy="17" r="3"/></>:<><path d="m9 38 14-22 18 8 9 20M23 16l5 29 13-21M9 38l19 7 22-1"/><circle cx="23" cy="16" r="3"/><circle cx="41" cy="24" r="3"/><circle cx="28" cy="45" r="3"/></>}</svg><span class="room-count">{room.count}</span></div><div class="room-heading"><h2>{room.name}</h2><span class="room-en"><span>{room.en}</span><span aria-hidden="true">{room.en}</span></span></div><p>{room.description}</p><span class="room-edge" aria-hidden="true"></span></a>)}
+    </nav>
+    <div class="portal-floor"><span class="interaction-hint"><span class="hint-ring" aria-hidden="true"></span><span>轻触水面，泛起涟漪</span></span><span class="floor-signature">不急着抵达，先让好奇发生。</span><button class="motion-control" id="motion-toggle" type="button" aria-label="暂停场景动效" aria-pressed="false"><span class="motion-indicator" aria-hidden="true"><i></i><i></i><i></i></span><span class="motion-text">风正在吹</span></button></div>
+  </section>
+</Base>
+<script>
+  import {gsap} from 'gsap';
+  const root=document.documentElement;const shell=document.querySelector<HTMLElement>('.portal-shell');const scene=shell?.querySelector('living-scene');const poem=document.querySelector('#scene-poem');
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const restingPoem=poem?.textContent||'';let poemText=restingPoem;
+  function settlePoem(){if(!poem)return;gsap.killTweensOf(poem);poem.textContent=poemText;gsap.set(poem,{opacity:1,y:0});}
+  document.querySelectorAll<HTMLAnchorElement>('.room-link').forEach(link=>{
+    const enter=()=>{shell?.setAttribute('data-active-room',link.dataset.room!);scene?.setAttribute('data-focus',link.dataset.room!);if(poem){poemText=link.dataset.poem!;gsap.killTweensOf(poem);if(reduced.matches||root.dataset.motion==='paused')settlePoem();else gsap.to(poem,{opacity:0,y:6,duration:.18,onComplete:()=>{poem.textContent=poemText;gsap.fromTo(poem,{y:-7,opacity:0},{y:0,opacity:1,duration:.4})}})}};
+    const leave=()=>{shell?.removeAttribute('data-active-room');scene?.removeAttribute('data-focus');poemText=restingPoem;settlePoem()};
+    link.addEventListener('pointerenter',enter);link.addEventListener('focus',enter);link.addEventListener('pointerleave',leave);link.addEventListener('blur',leave);
+  });
+  const button=document.querySelector<HTMLButtonElement>('#motion-toggle');
+  function sync(){const paused=root.dataset.motion==='paused'||reduced.matches;if(paused)settlePoem();button?.setAttribute('aria-pressed',String(paused));button?.setAttribute('aria-label',paused?'播放场景动效':'暂停场景动效');if(button){button.disabled=reduced.matches;button.querySelector('.motion-text')!.textContent=reduced.matches?'静静看一会儿':paused?'风暂时停了':'风正在吹';}}
+  sync();button?.addEventListener('click',()=>{const next=root.dataset.motion==='paused'?'running':'paused';root.dataset.motion=next;try{localStorage.setItem('app-motion',next)}catch{}sync()});reduced.addEventListener('change',sync);
+  new MutationObserver(sync).observe(root,{attributes:true,attributeFilter:['data-motion']});
+</script>

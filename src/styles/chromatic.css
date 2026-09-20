@@ -1,0 +1,85 @@
+/* A shared paper / ink foundation, with a different pigment for every room. */
+:root {
+  --ground:#f5f0e7;
+  --surface:#fcf8f1;
+  --surface-2:#eae2d6;
+  --ink:#33332f;
+  --ink-2:#605c56;
+  --ink-3:#69655e;
+  --accent:#986244;
+  --accent-hi:#b78259;
+  --accent-dim:#b8987d;
+  --accent-soft:color-mix(in srgb,var(--accent) 9%,transparent);
+  --line:#dcd3c5;
+  --line-2:#bfb09b;
+  --gold:#ac8147;
+  --code-bg:#eae4da;
+  --surface-glass:color-mix(in srgb,var(--ground) 91%,transparent);
+  --wash-one:#bd885b;
+  --wash-two:#9793b9;
+  --wash-strength:12%;
+  --contour-opacity:.035;
+  --card-shadow:#4f302014;
+  --glow:#ac814726;
+}
+html[data-theme=dark] {
+  --ground:#181c27;
+  --surface:#202532;
+  --surface-2:#2a2e3b;
+  --ink:#eae4d9;
+  --ink-2:#bfbac0;
+  --ink-3:#9994a0;
+  --accent:#d7b58a;
+  --accent-hi:#f1d3aa;
+  --accent-dim:#8d7969;
+  --line:#363746;
+  --line-2:#565360;
+  --gold:#d7b58a;
+  --code-bg:#121620;
+  --surface-glass:color-mix(in srgb,var(--ground) 91%,transparent);
+  --wash-one:#b87952;
+  --wash-two:#7873b9;
+  --wash-strength:10%;
+  --contour-opacity:.025;
+  --card-shadow:#0004;
+  --glow:#c9af8720;
+}
+html[data-space=work] { --accent:#9c583f;--wash-one:#c07b4d;--wash-two:#8e8baa; }
+html[data-space=notes] { --ground:#f4f0e7;--accent:#526c7b;--wash-one:#bc966b;--wash-two:#799db0; }
+html[data-space=study] { --ground:#f2eff0;--surface:#faf7f5;--surface-2:#e6e1e8;--accent:#706086;--ink-3:#66625b;--line:#d6cfd9;--wash-one:#9b7da9;--wash-two:#b99a68; }
+html[data-space=about] { --ground:#f5eee3;--accent:#855b3d;--wash-one:#c59161;--wash-two:#9c8fb4; }
+html[data-space=search] { --accent:#6a6d92;--wash-one:#a896b2;--wash-two:#af956b; }
+html[data-theme=dark][data-space=work] { --ground:#1d1d27;--accent:#dfb285;--wash-one:#bb8050;--wash-two:#8d75ae; }
+html[data-theme=dark][data-space=notes] { --ground:#1a202b;--accent:#acc1d3;--wash-one:#8799b7;--wash-two:#af845c; }
+html[data-theme=dark][data-space=study] { --ground:#1e1d30;--surface:#27263b;--surface-2:#302d43;--accent:#c2addd;--ink-3:#9e99a5;--line:#3e394e;--wash-one:#a480b8;--wash-two:#b39366; }
+html[data-theme=dark][data-space=about] { --ground:#252128;--accent:#debb91;--wash-one:#bd865f;--wash-two:#9c82b0; }
+html[data-theme=dark][data-space=search] { --accent:#b8b4db;--wash-one:#a091bf;--wash-two:#ae8c67; }
+
+body { isolation:isolate; }
+body:not(.portal-mode) {
+  background-image:radial-gradient(ellipse at 3% 24%,color-mix(in srgb,var(--wash-one) var(--wash-strength),transparent),transparent 48%),radial-gradient(ellipse at 98% 75%,color-mix(in srgb,var(--wash-two) var(--wash-strength),transparent),transparent 49%);
+  background-attachment:fixed;
+}
+/* Engraved contours stay at the margin; they never compete with the reading column. */
+body:not(.portal-mode)::before {
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:var(--contour-opacity);
+  background:var(--accent);
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1400 1000' fill='none' stroke='black' stroke-width='.65'%3E%3Cpath d='M1450 300C1120 270 1180 600 1320 660S1570 850 1250 1120M1470 330C1160 300 1210 590 1340 630S1610 840 1290 1120M1490 360C1200 330 1240 580 1360 600S1650 830 1330 1120M1510 390C1240 360 1270 570 1380 570S1690 820 1370 1120M-100 40C80 80 10 250 100 370S0 600-100 650M-120 70C40 110-20 260 70 390S-30 610-120 670M-140 100C0 140-50 270 40 410S-60 620-140 690'/%3E%3C/svg%3E");
+  mask-size:cover;mask-position:center;
+}
+body:not(.portal-mode)::after {
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='.7'/%3E%3C/svg%3E");
+}
+html[data-reading=true] body { --wash-strength:5%; }
+html[data-reading=true] body::before { opacity:.015; }
+.site-nav { box-shadow:0 6px 28px color-mix(in srgb,var(--ground) 25%,transparent); }
+.site-footer { position:relative; }
+.site-footer::before { content:'';position:absolute;inset:-1px auto auto 0;width:54px;height:2px;background:var(--accent); }
+html[data-space] .editorial-filter button[aria-pressed=true] { background:var(--accent);border-color:var(--accent);color:var(--surface); }
+html[data-theme=dark][data-space] .editorial-filter button[aria-pressed=true] { color:var(--ground); }
+.page-stage { box-shadow:0 14px 45px var(--card-shadow); }
+html[data-space] .page-stage>.stage-scrim { background:linear-gradient(90deg,color-mix(in srgb,var(--ground) 95%,transparent),color-mix(in srgb,var(--ground) 73%,transparent) 35%,transparent 77%); }
+.page-stage .stage-coordinate,.page-stage .journal-count { padding:9px 12px;background:color-mix(in srgb,var(--ground) 86%,transparent);backdrop-filter:blur(6px);border-radius:2px; }
+.page-stage::after { content:'';position:absolute;inset:0;z-index:1;pointer-events:none;box-shadow:inset 0 0 70px color-mix(in srgb,var(--ground) 12%,transparent); }
+@media(max-width:700px) { body:not(.portal-mode) { background-attachment:scroll; }body:not(.portal-mode)::before { display:none; } }

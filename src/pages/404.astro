@@ -1,0 +1,38 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="404" description="页面不存在">
+  <section class="e">
+    <span class="ghost g" aria-hidden="true">404</span>
+    <span class="eyebrow">Signal Lost</span>
+    <h1 class="fx">这里什么都没渲染出来</h1>
+    <p class="t">
+      地址不对，或者这一页在改版时被搬走了。
+      老站的链接大多做了跳转，如果你是从收藏夹点进来的，回首页应该能找到。
+    </p>
+    <div class="links">
+      <a class="chip" href="/">回到入口</a>
+      <a class="chip" href="/work/">看作品</a>
+      <a class="chip" href="/notes/">翻笔记</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .e {
+    position: relative;
+    isolation: isolate;
+    padding-block: 110px 140px;
+    max-width: var(--measure);
+  }
+  .g {
+    left: -6px;
+    top: 56px;
+    font-size: clamp(120px, 22vw, 260px);
+    -webkit-text-stroke-width: 2px;
+  }
+  .e h1 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); margin-top: 12px; }
+  .t { color: var(--ink-2); margin-top: 16px; line-height: 1.75; }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+</style>

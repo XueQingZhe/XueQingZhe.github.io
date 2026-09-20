@@ -1,0 +1,17 @@
+---
+interface Props { label: string; count?: string; ghost?: string }
+const { label, count } = Astro.props;
+---
+<div class="section-heading">
+  <span class="section-label" data-kinetic>{label}</span>
+  <span class="section-rule" aria-hidden="true"></span>
+  {count && <span class="section-count">{count}</span>}
+</div>
+<style>
+  .section-heading { display:flex;align-items:center;gap:22px;margin-bottom:30px; }
+  .section-label,.section-count { font:500 10px/1.6 var(--font-mono);letter-spacing:1.7px;text-transform:uppercase; }
+  .section-label { color:var(--accent); }
+  .section-count { color:var(--ink-3);white-space:nowrap; }
+  .section-rule { flex:1;height:1px;background:var(--line); }
+  @media(max-width:600px) { .section-heading { gap:14px; }.section-label,.section-count { font-size:9px;letter-spacing:1px; } }
+</style>

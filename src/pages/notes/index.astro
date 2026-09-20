@@ -1,0 +1,65 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionHead from '../../components/SectionHead.astro';
+import LivingScene from '../../components/LivingScene.astro';
+import '../../styles/editorial-pages.css';
+import { allNotes,noteUrl } from '../../lib/content';
+import { labelOf } from '../../data/taxonomy';
+const items=(await allNotes()).filter(n=>!n.data.draft).sort((a,b)=>b.data.date.valueOf()-a.data.date.valueOf());
+const groups=new Map<number,typeof items>();
+for(const n of items){const year=n.data.date.getUTCFullYear();if(!groups.has(year))groups.set(year,[]);groups.get(year)!.push(n);}
+const years=[...groups.keys()].sort((a,b)=>b-a);
+const counts=new Map<string,number>();for(const n of items)for(const tag of n.data.tech)counts.set(tag,(counts.get(tag)??0)+1);
+const facets=[...counts.entries()].sort((a,b)=>b[1]-a[1]);
+const pad=(n:number)=>String(n).padStart(2,'0');
+---
+<Base title="渲染手记" description="关于图形学、Shader 和技术美术的学习笔记与问题记录。">
+  <div class="editorial-width">
+    <header class="page-stage journal-stage"><LivingScene variant="notes"/><div class="stage-scrim" aria-hidden="true"></div><div class="journal-rules" aria-hidden="true"></div><span class="stage-index">02 / A GROWING NOTEBOOK</span><h1 data-kinetic data-kinetic-style="wide">JOURNAL</h1><div class="journal-heading-bottom"><p class="stage-subtitle" data-kinetic data-kinetic-style="ink">思绪沉积</p><p>把看见的、想到的、没想明白的，<br/>都留在这里。</p></div><span class="journal-count">{pad(items.length)}<small>ENTRIES / ONGOING</small></span></header>
+    <section aria-label="笔记索引" data-notes-index>
+      <SectionHead label="手记目录 / Notebook" count={`${pad(items.length)} ENTRIES`}/>
+      <div class="note-search"><label for="note-query">寻找一篇手记</label><div class="search-field"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.4 15.4 5 5"/></svg><input id="note-query" type="search" placeholder="输入标题、摘要或技术关键词…" autocomplete="off"/></div></div>
+      <div class="editorial-filter note-filters" role="group" aria-label="按技术筛选笔记"><button type="button" data-tag="" aria-pressed="true">全部<b>{items.length}</b></button>{facets.map(([tag,count])=><button type="button" data-tag={tag} aria-pressed="false">{labelOf('tech',tag)}<b>{count}</b></button>)}</div>
+      <div class="editorial-result"><span id="note-results" role="status" aria-live="polite">共 {items.length} 篇手记</span><button type="button" class="editorial-reset" id="note-reset" hidden>清除筛选</button></div>
+      <p class="editorial-empty" id="note-empty" hidden>还没有找到这篇手记。可以缩短关键词，或清除标签再试试。</p>
+      {years.map(year=><section class="note-year" data-year={year} id={`year-${year}`} aria-labelledby={`heading-${year}`}><div class="year-heading"><h2 id={`heading-${year}`} data-kinetic>{year}</h2><span class="year-count">{pad(groups.get(year)!.length)} 篇</span></div><ul class="note-list">{groups.get(year)!.map((n,i)=><li class="note-item" data-reveal data-tags={n.data.tech.join(' ')} data-search={`${n.data.title} ${n.data.summary||''} ${n.data.tech.map(t=>labelOf('tech',t)).join(' ')}`}><a href={noteUrl(n)}><div class="note-sequence"><span>{pad(i+1)}</span><time datetime={n.data.date.toISOString()}>{pad(n.data.date.getUTCMonth()+1)}.{pad(n.data.date.getUTCDate())}</time></div><div class="note-text"><h3>{n.data.title}</h3>{n.data.summary&&<p>{n.data.summary}</p>}<span class="note-tags">{n.data.tech.slice(0,3).map(t=>labelOf('tech',t)).join(' / ')}</span></div><span class="note-read" aria-hidden="true">阅读</span></a></li>)}</ul></section>)}
+    </section>
+  </div>
+</Base>
+<script>
+  const index=document.querySelector<HTMLElement>('[data-notes-index]');
+  if(index){
+    const buttons=[...index.querySelectorAll<HTMLButtonElement>('button[data-tag]')];
+    const query=index.querySelector<HTMLInputElement>('#note-query')!;
+    const items=[...index.querySelectorAll<HTMLElement>('.note-item')];
+    const years=[...index.querySelectorAll<HTMLElement>('.note-year')];
+    const empty=index.querySelector<HTMLElement>('#note-empty')!;
+    const results=index.querySelector<HTMLElement>('#note-results')!;
+    const reset=index.querySelector<HTMLButtonElement>('#note-reset')!;
+    let tag='';
+    function read(){const params=new URLSearchParams(location.search);const requested=params.get('tag')||'';tag=buttons.some(b=>b.dataset.tag===requested)?requested:'';query.value=params.get('q')||'';}
+    function apply(sync=false){
+      const text=query.value.trim().toLocaleLowerCase();let shown=0;
+      for(const item of items){const visible=(!tag||(item.dataset.tags||'').split(' ').includes(tag))&&(!text||(item.dataset.search||'').toLocaleLowerCase().includes(text));item.hidden=!visible;if(visible)shown++;}
+      for(const year of years){const count=[...year.querySelectorAll<HTMLElement>('.note-item')].filter(item=>!item.hidden).length;year.hidden=count===0;year.querySelector('.year-count')!.textContent=`${String(count).padStart(2,'0')} 篇`;}
+      for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.tag===tag));
+      empty.hidden=shown>0;results.textContent=shown===items.length?`共 ${shown} 篇手记`:`找到 ${shown} / ${items.length} 篇手记`;reset.hidden=!tag&&!query.value;
+      if(sync){const url=new URL(location.href);tag?url.searchParams.set('tag',tag):url.searchParams.delete('tag');query.value?url.searchParams.set('q',query.value):url.searchParams.delete('q');history.replaceState(null,'',url);}
+      document.dispatchEvent(new CustomEvent('site:layout'));
+    }
+    for(const button of buttons)button.addEventListener('click',()=>{tag=button.dataset.tag||'';apply(true);});
+    query.addEventListener('input',()=>apply(true));reset.addEventListener('click',()=>{tag='';query.value='';apply(true);query.focus();});
+    addEventListener('popstate',()=>{read();apply();});read();apply();
+  }
+</script>
+<style>
+  .journal-stage{min-height:440px;margin-top:24px;padding:70px 40px 48px;display:flex;flex-direction:column;justify-content:center}.journal-rules{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 39px,color-mix(in srgb,var(--line) 55%,transparent) 39px,color-mix(in srgb,var(--line) 55%,transparent) 40px);z-index:1;pointer-events:none;mask-image:linear-gradient(90deg,#0008,transparent)}.journal-stage .stage-index{position:relative;z-index:2;margin-bottom:32px;font-size:10px}.journal-stage h1{position:relative;z-index:2;font:800 clamp(65px,10.4vw,133px)/.95 var(--font-display);letter-spacing:-.07em;margin:0}.journal-heading-bottom{display:flex;align-items:flex-start;gap:40px;position:relative;z-index:2;margin-top:30px}.journal-heading-bottom .stage-subtitle{font:700 28px/1.4 var(--font-art,var(--font-display));letter-spacing:.1em;margin:0}.journal-heading-bottom>p:last-child{font-size:12px;line-height:1.8;color:var(--ink-2);margin:0}.journal-count{position:absolute;right:30px;bottom:30px;z-index:2;font:700 44px/1 var(--font-display);letter-spacing:-.06em;color:var(--accent)}.journal-count small{display:block;font:10px var(--font-mono);letter-spacing:1px;margin-top:10px;color:var(--ink-3)}
+  .note-item{position:relative;isolation:isolate}.note-item::before{content:'';position:absolute;inset:0 -12px;z-index:-1;background:radial-gradient(ellipse at 28% 50%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 78%);opacity:0;transition:opacity .4s}.note-item:hover::before,.note-item:focus-within::before{opacity:1}.note-sequence{flex:none;width:48px;display:flex;flex-direction:column;gap:11px}.note-sequence>span{font:700 23px/1 var(--font-display);letter-spacing:-.06em;color:var(--line-2)}.note-read{align-self:center;font-size:11px;color:var(--accent);opacity:.65;transition:opacity .25s}.note-item:hover .note-read,.note-item:focus-within .note-read{opacity:1}
+  .note-search{display:grid;grid-template-columns:155px minmax(0,1fr);align-items:center;gap:25px;margin:10px 0 22px}.note-search>label{font-size:12px;color:var(--ink-2)}.search-field{display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--line);padding:12px 0;color:var(--ink-3)}.search-field:focus-within{border-color:var(--accent)}.search-field svg{flex:none}.search-field input{border:0;background:transparent;color:var(--ink);font-size:14px;line-height:1.8;width:100%;min-width:0;padding:0;outline:none}.search-field input:focus-visible{outline:none}.search-field input::placeholder{color:var(--ink-3);font-size:12px}.note-filters{border-bottom:1px solid var(--line);padding-bottom:22px}
+  .note-year{display:grid;grid-template-columns:155px minmax(0,1fr);gap:25px;margin-top:38px;scroll-margin-top:130px}.year-heading{align-self:start;position:sticky;top:130px;padding-top:7px}.year-heading h2{font:400 40px/1.2 var(--font-display);margin:0;color:var(--accent)}.year-count{display:block;font:400 10px/1.8 var(--font-mono);letter-spacing:1px;color:var(--ink-3);margin-top:13px}.note-list{margin:0;padding:0;list-style:none}.note-item{border-bottom:1px solid var(--line)}.note-item:first-child{border-top:1px solid var(--line)}.note-item a{display:flex;align-items:baseline;gap:24px;padding:23px 0;text-decoration:none;color:var(--ink)}.note-item time{flex:none;font:400 11px var(--font-mono);letter-spacing:1px;color:var(--ink-3)}.note-text{flex:1;min-width:0}.note-text h3{font:650 19px/1.65 var(--font-body);margin:0;transition:color .25s;overflow-wrap:anywhere}.note-text p{font-size:13px;line-height:1.9;color:var(--ink-2);margin:9px 0 0}.note-tags{font:400 10px/1.8 var(--font-mono);color:var(--ink-3);letter-spacing:.4px;display:block;margin-top:11px}.note-tags:empty{display:none}.note-item a:hover h3{color:var(--accent)}
+  @media(max-width:700px){.journal-stage{min-height:385px;padding:60px 22px 100px}.journal-stage h1{font-size:clamp(50px,14vw,95px)}.journal-heading-bottom{gap:18px;flex-direction:column;margin-top:25px}.journal-heading-bottom .stage-subtitle{font-size:24px}.journal-heading-bottom>p:last-child{font-size:12px}.journal-count{font-size:35px;right:20px;bottom:20px}.journal-count small{font-size:10px}.note-search{grid-template-columns:1fr;gap:5px}.note-search>label{font-size:11px}.note-year{grid-template-columns:1fr;gap:21px;margin-top:34px}.year-heading{position:static;display:flex;align-items:center;justify-content:space-between}.year-heading h2{font-size:33px}.year-count{margin:0}.note-item a{gap:14px;padding:20px 0}.note-text h3{font-size:18px}.note-text p{font-size:13px}.note-item time{font-size:10px}.note-read{display:none}.note-sequence{width:38px}.note-sequence>span{font-size:21px}}
+  .note-year[hidden],.note-item[hidden]{display:none}.note-item a{outline-offset:6px}.note-item a:focus-visible h3{color:var(--accent)}.editorial-filter button{font-size:12px;min-height:38px}.editorial-filter button b{font-size:10px}.editorial-result,.editorial-reset{font-size:12px}.search-field:focus-within{box-shadow:0 2px 0 -1px var(--accent)}
+  :global(html[data-motion=paused]) .note-item::before,:global(html[data-motion=paused]) .note-read,:global(html[data-motion=paused]) .note-text h3{transition:none}
+  @media(prefers-reduced-motion:reduce){.note-item::before,.note-read,.note-text h3{transition:none}}
+  @media(max-width:700px){.editorial-filter button{font-size:11px;min-height:36px;padding:6px 11px}.note-search>label{font-size:12px}}
+</style>

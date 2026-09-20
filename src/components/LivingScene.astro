@@ -1,0 +1,47 @@
+---
+interface Props {
+  variant?: 'portal' | 'work' | 'notes' | 'study' | 'about';
+  class?: string;
+}
+const { variant = 'portal', class: className = '' } = Astro.props;
+---
+
+<living-scene class:list={['living-scene', className]} data-variant={variant} data-renderer="fallback" aria-hidden="true">
+  <div class="scene-fallback">
+    <div class="fallback-sun"></div>
+    <div class="fallback-arch fallback-arch-back"></div>
+    <div class="fallback-arch"></div>
+    <div class="fallback-object"></div>
+    <div class="fallback-water"></div>
+    <div class="fallback-botanical"></div>
+  </div>
+  <canvas></canvas>
+</living-scene>
+
+<style>
+  .living-scene { position:absolute; inset:0; display:block; overflow:hidden; pointer-events:none; isolation:isolate; }
+  .living-scene canvas, .scene-fallback { width:100%; height:100%; position:absolute; inset:0; display:block; }
+  .living-scene canvas { opacity:0; transition:opacity 1.5s ease; }
+  .living-scene[data-renderer="webgl"] canvas { opacity:1; }
+  .scene-fallback { background:radial-gradient(ellipse at 20% 20%,#eee4c7,transparent 55%),linear-gradient(155deg,#bcc6c6 0%,#b0bdb1 48%,#657f73 100%); transition:filter 1.5s ease; }
+  .fallback-sun { position:absolute; width:12vw; aspect-ratio:1; left:40%; top:12%; border-radius:50%; background:#f4e8b5; box-shadow:0 0 100px 50px #f5e8b640; }
+  .fallback-arch { position:absolute; width:18%; height:44%; right:18%; bottom:22%; border:clamp(10px,1.6vw,28px) solid #cfbd99; border-bottom:0; border-radius:45% 45% 0 0; box-shadow:inset -5px 3px 0 #969581,6px 5px 0 #7c978637; transform:rotate(-3deg); }
+  .fallback-arch-back { width:14%; height:38%; right:7%; bottom:28%; opacity:.58; transform:rotate(7deg); }
+  .fallback-water { position:absolute; left:0; right:0; height:29%; bottom:0; background:repeating-linear-gradient(176deg,transparent 0 19px,#b5e3c325 20px 21px,transparent 22px 38px),linear-gradient(transparent,#247c80a6); }
+  .fallback-botanical { position:absolute; width:34%; height:42%; right:-12%; top:-14%; background:#2e6458; border-radius:48%; box-shadow:-3vw 2vw 0 #397565,3vw 9vw 0 #275f53,-5vw 6vw 0 #4a8066; filter:blur(2px); }
+  .living-scene:not([data-variant="portal"]) .fallback-arch { display:none; }
+  .living-scene:not([data-variant="portal"]):not([data-variant="about"]) .fallback-botanical { opacity:.2; }
+  .fallback-object { position:absolute; right:18%; top:27%; width:17%; height:34%; }
+  .living-scene[data-variant="work"] .fallback-object { border:5px solid #a29773; background:radial-gradient(circle at 50% 47%,#638f81 0 22%,transparent 23%),#b9c5ae; box-shadow:11vw 4vw 0 -1vw #769587,-11vw 4vw 0 -1vw #bdba96; transform:rotate(3deg); }
+  .living-scene[data-variant="notes"] .fallback-object { background:repeating-linear-gradient(transparent 0 14%,#6f9d9740 14% 14.4%,transparent 14.4% 18%),#d6d9c8; transform:rotate(11deg); box-shadow:8vw 3vw 0 -1vw #b6cac0,-8vw -1vw 0 -1vw #d4ddce; }
+  .living-scene[data-variant="study"] .fallback-object { border:1px solid #c2d5ba; border-radius:50%; transform:rotate(35deg); box-shadow:0 0 30px #9ab9a220,inset 0 0 30px #9ab9a220; }
+  .living-scene[data-variant="study"] .fallback-object::after { content:""; position:absolute; inset:20% -20%; border:1px solid #c2d5ba; border-radius:50%; transform:rotate(80deg); }
+  .living-scene[data-variant="about"] .fallback-botanical { top:23%; right:12%; width:25%; height:23%; border-radius:45% 55% 50% 50%; box-shadow:-4vw 2vw 0 #397565,2vw 2vw 0 #275f53; }
+  .living-scene[data-variant="about"] .fallback-object { top:42%; right:24%; width:2px; height:30%; background:#466958; box-shadow:0 0 26px #d5b78466; }
+  :global(html[data-theme="dark"]) .scene-fallback { filter:brightness(.29) saturate(.8) hue-rotate(30deg); }
+  @media (prefers-reduced-motion:reduce) { .living-scene canvas,.scene-fallback { transition:none; } }
+</style>
+
+<script>
+  import '../scripts/living-scene';
+</script>

@@ -1,0 +1,6 @@
+---
+import { allNotes } from '../../lib/content';
+import Article from '../../components/Article.astro';
+export async function getStaticPaths(){const items=(await allNotes()).filter(n=>!('legacyUrl' in n.data && n.data.legacyUrl));return items.map((entry,i)=>({params:{slug:entry.id},props:{entry,prev:items[i-1],next:items[i+1]}}));}
+---
+<Article {...Astro.props}/>

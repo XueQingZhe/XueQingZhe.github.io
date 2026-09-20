@@ -1,0 +1,157 @@
+---
+/**
+ * 前后对比滑块 —— TA 作品集的刚需组件。
+ * 描边开关、Bloom 前后、LUT 对比，一拖就说明白了，比一段文字管用。
+ * 键盘左右方向键也能调，无障碍走 role="slider"。
+ */
+interface Props {
+  before: string;
+  after: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  caption?: string;
+}
+const {
+  before, after,
+  beforeLabel = "Before", afterLabel = "After",
+  caption,
+} = Astro.props;
+---
+
+<figure class="cmp">
+  <div
+    class="box frame"
+    role="slider"
+    tabindex="0"
+    aria-label="前后对比"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="50"
+    style="--pos:50%"
+  >
+    <img class="a" src={before} alt={beforeLabel} loading="lazy" />
+    <img class="b" src={after} alt={afterLabel} loading="lazy" />
+    <span class="bar" aria-hidden="true"></span>
+    <span class="knob" aria-hidden="true">⋮</span>
+    <span class="lb l">{beforeLabel}</span>
+    <span class="lb r">{afterLabel}</span>
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script is:inline>
+  document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".cmp .box").forEach((box) => {
+    const set = (pct) => {
+      const v = Math.max(0, Math.min(100, pct));
+      box.style.setProperty("--pos", v + "%");
+      box.setAttribute("aria-valuenow", String(Math.round(v)));
+    };
+    const fromEvent = (e) => {
+      const r = box.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+      set((x / r.width) * 100);
+    };
+    let dragging = false;
+    const start = (e) => { dragging = true; box.setPointerCapture(e.pointerId); fromEvent(e); };
+    const move = (e) => { if (dragging) fromEvent(e); };
+    const end = () => { dragging = false; };
+
+    box.addEventListener("pointerdown", start);
+    box.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end);
+    box.addEventListener("pointercancel", end);
+    box.addEventListener("keydown", (e) => {
+      const cur = Number(box.getAttribute("aria-valuenow")) || 50;
+      if (e.key === "ArrowLeft") { set(cur - 4); e.preventDefault(); }
+      if (e.key === "ArrowRight") { set(cur + 4); e.preventDefault(); }
+      if (e.key === "Home") { set(0); e.preventDefault(); }
+      if (e.key === "End") { set(100); e.preventDefault(); }
+    });
+  });
+  });
+</script>
+
+<style>
+  .cmp {
+    margin: 22px 0 0;
+  }
+  .box {
+    position: relative;
+    border: var(--hair) solid var(--line);
+    overflow: hidden;
+    touch-action: none;
+    cursor: ew-resize;
+    user-select: none;
+    line-height: 0;
+  }
+  .box img {
+    width: 100%;
+    display: block;
+  }
+  .box .b {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    object-fit: cover;
+    clip-path: inset(0 0 0 var(--pos));
+  }
+  .bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--pos);
+    width: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--glow), 0 0 2px #fff;
+  }
+  .knob {
+    position: absolute;
+    top: 50%;
+    left: var(--pos);
+    transform: translate(-50%, -50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 16px var(--glow), 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: grid;
+    place-items: center;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .knob:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 22px var(--glow);
+  }
+  .lb {
+    position: absolute;
+    bottom: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(7, 14, 26, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(6px);
+  }
+  .lb.l { left: 14px; }
+  .lb.r { right: 14px; }
+  figcaption {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.5px;
+  }
+</style>

@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+import Toc from './Toc.astro';
+import ReadingTools from './ReadingTools.astro';
+import { render } from 'astro:content';
+import { noteUrl } from '../lib/content';
+import { labelOf } from '../data/taxonomy';
+import '../styles/reading-room.css';
+const { entry,prev=null,next=null }=Astro.props;
+const data=entry.data;
+const { Content,headings }=await render(entry);
+const tutorial=data.kind==='tutorial';
+const contents=headings.filter(h=>h.depth>=2&&h.depth<=4);
+const raw=entry.body||'';
+const readingMinutes=Math.max(1,Math.ceil((raw.match(/[\u3400-\u9fff]/g)?.length||0)/450+(raw.match(/[A-Za-z]+/g)?.length||0)/220));
+---
+<Base title={data.title} description={data.summary} article space={tutorial?'study':'notes'}>
+  <div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div>
+  <header class:list={['article-header','reading-room-header',{'has-outline':contents.length>2}]}>
+    <div class="reading-breadcrumb"><a class="article-back" href={tutorial?'/tutorials/':'/notes/'}><svg viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M7 4H4v14h14v-3M8 4h10v10H8zM11 8h4M11 11h4"/></svg><span>{tutorial?'返回研习目录':'返回手记目录'}</span></a><span class="reading-edition">{tutorial?'STUDY / FIELD JOURNAL':'NOTES / FIELD JOURNAL'}</span></div>
+    <p class="eyebrow reading-kicker"><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0"/><circle cx="21" cy="9" r="1.5"/></svg><span>{tutorial?'STUDY NOTES':'FROM THE NOTEBOOK'}{data.series&&` / ${data.series}`}</span></p>
+    <h1 data-pagefind-meta="title" data-kinetic>{data.title}</h1>
+    {data.summary&&<p class="article-summary">{data.summary}</p>}
+    <div class="article-meta"><time datetime={data.date.toISOString()}>{data.date.toISOString().slice(0,10).replaceAll('-',' / ')}</time><span class="reading-time"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.2"/><path d="M9 5.2V9l2.6 1.7"/></svg>约 {readingMinutes} 分钟阅读</span>{data.tech?.length>0&&<span>{data.tech.slice(0,4).map((tag:string)=>labelOf('tech',tag)).join(' · ')}</span>}</div>
+    <ReadingTools canonicalPath={noteUrl(entry)} />
+  </header>
+  <div class:list={['article-grid',{'has-contents':contents.length>2}]}>
+    {contents.length>2&&<details class="reading-outline" open><summary><span>本篇目录</span><small>{contents.length} 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></summary><Toc headings={contents} scope=".article-body" label="文章目录"/><div class="reading-place" aria-hidden="true"><span>阅读进度</span><span data-reading-percent>0%</span></div></details>}
+    <div class="article-column">
+      <article class="prose body article-body" data-pagefind-body><Content/></article>
+      <div class="article-end"><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0"/><circle cx="21" cy="9" r="1.5"/></svg><p>记录于此，探索继续。</p><a href="#main">回到开篇</a></div>
+      {(prev||next)&&<nav class="article-pager" aria-label="相邻文章">{prev?<a href={noteUrl(prev)}><small> 上一篇</small><span>{prev.data.title}</span></a>:<span/>}{next&&<a href={noteUrl(next)}><small>下一篇 </small><span>{next.data.title}</span></a>}</nav>}
+    </div>
+  </div>
+</Base>
+<script>
+  const article=document.querySelector<HTMLElement>('.article-body');
+  const bar=document.querySelector<HTMLElement>('#reading-progress-bar');
+  const outline=document.querySelector<HTMLDetailsElement>('.reading-outline');
+  const narrow=matchMedia('(max-width: 1149px)');
+  if(outline){outline.open=!narrow.matches;narrow.addEventListener('change',()=>{outline.open=!narrow.matches});}
+  const percentage=document.querySelector<HTMLElement>('[data-reading-percent]');
+  const toc=document.querySelector('.toc');
+  const syncCurrent=()=>toc?.querySelectorAll<HTMLAnchorElement>('a[data-to]').forEach(link=>{if(link.dataset.on==='true')link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});
+  if(toc){new MutationObserver(syncCurrent).observe(toc,{subtree:true,attributes:true,attributeFilter:['data-on']});syncCurrent();}
+  if(article&&bar){
+    let queued=false;
+    function update(){queued=false;const bounds=article!.getBoundingClientRect();const span=Math.max(1,bounds.height-innerHeight*.75);const progress=Math.max(0,Math.min(1,(innerHeight*.15-bounds.top)/span));bar!.style.transform=`scaleX(${progress})`;if(percentage)percentage.textContent=`${Math.round(progress*100)}%`;}
+    function schedule(){if(!queued){queued=true;requestAnimationFrame(update);}}
+    addEventListener('scroll',schedule,{passive:true});addEventListener('resize',schedule,{passive:true});
+    new ResizeObserver(schedule).observe(article);update();
+  }
+</script>
+<style>
+  .reading-progress{position:fixed;inset:0 0 auto;z-index:90;height:2px;pointer-events:none}.reading-progress span{display:block;width:100%;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left}
+  .article-header{max-width:850px;margin:0 auto;padding:55px 0 45px}.article-back{display:inline-flex;align-items:center;gap:14px;color:var(--ink-3);text-decoration:none;font-size:11px;margin-bottom:45px}.article-back:hover{color:var(--accent)}.article-header .eyebrow{line-height:1.9;font-size:10px;letter-spacing:1.2px;margin-bottom:18px}.article-header h1{font:700 clamp(28px,3.5vw,44px)/1.5 var(--font-display);letter-spacing:-.04em;margin:0 0 23px;text-wrap:balance;overflow-wrap:anywhere}.article-summary{font-size:14px;line-height:2;color:var(--ink-2);margin:0 0 27px;max-width:740px}.article-meta{display:flex;align-items:center;gap:10px 22px;flex-wrap:wrap;color:var(--ink-3);font-size:10px;line-height:1.7}.article-meta time{font-family:var(--font-mono);letter-spacing:1px}.article-meta>span{padding-left:20px;border-left:1px solid var(--line)}
+  .article-grid{display:grid;grid-template-columns:minmax(0,780px);justify-content:center;border-top:1px solid var(--line);padding-top:44px}.article-column{min-width:0}.article-grid :global(.toc){order:2;margin-top:40px;padding-top:25px;border-top:1px solid var(--line)}.article-grid :global(.toc .tele-label){font:400 10px var(--font-mono);letter-spacing:1px;color:var(--ink-3)}.article-grid :global(.toc a){font-size:11px;line-height:1.8;padding-block:6px}.article-grid :global(.toc li[data-d="4"] a){font-size:10px;color:var(--ink-3)}
+  .article-body{font-size:16px;line-height:2;color:var(--ink-2);overflow-wrap:anywhere}.article-body :global(h2),.article-body :global(h3),.article-body :global(h4){color:var(--ink);font-family:var(--font-display);font-weight:500;scroll-margin-top:120px;letter-spacing:.025em}.article-body :global(h2){font-size:27px;line-height:1.65;margin:56px 0 24px;padding-bottom:16px;border-bottom:1px solid var(--line)}.article-body :global(h2:first-child){margin-top:0}.article-body :global(h3){font-size:22px;line-height:1.75;margin:38px 0 18px}.article-body :global(h4){font-size:18px;margin:29px 0 15px}.article-body :global(p){margin-bottom:22px}.article-body :global(ul),.article-body :global(ol){padding-left:1.5em;margin:20px 0}.article-body :global(li){padding-left:.25em;margin:8px 0}.article-body :global(a){text-decoration-thickness:1px;text-underline-offset:4px;overflow-wrap:anywhere}.article-body :global(blockquote){margin:30px 0;padding:4px 0 4px 25px;border-left:2px solid var(--accent);color:var(--ink-2)}.article-body :global(blockquote p:last-child){margin-bottom:0}.article-body :global(strong){font-weight:600;color:var(--ink)}
+  .article-body :global(pre){position:relative;overflow:auto;max-width:100%;padding:25px;margin:28px 0;font-size:12px;line-height:1.85;border:1px solid var(--line);border-radius:0}.article-body :global(pre code){font-size:inherit}.article-body :global(:not(pre)>code){font-size:.83em;border-radius:0;overflow-wrap:anywhere}.article-body :global(table){display:block;width:100%;overflow:auto;border-collapse:collapse;margin:28px 0;font-size:13px}.article-body :global(th),.article-body :global(td){border-bottom:1px solid var(--line);padding:12px 16px;text-align:left}.article-body :global(th){font-weight:500;color:var(--ink);background:var(--surface-2)}.article-body :global(figure){max-width:100%;margin:32px auto}.article-body :global(img),.article-body :global(video){max-width:100%;height:auto}.article-body :global(figcaption){font-size:11px;line-height:1.8;color:var(--ink-3);text-align:center;margin-top:12px}.article-body :global(.katex-display){overflow-x:auto;overflow-y:hidden;padding-block:8px}
+  .article-end{text-align:center;color:var(--ink-3);padding:48px 0 32px;margin-top:40px;border-top:1px solid var(--line)}.article-end>span{font-size:18px;color:var(--accent)}.article-end p{font-size:11px;letter-spacing:2px;margin:12px 0 22px}.article-end a{font-size:10px;color:var(--ink-3);text-decoration:none}.article-pager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:35px;border-top:1px solid var(--line);padding-top:28px}.article-pager a{text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:12px;font:500 16px/1.8 var(--font-display)}.article-pager a:hover{color:var(--accent)}.article-pager a:last-child{text-align:right}.article-pager small{font:400 10px var(--font-body);color:var(--ink-3)}
+  @media(min-width:1150px){.article-grid.has-contents{grid-template-columns:195px minmax(0,780px);gap:55px;justify-content:start}.article-grid :global(.toc){order:0;position:sticky;top:118px;align-self:start;max-height:calc(100vh - 155px);overflow:auto;margin:0;padding:0 12px 15px 0;border:0;scrollbar-width:thin}.article-header{max-width:none;margin-left:250px;max-width:780px}}
+  @media(max-width:650px){.article-header{padding:34px 0 29px}.article-back{margin-bottom:30px}.article-header .eyebrow{font-size:9px}.article-header h1{font-size:27px;line-height:1.7;margin-bottom:18px}.article-summary{font-size:13px}.article-meta{gap:9px 13px;font-size:9px}.article-meta>span{padding-left:12px}.article-grid{padding-top:30px}.article-body{font-size:14px;line-height:2}.article-body :global(h2){font-size:23px;margin-top:39px;padding-bottom:13px}.article-body :global(h3){font-size:20px}.article-body :global(pre){padding:20px 15px;font-size:11px}.article-body :global(blockquote){padding-left:18px}.article-body :global(th),.article-body :global(td){padding:10px;font-size:12px}.article-pager{gap:23px}.article-pager a{font-size:14px}.article-end{margin-top:30px}}
+</style>

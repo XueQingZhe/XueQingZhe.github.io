@@ -1,0 +1,32 @@
+/* The document remains an MPA. Only the deliberately selected cover is shared. */
+html[data-work-navigation] { scroll-behavior: auto; }
+html[data-work-navigation] .work-image { transform: none !important; }
+html[data-work-navigation] .work-inspect,
+html[data-work-navigation] .work-aperture,
+html[data-work-navigation] .work-reflection,
+html[data-work-navigation] .work-negative-label { opacity: 0 !important; transition: none !important; }
+html[data-work-navigation=enter] [data-work-detail-title] { opacity: 0; }
+html[data-work-title=arrive] [data-work-detail-title] { animation: work-title-arrive 560ms cubic-bezier(.2,.75,.2,1) both; }
+::view-transition-group(work-cover) { animation-duration: 680ms; animation-timing-function: cubic-bezier(.22,.74,.18,1); overflow: hidden; background: var(--surface-2); }
+::view-transition-image-pair(work-cover) { isolation: isolate; }
+::view-transition-old(work-cover),
+::view-transition-new(work-cover) { width: 100%; height: 100%; object-fit: contain; object-position: center; mix-blend-mode: normal; }
+/* Two letterboxed snapshots crossfading produce doubled faces. One sharp
+   snapshot follows the interpolated bounds; object-fit keeps its aspect. */
+::view-transition-old(work-cover) { display: none; }
+::view-transition-new(work-cover) { animation: none; opacity: 1; }
+html[data-work-navigation]::view-transition-group(root) { animation-duration: 320ms; }
+html[data-work-navigation]::view-transition-old(root) { animation: work-document-out 180ms ease-out both; }
+html[data-work-navigation]::view-transition-new(root) { animation: work-document-in 320ms ease-out both; }
+[data-artwork][data-work-returned] { outline: 1px solid color-mix(in srgb,var(--accent) 60%,transparent); outline-offset: 9px; }
+@keyframes work-title-arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes work-document-out { to { opacity: 0; } }
+@keyframes work-document-in { from { opacity: 0; } to { opacity: 1; } }
+html[data-motion=paused] [data-work-detail-title] { opacity: 1; animation: none !important; }
+html[data-motion=paused]::view-transition-group(*),
+html[data-motion=paused]::view-transition-old(*),
+html[data-motion=paused]::view-transition-new(*) { animation-duration: 0s !important; }
+@media(prefers-reduced-motion:reduce) {
+  [data-work-detail-title] { opacity: 1 !important; animation: none !important; }
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*) { animation-duration: 0s !important; }
+}

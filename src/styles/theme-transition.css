@@ -1,0 +1,86 @@
+/* Interpolate the pigments themselves so gradients and their text stay in one rhythm. */
+@property --theme-night { syntax:'<number>';inherits:true;initial-value:0; }
+@property --theme-ink-night { syntax:'<number>';inherits:true;initial-value:0; }
+@property --ground { syntax:'<color>';inherits:true;initial-value:#f5f0e7; }
+@property --surface { syntax:'<color>';inherits:true;initial-value:#fcf8f1; }
+@property --surface-2 { syntax:'<color>';inherits:true;initial-value:#eae2d6; }
+@property --ink { syntax:'<color>';inherits:true;initial-value:#33332f; }
+@property --ink-2 { syntax:'<color>';inherits:true;initial-value:#605c56; }
+@property --ink-3 { syntax:'<color>';inherits:true;initial-value:#69655e; }
+@property --accent { syntax:'<color>';inherits:true;initial-value:#986244; }
+@property --accent-hi { syntax:'<color>';inherits:true;initial-value:#b78259; }
+@property --accent-dim { syntax:'<color>';inherits:true;initial-value:#b8987d; }
+@property --line { syntax:'<color>';inherits:true;initial-value:#dcd3c5; }
+@property --line-2 { syntax:'<color>';inherits:true;initial-value:#bfb09b; }
+@property --gold { syntax:'<color>';inherits:true;initial-value:#ac8147; }
+@property --code-bg { syntax:'<color>';inherits:true;initial-value:#eae4da; }
+@property --wash-one { syntax:'<color>';inherits:true;initial-value:#bd885b; }
+@property --wash-two { syntax:'<color>';inherits:true;initial-value:#9793b9; }
+@property --card-shadow { syntax:'<color>';inherits:true;initial-value:#4f302014; }
+@property --glow { syntax:'<color>';inherits:true;initial-value:#ac814726; }
+
+:root {
+  --theme-night:0;
+  --theme-ink-night:0;
+  --theme-easing:cubic-bezier(.4,0,.2,1);
+  --portal-ink:color-mix(in srgb,#3d493c,#e9e0cf calc(var(--theme-ink-night) * 100%));
+  --portal-wash-side:color-mix(in srgb,#f2ead8aa,#161e3573 calc(var(--theme-night) * 100%));
+  --portal-wash-middle:color-mix(in srgb,#f0e5ca24,#161e3500 calc(var(--theme-night) * 100%));
+  --portal-wash-bottom:color-mix(in srgb,#e9dfc8d9,#151c32e8 calc(var(--theme-night) * 100%));
+  --portal-wash-edge:color-mix(in srgb,#e8ddc41c,#20203926 calc(var(--theme-night) * 100%));
+  --portal-card-start:color-mix(in srgb,#faf3e3a6,#242b40c4 calc(var(--theme-night) * 100%));
+  --portal-card-end:color-mix(in srgb,#f3e8d465,#1c243777 calc(var(--theme-night) * 100%));
+  --portal-card-border:color-mix(in srgb,#fff6e2a3,#c6c4d348 calc(var(--theme-night) * 100%));
+  --portal-control:color-mix(in srgb,#f3ead2b8,#24293ac9 calc(var(--theme-night) * 100%));
+}
+html[data-theme=dark] { --theme-night:1;--theme-ink-night:1; }
+html[data-theme-transition=manual] {
+  /* Ink changes at the crossing point instead of vanishing into the same mid-grey as paper. */
+  transition:
+    --theme-night 1s var(--theme-easing),
+    --theme-ink-night .38s steps(1,end),
+    --ground 1s var(--theme-easing),--surface 1s var(--theme-easing),--surface-2 1s var(--theme-easing),
+    --ink .38s steps(1,end),--ink-2 .38s steps(1,end),--ink-3 .38s steps(1,end),
+    --accent .38s steps(1,end),--accent-hi 1s var(--theme-easing),--accent-dim 1s var(--theme-easing),
+    --line 1s var(--theme-easing),--line-2 1s var(--theme-easing),--gold 1s var(--theme-easing),
+    --code-bg 1s var(--theme-easing),--wash-one 1s var(--theme-easing),--wash-two 1s var(--theme-easing),
+    --card-shadow 1s var(--theme-easing),--glow 1s var(--theme-easing);
+}
+
+/* No nested color delays: children consume the interpolated root pigment. */
+html body,html .site-nav { transition:none; }
+html[data-theme-transition=manual] :is(.theme-toggle,.room-link) { transition-property:transform,box-shadow; }
+html:not([data-theme-transition=manual]) .theme-orbit { transition:none; }
+
+/* The existing decorative surfaces use one palette rather than discrete gradient swaps. */
+html[data-space=portal][data-theme] .portal-shell {
+  background:color-mix(in srgb,#b5b39b,#181e31 calc(var(--theme-night) * 100%));
+}
+html[data-space=portal][data-theme] :is(.portal-eyebrow,.portal-title,.portal-description,.portal-tags,.portal-type,.scene-poem,.scene-coordinate,.portal-floor) { color:var(--portal-ink); }
+html[data-space=portal][data-theme] .portal-wash {
+  background:linear-gradient(90deg,var(--portal-wash-side) 0%,var(--portal-wash-middle) 38%,transparent 64%),linear-gradient(0deg,var(--portal-wash-bottom) 0%,var(--portal-wash-edge) 26%,transparent 48%);
+  transition:none;
+}
+html[data-space=portal][data-theme] .portal-vignette {
+  background:radial-gradient(ellipse at 55% 43%,transparent 41%,color-mix(in srgb,#5244250c,#050c181f calc(var(--theme-night) * 100%)) 72%,color-mix(in srgb,#3937292e,#02071573 calc(var(--theme-night) * 100%)) 100%);
+}
+html[data-space=portal][data-theme] .portal-type .hollow-type { -webkit-text-stroke:.65px color-mix(in srgb,#566149,#b9bdcf calc(var(--theme-ink-night) * 100%)); }
+html[data-space=portal][data-theme] .scene-poem { background:linear-gradient(90deg,transparent,color-mix(in srgb,#eee3cdcc,#222a3fc9 calc(var(--theme-night) * 100%)) 30%);text-shadow:none; }
+html[data-space=portal][data-theme] .room-link {
+  --room-pigment:color-mix(in srgb,#ac7451,#d9b084 calc(var(--theme-night) * 100%));
+  color:var(--portal-ink);background:linear-gradient(125deg,var(--portal-card-start),var(--portal-card-end));border-color:var(--portal-card-border);
+}
+html[data-space=portal][data-theme] .room-link[data-room=notes] { --room-pigment:color-mix(in srgb,#657f97,#a0bdd0 calc(var(--theme-night) * 100%)); }
+html[data-space=portal][data-theme] .room-link[data-room=study] { --room-pigment:color-mix(in srgb,#9180aa,#bbacd6 calc(var(--theme-night) * 100%)); }
+html[data-space=portal][data-theme] .room-link[data-room=about] { --room-pigment:color-mix(in srgb,#7c8a5d,#b7bd97 calc(var(--theme-night) * 100%)); }
+html[data-space=portal][data-theme] .room-link:is(:hover,:focus-visible) { border-color:color-mix(in srgb,var(--room-pigment) 60%,var(--surface));background:linear-gradient(125deg,color-mix(in srgb,var(--room-pigment) 12%,var(--portal-card-start)),var(--portal-card-end)); }
+html[data-space=portal][data-theme] body .site-nav :is(a,button) { color:var(--portal-ink); }
+html[data-space=portal][data-theme] body .site-nav small { color:color-mix(in srgb,#5d654e,#b7bbca calc(var(--theme-ink-night) * 100%)); }
+html[data-space=portal][data-theme] body .site-mark { color:color-mix(in srgb,#7b704d,#d5bc91 calc(var(--theme-ink-night) * 100%)); }
+html[data-space=portal][data-theme] body .nav-extra :is(.theme-toggle,.icon-button) { background:var(--portal-control); }
+@media(max-width:700px) {
+  html[data-space=portal][data-theme] .portal-wash { background:linear-gradient(90deg,var(--portal-wash-side),transparent 83%),linear-gradient(0deg,var(--portal-wash-bottom) 0%,var(--portal-wash-edge) 35%,transparent 60%); }
+}
+@media(prefers-reduced-motion:reduce) { html[data-theme-transition] { transition:none; } }
+html[data-motion=paused] { transition:none; }
+html[data-motion=paused] .theme-orbit { transition:none; }

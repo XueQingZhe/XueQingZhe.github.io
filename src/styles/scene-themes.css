@@ -1,0 +1,12 @@
+/* Shared finishing touches for the chosen water garden. */
+body:not(.portal-mode) .brand small{font-size:8px;letter-spacing:1.1px}
+body:not(.portal-mode) .site-nav nav a small{font-size:8px}
+body:not(.portal-mode) .site-nav nav a{font-size:13px}
+body:not(.portal-mode) .theme-toggle{font-size:11px}
+body:not(.portal-mode) .footer-bottom{font-size:10px}
+body:not(.portal-mode) .footer-bottom small{font-size:10px}
+body:not(.portal-mode) .footer-links{font-size:12px}
+@media(max-width:800px){body:not(.portal-mode) .site-nav nav{gap:18px}body:not(.portal-mode) .brand small{font-size:7px;letter-spacing:.7px}}
+@media(max-width:600px){body:not(.portal-mode) .site-nav nav a{font-size:12px}body:not(.portal-mode) .site-nav nav a small{font-size:8px;letter-spacing:.3px}body:not(.portal-mode) .brand small{font-size:6px}body:not(.portal-mode) .brand>span{font-size:23px}body:not(.portal-mode) .theme-toggle{font-size:10px}}
+.site-nav nav a{white-space:nowrap}
+@media(max-width:360px){html[data-space] .site-nav .brand>span{font-size:21px}html[data-space] .site-nav .brand{gap:8px}html[data-space] .site-nav .brand .site-mark{width:24px}html[data-space] .site-nav .brand small{font-size:5.5px;letter-spacing:.4px}html[data-space] .site-nav nav a small{display:none}html[data-space] .site-nav nav{gap:12px}html[data-space] .site-nav .nav-extra{gap:6px}html[data-space] .site-nav .theme-toggle{padding-inline:8px}html[data-space] .site-nav .nav-extra .icon-button{width:24px}}

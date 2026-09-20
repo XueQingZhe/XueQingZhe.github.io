@@ -1,0 +1,80 @@
+---
+// Complete illustrations are cropped only by the viewport. No separated character layers.
+---
+<div class="margin-garden" aria-hidden="true" data-pagefind-ignore>
+  <div class="margin-garden-wing margin-garden-left"><span class="margin-garden-layer margin-garden-day"></span><span class="margin-garden-layer margin-garden-night"></span></div>
+  <div class="margin-garden-wing margin-garden-right"><span class="margin-garden-layer margin-garden-day"></span><span class="margin-garden-layer margin-garden-night"></span></div>
+  <div class="margin-garden-light"></div>
+  <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none">
+    <ellipse cx="131" cy="118" rx="99" ry="23"/>
+    <ellipse cx="131" cy="118" rx="128" ry="35"/>
+    <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8"/>
+    <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33"/>
+    <circle class="margin-water-light" cx="158" cy="75" r="2.5"/>
+  </svg>
+  <div class="margin-garden-motes"><i></i><i></i><i></i><i></i></div>
+  <div class="margin-garden-vignette"></div>
+</div>
+
+<style>
+  .margin-garden {
+    --margin-opacity:calc(.27 + .04 * var(--theme-night,0));
+    position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+    contain:strict;
+  }
+  .margin-garden-wing {
+    position:absolute;inset-block:0;
+    width:clamp(150px,calc((100vw - 1280px)/2 + 170px),1200px);
+    opacity:var(--margin-opacity);
+    filter:saturate(.72);
+  }
+  .margin-garden-layer {position:absolute;inset:0;background-repeat:no-repeat;background-size:auto 100%;background-position:var(--margin-position);}
+  .margin-garden-night {opacity:var(--theme-night,0);}
+  .margin-garden-left {
+    left:0;--margin-position:5% center;
+    mask-image:linear-gradient(90deg,#000 0%,#000c 35%,#0005 65%,transparent 100%);
+  }
+  .margin-garden-right {
+    right:0;--margin-position:81% center;
+    mask-image:linear-gradient(270deg,#000 0%,#000e 24%,#0009 48%,#0002 76%,transparent 100%);
+  }
+  .margin-garden-light {
+    position:absolute;inset:-4%;opacity:.55;
+    animation:margin-light 18s ease-in-out infinite alternate;
+  }
+  .margin-garden-light::before,.margin-garden-light::after,.margin-garden-vignette::before,.margin-garden-vignette::after {content:'';position:absolute;inset:0;}
+  .margin-garden-light::before {background:radial-gradient(ellipse at 1% 12%,#edce8d23,transparent 30%),radial-gradient(ellipse at 98% 60%,#a49ac423,transparent 25%);opacity:calc(1 - var(--theme-night,0));}
+  .margin-garden-light::after {background:radial-gradient(ellipse at 1% 26%,#7c90b712,transparent 30%),radial-gradient(ellipse at 98% 60%,#a77b5820,transparent 25%);opacity:var(--theme-night,0);}
+  .margin-garden-water {
+    position:absolute;left:-20px;bottom:6vh;width:clamp(180px,15vw,350px);
+    stroke:var(--accent);stroke-width:.7;opacity:.17;
+    mask-image:linear-gradient(90deg,#000 60%,transparent);
+  }
+  .margin-water-light {fill:var(--accent);stroke:none;}
+  .margin-garden-motes i {
+    position:absolute;left:6%;top:33%;width:3px;height:3px;border-radius:50%;
+    background:color-mix(in srgb,#ae8551,#f2d1a0 calc(var(--theme-night,0) * 100%));opacity:.3;box-shadow:0 0 9px #d7b47b66;
+    animation:margin-mote 16s ease-in-out infinite alternate;
+  }
+  .margin-garden-motes i:nth-child(2){left:2.8%;top:76%;width:2px;height:2px;animation-delay:-5s;animation-duration:20s}
+  .margin-garden-motes i:nth-child(3){left:auto;right:6%;top:48%;animation-delay:-9s;animation-duration:18s}
+  .margin-garden-motes i:nth-child(4){left:auto;right:3%;top:83%;width:2px;height:2px;animation-delay:-3s;animation-duration:23s}
+  .margin-garden-vignette {
+    position:absolute;inset:0;
+  }
+  .margin-garden-vignette::before {background:radial-gradient(ellipse at 50% 42%,transparent 46%,#51453208 75%,#302a2517 100%);opacity:calc(1 - var(--theme-night,0));}
+  .margin-garden-vignette::after {background:radial-gradient(ellipse at 50% 42%,transparent 43%,#080b161c 75%,#03050d66 100%);opacity:var(--theme-night,0);}
+  :global(html[data-reading=true]) .margin-garden {--margin-opacity:calc(.22 + .06 * var(--theme-night,0));}
+  :global(html[data-reading=true]) .margin-garden-water {opacity:.12;}
+  :global(html[data-motion=paused]) .margin-garden * {animation-play-state:paused!important;}
+  @keyframes margin-light {to{opacity:.9;transform:translateY(1.5%)}}
+  @keyframes margin-mote {to{transform:translate(7px,-20px);opacity:.12}}
+  @media(min-width:901px){.margin-garden-day{background-image:url('/art/blue-hour/seasons/day/complete.webp')}.margin-garden-night{background-image:url('/art/blue-hour/seasons/night/complete.webp')}}
+  @media(min-width:2300px){.margin-garden-layer{background-size:cover;}.margin-garden-right{--margin-position:79% center}}
+  @media(max-width:1400px){.margin-garden{--margin-opacity:.14}.margin-garden-water{display:none}}
+  @media(max-width:900px){
+    .margin-garden-wing,.margin-garden-light,.margin-garden-motes{display:none;background-image:none;animation:none;}
+    .margin-garden-vignette{opacity:.45;}
+  }
+  @media(prefers-reduced-motion:reduce){.margin-garden *{animation:none!important;}}
+</style>

@@ -1,0 +1,15 @@
+/* Common mechanics; each collection defines its own visual composition. */
+.page-stage{position:relative;isolation:isolate;overflow:hidden;margin-bottom:55px;background:var(--surface-2);border:1px solid var(--line)}
+.page-stage>.stage-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--ground) 92%,transparent),color-mix(in srgb,var(--ground) 65%,transparent) 44%,transparent 90%)}
+.page-stage .stage-index{z-index:2;font:9px/1.7 var(--font-mono);letter-spacing:1.7px;color:var(--ink-3)}
+.editorial-width{max-width:1120px;margin-inline:auto}
+.editorial-filter{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.editorial-filter button{font:500 11px/1.8 var(--font-body);padding:6px 15px;background:transparent;color:var(--ink-2);border:1px solid var(--line);border-radius:100px;transition:background .25s,color .25s,border-color .25s}
+.editorial-filter button b{font:9px var(--font-mono);color:var(--ink-3);margin-left:5px}
+.editorial-filter button:hover{background:var(--surface-2);color:var(--ink);border-color:var(--ink-3)}
+.editorial-filter button[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:var(--ground)}
+.editorial-filter button[aria-pressed=true] b{color:inherit;opacity:.65}
+.editorial-result{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:27px 0 32px;color:var(--ink-3);font-size:11px}
+.editorial-reset{color:var(--accent);border:0;padding:3px 0;background:none;border-bottom:1px solid var(--line);font-size:11px}
+.editorial-empty{padding:50px 0 70px;border-top:1px solid var(--line);font-size:14px;color:var(--ink-2)}
+@media(max-width:700px){.page-stage{margin-bottom:35px}.editorial-filter{gap:6px}.editorial-filter button{font-size:10px;padding:5px 11px}.editorial-result{margin:22px 0 28px}}

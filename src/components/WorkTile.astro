@@ -1,0 +1,47 @@
+---
+import { labelOf } from '../data/taxonomy';
+interface Props { index:number;slug:string;title:string;summary:string;cover:string;coverAlt?:string;engine?:string[];tech?:string[];year:number;status?:string;glow?:string;layout?:string; }
+const {index,slug,title,summary,cover,coverAlt,engine=[],tech=[],year,status,layout='standard'}=Astro.props;
+---
+<a class:list={['work-tile',`work-${layout}`]} href={`/work/${slug}/`} data-artwork data-work-key={slug}>
+  <div class="work-image" data-gallery-frame>
+    <div class="work-image-plane"><img src={cover} alt={coverAlt||title} width="960" height="600" loading="lazy" decoding="async" data-work-cover data-work-key={slug}/></div>
+    <span class="work-reflection" aria-hidden="true"></span>
+    <span class="work-aperture" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="work-inspect" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="8"/><circle cx="14" cy="14" r="2.5"/><path d="M14 2v4m0 16v4M2 14h4m16 0h4"/></svg><span>查看作品<small>INSPECT</small></span></span>
+    <span class="work-negative-label" aria-hidden="true">STUDY {String(index).padStart(2,'0')} <i></i> {year}</span>
+  </div>
+  <div class="work-caption">
+    <div class="work-meta"><span class="work-number">{String(index).padStart(2,'0')}</span><span class="work-engine">{engine.slice(0,2).map(e=>labelOf('engine',e)).join(' / ')}</span><span class="work-year">{year}</span></div>
+    <h3><span>{title}</span></h3><p>{summary}</p>
+    <div class="work-bottom"><span class="work-tech">{tech.slice(0,3).map(t=>labelOf('tech',t)).join(' · ')}</span><span class="work-read"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.15" aria-hidden="true"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Z"/><circle cx="10" cy="10" r="2.2"/></svg><span>{status==='wip'?'查看进展':'阅读项目'}</span></span></div>
+  </div>
+</a>
+<style>
+  .work-tile{display:flex;flex-direction:column;min-width:0;text-decoration:none;color:var(--ink);outline-offset:9px;--frame-rx:0deg;--frame-ry:0deg;--light-x:50%;--light-y:45%;--inspect-x:77%;--inspect-y:76%}
+  .work-image{position:relative;aspect-ratio:8/5;padding:9px;border:1px solid var(--line);background:var(--surface);isolation:isolate;transform:perspective(1100px) rotateX(var(--frame-rx)) rotateY(var(--frame-ry));transform-origin:50% 50%;box-shadow:0 8px 28px -24px color-mix(in srgb,var(--ink) 45%,transparent);transition:box-shadow .45s,border-color .35s}
+  .work-image-plane{position:absolute;inset:9px;background:var(--surface-2);overflow:hidden}
+  .work-image img{display:block;width:100%;height:100%;object-fit:contain;transition:filter .5s}
+  .work-reflection{position:absolute;inset:9px;pointer-events:none;background:radial-gradient(ellipse at var(--light-x) var(--light-y),#fff5,transparent 48%);mix-blend-mode:soft-light;opacity:0;transition:opacity .4s}
+  .work-aperture{position:absolute;inset:21px;pointer-events:none;color:#fff;mix-blend-mode:difference}.work-aperture i{position:absolute;width:23px;height:23px;opacity:0;transition:opacity .3s,clip-path .55s cubic-bezier(.2,.8,.2,1);clip-path:inset(50%)}.work-aperture i:nth-child(1){top:0;left:0;border-top:1px solid;border-left:1px solid}.work-aperture i:nth-child(2){top:0;right:0;border-top:1px solid;border-right:1px solid}.work-aperture i:nth-child(3){bottom:0;left:0;border-bottom:1px solid;border-left:1px solid}.work-aperture i:nth-child(4){bottom:0;right:0;border-bottom:1px solid;border-right:1px solid}
+  .work-inspect{position:absolute;left:clamp(76px,var(--inspect-x),calc(100% - 76px));top:clamp(49px,var(--inspect-y),calc(100% - 49px));display:flex;align-items:center;gap:8px;padding:12px 15px 12px 11px;border:1px solid color-mix(in srgb,var(--line) 60%,transparent);background:color-mix(in srgb,var(--ground) 92%,transparent);backdrop-filter:blur(12px);color:var(--ink);opacity:0;transform:translate(-50%,-50%) scale(.91);pointer-events:none;transition:opacity .25s,transform .35s cubic-bezier(.2,.8,.2,1);box-shadow:0 8px 20px #0001}.work-inspect svg{width:27px;height:27px;stroke:var(--accent);stroke-width:1.1;flex:none}.work-inspect>span{font:500 11px/1.5 var(--font-body);white-space:nowrap}.work-inspect small{display:block;font:10px/1.5 var(--font-mono);letter-spacing:.11em;color:var(--ink-3)}
+  .work-negative-label{position:absolute;left:23px;top:24px;display:flex;align-items:center;gap:10px;font:10px/1.5 var(--font-mono);letter-spacing:.09em;color:#fff;mix-blend-mode:difference;opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .3s,transform .4s}.work-negative-label i{display:block;width:22px;height:1px;background:currentColor}
+  .work-tile:is([data-frame-active],:focus-visible) .work-image{border-color:color-mix(in srgb,var(--accent) 48%,var(--line));box-shadow:0 22px 40px -26px color-mix(in srgb,var(--ink) 32%,transparent)}
+  .work-tile:is([data-frame-active],:focus-visible) .work-reflection{opacity:1}.work-tile:is([data-frame-active],:focus-visible) .work-aperture i{opacity:.85;clip-path:inset(0)}.work-tile:is([data-frame-active],:focus-visible) .work-inspect{opacity:1;transform:translate(-50%,-50%) scale(1)}.work-tile:is([data-frame-active],:focus-visible) .work-negative-label{opacity:.85;transform:translateY(0)}
+  .work-caption{flex:1;display:flex;flex-direction:column;padding-top:22px}
+  .work-meta{display:flex;align-items:center;gap:17px;font:10px/1.7 var(--font-mono);color:var(--ink-3);letter-spacing:.7px}
+  .work-number{font:500 33px/1 var(--font-display);letter-spacing:-.075em;color:color-mix(in srgb,var(--accent) 60%,var(--ink-3));padding-right:17px;border-right:1px solid var(--line);transition:color .3s}.work-engine{padding-top:2px}.work-year{margin-left:auto}
+  .work-caption h3{font:650 clamp(21px,2vw,28px)/1.6 var(--font-body);margin:17px 0 13px;letter-spacing:-.035em;overflow-wrap:anywhere}.work-caption h3>span{background-image:linear-gradient(color-mix(in srgb,var(--accent) 21%,transparent),color-mix(in srgb,var(--accent) 21%,transparent));background-repeat:no-repeat;background-size:0% .24em;background-position:0 92%;box-decoration-break:clone;-webkit-box-decoration-break:clone;transition:background-size .55s cubic-bezier(.2,.8,.2,1),color .3s}
+  .work-tile:is(:hover,:focus-visible) h3>span{background-size:100% .24em;color:var(--accent)}.work-tile:is(:hover,:focus-visible) .work-number{color:var(--accent)}
+  .work-caption p{font-size:13px;line-height:1.95;color:var(--ink-2);margin:0 0 23px}
+  .work-bottom{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:14px;margin-top:auto}
+  .work-tech{font:10px/1.8 var(--font-mono);color:var(--ink-3)}
+  .work-read{display:inline-flex;align-items:center;gap:7px;margin-left:auto;padding:7px 11px;border:1px solid var(--line);border-radius:30px;font-size:11px;line-height:1.6;color:var(--accent);white-space:nowrap;transition:color .25s,background .25s,border-color .25s}
+  .work-read svg{width:14px;height:14px;flex:none}
+  .work-tile:is(:hover,:focus-visible) .work-read{background:color-mix(in srgb,var(--accent) 8%,var(--surface));border-color:color-mix(in srgb,var(--accent) 32%,var(--line))}
+  @media(hover:none),(pointer:coarse){.work-image{transform:none}.work-inspect,.work-reflection,.work-aperture,.work-negative-label{display:none}.work-read{min-height:38px;padding-inline:13px}.work-tile:active .work-image{border-color:var(--accent)}}
+  @media(max-width:600px){.work-image{padding:6px}.work-image-plane{inset:6px}.work-reflection{inset:6px}.work-caption{padding-top:18px}.work-caption h3{font-size:22px;margin-top:15px}.work-caption p{font-size:13px}.work-meta{font-size:10px;gap:13px}.work-number{font-size:29px;padding-right:13px}.work-read{min-height:38px}}
+  :global(html[data-motion=paused]) .work-image{transform:none!important}
+  :global(html[data-motion=paused]) .work-tile *{transition:none!important}
+  @media(prefers-reduced-motion:reduce){.work-image{transform:none!important}.work-tile *{transition:none!important}}
+</style>

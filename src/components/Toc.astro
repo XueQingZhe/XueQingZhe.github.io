@@ -1,0 +1,135 @@
+---
+/**
+ * 侧边目录 —— 笔记页和作品页共用。
+ *
+ * 放在正文左边：中文阅读视线的起点在左，抬眼就能看到自己在第几节，
+ * 不用横跨整条正文去右边找。
+ *
+ * 高亮跟随滚动用 IntersectionObserver，不监听 scroll 轮询 ——
+ * 一篇长文几十个标题，轮询里做 getBoundingClientRect 是白烧 CPU。
+ *
+ * 层级跟着 Obsidian 走：正文标题在构建期已经整篇平移对齐到 h2
+ * （见 remarkHeadingLevels），所以这里的 h2/h3/h4 就是笔记里
+ * 原本的第一、二、三级，缩进关系和 Obsidian 大纲一致。
+ * 第四级往下不列 —— 再深目录本身就变成一篇需要读的东西了。
+ */
+interface Props {
+  headings: { depth: number; slug: string; text: string }[];
+  /** 正文容器的选择器，用来找要观察的标题 */
+  scope?: string;
+  label?: string;
+}
+const { headings, scope = ".body", label = "目录" } = Astro.props;
+---
+
+<aside class="toc" data-scope={scope}>
+  <p class="tele-label">[ {label} ]</p>
+  <ul>
+    {
+      headings.map((h) => (
+        <li data-d={h.depth}>
+          <a href={`#${h.slug}`} data-to={h.slug}>
+            {h.text}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</aside>
+
+<script is:inline>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script>
+
+<style>
+  .toc ul {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    border-left: var(--hair) solid var(--line);
+  }
+  .toc li { padding: 0; }
+  .toc li[data-d="3"] a { padding-left: 26px; }
+  .toc li[data-d="4"] a {
+    padding-left: 38px;
+    font-size: var(--fs-xs);
+    color: var(--line-2);
+  }
+  .toc li[data-d="4"] a:hover { color: var(--ink-3); }
+  .toc a {
+    display: block;
+    padding: 5px 0 5px 14px;
+    /* 目录里全是 MaterialInstanceBasePropertyOverrides.h 这种长标识符，
+       不许换行就会被裁掉半截 —— 宁可换行也别截断 */
+    overflow-wrap: anywhere;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--ink-3);
+    text-decoration: none;
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+  .toc a:hover { color: var(--ink-2); }
+  .toc a[data-on="true"] {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+</style>

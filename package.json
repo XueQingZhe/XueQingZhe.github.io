@@ -1,6 +1,45 @@
 {
+  "name": "xueqingzhe-site",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1",
+    "build": "astro build --force && pagefind --site dist",
+    "preview": "astro preview --host 127.0.0.1",
+    "sync": "node tools/publisher/server.mjs",
+    "publisher": "node tools/publisher/server.mjs",
+    "test": "node --test tools/publisher/core.test.mjs tools/publisher/transaction.test.mjs",
+    "test:integration": "node --test tools/publisher/integration.test.mjs",
+    "test:ui": "node --test tools/publisher/ui.test.mjs",
+    "check:site": "node tools/check-site.mjs",
+    "check:release": "node tools/check-release.mjs",
+    "start": "node tools/start-local.mjs"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.0.3",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.2.1",
+    "astro": "5.18.2",
+    "github-slugger": "2.0.0",
+    "gsap": "^3.15.0",
+    "image-size": "^2.0.4",
+    "pagefind": "1.5.2",
+    "parse5": "8.0.1",
+    "rehype-katex": "7.0.1",
+    "remark-frontmatter": "5.0.0",
+    "remark-gfm": "4.0.1",
+    "remark-math": "6.0.0",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
+    "sharp": "0.34.5",
+    "three": "^0.186.0",
+    "unified": "11.0.5",
+    "unist-util-visit": "5.0.0",
+    "yaml": "2.8.3"
+  },
   "devDependencies": {
-    "@shopify/prettier-plugin-liquid": "1.4.0",
-    "prettier": "3.1.1"
+    "@types/three": "^0.186.0",
+    "playwright": "^1.49.1"
   }
 }

@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "scope": "synthetic isolated vault and site only",
+  "checks": [
+    "service identity",
+    "preview URL",
+    "default private",
+    "session and origin checks",
+    "explicit selection",
+    "thumbnail",
+    "attachment approval",
+    "markdown preview",
+    "Astro build",
+    "Pagefind index",
+    "failed build restores content and preview",
+    "withdrawal",
+    "original preserved"
+  ]
+}

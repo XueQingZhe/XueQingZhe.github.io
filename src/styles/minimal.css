@@ -1,0 +1,462 @@
+/* ==========================================================================
+   MINIMALIST PORTFOLIO DESIGN SYSTEM (极简主义与呼吸感)
+   Refined typography, negative space, quiet elegance, zero noise
+   ========================================================================== */
+
+:root {
+  --min-bg: #09090b;
+  --min-surface: #121215;
+  --min-surface-hover: #18181c;
+  --min-border: rgba(255, 255, 255, 0.08);
+  --min-border-hover: rgba(255, 255, 255, 0.2);
+  --min-text: #f4f4f5;
+  --min-text-sub: #a1a1aa;
+  --min-text-muted: #71717a;
+  --min-accent: #38bdf8;
+  --min-mono: 'JetBrains Mono', monospace;
+  --min-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --min-max-w: 1120px;
+}
+
+[data-theme="light"] {
+  --min-bg: #ffffff;
+  --min-surface: #f8fafc;
+  --min-surface-hover: #f1f5f9;
+  --min-border: rgba(0, 0, 0, 0.08);
+  --min-border-hover: rgba(0, 0, 0, 0.2);
+  --min-text: #09090b;
+  --min-text-sub: #52525b;
+  --min-text-muted: #a1a1aa;
+  --min-accent: #0284c7;
+}
+
+/* Base resets & layout */
+body {
+  background-color: var(--min-bg) !important;
+  color: var(--min-text) !important;
+  font-family: var(--min-sans) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.minimal-container {
+  max-width: var(--min-max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ==========================================================================
+   HERO SECTION (极简首屏)
+   ========================================================================== */
+.min-hero {
+  padding: 100px 0 80px;
+  max-width: 800px;
+}
+
+.min-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--min-mono);
+  font-size: 0.82rem;
+  color: var(--min-accent);
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+.min-hero-eyebrow .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--min-accent);
+}
+
+.min-hero-title {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px;
+  color: var(--min-text);
+}
+
+.min-hero-subtitle {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--min-text-sub);
+  margin: 0 0 24px;
+  line-height: 1.4;
+}
+
+.min-hero-desc {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--min-text-muted);
+  margin: 0 0 36px;
+  max-width: 680px;
+}
+
+.min-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.min-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.min-btn-primary {
+  background: var(--min-text);
+  color: var(--min-bg);
+  padding: 10px 20px;
+  border-radius: 6px;
+}
+
+.min-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.min-btn-link {
+  color: var(--min-text-sub);
+}
+
+.min-btn-link:hover {
+  color: var(--min-text);
+}
+
+/* ==========================================================================
+   GALLERY SECTION (画廊式精选作品)
+   ========================================================================== */
+.min-section {
+  padding: 64px 0;
+  border-top: 1px solid var(--min-border);
+}
+
+.min-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 40px;
+}
+
+.min-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--min-text);
+}
+
+.min-section-sub {
+  font-size: 0.88rem;
+  color: var(--min-text-muted);
+  margin: 6px 0 0;
+}
+
+.min-section-more {
+  font-size: 0.88rem;
+  color: var(--min-text-sub);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.min-section-more:hover {
+  color: var(--min-text);
+}
+
+.min-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+}
+
+.min-gallery-card {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  group: true;
+}
+
+.min-card-image-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--min-surface);
+  border: 1px solid var(--min-border);
+  transition: border-color 0.25s ease, transform 0.25s ease;
+  margin-bottom: 16px;
+}
+
+.min-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.min-gallery-card:hover .min-card-image-wrap {
+  border-color: var(--min-border-hover);
+  transform: translateY(-2px);
+}
+
+.min-gallery-card:hover .min-card-image {
+  transform: scale(1.02);
+}
+
+.min-card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.min-card-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.min-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--min-text);
+  transition: color 0.2s;
+}
+
+.min-gallery-card:hover .min-card-title {
+  color: var(--min-accent);
+}
+
+.min-card-year {
+  font-family: var(--min-mono);
+  font-size: 0.78rem;
+  color: var(--min-text-muted);
+}
+
+.min-card-meta {
+  font-size: 0.84rem;
+  color: var(--min-text-sub);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.min-card-tags {
+  display: flex;
+  gap: 8px;
+  font-family: var(--min-mono);
+  font-size: 0.72rem;
+  color: var(--min-text-muted);
+}
+
+/* ==========================================================================
+   ALGORITHM INSPECTOR (极简算法实机对比)
+   ========================================================================== */
+.min-compare-box {
+  background: var(--min-surface);
+  border: 1px solid var(--min-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.min-compare-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  max-height: 480px;
+  overflow: hidden;
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.min-compare-layer-after,
+.min-compare-layer-before {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.min-compare-layer-before {
+  clip-path: inset(0 50% 0 0);
+}
+
+.min-compare-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.min-compare-slider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #ffffff;
+  pointer-events: none;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.min-compare-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--min-bg);
+  border: 1px solid var(--min-border-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--min-text);
+  font-size: 0.65rem;
+  pointer-events: auto;
+}
+
+.min-compare-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-size: 0.84rem;
+  color: var(--min-text-sub);
+  border-top: 1px solid var(--min-border);
+}
+
+.min-compare-link {
+  color: var(--min-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.min-compare-link:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   EDITORIAL WRITING LIST (极简手记目录)
+   ========================================================================== */
+.min-note-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.min-note-row {
+  display: flex;
+  align-items: baseline;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--min-border);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.min-note-row:first-child {
+  border-top: 1px solid var(--min-border);
+}
+
+.min-note-row:hover {
+  padding-left: 8px;
+}
+
+.min-note-row:hover .min-note-title {
+  color: var(--min-accent);
+}
+
+.min-note-date {
+  font-family: var(--min-mono);
+  font-size: 0.82rem;
+  color: var(--min-text-muted);
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.min-note-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--min-text);
+  flex: 1;
+  transition: color 0.2s ease;
+}
+
+.min-note-tag {
+  font-family: var(--min-mono);
+  font-size: 0.75rem;
+  color: var(--min-text-muted);
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
+/* ==========================================================================
+   MINIMALIST FOOTER
+   ========================================================================== */
+.min-footer {
+  padding: 60px 0 80px;
+  border-top: 1px solid var(--min-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.84rem;
+  color: var(--min-text-muted);
+}
+
+.min-footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.min-footer-links a {
+  color: var(--min-text-sub);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.min-footer-links a:hover {
+  color: var(--min-text);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .min-hero {
+    padding: 60px 0 40px;
+  }
+  .min-hero-title {
+    font-size: 2.2rem;
+  }
+  .min-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .min-note-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .min-note-date {
+    width: auto;
+    font-size: 0.75rem;
+  }
+  .min-note-tag {
+    margin-left: 0;
+  }
+  .min-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}

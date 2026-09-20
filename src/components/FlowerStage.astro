@@ -1,0 +1,35 @@
+---
+import '../styles/flower-stage.css';
+interface Props { variant:'work'|'notes'|'study'|'about'; eyebrow:string; title:string; subtitle:string; description:string; count?:string; }
+const {variant,eyebrow,title,subtitle,description,count}=Astro.props;
+const scenes={
+  work:{name:'形的练习',en:'FORM / MATERIAL / LIGHT',hint:'拖动雕塑，观察光与材质',actions:['釉白','流金','结构'],status:'釉白 · 柔和漫反射'},
+  notes:{name:'未完的页',en:'THOUGHTS IN MOTION',hint:'拖动书页，换一个阅读角度',actions:['翻一页'],status:'01 / 留下一个念头'},
+  study:{name:'好奇的轨道',en:'AN ORBIT OF CURIOSITY',hint:'拖动星仪，选择一条学习路径',actions:['学习手记','Unity','Unreal','Blender'],status:'学习手记 · 从基础出发'},
+  about:{name:'光的切面',en:'A STUDY OF LIGHT',hint:'拖动光圈，寻找另一面',actions:['展开光圈'],status:'光在交叠的缝隙里停留'},
+};
+const scene=scenes[variant];
+---
+<section class="flower-stage" data-flower-stage data-variant={variant} aria-labelledby="room-title">
+  <div class="flower-stage-copy">
+    <p class="flower-stage-eyebrow"><span class="flower-stage-seal" aria-hidden="true">✳</span>{eyebrow}</p>
+    <h1 id="room-title"><span class="flower-stage-title" data-kinetic data-kinetic-style="ink">{title}</span><span class="flower-stage-subtitle">{subtitle}</span></h1>
+    <p class="flower-stage-description">{description}</p>
+    <div class="flower-stage-index">{count&&<><span>{count}</span><i aria-hidden="true"></i></>}<span>光影之间，慢慢探索</span></div>
+  </div>
+  <div class="flower-exhibit">
+    <div class="flower-exhibit-caption"><span>{scene.name}</span><span>{scene.en}</span></div>
+    <div class="flower-viewport" data-flower-viewport>
+      <svg class="flower-fallback" viewBox="0 0 600 460" fill="none" aria-hidden="true"><ellipse cx="305" cy="378" rx="140" ry="24" fill="currentColor" opacity=".06"/><ellipse cx="300" cy="218" rx="153" ry="135" stroke="currentColor" opacity=".35"/><ellipse cx="300" cy="218" rx="153" ry="58" stroke="currentColor" transform="rotate(-40 300 218)"/><ellipse cx="300" cy="218" rx="153" ry="58" stroke="currentColor" transform="rotate(40 300 218)" opacity=".5"/><circle cx="300" cy="218" r="45" fill="currentColor" opacity=".16"/><path d="M270 215 300 170 333 216 300 263Z" fill="currentColor" opacity=".3"/></svg>
+      <canvas data-flower-canvas tabindex="0" aria-label={`${scene.name}，可拖动旋转，也可使用方向键调整角度`}></canvas>
+      <button class="flower-reset" data-flower-reset type="button" aria-label="恢复初始观察角度" title="恢复视角"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M5 9a8 8 0 1 1-1 6M5 3v6h6"/></svg></button>
+      <span class="flower-gesture" data-flower-hint>{scene.hint}</span>
+    </div>
+    <div class="flower-exhibit-controls" role="group" aria-label={`${scene.name}的交互控制`}>
+      {scene.actions.map((action,i)=><button type="button" data-flower-action={i} aria-pressed={(variant==='work'||variant==='study')?String(i===0):undefined}><i aria-hidden="true"></i>{action}</button>)}
+      {variant==='study'&&<a class="flower-track-link" data-flower-track href="#solo">阅读此系列</a>}
+    </div>
+    <p class="flower-exhibit-status" data-flower-status role="status" aria-live="polite">{scene.status}</p>
+  </div>
+</section>
+<script>import '../scripts/flower-stage';</script>

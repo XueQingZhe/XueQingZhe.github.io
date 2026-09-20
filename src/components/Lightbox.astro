@@ -1,0 +1,330 @@
+---
+/**
+ * 灯箱 —— 点开看原图。
+ *
+ * 为什么自己写：市面上的库（PhotoSwipe / fancybox）体积都在 40KB 以上，
+ * 而这里要的功能只有「放大、缩放、平移、翻页、关掉」，自己写不到 3KB，
+ * 还不用为了它引一套 CSS 命名空间。
+ *
+ * 触发方式是事件委托：任何带 data-zoom 的 <img> 都能点开，
+ * 所以正文里 Obsidian 搬过来的图、作品页画廊、封面，全都自动生效，
+ * 以后新增的地方也不用再接一次。
+ *
+ * 交互：
+ *   点击 / Enter        打开
+ *   滚轮 / 双击 / +-    缩放（以光标为锚点）
+ *   按住拖动            平移（仅在放大后）
+ *   ← →                同一页内上一张 / 下一张
+ *   Esc / 点背景 / 下滑  关闭
+ */
+---
+
+<div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看">
+  <div class="lb-stage" id="lb-stage">
+    <img id="lb-img" alt="" draggable="false" />
+  </div>
+
+  <div class="lb-top">
+    <span class="lb-idx tele" id="lb-idx"></span>
+    <button class="lb-btn" id="lb-zoom-out" aria-label="缩小">−</button>
+    <span class="lb-pct tnum" id="lb-pct">100%</span>
+    <button class="lb-btn" id="lb-zoom-in" aria-label="放大">+</button>
+    <button class="lb-btn" id="lb-close" aria-label="关闭">✕</button>
+  </div>
+
+  <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张">‹</button>
+  <button class="lb-nav lb-next" id="lb-next" aria-label="下一张">›</button>
+
+  <p class="lb-cap" id="lb-cap"></p>
+  <span class="lb-hint tele">滚轮缩放 · 拖动平移 · ESC 关闭</span>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>
+
+<style>
+  .lb {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(4, 6, 11, 0.94);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.16s ease;
+    display: grid;
+    place-items: center;
+  }
+  .lb.on { opacity: 1; }
+  /* 关键：.lb 自己是 display:grid，会把 hidden 属性盖掉 ——
+     不写这一条，这层全屏遮罩永远铺在页面上，正文什么都点不动。 */
+  .lb[hidden] {
+    display: none !important;
+  }
+
+  .lb-stage {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .lb-stage img {
+    max-width: min(94vw, 1600px);
+    max-height: 86vh;
+    object-fit: contain;
+    transform-origin: center;
+    user-select: none;
+    box-shadow: 0 0 80px color-mix(in srgb, var(--accent) 16%, transparent);
+    border: var(--hair) solid var(--line-2);
+    background: #05070d;
+  }
+
+  .lb-top {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 16px;
+    /* 安全区：顶栏挪开一点，别压在系统状态栏上 */
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  }
+  .lb-idx { color: var(--ink-3); margin-right: 8px; }
+  .lb-pct {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--ink-3);
+    width: 44px;
+    text-align: center;
+  }
+  .lb-btn {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    background: transparent;
+    border: var(--hair) solid var(--line);
+    color: var(--ink-2);
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    font-family: var(--font-mono);
+  }
+  .lb-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .lb-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 68px;
+    background: transparent;
+    border: none;
+    color: var(--ink-3);
+    font-size: 34px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .lb-nav:hover { color: var(--accent); }
+  .lb-prev { left: 6px; }
+  .lb-next { right: 6px; }
+
+  .lb-cap {
+    position: absolute;
+    left: 50%;
+    bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    max-width: min(90vw, 760px);
+    margin: 0;
+    text-align: center;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    text-shadow: 0 1px 10px #000;
+  }
+  .lb-hint {
+    position: absolute;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    color: var(--line-2);
+  }
+
+  @media (max-width: 640px) {
+    .lb-hint { display: none; }
+    .lb-nav { width: 36px; font-size: 28px; }
+  }
+</style>

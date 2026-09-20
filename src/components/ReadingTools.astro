@@ -1,0 +1,31 @@
+---
+import '../styles/reading-experience.css';
+interface Props { scope?: string; canonicalPath?: string; }
+const { scope = '.article-body', canonicalPath } = Astro.props;
+---
+<div class="reading-tools" data-reading-tools data-scope={scope} data-canonical-path={canonicalPath} data-pagefind-ignore>
+  <div class="reading-tools-line">
+    <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"/></svg>
+      <span data-reading-focus-label>静读</span>
+    </button>
+    <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span>
+  </div>
+  <div class="reading-resume" data-reading-resume hidden>
+    <button class="reading-resume-action" type="button" data-reading-resume-action>
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"/></svg>
+      <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span>
+    </button>
+    <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"/></svg></button>
+  </div>
+  <div class="reading-dock" data-reading-dock hidden>
+    <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"/></svg>
+      <span data-reading-focus-label>静读</span>
+    </button>
+  </div>
+  <span class="sr-only" role="status" aria-live="polite" data-reading-status></span>
+</div>
+<script>
+  import '../scripts/reading-experience';
+</script>

@@ -1,0 +1,61 @@
+---
+import '../styles/tokens.css';
+import '../styles/site.css';
+import '../styles/immersive.css';
+import '../styles/chromatic.css';
+import '../styles/scene-themes.css';
+import '../styles/work-navigation.css';
+import '../styles/theme-transition.css';
+import 'katex/dist/katex.min.css';
+import Nav from '../components/Nav.astro';
+import Mark from '../components/Mark.astro';
+import Lightbox from '../components/Lightbox.astro';
+import MarginGarden from '../components/MarginGarden.astro';
+import workNavigationBoot from '../scripts/work-navigation-boot.js?raw';
+interface Props { title:string; description?:string; image?:string; article?:boolean; portal?:boolean; space?:string; }
+const {title,description='吟处雪轻遮的个人花园。记录技术美术、实时渲染与 Shader 学习，在代码与光影之间，慢慢构建自己的世界。',image='/og.png',article=false,portal=false,space:requestedSpace}=Astro.props;
+const full=title==='home'?'吟处雪轻遮 · 浮光游境':`${title} · 吟处雪轻遮`;
+const canonical=new URL(Astro.url.pathname,Astro.site).href;
+const home=title==='home'||portal;
+const pathname=Astro.url.pathname;
+const space=requestedSpace||(home?'portal':pathname.startsWith('/work/')?'work':pathname.startsWith('/tutorials/')?'study':pathname.startsWith('/about')?'about':pathname.startsWith('/search')?'search':'notes');
+---
+<!doctype html><html lang="zh-CN" data-space={space} data-reading={article?'true':undefined}><head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/><meta name="theme-color" content="#f5f0e7"/>
+  <style is:inline>@view-transition{navigation:auto}</style>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin/>
+  <link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin/>
+  <script is:inline>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script>
+  <script is:inline set:html={workNavigationBoot}></script>
+  <title>{full}</title><meta name="description" content={description}/><link rel="canonical" href={canonical}/>
+  <link rel="sitemap" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"/>
+  <meta property="og:type" content={article?'article':'website'}/><meta property="og:title" content={full}/><meta property="og:description" content={description}/><meta property="og:url" content={canonical}/><meta property="og:image" content={new URL(image,Astro.site).href}/><meta property="og:locale" content="zh_CN"/><meta name="twitter:card" content="summary_large_image"/>
+</head><body class:list={{'portal-mode':home}}>
+  {!home && <MarginGarden/>}
+  <a class="skip-link" href="#main">跳转到正文</a><Nav/>
+  <main class:list={['page',{'portal-page':home}]} id="main" tabindex="-1"><slot/></main>
+  <footer class="site-footer page" data-pagefind-ignore>
+    <div class="footer-top"><a class="footer-brand" href="/"><Mark/><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div>
+    <div class="footer-bottom"><small>© {new Date().getFullYear()} 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div>
+  </footer><Lightbox/>
+  <script>
+    import '../scripts/kinetic';
+    import '../scripts/scene-theme';
+    import '../scripts/work-navigation';
+    import '../scripts/theme-controller';
+    const root=document.documentElement;
+    const motionButton=document.querySelector<HTMLButtonElement>('[data-motion-toggle]');const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
+    function motionUI(){const stopped=root.dataset.motion==='paused'||motionQuery.matches;motionButton?.setAttribute('aria-pressed',String(stopped));motionButton?.setAttribute('aria-label',stopped?'播放场景动效':'暂停场景动效');if(motionButton)motionButton.disabled=motionQuery.matches;}
+    motionUI();motionQuery.addEventListener('change',motionUI);motionButton?.addEventListener('click',()=>{const next=root.dataset.motion==='paused'?'running':'paused';root.dataset.motion=next;try{localStorage.setItem('app-motion',next)}catch{}motionUI()});
+    new MutationObserver(motionUI).observe(root,{attributes:true,attributeFilter:['data-motion']});
+    document.querySelectorAll<HTMLVideoElement>('video').forEach(v=>{v.autoplay=false;v.controls=true;v.preload='none'});
+    document.querySelectorAll('pre').forEach(pre=>{if(!pre.querySelector('code'))return;const button=document.createElement('button');button.className='copy-code';button.textContent='复制';button.type='button';button.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(pre.querySelector('code')!.textContent||'');button.textContent='已复制'}catch{button.textContent='请手动复制'}setTimeout(()=>button.textContent='复制',1600)});pre.append(button)});
+    addEventListener('keydown',e=>{const el=e.target as HTMLElement;if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(el.tagName)&&!el.isContentEditable&&!e.ctrlKey&&!e.metaKey){e.preventDefault();location.href='/search/'}});
+  </script>
+</body></html>

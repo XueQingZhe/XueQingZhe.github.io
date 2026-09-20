@@ -39,6 +39,10 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.headers.host !== `127.0.0.1:${port}`) return json(403, { error: '仅接受本机地址' });
     const url = new URL(req.url, origin);
+    if (req.method === 'GET' && url.pathname === '/publisher.css') {
+      res.writeHead(200, { 'Content-Type': 'text/css; charset=utf-8' });
+      return res.end(await fs.readFile(path.join(here, 'publisher.css'), 'utf8'));
+    }
     if (req.method === 'GET' && url.pathname === '/api/health') return json(200, { service: 'garden-publisher', site, previewUrl, version: publisherVersion });
     if (req.method === 'GET' && url.pathname === '/') {
       const html = (await fs.readFile(path.join(here, 'index.html'), 'utf8')).replace('__TOKEN__', token).replace('__PREVIEW_URL__', previewUrl.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;'));
@@ -73,7 +77,7 @@ const server = http.createServer(async (req, res) => {
       if(url.pathname==='/api/relink'){await publisher.relink(data.oldPath,data.newPath);return json(200,{ok:true})}
       if (url.pathname === '/api/analyze') {
         const p = await publisher.analyze();
-        return json(200, { id: p.id, notes: p.output.map(({ markdown, ...n }) => n), assets: p.assets, errors: p.errors, warnings: p.warnings, changes: p.changes });
+        return json(200, { id: p.id, notes: p.output.map(({ markdown, ...n }) => n), assets: p.assets, assetModes: publisher.db.assets, errors: p.errors, warnings: p.warnings, changes: p.changes });
       }
       if (url.pathname === '/api/prepare') return json(200, await publisher.prepare(data.id, data.approved));
       if (url.pathname === '/api/apply') {

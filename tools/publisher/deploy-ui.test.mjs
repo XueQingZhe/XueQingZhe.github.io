@@ -28,6 +28,7 @@ async function fixture(t, initialStatus = idle) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     const send = (body, status = 200) => { res.writeHead(status); res.end(JSON.stringify(body)); };
     if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(source); }
+    if (req.url === '/publisher.css') { res.setHeader('Content-Type', 'text/css'); return res.end(await fs.readFile(new URL('./publisher.css', import.meta.url), 'utf8')); }
     if (req.url === '/favicon.ico') { res.writeHead(204); return res.end(); }
     let raw = ''; for await (const data of req) raw += data;
     const data = JSON.parse(raw || '{}');

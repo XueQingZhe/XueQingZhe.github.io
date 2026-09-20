@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const root=path.resolve('dist'),problems=[];let bytes=0,files=0,largest={path:'',bytes:0};
+const root=path.resolve(process.argv[2] || 'dist'),problems=[];let bytes=0,files=0,largest={path:'',bytes:0};
 async function walk(dir) {
   for(const entry of await fs.readdir(dir,{withFileTypes:true})) {
     const file=path.join(dir,entry.name),rel=path.relative(root,file).replaceAll('\\','/');

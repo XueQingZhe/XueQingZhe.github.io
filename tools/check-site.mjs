@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'parse5';
-const root=path.resolve('dist');
+const root=path.resolve(process.argv[2] || 'dist');
 async function files(dir){const out=[];for(const f of await fs.readdir(dir,{withFileTypes:true})){const p=path.join(dir,f.name);if(f.isDirectory())out.push(...await files(p));else out.push(p)}return out}
 const problems=[],missing=new Set(),mathErrors=[];
 for(const file of (await files(root)).filter(p=>p.endsWith('.html')&&!p.includes(`${path.sep}assets${path.sep}html${path.sep}`))){
@@ -24,4 +24,4 @@ for(const file of (await files(root)).filter(p=>p.endsWith('.html')&&!p.includes
 const manifest=JSON.parse(await fs.readFile('docs/migration-manifest.json','utf8'));
 const oldUrls=[];for(const n of manifest.articles)if(!await fs.stat(path.join(root,decodeURIComponent(n.url),'index.html')).catch(()=>null))oldUrls.push(n.url);
 const report={checkedLegacyUrls:manifest.articles.length,missingLegacyUrls:oldUrls,missingLocalResources:[...missing],problems,mathErrors};
-await fs.writeFile('docs/site-check.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(oldUrls.length||missing.size||problems.length||mathErrors.length)process.exitCode=1;
+if(!process.argv.includes('--no-report'))await fs.writeFile('docs/site-check.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));if(oldUrls.length||missing.size||problems.length||mathErrors.length)process.exitCode=1;

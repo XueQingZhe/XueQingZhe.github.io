@@ -37,6 +37,10 @@ const texts=await Promise.all(files.map(f=>fs.readFile('content/published/notes/
  assert.match(html,/href="http:\/\/127\.0\.0\.1:4325\/"/);
  const call=async(route,data)=>{const response=await fetch(base+'/api/'+route,{method:data===undefined?'GET':'POST',headers:{'X-Publisher-Token':token,...(data===undefined?{}:{Origin:base,'Content-Type':'application/json'})},...(data===undefined?{}:{body:JSON.stringify(data)})});const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));return body};
  assert.equal((await fetch(base+'/api/scan')).status,403);
+ assert.equal((await fetch(base+'/api/deploy/status')).status,403);
+ assert.equal((await fetch(base+'/api/deploy/start',{method:'POST',headers:{'X-Publisher-Token':token,'Content-Type':'application/json'},body:'{}'})).status,403);
+ const deployment=await call('deploy/status');assert.equal(deployment.busy,false);assert.equal(deployment.phase,'idle');
+ const deploymentReview=await call('deploy/review',{});assert.equal(deploymentReview.canPublish,false);assert.ok(deploymentReview.blockers.length);
  assert.equal((await fetch(base+'/api/select',{method:'POST',headers:{'X-Publisher-Token':token,Origin:'https://example.invalid','Content-Type':'application/json'},body:'{}'})).status,403);
  assert.deepEqual((await call('scan')).selected,[]);
  await call('select',{selected:['Public.md']});let plan=await call('analyze',{});assert.deepEqual(plan.errors,[]);
@@ -44,7 +48,10 @@ const texts=await Promise.all(files.map(f=>fs.readFile('content/published/notes/
  const denied=await fetch(base+'/api/prepare',{method:'POST',headers:{'X-Publisher-Token':token,Origin:base,'Content-Type':'application/json'},body:JSON.stringify({id:plan.id,approved:[]})});assert.equal(denied.status,400);
  let stage=await call('prepare',{id:plan.id,approved:plan.assets.map(a=>a.key)});
  const preview=await call('stage?id='+stage.id+'&slug='+stage.notes[0].slug);assert.match(preview.markdown,/公开测试/);assert.doesNotMatch(preview.markdown,/DO_NOT_EXPORT/);
- await call('apply',{id:stage.id});let output=await fs.readFile(path.join(site,'dist/index.html'),'utf8');assert.match(output,/Only selected material/);assert.doesNotMatch(output,/DO_NOT_EXPORT/);assert.ok(await fs.stat(path.join(site,'dist/pagefind/pagefind.js')));
+ const applying=call('apply',{id:stage.id});
+ await new Promise(resolve=>setTimeout(resolve,150));
+ const statusDuringBuild=await fetch(base+'/api/deploy/status',{headers:{'X-Publisher-Token':token},signal:AbortSignal.timeout(3000)});assert.equal(statusDuringBuild.status,200);
+ await applying;let output=await fs.readFile(path.join(site,'dist/index.html'),'utf8');assert.match(output,/Only selected material/);assert.doesNotMatch(output,/DO_NOT_EXPORT/);assert.ok(await fs.stat(path.join(site,'dist/pagefind/pagefind.js')));
  const originalPage=output,originalManifest=await fs.readFile(path.join(state,'current.json'),'utf8');
  await fs.writeFile(path.join(vault,'Public.md'),raw+'\n\nReviewed update.');
  plan=await call('analyze',{});stage=await call('prepare',{id:plan.id,approved:plan.assets.map(a=>a.key)});

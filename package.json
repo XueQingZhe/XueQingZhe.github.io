@@ -9,9 +9,9 @@
     "preview": "astro preview --host 127.0.0.1",
     "sync": "node tools/publisher/server.mjs",
     "publisher": "node tools/publisher/server.mjs",
-    "test": "node --test tools/publisher/core.test.mjs tools/publisher/transaction.test.mjs",
+    "test": "node --test tools/publisher/core.test.mjs tools/publisher/transaction.test.mjs tools/publisher/deploy.test.mjs",
     "test:integration": "node --test tools/publisher/integration.test.mjs",
-    "test:ui": "node --test tools/publisher/ui.test.mjs",
+    "test:ui": "node --test tools/publisher/ui.test.mjs tools/publisher/deploy-ui.test.mjs",
     "check:site": "node tools/check-site.mjs",
     "check:release": "node tools/check-release.mjs",
     "start": "node tools/start-local.mjs"

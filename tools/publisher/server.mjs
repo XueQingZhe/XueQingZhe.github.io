@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { Publisher } from './core.mjs';
+import { GitPublisher } from './deploy.mjs';
 import { spawn } from 'node:child_process';
 import sharp from 'sharp';
 
@@ -18,6 +19,17 @@ await publisher.init();
 let locked = false;
 async function command(script,args){await new Promise((resolve,reject)=>{const p=spawn(process.execPath,[path.join(site,script),...args],{cwd:site,windowsHide:true,env:{...process.env,ASTRO_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});let log='';for(const stream of [p.stdout,p.stderr])stream.on('data',d=>log=(log+d).slice(-6000));p.on('error',reject);p.on('exit',code=>code===0?resolve():reject(Error('网站构建失败，已保留原副本：'+log)))})}
 async function rebuild(dir){await command('node_modules/astro/astro.js',['build','--force','--outDir',dir]);await command('node_modules/pagefind/lib/runner/bin.cjs',['--site',dir]);}
+const deployment = await new GitPublisher({
+  site, state: publisher.state, proxy: process.env.PUBLISHER_GIT_PROXY,
+  validate: async () => {
+    const dir = path.join(site, '.publisher-build-' + crypto.randomUUID());
+    try {
+      await rebuild(dir);
+      await command('tools/check-site.mjs', [dir, '--no-report']);
+      await command('tools/check-release.mjs', [dir]);
+    } finally { await fs.rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 }); }
+  }
+}).init();
 const server = http.createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY'); res.setHeader('Referrer-Policy', 'no-referrer');
@@ -33,7 +45,8 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/favicon.ico') { res.writeHead(204); return res.end(); }
     if (req.headers['x-publisher-token'] !== token || (req.headers.origin && req.headers.origin !== origin)) return json(403, { error: '本地会话验证失败，请刷新页面' });
-    if (locked) return json(409, { error: '正在处理，请稍候' });
+    if (req.method === 'GET' && url.pathname === '/api/deploy/status') return json(200, deployment.status());
+    if (locked || deployment.busy) return json(409, { error: '正在处理，请稍候；可继续查看发布进度。' });
     locked = true;
     try {
       if (req.method === 'GET' && url.pathname === '/api/scan') return json(200, await publisher.scan());
@@ -53,6 +66,8 @@ const server = http.createServer(async (req, res) => {
       if (req.headers.origin !== origin || !req.headers['content-type']?.startsWith('application/json')) return json(403, { error: '请求来源无效' });
       let body = ''; for await (const chunk of req) { body += chunk; if (body.length > 2_000_000) throw Error('请求过大'); }
       const data = JSON.parse(body || '{}');
+      if (url.pathname === '/api/deploy/review') return json(200, await deployment.review());
+      if (url.pathname === '/api/deploy/start') return json(202, await deployment.start(data.id));
       if (url.pathname === '/api/select') { await publisher.select(data.selected, data.assets); return json(200, { ok: true }); }
       if(url.pathname==='/api/relink'){await publisher.relink(data.oldPath,data.newPath);return json(200,{ok:true})}
       if (url.pathname === '/api/analyze') {
@@ -69,4 +84,4 @@ const server = http.createServer(async (req, res) => {
     } finally { locked = false; }
   } catch (e) { return json(400, { error: e.message }); }
 });
-server.listen(port, '127.0.0.1', () => console.log(`本地发布管理器：${origin}\n默认零选择。只生成网站副本，不执行上传、Git 提交或部署。`));
+server.listen(port, '127.0.0.1', () => console.log(`本地发布管理器：${origin}\n默认零选择。写入本地副本后，点击“发布到 GitHub Pages”才会上传并部署。`));

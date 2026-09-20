@@ -30,6 +30,8 @@ jobs:
       - run: npm run build
         env:
           ASTRO_TELEMETRY_DISABLED: '1'
+      - name: Record the published source revision
+        run: node tools/stamp-release.mjs
       - run: npm run check:site
       - run: npm run check:release
       - uses: actions/upload-artifact@v4

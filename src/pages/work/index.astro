@@ -1,0 +1,64 @@
+---
+import Base from '../../layouts/Base.astro';
+import WorkTile from '../../components/WorkTile.astro';
+import LivingScene from '../../components/LivingScene.astro';
+import SectionHead from '../../components/SectionHead.astro';
+import '../../styles/editorial-pages.css';
+import { getCollection } from 'astro:content';
+import { labelOf,FACET_LABEL } from '../../data/taxonomy';
+import type { Facet } from '../../data/taxonomy';
+const items=(await getCollection('work')).filter(w=>!w.data.draft).sort((a,b)=>b.data.year-a.data.year||a.data.order-b.data.order);
+const facets:Facet[]=['engine','tech','role'];
+const groups=facets.map(f=>{const count=new Map<string,number>();for(const w of items)for(const k of w.data[f])count.set(k,(count.get(k)??0)+1);return {facet:f,terms:[...count.entries()].sort((a,b)=>b[1]-a[1])};}).filter(g=>g.terms.length>0);
+---
+<Base title="作品与实践" description="吟处雪轻遮的角色渲染、Shader 与技术美术实践。">
+  <header class="page-stage work-stage">
+    <LivingScene variant="work"/>
+    <div class="stage-scrim" aria-hidden="true"></div>
+    <span class="stage-index">01 / THE EXHIBITION</span>
+    <div class="work-title"><span class="work-vertical" aria-hidden="true">SELECTED EXPERIMENTS</span><div><div class="work-letterpress" data-work-letterpress><h1 data-kinetic data-kinetic-style="wide">WORK</h1><span class="work-type-echo" aria-hidden="true">WORK</span></div><p class="stage-subtitle" data-kinetic data-kinetic-style="ink">作品档案</p></div></div>
+    <p class="work-stage-copy">形、色、光。<br/>从想象出发，走到画面里。</p><span class="stage-coordinate"><span>{String(items.length).padStart(2,'0')} PROJECTS</span><span class="stage-disciplines">SHADER / TOOL / WORLD</span></span>
+  </header>
+  <section aria-label="作品索引" data-work-index>
+    <SectionHead label="作品索引 / Portfolio" count={`${items.length} PROJECTS`}/>
+    <div class="filters" aria-label="筛选作品">
+      {groups.map(g=><div class="filter-row"><span class="filter-name">{FACET_LABEL[g.facet]}</span><div class="editorial-filter" role="group" aria-label={`按${FACET_LABEL[g.facet]}筛选`}><button type="button" data-facet={g.facet} data-term="" aria-pressed="true">全部</button>{g.terms.map(([term,count])=><button type="button" data-facet={g.facet} data-term={term} aria-pressed="false">{labelOf(g.facet,term)}<b>{count}</b></button>)}</div></div>)}
+    </div>
+    <div class="editorial-result"><span id="work-results" role="status" aria-live="polite">共 {items.length} 件作品</span><button type="button" class="editorial-reset" id="work-reset" hidden>清除筛选</button></div>
+    <p class="editorial-empty" id="work-empty" hidden>这一组条件下还没有作品。试试其他标签，或清除筛选。</p>
+    <div class="work-tiles">{items.map((w,i)=><div class="work-cell" data-reveal data-engine={w.data.engine.join(' ')} data-tech={w.data.tech.join(' ')} data-role={w.data.role.join(' ')}><WorkTile index={i+1} slug={w.id} {...w.data}/></div>)}</div>
+  </section>
+</Base>
+<script>
+  import '../../scripts/work-interactions';
+  const index=document.querySelector<HTMLElement>('[data-work-index]');
+  if(index){
+    const cells=[...index.querySelectorAll<HTMLElement>('.work-cell')];
+    const buttons=[...index.querySelectorAll<HTMLButtonElement>('button[data-facet]')];
+    const result=index.querySelector<HTMLElement>('#work-results')!;
+    const empty=index.querySelector<HTMLElement>('#work-empty')!;
+    const reset=index.querySelector<HTMLButtonElement>('#work-reset')!;
+    const facets=['engine','tech','role'];
+    const selected:Record<string,string>={engine:'',tech:'',role:''};
+    function read(){const params=new URLSearchParams(location.search);for(const facet of facets){const term=params.get(facet)||'';selected[facet]=buttons.some(b=>b.dataset.facet===facet&&b.dataset.term===term)?term:'';}}
+    function apply(sync=false){
+      let shown=0;for(const cell of cells){const visible=facets.every(f=>!selected[f]||(cell.dataset[f]||'').split(' ').includes(selected[f]));cell.hidden=!visible;if(visible)shown++;}
+      for(const button of buttons)button.setAttribute('aria-pressed',String(selected[button.dataset.facet!]===button.dataset.term));
+      result.textContent=shown===cells.length?`共 ${shown} 件作品`:`找到 ${shown} / ${cells.length} 件作品`;empty.hidden=shown>0;reset.hidden=!facets.some(f=>selected[f]);
+      if(sync){const url=new URL(location.href);for(const f of facets){selected[f]?url.searchParams.set(f,selected[f]):url.searchParams.delete(f);}history.replaceState(null,'',url);}
+      document.dispatchEvent(new CustomEvent('site:layout'));
+    }
+    for(const button of buttons)button.addEventListener('click',()=>{selected[button.dataset.facet!]=button.dataset.term||'';apply(true);});
+    reset.addEventListener('click',()=>{for(const facet of facets)selected[facet]='';apply(true);buttons[0]?.focus();});
+    addEventListener('popstate',()=>{read();apply();});read();apply();
+  }
+</script>
+<style>
+  .work-stage{margin-top:24px;min-height:470px;display:flex;flex-direction:column;justify-content:center;padding:65px}.stage-index{position:absolute;top:30px;left:65px;font-size:10px!important}.work-title{position:relative;display:flex;align-items:center;gap:27px;z-index:2}.work-title h1{font:800 clamp(90px,13vw,185px)/.86 var(--font-display);letter-spacing:-.065em;margin:0 0 19px}.work-vertical{writing-mode:vertical-rl;transform:rotate(180deg);font:10px var(--font-mono);letter-spacing:2px;color:var(--ink-3)}.work-title .stage-subtitle{font:700 27px/1.5 var(--font-art,var(--font-display));letter-spacing:.19em;margin:0 0 0 5px}.work-stage-copy{position:relative;z-index:2;font-size:13px;line-height:1.9;margin:26px 0 0 46px;color:var(--ink-2)}.stage-coordinate{position:absolute;right:35px;bottom:34px;z-index:2;text-align:right;font:10px/1.8 var(--font-mono);color:var(--ink-3)}.stage-coordinate>span{display:block}
+  .filters{padding:7px 0 18px;border-bottom:1px solid var(--line)}.filter-row{display:flex;align-items:baseline;gap:25px;margin-bottom:11px}.filter-name{flex:none;width:36px;font-size:12px;color:var(--ink-3)}.editorial-filter button{font-size:12px;min-height:38px}.editorial-filter button b{font-size:10px}.editorial-result,.editorial-reset{font-size:12px}
+  .work-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:65px 40px}.work-cell{min-width:0}.work-cell[hidden]{display:none}.work-cell:nth-child(even){padding-top:65px}.work-tiles:has(.work-cell[hidden]) .work-cell{padding-top:0}
+  .work-letterpress{position:relative;isolation:isolate;width:max-content;--type-light-x:50%;--type-light-y:50%}.work-type-echo{position:absolute;inset:0;pointer-events:none;font:800 clamp(90px,13vw,185px)/.86 var(--font-display);letter-spacing:-.065em;color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--accent) 85%,var(--ink));mask-image:radial-gradient(circle 95px at var(--type-light-x) var(--type-light-y),#000 15%,transparent 100%);transform:translate(2px,-2px);opacity:0;transition:opacity .45s}.work-letterpress[data-type-active=true] .work-type-echo{opacity:1}
+  :global(html[data-motion=paused]) .work-type-echo{display:none}@media(prefers-reduced-motion:reduce){.work-type-echo{display:none}}
+  @media(max-width:700px){.work-stage{padding:70px 25px 68px;min-height:410px}.stage-index{left:25px;top:25px}.work-title{gap:15px}.work-title h1{font-size:clamp(76px,19vw,130px)}.work-title .stage-subtitle{font-size:23px}.work-vertical{font-size:10px;letter-spacing:1px}.work-stage-copy{margin-left:29px;font-size:12px}.stage-coordinate{font-size:10px;right:20px;bottom:20px}.stage-coordinate .stage-disciplines{display:none}.work-tiles{grid-template-columns:1fr;gap:42px}.work-cell:nth-child(even){padding-top:0}.filter-row{gap:10px}.filter-name{width:27px}.editorial-filter button{font-size:11px;min-height:36px;padding:6px 11px}}
+  @media(max-width:700px){.work-type-echo{font-size:clamp(76px,19vw,130px)}}
+</style>

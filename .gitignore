@@ -5,7 +5,7 @@ dist/
 *.log
 .env
 .env.production
-work/
+/work/
 .publisher-build-*/
 .publisher-previous-*/
 test-results/

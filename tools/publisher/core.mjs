@@ -13,6 +13,8 @@ import GithubSlugger from 'github-slugger';
 import { parseFragment } from 'parse5';
 import { normalizeDisplayMath } from '../markdown-utils.mjs';
 import { collectCatalog, catalogPreset } from './catalog.mjs';
+import { readSiteContent, siteCandidates, publicSiteEntry, boundedSite } from './site-content.mjs';
+import { TopicStore } from './topics.mjs';
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
 const writer = unified().use(remarkStringify, { fences: true, bullet: '-' }).use(remarkGfm).use(remarkMath);
@@ -31,9 +33,14 @@ const escapeHtml = s => String(s).replaceAll('&','&amp;').replaceAll('"','&quot;
 const childrenOf = function* (node) { for (const child of node.children ?? []) { yield child; yield* childrenOf(child); } };
 const blockId = node => node.type === 'paragraph' && node.children.at(-1)?.type === 'text' ? node.children.at(-1).value.match(/\s+\^([\w-]+)\s*$/)?.[1] : undefined;
 export const sections = [{ value: 'notes', label: '渲染手记' }, { value: 'tutorials', label: '学习系列' }, { value: 'work', label: '作品与实践' }];
-const metadataFields = ['section', 'category', 'title', 'date', 'summary', 'tags', 'series', 'order', 'cover', 'engine', 'role', 'year', 'featured'];
+const metadataFields = ['section', 'category', 'title', 'date', 'summary', 'tags', 'series', 'order', 'cover', 'engine', 'role', 'year', 'featured', 'work', 'notes'];
 const imageExts = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
 function metadataValue(key, value) {
+  if (key === 'notes') {
+    const list = typeof value === 'string' ? [value] : value;
+    if (!Array.isArray(list) || list.length > 500 || list.some(item => typeof item !== 'string' || item.length > 300 || /[\u0000-\u001f]/.test(item))) throw Error('关联文章必须是有效文章标识列表');
+    return [...new Set(list.map(item => item.trim()).filter(Boolean))];
+  }
   if (['tags', 'engine', 'role'].includes(key)) {
     const list = typeof value === 'string' ? value.split(/[,，]/) : value;
     if (!Array.isArray(list) || list.length > 50 || list.some(item => typeof item !== 'string' || item.length > 100)) throw Error(`${key} 必须是最多 50 项的文字列表`);
@@ -50,7 +57,7 @@ function metadataValue(key, value) {
     if (!Number.isFinite(date.valueOf()) || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && date.toISOString().slice(0, 10) !== value)) throw Error('date 日期无效');
     return date.toISOString().slice(0, 10);
   }
-  const limit = key === 'summary' ? 2000 : key === 'cover' ? 2048 : 200;
+  const limit = key === 'summary' ? 2000 : key === 'cover' ? 2048 : key === 'work' ? 300 : 200;
   if (typeof value !== 'string' || value.length > limit || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) throw Error(`${key} 必须是 ${limit} 字以内的文字`);
   const text = value.trim();
   if (key === 'category' && /[\r\n\t\u007f]/.test(text)) throw Error('子栏目名称必须为单行文字');
@@ -67,7 +74,7 @@ function normalizeOverride(value) {
   return Object.fromEntries(metadataFields.filter(key => Object.hasOwn(value, key)).map(key => [key, metadataValue(key, value[key])]));
 }
 function effectiveMetadata(data, entry, rel, override = entry.metadata ?? {}, errors = null) {
-  const defaults = { section: 'notes', category: '', title: path.basename(rel, '.md'), date: entry.firstSeen, summary: '', tags: [], series: '', order: 100, cover: '', engine: [], role: [], year: Number(entry.firstSeen.slice(0, 4)), featured: false };
+  const defaults = { section: 'notes', category: '', title: path.basename(rel, '.md'), date: entry.firstSeen, summary: '', tags: [], series: '', order: 100, cover: '', engine: [], role: [], year: Number(entry.firstSeen.slice(0, 4)), featured: false, work: '', notes: [] };
   const inherited = { ...data, section: data.section ?? ({ article: 'notes', tutorial: 'tutorials', work: 'work' }[data.kind] ?? 'notes'), tags: data.tags ?? data.tech ?? [] };
   const result = Object.fromEntries(metadataFields.map(key => {
     try { return [key, metadataValue(key, Object.hasOwn(override, key) ? override[key] : inherited[key] ?? defaults[key])]; }
@@ -90,6 +97,7 @@ export class Publisher {
     this.vault = path.resolve(vault); this.site = path.resolve(site); this.state = path.resolve(state);
     if (inside(this.site, this.state) || inside(this.vault, this.state)) throw Error('私有工作目录必须在网站和笔记库外');
     this.plans = new Map(); this.stages = new Map(); this.busy = false;
+    this.topics = new TopicStore({ site: this.site, state: this.state });
   }
   async init() {
     await fs.mkdir(this.state, { recursive: true });
@@ -116,6 +124,7 @@ export class Publisher {
     return p;
   }
   async scan() {
+    this.siteContent = await readSiteContent(this.site, frontmatter);
     const files = [];
     const walk = async dir => {
       for (const item of await fs.readdir(dir, { withFileTypes: true })) {
@@ -128,18 +137,18 @@ export class Publisher {
     await walk(this.vault);
     this.files = files; this.fileSet = new Set(files);
     for (const key of Object.keys(this.db.assets)) if (!this.fileSet.has(key)) delete this.db.assets[key];
-    const notes = [], scanned = []; this.sourceMetadata = new Map();
+    const notes = [], scanned = []; this.sourceMetadata = new Map(); this.vaultMetadata = new Map();
     for (const rel of files.filter(s => /\.md$/i.test(s))) {
       const raw = await fs.readFile(await this.bounded(rel), 'utf8');
       let data = {}, error = '';
       try { data = frontmatter(raw).data; } catch (e) { error = e.message; }
-      scanned.push({ rel, bytes: Buffer.byteLength(raw), data, error, digest: hash(raw) });
-      this.sourceMetadata.set(rel, data);
+      scanned.push({ rel, raw, bytes: Buffer.byteLength(raw), data, error, digest: hash(raw) });
+      this.vaultMetadata.set(rel, data);
     }
     // Auto-follow moves only when both the old and new side have one match.
     const newDigests = new Map();
     for (const item of scanned) if (!this.db.entries[item.rel]) newDigests.set(item.digest, (newDigests.get(item.digest) ?? 0) + 1);
-    for (const { rel, bytes, data, error, digest } of scanned) {
+    for (const { rel, raw, bytes, data, error, digest } of scanned) {
       let entry = this.db.entries[rel];
       if (!entry) {
         const matches = Object.entries(this.db.entries).filter(([old, e]) => !this.fileSet.has(old) && e.digest === digest);
@@ -150,16 +159,65 @@ export class Publisher {
         this.db.entries[rel] = entry;
       }
       entry.digest = digest;
+      const linked = entry.siteLink ? this.siteContent.find(item => item.key === entry.siteLink) : null;
+      const sourceData = this.inheritedSource(rel, entry, data); this.sourceMetadata.set(rel, sourceData);
       const blocked = !!error || data.draft === true || data.publish === false;
       const metadataErrors = [];
-      const metadata = effectiveMetadata(data, entry, rel, entry.metadata ?? {}, metadataErrors);
-      const sourceMetadata = effectiveMetadata(data, entry, rel, {}, []), metadataError = metadataErrors.join('；');
-      notes.push({ path: rel, id: entry.id, slug: entry.slug, title: metadata.title, metadata, sourceMetadata, sourceYearExplicit: data.year != null, metadataOverride: entry.metadata ?? {}, metadataDigest: hash(JSON.stringify(metadata)), metadataError, aliases: Array.isArray(data.aliases) ? data.aliases.map(String) : [], selected: this.db.selected.includes(rel), blocked, error: error || metadataError, candidate: data.publish === true, bytes, digest });
+      const metadata = effectiveMetadata(sourceData, entry, rel, entry.metadata ?? {}, metadataErrors);
+      const sourceMetadata = effectiveMetadata(sourceData, entry, rel, {}, []), metadataError = metadataErrors.join('；');
+      const managed = this.siteContent.find(item => item.collection === 'published' && item.contentId === entry.id);
+      const siteMatch = entry.siteLink ? { state: linked ? 'linked' : 'missing', key: entry.siteLink, candidates: [], reason: linked ? '已明确关联网站文章，更新将沿用原网址' : '已关联的网站源文件不存在，请重新关联' } : managed ? { state: 'linked', key: managed.key, candidates: [], reason: '发布身份与网站副本一致' } : error ? { state: 'none', candidates: [], reason: '' } : siteCandidates(raw, metadata.title, this.siteContent, frontmatter);
+      notes.push({ path: rel, id: entry.id, slug: entry.slug, title: metadata.title, metadata, sourceMetadata, sourceYearExplicit: sourceData.year != null, metadataOverride: entry.metadata ?? {}, metadataDigest: hash(JSON.stringify(metadata)), metadataError, siteMatch, aliases: Array.isArray(data.aliases) ? data.aliases.map(String) : [], selected: this.db.selected.includes(rel), blocked, error: error || metadataError, candidate: data.publish === true, bytes, digest });
     }
     this.notes = notes; await this.save();
     const previous = await this.manifest();
-    for (const note of notes) note.status = previous.notes?.[note.id] ? (previous.notes[note.id].digest === note.digest && previous.notes[note.id].metadataDigest === note.metadataDigest ? '已生成副本' : '有更新') : '未生成';
-    return { notes, selected: this.db.selected, missingSelected: this.db.selected.filter(s=>!notes.some(n=>n.path===s)), assets: this.db.assets, metadata: this.metadataOverrides(), sections, catalog: await this.catalog(), previous: Object.values(previous.notes ?? {}), ffmpeg: await this.ffmpeg() !== null };
+    for (const note of notes) {
+      const prior = previous.notes?.[note.id], generated = this.siteContent.find(item => item.collection === 'published' && item.id === note.slug && item.contentId === note.id);
+      const linked = this.siteContent.find(item => item.key === this.db.entries[note.path].siteLink);
+      const { work, notes: relatedNotes, ...preRelationsMetadata } = note.metadata;
+      const metadataMatches = prior?.metadataDigest === note.metadataDigest || !prior?.fileDigest && !work && !relatedNotes.length && prior?.metadataDigest === hash(JSON.stringify(preRelationsMetadata));
+      const changed = prior && (prior.digest !== note.digest || !metadataMatches || (prior.siteSourceDigest ?? '') !== (linked?.digest ?? ''));
+      note.status = prior ? (!generated || changed || prior.fileDigest && generated.digest !== prior.fileDigest ? '有更新' : !prior.fileDigest ? '已有副本·待校验' : '已生成副本') : note.siteMatch.state === 'linked' ? '已关联网站文章' : note.siteMatch.state === 'candidate' ? '网站已有·待关联' : '未生成';
+      if (prior && !generated) note.statusReason = '网站副本已缺失，需要重新生成';
+      else if (prior?.fileDigest && generated && prior.fileDigest !== generated.digest) note.statusReason = '网站副本内容与登记记录不一致';
+      else if (note.status === '已有副本·待校验') note.statusReason = '旧发布记录，网站文件已存在；重新生成后完成校验';
+    }
+    for (const item of this.siteContent) { const owner = notes.find(note => this.db.entries[note.path].siteLink === item.key || item.contentId && note.id === item.contentId); if (owner) { item.linkedPath = owner.path; item.managed = item.collection === 'published'; } }
+    return { notes, siteContent: this.siteContent.map(publicSiteEntry), selected: this.db.selected, missingSelected: this.db.selected.filter(s=>!notes.some(n=>n.path===s)), assets: this.db.assets, metadata: this.metadataOverrides(), sections, catalog: await this.catalog(), previous: Object.values(previous.notes ?? {}), ffmpeg: await this.ffmpeg() !== null };
+  }
+  inheritedSource(rel, entry = this.db.entries[rel], raw = this.vaultMetadata?.get(rel) ?? {}) {
+    const linked = entry.siteLink ? this.siteContent?.find(item => item.key === entry.siteLink) : null;
+    if (!linked) return raw;
+    const source = { ...linked.metadata, ...raw };
+    if (raw.kind != null && raw.section == null) source.section = { article: 'notes', tutorial: 'tutorials', work: 'work' }[raw.kind] ?? source.section;
+    if (raw.tags == null && raw.tech != null) source.tags = raw.tech;
+    return source;
+  }
+  async linkSite(rel, key) {
+    if (!this.notes?.some(note => note.path === rel)) throw Error('只能关联已扫描的笔记');
+    const entry = this.db.entries[rel], target = this.siteContent?.find(item => item.key === key);
+    if (key !== null && (typeof key !== 'string' || !target?.linkable || target.draft)) throw Error('请选择可关联的网站源文章，已生成副本不能重复接管');
+    if (key !== null && target.replacedBy && this.siteContent.find(item => item.key === target.replacedBy)?.contentId !== entry.id) throw Error('这篇网站文章已有替代副本，请先处理原关联');
+    if (key !== null && Object.entries(this.db.entries).some(([other, value]) => other !== rel && value.siteLink === key)) throw Error('这篇网站文章已关联另一篇笔记，请先解除原关联');
+    const next = structuredClone(this.db);
+    if (key === null) delete next.entries[rel].siteLink; else next.entries[rel].siteLink = key;
+    await this.save(next); this.db = next; return this.scan();
+  }
+  topicSources() {
+    const selected = new Set(this.db.selected), entries = (this.siteContent ?? []).filter(item => {
+      if (item.collection !== 'published') return true;
+      const owner = this.notes?.find(note => note.id === item.contentId);
+      return !owner || selected.has(owner.path);
+    }).map(publicSiteEntry);
+    for (const item of entries) if (item.replacedBy && !entries.some(replacement => replacement.key === item.replacedBy)) { delete item.replacedBy; item.active = true; }
+    for (const note of this.notes ?? []) if (selected.has(note.path) && !note.blocked) {
+      const metadata = effectiveMetadata(this.sourceMetadata.get(note.path), this.db.entries[note.path], note.path, this.db.entries[note.path].metadata ?? {}, []);
+      const linked = this.db.entries[note.path].siteLink, current = entries.find(item => item.collection === 'published' && item.contentId === note.id);
+      if (current) { current.metadata = { ...current.metadata, ...metadata }; current.title = metadata.title; current.section = metadata.section; current.notes = metadata.notes; current.work = metadata.work; continue; }
+      if (linked) { const source = entries.find(item => item.key === linked); if (source) { source.metadata = { ...source.metadata, ...metadata }; source.title = metadata.title; source.section = metadata.section; source.notes = metadata.notes; source.work = metadata.work; } continue; }
+      entries.push({ key: 'published:' + note.slug, collection: 'published', id: note.slug, title: metadata.title, section: metadata.section, metadata, notes: metadata.notes, work: metadata.work, pending: true, url: `/notes/${note.slug}/` });
+    }
+    return entries;
   }
   metadataOverrides() { return Object.fromEntries(this.notes.map(note => [note.path, this.db.entries[note.path]?.metadata ?? {}])); }
   async catalog() {
@@ -196,6 +254,7 @@ export class Publisher {
     const previous=await this.manifest();if(previous.notes[this.db.entries[newPath]?.id])throw Error('目标已经有独立公开身份，不能覆盖');
     this.db.entries[newPath]={...this.db.entries[oldPath],digest:this.notes.find(n=>n.path===newPath).digest};delete this.db.entries[oldPath];
     this.db.selected=[...new Set(this.db.selected.map(s=>s===oldPath?newPath:s))];
+    this.sourceMetadata.set(newPath, this.inheritedSource(newPath));
     const target=this.notes.find(n=>n.path===newPath);Object.assign(target,{id:this.db.entries[newPath].id,slug:this.db.entries[newPath].slug,selected:this.db.selected.includes(newPath)});
     const metadataErrors = [];
     target.metadata = effectiveMetadata(this.sourceMetadata.get(newPath), this.db.entries[newPath], newPath, this.db.entries[newPath].metadata ?? {}, metadataErrors);
@@ -256,7 +315,8 @@ export class Publisher {
           if (!anchor) throw Error(`找不到标题：${target}`);
         }
       }
-      return { rel, url: `/notes/${note.slug}/${anchor ? '#' + anchor : ''}` };
+      const linked = this.siteContent.find(item => item.key === this.db.entries[rel].siteLink);
+      return { rel, url: `${linked?.url ?? `/notes/${note.slug}/`}${anchor ? '#' + anchor : ''}` };
     };
     const media = async (target, source) => {
       const rel = await this.resolve(target, source), ext = path.extname(rel).toLowerCase();
@@ -356,12 +416,15 @@ export class Publisher {
       try {
         const item = this.notes.find(n => n.path === rel), { data } = await read(rel);
         if (item.metadataError) throw Error(item.metadataError);
-        const metadata = effectiveMetadata(data, this.db.entries[rel], rel);
-        if (!data.date && !Object.hasOwn(this.db.entries[rel].metadata ?? {}, 'date')) warnings.push(`${rel}：没有 date，采用首次登记日期 ${metadata.date}`);
+        const linked = this.db.entries[rel].siteLink ? this.siteContent.find(entry => entry.key === this.db.entries[rel].siteLink) : null;
+        if (this.db.entries[rel].siteLink && (!linked || linked.draft)) throw Error('已关联的网站文章缺失或不再公开，请重新关联');
+        const metadata = effectiveMetadata(this.inheritedSource(rel, this.db.entries[rel], data), this.db.entries[rel], rel);
+        if (!data.date && !linked?.metadata.date && !Object.hasOwn(this.db.entries[rel].metadata ?? {}, 'date')) warnings.push(`${rel}：没有 date，采用首次登记日期 ${metadata.date}`);
         if (metadata.section === 'work' && (!metadata.cover || !metadata.summary)) throw Error('作品与实践需要填写封面和摘要，请在发布设置中补充');
         if (metadata.section === 'work' && (!Number.isInteger(metadata.year) || metadata.year < 2000 || metadata.year > 2100)) throw Error('作品年份必须在 2000 至 2100 之间，请在发布设置中补充作品年份');
-        let cover = metadata.cover, coverVideo = '';
-        if (cover && !/^https:\/\//i.test(cover)) {
+        const inheritedCover = linked && data.cover == null && !Object.hasOwn(this.db.entries[rel].metadata ?? {}, 'cover') && metadata.cover === linked.metadata.cover;
+        let cover = metadata.cover, coverVideo = inheritedCover ? linked.metadata.coverVideo ?? '' : '';
+        if (cover && !/^https:\/\//i.test(cover) && !inheritedCover) {
           const resolved = await this.resolve(cover, rel);
           const ext = path.extname(resolved).toLowerCase();
           if (!imageExts.has(ext) && !videoExts.has(ext)) throw Error('封面必须是图片或视频附件');
@@ -375,17 +438,27 @@ export class Publisher {
             if (asset.mode === 'video') throw Error('图片封面不能转为视频，请为封面选择保留原件或静态图片压缩');
             cover = item.url;
           }
-        } else if (cover) warnings.push(`${rel}：外部封面 ${cover} 保留为外链，未下载`);
+        } else if (cover && !inheritedCover) warnings.push(`${rel}：外部封面 ${cover} 保留为外链，未下载`);
         const tree = await convert(rel);
         const kind = { notes: 'article', tutorials: 'tutorial', work: 'work' }[metadata.section];
         const { engine, role, year, featured, ...commonMetadata } = metadata;
-        const meta = { ...commonMetadata, cover, ...(coverVideo ? { coverVideo } : {}), kind, contentId: item.id, draft: false, tech: metadata.tags, ...(metadata.section === 'work' ? { engine, role, year, featured } : {}), ...(typeof data.review_status === 'string' ? { review_status: data.review_status } : {}) };
+        const retained = linked ? Object.fromEntries(['media', 'glow', 'status', 'coverAlt', 'repo', 'track', 'review_status'].filter(key => Object.hasOwn(linked.metadata, key)).map(key => [key, linked.metadata[key]])) : {};
+        const meta = { ...retained, ...commonMetadata, cover, ...(coverVideo ? { coverVideo } : {}), kind, contentId: item.id, draft: false, tech: metadata.tags, ...(metadata.section === 'work' ? { engine, role, year, featured } : {}), ...(typeof data.review_status === 'string' ? { review_status: data.review_status } : {}), ...(linked ? { replaces: linked.key, legacyUrl: linked.url } : {}) };
         const markdown='---\n'+YAML.stringify(meta)+'---\n\n'+writer.stringify(tree);
-        output.push({ id: item.id, slug: item.slug, title: metadata.title, path: rel, section: metadata.section, kind, metadata, metadataDigest: hash(JSON.stringify(metadata)), digest: item.digest, renderDigest:hash(markdown), markdown });
+        output.push({ id: item.id, slug: item.slug, title: metadata.title, path: rel, section: metadata.section, kind, metadata, ...(linked ? { replaces: linked.key, legacyUrl: linked.url, siteSourceDigest: linked.digest } : {}), metadataDigest: hash(JSON.stringify(metadata)), digest: item.digest, renderDigest:hash(markdown), markdown });
       } catch (e) { errors.push({ path: rel, message: e.message }); }
     }
     const previous = await this.manifest();
-    const plan = { id: crypto.randomUUID(), selected, output, assets: [...assets.values()], assetDefaults, sources: [...sources].map(([rel, raw]) => ({ path: rel, digest: hash(raw) })), errors, warnings: [...new Set(warnings)], changes: { added: output.filter(n => !previous.notes[n.id]).map(n => n.title), updated: output.filter(n => previous.notes[n.id] && previous.notes[n.id].renderDigest !== n.renderDigest).map(n => n.title), removed: Object.entries(previous.notes).filter(([id]) => !output.some(n => n.id === id)).map(([, n]) => n.title) } };
+    let topicSnapshot = null;
+    try { topicSnapshot = await this.topics.snapshot(this.topicSources()); } catch (error) { errors.push({ path: '作品专题', message: error.message }); }
+    const withdrawals = Object.entries(previous.notes).filter(([id]) => !output.some(n => n.id === id)).map(([id, item]) => {
+      const replaces = item.replaces || this.siteContent.find(entry => entry.collection === 'published' && entry.contentId === id)?.replaces;
+      const original = replaces && this.siteContent.find(entry => entry.key === replaces && !entry.draft);
+      return { title: original?.title ?? item.title, restored: !!original };
+    });
+    const plan = { id: crypto.randomUUID(), selected, output, assets: [...assets.values()], assetDefaults, sources: [...sources].map(([rel, raw]) => ({ path: rel, digest: hash(raw) })), errors, warnings: [...new Set(warnings)], changes: { added: output.filter(n => !previous.notes[n.id] && !n.replaces).map(n => n.title), updated: output.filter(n => !previous.notes[n.id] ? !!n.replaces : previous.notes[n.id].renderDigest !== n.renderDigest).map(n => n.title), removed: withdrawals.filter(item => !item.restored).map(item => item.title), restored: withdrawals.filter(item => item.restored).map(item => item.title) } };
+    plan.siteSources = selected.map(rel => this.siteContent.find(item => item.key === this.db.entries[rel].siteLink)).filter(Boolean).map(({ key, path, digest }) => ({ key, path, digest }));
+    plan.topics = topicSnapshot; plan.changes.topics = topicSnapshot?.changes ?? [];
     plan.catalog = scanned.catalog;
     this.plans.set(plan.id, plan); return plan;
   }
@@ -395,17 +468,20 @@ export class Publisher {
     if(executable)return path.join(local,executable);
     try { const { default: exe } = await import('ffmpeg-static'); return exe && (await fs.stat(exe)).size > 0 ? exe : null; } catch { return null; }
   }
-  async verify(plan) {
+  async verify(plan, { applied = false } = {}) {
     if (JSON.stringify(this.db.selected) !== JSON.stringify(plan.selected)) throw Error('选择已改变，请重新分析');
     for (let i=0;i<plan.selected.length;i++) {
       const entry=this.db.entries[plan.selected[i]], output=plan.output[i];
       if(!entry||entry.id!==output?.id||entry.slug!==output?.slug)throw Error('公开身份已改变，请重新分析并审核');
+      if ((entry.siteLink ?? '') !== (output.replaces ?? '')) throw Error('网站关联已改变，请重新分析并审核');
       if (hash(JSON.stringify(effectiveMetadata(this.sourceMetadata.get(plan.selected[i]), entry, plan.selected[i]))) !== output.metadataDigest) throw Error('发布设置已改变，请重新分析并审核');
     }
     for (const s of [...plan.sources, ...plan.assets.flatMap(a => a.sources.map(p => ({ path: p, digest: a.digest })))]) {
       if (hash(await fs.readFile(await this.bounded(s.path))) !== s.digest) throw Error('源文件已变化，请重新分析并审核');
     }
     for (const a of plan.assets) if (a.sources.some(s => (this.db.assets[s] ?? plan.assetDefaults?.[s] ?? 'lossless') !== a.mode)) throw Error('压缩策略已改变，请重新分析');
+    for (const source of plan.siteSources ?? []) if (hash(await fs.readFile(await boundedSite(this.site, source.path))) !== source.digest) throw Error('已关联的网站文章已改变，请重新分析并审核');
+    if (plan.topics) await this.topics.verify(plan.topics, { applied });
   }
   async transform(asset) {
     const key = hash((asset.coverVideo ? 'cover-v1:' : 'v1:') + asset.key), cache = path.join(this.state, 'cache', key);
@@ -459,19 +535,21 @@ export class Publisher {
         if (a.poster) md = md.replaceAll(`publisher-poster:${a.key}`, '/published-assets/' + a.poster);
       }
       if (md.includes('publisher-asset:') || md.includes('publisher-poster:')) throw Error('存在未解析附件或视频封面');
+      note.fileDigest = hash(md);
       await fs.writeFile(path.join(dir, 'notes', note.slug + '.md'), md);
     }
+    if (plan.topics) await this.topics.stage(plan.topics, dir);
     await this.verify(plan);
     const stage = { id: idStage, plan, dir, transformed }; this.stages.set(idStage, stage);
     return { id: idStage, notes: plan.output.map(n => ({ title: n.title, slug: n.slug })), assets: transformed.map(({ cache, ...a }) => a), changes: plan.changes };
   }
   async managedTargets() {
-    const pairs = [['notes', path.join(this.site, 'content', 'published', 'notes')], ['assets', path.join(this.site, 'public', 'published-assets')]];
-    for (const [, p] of pairs) {
+    const pairs = [['notes', path.join(this.site, 'content', 'published', 'notes')], ['assets', path.join(this.site, 'public', 'published-assets')], ['topics', this.topics.file]];
+    for (const [name, p] of pairs) {
       await fs.mkdir(path.dirname(p), { recursive: true });
       if (!inside(await fs.realpath(this.site), await fs.realpath(path.dirname(p)))) throw Error('输出目录越界');
       if ((await fs.lstat(p).catch(() => null))?.isSymbolicLink()) throw Error('输出目录不能是符号链接');
-      if(!await exists(path.join(this.state,'current.json'))&&!await exists(path.join(this.state,'transaction.json'))&&await exists(p)&&(await fs.readdir(p)).length)throw Error('发现不属于本发布器的已有内容，请先建立归属清单，不能覆盖');
+      if(name!=='topics'&&!await exists(path.join(this.state,'current.json'))&&!await exists(path.join(this.state,'transaction.json'))&&await exists(p)&&(await fs.readdir(p)).length)throw Error('发现不属于本发布器的已有内容，请先建立归属清单，不能覆盖');
     }
     return pairs;
   }
@@ -479,6 +557,7 @@ export class Publisher {
     const journal = path.join(this.state, 'transaction.json');
     if (!await exists(journal)) return;
     const t = JSON.parse(await fs.readFile(journal, 'utf8'));
+    const conflicts = [];
     if (t.preview) {
       const dest = path.join(this.site, 'dist');
       // The previous build stays in its backup until recovery finishes, making
@@ -491,6 +570,21 @@ export class Publisher {
       }
     }
     for (const [name, dest] of await this.managedTargets()) {
+      if (!Object.hasOwn(t.had, name)) continue;
+      if (name === 'topics' && t.topicsDigest && await exists(dest)) {
+        const current = await fs.readFile(dest), original = t.had.topics ? await fs.readFile(path.join(t.backup, name)) : null;
+        if (hash(current) !== t.topicsDigest && (!original || !current.equals(original))) {
+          let conflict = path.join(t.backup, 'topics-conflict.json');
+          // A repeated recovery must not overwrite an earlier preserved edit.
+          try { await fs.writeFile(conflict, current, { flag: 'wx' }); }
+          catch (error) {
+            if (error.code !== 'EEXIST') throw error;
+            conflict = path.join(t.backup, `topics-conflict-${crypto.randomUUID()}.json`);
+            await fs.writeFile(conflict, current, { flag: 'wx' });
+          }
+          conflicts.push(conflict);
+        }
+      }
       await fs.rm(dest, { recursive: true, force: true });
       if (t.had[name]) await fs.cp(path.join(t.backup, name), dest, { recursive: true });
     }
@@ -501,6 +595,7 @@ export class Publisher {
       await fs.rm(t.preview.prepared, { recursive: true, force: true }).catch(() => {});
       await fs.rm(t.preview.backup, { recursive: true, force: true }).catch(() => {});
     }
+    return { conflicts };
   }
   async apply(id, validate = null, { previewDirectory = null } = {}) {
     const stage = this.stages.get(id); if (!stage) throw Error('暂存副本不存在，请重新生成');
@@ -517,23 +612,29 @@ export class Publisher {
       preview = { prepared, backup: path.join(this.site, '.publisher-previous-' + crypto.randomUUID()), had: await exists(path.join(this.site, 'dist')) };
     }
     const journal = path.join(this.state, 'transaction.json');
-    await fs.writeFile(journal + '.tmp', JSON.stringify({ backup, had, previous, preview }));
+    const topicsDigest = stage.plan.topics ? hash(await fs.readFile(path.join(stage.dir, 'topics'))) : null;
+    await fs.writeFile(journal + '.tmp', JSON.stringify({ backup, had, previous, preview, topicsDigest }));
     await fs.rename(journal + '.tmp', journal);
     try {
       for (const [name, dest] of targets) { await fs.rm(dest, { recursive: true, force: true }); await fs.cp(path.join(stage.dir, name), dest, { recursive: true }); }
       if(validate)await validate();
-      await this.verify(stage.plan);
+      await this.verify(stage.plan, { applied: true });
       if (preview) {
         if ((await fs.lstat(preview.prepared)).isSymbolicLink() || !await exists(path.join(preview.prepared, 'index.html'))) throw Error('预览构建结果无效');
         if (preview.had) await fs.rename(path.join(this.site, 'dist'), preview.backup);
         await fs.rename(preview.prepared, path.join(this.site, 'dist'));
       }
-      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, metadataDigest: n.metadataDigest, renderDigest:n.renderDigest }])), assets: stage.transformed.flatMap(a => [a.filename, ...(a.poster ? [a.poster] : [])]), generatedAt: new Date().toISOString() };
+      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, metadataDigest: n.metadataDigest, fileDigest: n.fileDigest, siteSourceDigest: n.siteSourceDigest ?? '', replaces: n.replaces ?? '', renderDigest:n.renderDigest }])), assets: stage.transformed.flatMap(a => [a.filename, ...(a.poster ? [a.poster] : [])]), generatedAt: new Date().toISOString() };
       await fs.writeFile(path.join(this.state, 'current.json'), JSON.stringify(current));
       await fs.rm(path.join(this.state, 'transaction.json'));
+      if (stage.plan.topics) await this.topics.finish(stage.plan.topics).catch(() => {});
       if (preview) await fs.rm(preview.backup, { recursive: true, force: true }).catch(() => {});
       this.stages.delete(id); return { notes: stage.plan.output.length, assets: stage.transformed.length, message: '已写入本地网站副本，尚未上传或上线' };
-    } catch (e) { await this.recover(); throw e; }
+    } catch (e) {
+      const recovered = await this.recover();
+      if (recovered?.conflicts.length) e.message += `；构建期间的外部专题修改已保留，恢复文件：${recovered.conflicts.join('、')}`;
+      throw e;
+    }
   }
 }
 

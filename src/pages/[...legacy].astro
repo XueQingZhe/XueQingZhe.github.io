@@ -1,12 +1,11 @@
 ---
+import { detailPages } from '../lib/content';
 import Article from '../components/Article.astro';
-import { allArticles, articleNeighbors } from '../lib/content';
+import WorkDetail from '../components/WorkDetail.astro';
 export async function getStaticPaths() {
-  const entries = await allArticles();
-  return entries.filter(entry => entry.collection === 'legacy' && entry.data.legacyUrl).map(entry => ({
-    params:{legacy:entry.data.legacyUrl!.replace(/^\/+|\/+$/g,'')},
-    props:{entry,...articleNeighbors(entry,entries)},
+  return (await detailPages()).filter(({url})=>!url.startsWith('/notes/')&&!url.startsWith('/work/')).map(({url,...props})=>({
+    params:{legacy:decodeURIComponent(url.replace(/^\/+|\/+$/g,''))},props,
   }));
 }
 ---
-<Article {...Astro.props}/>
+{Astro.props.isWork ? <WorkDetail {...Astro.props}/> : <Article {...Astro.props}/>}

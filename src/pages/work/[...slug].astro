@@ -1,9 +1,11 @@
 ---
+import { detailPages } from '../../lib/content';
+import Article from '../../components/Article.astro';
 import WorkDetail from '../../components/WorkDetail.astro';
-import { allWork } from '../../lib/content';
 export async function getStaticPaths() {
-  const items = await allWork();
-  return items.flatMap((entry,i) => entry.collection === 'work' ? [{params:{slug:entry.id},props:{entry,prev:items[i-1],next:items[i+1]}}] : []);
+  return (await detailPages()).filter(({url})=>url.startsWith('/work/')).map(({url,...props})=>({
+    params:{slug:decodeURIComponent(url.slice('/work/'.length).replace(/\/$/,''))},props,
+  }));
 }
 ---
-<WorkDetail {...Astro.props}/>
+{Astro.props.isWork ? <WorkDetail {...Astro.props}/> : <Article {...Astro.props}/>}

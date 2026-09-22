@@ -49,6 +49,19 @@ test('blocks existing staged changes without changing the index or HEAD', async 
   assert.equal(await git(f.site, 'diff', '--cached'), before); assert.equal(await git(f.site, 'rev-parse', 'HEAD'), head);
 });
 
+test('topic configuration is included in reviewed deployment and protected against later edits', async t => {
+  const f = await fixture(t);
+  const file = 'src/data/publisher-topics.json';
+  await f.write(file, JSON.stringify({version:1,topics:{ue:{notes:['notes:overlay']}}}));
+  const review = await f.publisher.review();
+  assert.equal(review.canPublish,true);assert.ok(review.changes.some(item=>item.path===file));
+  await f.write(file, JSON.stringify({version:1,topics:{ue:{notes:[]}}}));
+  await f.publisher.start(review.id);await f.publisher._job;
+  assert.equal(f.publisher.status().phase,'error');
+  assert.equal((await publish(f.publisher)).phase,'success');
+  assert.deepEqual(JSON.parse(await git(f.remote,'show','main:'+file)).topics.ue.notes,[]);
+});
+
 test('rejects article changes after review and during validation', async t => {
   const f = await fixture(t); await f.write('src/content/note.md', 'reviewed'); const before = await git(f.remote, 'rev-parse', 'main');
   const review = await f.publisher.review(); await f.write('src/content/note.md', 'unreviewed');

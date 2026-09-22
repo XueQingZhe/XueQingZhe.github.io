@@ -62,6 +62,7 @@ const server = http.createServer(async (req, res) => {
     locked = true;
     try {
       if (req.method === 'GET' && url.pathname === '/api/scan') return json(200, await publisher.scan());
+      if (req.method === 'GET' && url.pathname === '/api/topics') return json(200, await publisher.topics.scan(publisher.topicSources()));
       if(req.method==='GET'&&url.pathname==='/api/thumbnail'){
         const asset=publisher.plans.get(url.searchParams.get('id'))?.assets.find(a=>a.key===url.searchParams.get('key'));
         if(!asset||!['.png','.jpg','.jpeg','.gif','.webp','.avif'].includes(asset.ext))return json(404,{error:'没有图片预览'});
@@ -80,6 +81,8 @@ const server = http.createServer(async (req, res) => {
       const data = JSON.parse(body || '{}');
       if (url.pathname === '/api/deploy/review') return json(200, await deployment.review());
       if (url.pathname === '/api/deploy/start') return json(202, await deployment.start(data.id));
+      if (url.pathname === '/api/site-link') return json(200, await publisher.linkSite(data.path, data.key));
+      if (url.pathname === '/api/topics') return json(200, await publisher.topics.save(data, publisher.topicSources()));
       if (url.pathname === '/api/select') { await publisher.select(data.selected, data.assets, data.metadata); return json(200, { ok: true, metadata: publisher.metadataOverrides() }); }
       if (url.pathname === '/api/catalog') return json(200, { catalog: await publisher.addCatalog(data) });
       if(url.pathname==='/api/relink'){await publisher.relink(data.oldPath,data.newPath);return json(200,{ok:true})}

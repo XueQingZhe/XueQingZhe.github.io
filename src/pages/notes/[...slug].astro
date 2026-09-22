@@ -1,16 +1,11 @@
 ---
-import { allArticles, allWork, articleNeighbors, sectionOf } from '../../lib/content';
+import { detailPages } from '../../lib/content';
 import Article from '../../components/Article.astro';
 import WorkDetail from '../../components/WorkDetail.astro';
 export async function getStaticPaths() {
-  const [articles,works] = await Promise.all([allArticles(),allWork()]);
-  return articles.filter(n => n.collection !== 'legacy').map(entry => {
-    if (sectionOf(entry) === 'work') {
-      const i=works.findIndex(n => n.collection === entry.collection && n.id === entry.id);
-      return {params:{slug:entry.id},props:{entry:works[i],prev:works[i-1],next:works[i+1],isWork:true}};
-    }
-    return {params:{slug:entry.id},props:{entry,...articleNeighbors(entry,articles),isWork:false}};
-  });
+  return (await detailPages()).filter(({url})=>url.startsWith('/notes/')).map(({url,...props})=>({
+    params:{slug:decodeURIComponent(url.slice('/notes/'.length).replace(/\/$/,''))},props,
+  }));
 }
 ---
 {Astro.props.isWork ? <WorkDetail {...Astro.props}/> : <Article {...Astro.props}/>}

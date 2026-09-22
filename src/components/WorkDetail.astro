@@ -4,7 +4,7 @@ import MediaGallery from "../components/MediaGallery.astro";
 import Toc from "../components/Toc.astro";
 import ReadingTools from "../components/ReadingTools.astro";
 import { render } from "astro:content";
-import { allArticles, noteUrl, workUrl, workKey } from "../lib/content";
+import { allArticles, topicArticles, noteUrl, workUrl, workKey } from "../lib/content";
 import { labelOf } from "../data/taxonomy";
 import "../styles/reading-room.css";
 
@@ -29,9 +29,8 @@ const { Content, headings } = await render(entry);
 const toc = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 
 // 关联笔记：可能是一篇也可能是好几篇。拿标题出来，不要只给一个 slug。
-const noteSlugs = d.notes ? (Array.isArray(d.notes) ? d.notes : [d.notes]) : [];
 const noteEntries = await allArticles();
-const notes = noteSlugs.map((slug:string) => noteEntries.find(n => n.id === slug)).filter(Boolean);
+const notes = topicArticles(entry,noteEntries);
 
 const specs = [
   { k: "ENGINE", v: d.engine.map((e) => labelOf("engine", e)).join(" · ") },
@@ -113,15 +112,15 @@ const specs = [
         <!-- 6 · 关联笔记 —— 跟着正文列走，不然会和正文差出一个目录的宽度 -->
         {
           notes.length > 0 && (
-            <section class="notes">
+            <section class="notes" data-topic-articles>
               <span class="tele-label nh">
-                {notes.length > 1 ? `延伸阅读 · ${notes.length} 篇` : "延伸阅读"}
+                {`专题文章 · ${notes.length} 篇`}
               </span>
               {notes.map((n) => (
                 <a class="note" href={noteUrl(n)}>
                   <span class="nt">{n.data.title}</span>
                   {n.data.summary && <span class="ns">{n.data.summary}</span>}
-                  <span class="ngo tele">阅读手记 </span>
+                  <span class="ngo tele">阅读文章 </span>
                 </a>
               ))}
             </section>

@@ -100,6 +100,7 @@ const articleSchema = z.object({
   tech: z.array(z.string()).default([]), work: z.string().optional(), draft: z.boolean().default(false),
   contentId: z.string().optional(), series: z.string().optional(), order: z.number().default(100),
   legacyUrl: z.string().optional(),
+  replaces: z.string().regex(/^(notes|legacy|work):.+$/).optional(),
   kind: z.enum(['article','tutorial','work']).default('article'), track: z.string().optional(),
   section: z.enum(['notes','tutorials','work']).optional(),
   cover: z.string().optional(), coverAlt: z.string().optional(), coverVideo: z.string().optional(),

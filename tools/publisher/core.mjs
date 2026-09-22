@@ -29,6 +29,51 @@ const textNode = value => ({ type: 'text', value });
 const escapeHtml = s => String(s).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 const childrenOf = function* (node) { for (const child of node.children ?? []) { yield child; yield* childrenOf(child); } };
 const blockId = node => node.type === 'paragraph' && node.children.at(-1)?.type === 'text' ? node.children.at(-1).value.match(/\s+\^([\w-]+)\s*$/)?.[1] : undefined;
+export const sections = [{ value: 'notes', label: '渲染手记' }, { value: 'tutorials', label: '学习系列' }, { value: 'work', label: '作品与实践' }];
+const metadataFields = ['section', 'title', 'date', 'summary', 'tags', 'series', 'order', 'cover', 'engine', 'role', 'year', 'featured'];
+const imageExts = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
+function metadataValue(key, value) {
+  if (['tags', 'engine', 'role'].includes(key)) {
+    const list = typeof value === 'string' ? value.split(/[,，]/) : value;
+    if (!Array.isArray(list) || list.length > 50 || list.some(item => typeof item !== 'string' || item.length > 100)) throw Error(`${key} 必须是最多 50 项的文字列表`);
+    return [...new Set(list.map(item => item.trim()).filter(Boolean))];
+  }
+  if (key === 'featured') { if (typeof value !== 'boolean') throw Error('featured 必须为 true 或 false'); return value; }
+  if (key === 'order' || key === 'year') {
+    if (typeof value !== 'number' || !Number.isFinite(value) || (key === 'year' ? !Number.isInteger(value) || value < 2000 || value > 2100 : Math.abs(value) > 100000)) throw Error(`${key} 数值无效`);
+    return value;
+  }
+  if (key === 'date') {
+    if (!(typeof value === 'string' || value instanceof Date)) throw Error('date 日期无效');
+    const date = new Date(value);
+    if (!Number.isFinite(date.valueOf()) || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && date.toISOString().slice(0, 10) !== value)) throw Error('date 日期无效');
+    return date.toISOString().slice(0, 10);
+  }
+  const limit = key === 'summary' ? 2000 : key === 'cover' ? 2048 : 200;
+  if (typeof value !== 'string' || value.length > limit || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) throw Error(`${key} 必须是 ${limit} 字以内的文字`);
+  const text = value.trim();
+  if (key === 'title' && !text) throw Error('标题不能为空');
+  if (key === 'section' && !sections.some(section => section.value === text)) throw Error('栏目必须为渲染手记、学习系列或作品与实践');
+  if (key === 'cover' && text) {
+    if (/^https:\/\//i.test(text)) { const url = new URL(text); if (url.username || url.password) throw Error('封面网址不能含账号密码'); }
+    else if (/^(?:[a-z]+:|\/\/|\\\\)/i.test(text) || path.isAbsolute(text) && !text.startsWith('/')) throw Error('封面仅支持笔记库内图片路径或 HTTPS 网址');
+  }
+  return text;
+}
+function normalizeOverride(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !metadataFields.includes(key))) throw Error('元数据包含无效字段');
+  return Object.fromEntries(metadataFields.filter(key => Object.hasOwn(value, key)).map(key => [key, metadataValue(key, value[key])]));
+}
+function effectiveMetadata(data, entry, rel, override = entry.metadata ?? {}, errors = null) {
+  const defaults = { section: 'notes', title: path.basename(rel, '.md'), date: entry.firstSeen, summary: '', tags: [], series: '', order: 100, cover: '', engine: [], role: [], year: Number(entry.firstSeen.slice(0, 4)), featured: false };
+  const inherited = { ...data, section: data.section ?? ({ article: 'notes', tutorial: 'tutorials', work: 'work' }[data.kind] ?? 'notes'), tags: data.tags ?? data.tech ?? [] };
+  const result = Object.fromEntries(metadataFields.map(key => {
+    try { return [key, metadataValue(key, Object.hasOwn(override, key) ? override[key] : inherited[key] ?? defaults[key])]; }
+    catch (error) { if (!errors) throw error; errors.push(error.message); return [key, metadataValue(key, defaults[key])]; }
+  }));
+  if (!Object.hasOwn(override, 'year') && data.year == null) result.year = Number(result.date.slice(0, 4));
+  return result;
+}
 
 export function frontmatter(raw) {
   const normalized = raw.replace(/^\uFEFF/, '').replaceAll('\r\n', '\n');
@@ -50,9 +95,9 @@ export class Publisher {
     this.db.assets ??= {};
     await this.recover();
   }
-  async save() {
+  async save(db = this.db) {
     const file = path.join(this.state, 'selection.json');
-    await fs.writeFile(file + '.tmp', JSON.stringify(this.db, null, 2)); await fs.rename(file + '.tmp', file);
+    await fs.writeFile(file + '.tmp', JSON.stringify(db, null, 2)); await fs.rename(file + '.tmp', file);
   }
   async bounded(rel) {
     if (typeof rel !== 'string' || !rel || path.isAbsolute(rel) || /(^|[\\/])\.\.([\\/]|$)/.test(rel)) throw Error('路径越界');
@@ -81,12 +126,13 @@ export class Publisher {
     await walk(this.vault);
     this.files = files; this.fileSet = new Set(files);
     for (const key of Object.keys(this.db.assets)) if (!this.fileSet.has(key)) delete this.db.assets[key];
-    const notes = [], scanned = [];
+    const notes = [], scanned = []; this.sourceMetadata = new Map();
     for (const rel of files.filter(s => /\.md$/i.test(s))) {
       const raw = await fs.readFile(await this.bounded(rel), 'utf8');
       let data = {}, error = '';
       try { data = frontmatter(raw).data; } catch (e) { error = e.message; }
       scanned.push({ rel, bytes: Buffer.byteLength(raw), data, error, digest: hash(raw) });
+      this.sourceMetadata.set(rel, data);
     }
     // Auto-follow moves only when both the old and new side have one match.
     const newDigests = new Map();
@@ -103,18 +149,32 @@ export class Publisher {
       }
       entry.digest = digest;
       const blocked = !!error || data.draft === true || data.publish === false;
-      notes.push({ path: rel, id: entry.id, slug: entry.slug, title: String(data.title ?? path.basename(rel, '.md')), aliases: Array.isArray(data.aliases) ? data.aliases.map(String) : [], selected: this.db.selected.includes(rel), blocked, error, candidate: data.publish === true, bytes, digest });
+      const metadataErrors = [];
+      const metadata = effectiveMetadata(data, entry, rel, entry.metadata ?? {}, metadataErrors);
+      const sourceMetadata = effectiveMetadata(data, entry, rel, {}, []), metadataError = metadataErrors.join('；');
+      notes.push({ path: rel, id: entry.id, slug: entry.slug, title: metadata.title, metadata, sourceMetadata, sourceYearExplicit: data.year != null, metadataOverride: entry.metadata ?? {}, metadataDigest: hash(JSON.stringify(metadata)), metadataError, aliases: Array.isArray(data.aliases) ? data.aliases.map(String) : [], selected: this.db.selected.includes(rel), blocked, error: error || metadataError, candidate: data.publish === true, bytes, digest });
     }
     this.notes = notes; await this.save();
     const previous = await this.manifest();
-    return { notes: notes.map(n => ({ ...n, status: previous.notes?.[n.id] ? (previous.notes[n.id].digest === n.digest ? '已生成副本' : '有更新') : '未生成' })), selected: this.db.selected, missingSelected: this.db.selected.filter(s=>!notes.some(n=>n.path===s)), assets: this.db.assets, previous: Object.values(previous.notes ?? {}), ffmpeg: await this.ffmpeg() !== null };
+    for (const note of notes) note.status = previous.notes?.[note.id] ? (previous.notes[note.id].digest === note.digest && previous.notes[note.id].metadataDigest === note.metadataDigest ? '已生成副本' : '有更新') : '未生成';
+    return { notes, selected: this.db.selected, missingSelected: this.db.selected.filter(s=>!notes.some(n=>n.path===s)), assets: this.db.assets, metadata: this.metadataOverrides(), sections, previous: Object.values(previous.notes ?? {}), ffmpeg: await this.ffmpeg() !== null };
   }
-  async select(selected, assetModes = {}) {
+  metadataOverrides() { return Object.fromEntries(this.notes.map(note => [note.path, this.db.entries[note.path]?.metadata ?? {}])); }
+  async select(selected, assetModes = {}, metadata = {}) {
     if (!Array.isArray(selected) || selected.some(s => !this.notes?.some(n => n.path === s))) throw Error('请选择扫描结果中的笔记');
     const unique = [...new Set(selected)];
     if (this.notes.some(n => unique.includes(n.path) && n.blocked)) throw Error('草稿、禁止发布或属性错误的笔记不能选中');
+    if (!assetModes || typeof assetModes !== 'object' || Array.isArray(assetModes) || !metadata || typeof metadata !== 'object' || Array.isArray(metadata)) throw Error('附件或元数据设置无效');
     for (const [key, value] of Object.entries(assetModes)) if (!modes.has(value) || !this.fileSet.has(key)) throw Error('附件设置无效');
-    this.db.selected = unique; Object.assign(this.db.assets, assetModes); await this.save();
+    const next = structuredClone(this.db);
+    for (const [rel, override] of Object.entries(metadata)) {
+      if (!this.notes.some(note => note.path === rel)) throw Error('只能设置扫描结果中的笔记元数据');
+      if (override === null) delete next.entries[rel].metadata;
+      else next.entries[rel].metadata = normalizeOverride(override);
+    }
+    for (const rel of new Set([...unique, ...Object.keys(metadata)])) effectiveMetadata(this.sourceMetadata.get(rel), next.entries[rel], rel);
+    next.selected = unique; Object.assign(next.assets, assetModes);
+    await this.save(next); this.db = next;
   }
   async manifest() { return JSON.parse(await fs.readFile(path.join(this.state, 'current.json'), 'utf8').catch(() => '{"notes":{},"assets":[]}')); }
   async relink(oldPath, newPath) {
@@ -123,6 +183,12 @@ export class Publisher {
     this.db.entries[newPath]={...this.db.entries[oldPath],digest:this.notes.find(n=>n.path===newPath).digest};delete this.db.entries[oldPath];
     this.db.selected=[...new Set(this.db.selected.map(s=>s===oldPath?newPath:s))];
     const target=this.notes.find(n=>n.path===newPath);Object.assign(target,{id:this.db.entries[newPath].id,slug:this.db.entries[newPath].slug,selected:this.db.selected.includes(newPath)});
+    const metadataErrors = [];
+    target.metadata = effectiveMetadata(this.sourceMetadata.get(newPath), this.db.entries[newPath], newPath, this.db.entries[newPath].metadata ?? {}, metadataErrors);
+    target.sourceMetadata = effectiveMetadata(this.sourceMetadata.get(newPath), this.db.entries[newPath], newPath, {}, []);
+    target.metadataOverride = this.db.entries[newPath].metadata ?? {};
+    target.metadataDigest = hash(JSON.stringify(target.metadata)); target.title = target.metadata.title;
+    target.metadataError = metadataErrors.join('；'); target.error = target.metadataError;
     await this.save();
   }
   async resolve(target, source, noteOnly = false) {
@@ -270,13 +336,24 @@ export class Publisher {
     for (const rel of selected) {
       try {
         const item = this.notes.find(n => n.path === rel), { data } = await read(rel);
-        const date = data.date ? new Date(data.date) : new Date(this.db.entries[rel].firstSeen);
-        if (!Number.isFinite(date.valueOf())) throw Error('date 日期无效');
-        if (!data.date) warnings.push(`${rel}：没有 date，采用首次登记日期 ${date.toISOString().slice(0, 10)}`);
+        if (item.metadataError) throw Error(item.metadataError);
+        const metadata = effectiveMetadata(data, this.db.entries[rel], rel);
+        if (!data.date && !Object.hasOwn(this.db.entries[rel].metadata ?? {}, 'date')) warnings.push(`${rel}：没有 date，采用首次登记日期 ${metadata.date}`);
+        if (metadata.section === 'work' && (!metadata.cover || !metadata.summary)) throw Error('作品与实践需要填写封面和摘要，请在发布设置中补充');
+        if (metadata.section === 'work' && (!Number.isInteger(metadata.year) || metadata.year < 2000 || metadata.year > 2100)) throw Error('作品年份必须在 2000 至 2100 之间，请在发布设置中补充作品年份');
+        let cover = metadata.cover;
+        if (cover && !/^https:\/\//i.test(cover)) {
+          const resolved = await this.resolve(cover, rel);
+          if (!imageExts.has(path.extname(resolved).toLowerCase())) throw Error('封面必须是图片附件');
+          if (this.db.assets[resolved] === 'video') throw Error('封面不能转为视频，请为封面选择保留原件或静态图片压缩');
+          cover = (await media(cover, rel)).url;
+        } else if (cover) warnings.push(`${rel}：外部封面 ${cover} 保留为外链，未下载`);
         const tree = await convert(rel);
-        const meta = { title: item.title, date: date.toISOString().slice(0, 10), contentId: item.id, draft: false, tech: Array.isArray(data.tags) ? data.tags.map(String) : [], summary: typeof data.summary === 'string' ? data.summary : '', ...(typeof data.series === 'string' ? { series: data.series } : {}), ...(Number.isFinite(data.order) ? { order: data.order } : {}), ...(typeof data.review_status === 'string' ? { review_status: data.review_status } : {}) };
+        const kind = { notes: 'article', tutorials: 'tutorial', work: 'work' }[metadata.section];
+        const { engine, role, year, featured, ...commonMetadata } = metadata;
+        const meta = { ...commonMetadata, cover, kind, contentId: item.id, draft: false, tech: metadata.tags, ...(metadata.section === 'work' ? { engine, role, year, featured } : {}), ...(typeof data.review_status === 'string' ? { review_status: data.review_status } : {}) };
         const markdown='---\n'+YAML.stringify(meta)+'---\n\n'+writer.stringify(tree);
-        output.push({ id: item.id, slug: item.slug, title: item.title, digest: item.digest, renderDigest:hash(markdown), markdown });
+        output.push({ id: item.id, slug: item.slug, title: metadata.title, path: rel, section: metadata.section, kind, metadata, metadataDigest: hash(JSON.stringify(metadata)), digest: item.digest, renderDigest:hash(markdown), markdown });
       } catch (e) { errors.push({ path: rel, message: e.message }); }
     }
     const previous = await this.manifest();
@@ -294,6 +371,7 @@ export class Publisher {
     for (let i=0;i<plan.selected.length;i++) {
       const entry=this.db.entries[plan.selected[i]], output=plan.output[i];
       if(!entry||entry.id!==output?.id||entry.slug!==output?.slug)throw Error('公开身份已改变，请重新分析并审核');
+      if (hash(JSON.stringify(effectiveMetadata(this.sourceMetadata.get(plan.selected[i]), entry, plan.selected[i]))) !== output.metadataDigest) throw Error('发布设置已改变，请重新分析并审核');
     }
     for (const s of [...plan.sources, ...plan.assets.flatMap(a => a.sources.map(p => ({ path: p, digest: a.digest })))]) {
       if (hash(await fs.readFile(await this.bounded(s.path))) !== s.digest) throw Error('源文件已变化，请重新分析并审核');
@@ -417,7 +495,7 @@ export class Publisher {
         if (preview.had) await fs.rename(path.join(this.site, 'dist'), preview.backup);
         await fs.rename(preview.prepared, path.join(this.site, 'dist'));
       }
-      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, renderDigest:n.renderDigest }])), assets: stage.transformed.map(a => a.filename), generatedAt: new Date().toISOString() };
+      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, metadataDigest: n.metadataDigest, renderDigest:n.renderDigest }])), assets: stage.transformed.map(a => a.filename), generatedAt: new Date().toISOString() };
       await fs.writeFile(path.join(this.state, 'current.json'), JSON.stringify(current));
       await fs.rm(path.join(this.state, 'transaction.json'));
       if (preview) await fs.rm(preview.backup, { recursive: true, force: true }).catch(() => {});

@@ -44,7 +44,8 @@ const texts=await Promise.all(files.map(f=>fs.readFile('content/published/notes/
  const deploymentReview=await call('deploy/review',{});assert.equal(deploymentReview.canPublish,false);assert.ok(deploymentReview.blockers.length);
  assert.equal((await fetch(base+'/api/select',{method:'POST',headers:{'X-Publisher-Token':token,Origin:'https://example.invalid','Content-Type':'application/json'},body:'{}'})).status,403);
  assert.deepEqual((await call('scan')).selected,[]);
- await call('select',{selected:['Public.md'],assets:{'pic.png':'lossless'}});let plan=await call('analyze',{});assert.deepEqual(plan.errors,[]);assert.deepEqual(plan.assetModes,{'pic.png':'lossless'});
+ await call('select',{selected:['Public.md'],assets:{'pic.png':'lossless'},metadata:{'Public.md':{section:'tutorials',tags:['Computer Graphics'],series:'HTTP 测试系列'}}});let plan=await call('analyze',{});assert.deepEqual(plan.errors,[]);assert.deepEqual(plan.assetModes,{'pic.png':'lossless'});
+ assert.equal(plan.notes[0].metadata.section,'tutorials');assert.deepEqual(plan.notes[0].metadata.tags,['Computer Graphics']);assert.deepEqual(plan.metadata['Public.md'],{section:'tutorials',tags:['Computer Graphics'],series:'HTTP 测试系列'});assert.equal(plan.scannedNotes.find(n=>n.path==='Public.md').metadata.section,'tutorials');
  const thumb=await fetch(base+'/api/thumbnail?id='+plan.id+'&key='+encodeURIComponent(plan.assets[0].key),{headers:{'X-Publisher-Token':token}});assert.equal(thumb.status,200);assert.match(thumb.headers.get('content-type'),/image/);
  const denied=await fetch(base+'/api/prepare',{method:'POST',headers:{'X-Publisher-Token':token,Origin:base,'Content-Type':'application/json'},body:JSON.stringify({id:plan.id,approved:[]})});assert.equal(denied.status,400);
  let stage=await call('prepare',{id:plan.id,approved:plan.assets.map(a=>a.key)});

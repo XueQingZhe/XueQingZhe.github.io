@@ -34,11 +34,11 @@ const space=requestedSpace||(home?'portal':pathname.startsWith('/work/')?'work':
   </script>
   <script is:inline set:html={workNavigationBoot}></script>
   <title>{full}</title><meta name="description" content={description}/><link rel="canonical" href={canonical}/>
-  <link rel="sitemap" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记" href="/rss.xml"/>
+  <link rel="sitemap" href="/sitemap-index.xml"/><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记与研习" href="/rss.xml"/>
   <meta property="og:type" content={article?'article':'website'}/><meta property="og:title" content={full}/><meta property="og:description" content={description}/><meta property="og:url" content={canonical}/><meta property="og:image" content={new URL(image,Astro.site).href}/><meta property="og:locale" content="zh_CN"/><meta name="twitter:card" content="summary_large_image"/>
 </head><body class:list={{'portal-mode':home}}>
   {!home && <MarginGarden/>}
-  <a class="skip-link" href="#main">跳转到正文</a><Nav/>
+  <a class="skip-link" href="#main">跳转到正文</a><Nav space={space}/>
   <main class:list={['page',{'portal-page':home}]} id="main" tabindex="-1"><slot/></main>
   <footer class="site-footer page" data-pagefind-ignore>
     <div class="footer-top"><a class="footer-brand" href="/"><Mark/><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div>

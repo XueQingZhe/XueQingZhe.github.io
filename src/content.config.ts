@@ -96,8 +96,19 @@ const articleSchema = z.object({
   tech: z.array(z.string()).default([]), work: z.string().optional(), draft: z.boolean().default(false),
   contentId: z.string().optional(), series: z.string().optional(), order: z.number().default(100),
   legacyUrl: z.string().optional(),
-  kind: z.enum(['article','tutorial']).default('article'), track: z.string().optional(),
+  kind: z.enum(['article','tutorial','work']).default('article'), track: z.string().optional(),
+  section: z.enum(['notes','tutorials','work']).optional(),
+  cover: z.string().optional(), coverAlt: z.string().optional(),
+  engine: z.array(z.string()).default([]), role: z.array(z.string()).default([]),
+  year: z.number().int().min(2000).max(2100).optional(),
+  featured: z.boolean().default(false), status: z.enum(['wip','shipped']).default('shipped'),
+  media: z.array(mediaItem).default([]), glow: z.string().optional(),
+  notes: z.union([z.string(), z.array(z.string())]).optional(), repo: z.string().url().optional(),
 });
-const published = defineCollection({ loader: glob({ pattern: '**/*.md', base: './content/published/notes' }), schema: articleSchema });
+const published = defineCollection({ loader: glob({ pattern: '**/*.md', base: './content/published/notes' }), schema: articleSchema.superRefine((data,ctx)=>{
+  if (data.section === 'work' || (!data.section && data.kind === 'work')) {
+    for (const key of ['cover','summary'] as const) if (!data[key]?.trim()) ctx.addIssue({code:'custom',path:[key],message:'作品需要封面和摘要。'});
+  }
+}) });
 const legacy = defineCollection({ loader: glob({ pattern: '**/*.md', base: './src/content/legacy' }), schema: articleSchema });
 export const collections = { work, notes, published, legacy };

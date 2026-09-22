@@ -1,11 +1,13 @@
 ---
 import Mark from './Mark.astro';
+const { space } = Astro.props;
+const activeHref = ({work:'/work/',notes:'/notes/',study:'/tutorials/',about:'/about/'} as Record<string,string>)[space];
 const links = [{href:'/work/',label:'作品',en:'WORK'},{href:'/notes/',label:'手记',en:'JOURNAL'},{href:'/tutorials/',label:'研习',en:'STUDY'},{href:'/about/',label:'关于',en:'ABOUT'}];
 ---
 <header class="site-nav" data-pagefind-ignore>
   <div class="page nav-inner">
     <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><Mark/><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a>
-    <nav aria-label="主导航">{links.map(l=><a href={l.href} aria-current={Astro.url.pathname.startsWith(l.href)?'page':undefined}><span>{l.label}</span><small>{l.en}</small></a>)}</nav>
+    <nav aria-label="主导航">{links.map(l=><a href={l.href} aria-current={(activeHref ? activeHref===l.href : Astro.url.pathname.startsWith(l.href))?'page':undefined}><span>{l.label}</span><small>{l.en}</small></a>)}</nav>
     <div class="nav-extra">
       {Astro.url.pathname!=='/'&&<button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"/></svg></button>}
       <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></a>

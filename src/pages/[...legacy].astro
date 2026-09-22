@@ -1,9 +1,12 @@
 ---
-import { getCollection } from 'astro:content';
 import Article from '../components/Article.astro';
-export async function getStaticPaths(){
- const entries=(await getCollection('legacy')).filter(n=>!n.data.draft);
- return entries.map(entry=>{const siblings=entries.filter(n=>n.data.series===entry.data.series).sort((a,b)=>entry.data.kind==='tutorial'?a.data.order-b.data.order:a.data.date.valueOf()-b.data.date.valueOf());const i=siblings.findIndex(n=>n.id===entry.id);return {params:{legacy:entry.data.legacyUrl!.replace(/^\/+|\/+$/g,'')},props:{entry,prev:siblings[i-1],next:siblings[i+1]}}});
+import { allArticles, articleNeighbors } from '../lib/content';
+export async function getStaticPaths() {
+  const entries = await allArticles();
+  return entries.filter(entry => entry.collection === 'legacy' && entry.data.legacyUrl).map(entry => ({
+    params:{legacy:entry.data.legacyUrl!.replace(/^\/+|\/+$/g,'')},
+    props:{entry,...articleNeighbors(entry,entries)},
+  }));
 }
 ---
 <Article {...Astro.props}/>

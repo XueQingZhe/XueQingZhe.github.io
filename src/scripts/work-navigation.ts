@@ -23,7 +23,7 @@ function localURL(value: string): URL | undefined {
 function validOrigin(value: unknown): value is Origin {
   const origin = value as Origin | null;
   return !!origin && typeof origin.key === 'string' && typeof origin.detailPath === 'string'
-    && localURL(origin.listUrl)?.pathname === '/work/' && origin.detailPath.startsWith('/work/') && origin.detailPath !== '/work/'
+    && localURL(origin.listUrl)?.pathname === '/work/' && /^\/(?:work|notes)\/.+\/$/.test(origin.detailPath)
     && Number.isFinite(origin.scrollY) && origin.scrollY >= 0 && Number.isFinite(origin.scrollX) && Number.isFinite(origin.width);
 }
 function readPending(): Pending | undefined {

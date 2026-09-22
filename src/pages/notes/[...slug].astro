@@ -1,6 +1,16 @@
 ---
-import { allNotes } from '../../lib/content';
+import { allArticles, allWork, articleNeighbors, sectionOf } from '../../lib/content';
 import Article from '../../components/Article.astro';
-export async function getStaticPaths(){const items=(await allNotes()).filter(n=>!('legacyUrl' in n.data && n.data.legacyUrl));return items.map((entry,i)=>({params:{slug:entry.id},props:{entry,prev:items[i-1],next:items[i+1]}}));}
+import WorkDetail from '../../components/WorkDetail.astro';
+export async function getStaticPaths() {
+  const [articles,works] = await Promise.all([allArticles(),allWork()]);
+  return articles.filter(n => n.collection !== 'legacy').map(entry => {
+    if (sectionOf(entry) === 'work') {
+      const i=works.findIndex(n => n.collection === entry.collection && n.id === entry.id);
+      return {params:{slug:entry.id},props:{entry:works[i],prev:works[i-1],next:works[i+1],isWork:true}};
+    }
+    return {params:{slug:entry.id},props:{entry,...articleNeighbors(entry,articles),isWork:false}};
+  });
+}
 ---
-<Article {...Astro.props}/>
+{Astro.props.isWork ? <WorkDetail {...Astro.props}/> : <Article {...Astro.props}/>}

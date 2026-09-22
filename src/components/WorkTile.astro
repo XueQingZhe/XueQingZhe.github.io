@@ -1,9 +1,9 @@
 ---
 import { labelOf } from '../data/taxonomy';
-interface Props { index:number;slug:string;title:string;summary:string;cover:string;coverAlt?:string;engine?:string[];tech?:string[];year:number;status?:string;glow?:string;layout?:string; }
-const {index,slug,title,summary,cover,coverAlt,engine=[],tech=[],year,status,layout='standard'}=Astro.props;
+interface Props { index:number;slug:string;href?:string;title:string;summary:string;cover:string;coverAlt?:string;engine?:string[];tech?:string[];year:number;status?:string;glow?:string;layout?:string; }
+const {index,slug,href=`/work/${slug}/`,title,summary,cover,coverAlt,engine=[],tech=[],year,status,layout='standard'}=Astro.props;
 ---
-<a class:list={['work-tile',`work-${layout}`]} href={`/work/${slug}/`} data-artwork data-work-key={slug}>
+<a class:list={['work-tile',`work-${layout}`]} href={href} data-artwork data-work-key={slug}>
   <div class="work-image" data-gallery-frame>
     <div class="work-image-plane"><img src={cover} alt={coverAlt||title} width="960" height="600" loading="lazy" decoding="async" data-work-cover data-work-key={slug}/></div>
     <span class="work-reflection" aria-hidden="true"></span>

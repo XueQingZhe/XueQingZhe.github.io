@@ -5,7 +5,32 @@
 </style><link rel="stylesheet" href="/publisher.css"></head><body>
 <header><div><p style="letter-spacing:3px;font-size:10px">LOCAL PUBLISHER / 只在本机运行</p><h1>文章发布管理器</h1><p>选择笔记，预览文章，一键更新线上网站。</p></div><button id="rescan">重新扫描</button></header>
 <main><div class="steps"><b>01 选择笔记</b><span>02 审核内容与附件</span><span>03 生成副本</span><span>04 预览网站</span><span>05 发布上线</span></div><div id="message" class="message" role="status" aria-live="polite">正在读取本地笔记目录…</div>
-<div class="layout"><section class="panel"><h2>公开哪些笔记，由你决定</h2><div class="filters"><select id="folder" aria-label="筛选目录"><option value="">全部目录</option></select><label><input id="only" type="checkbox"> 只看已选择</label><label><input id="candidate" type="checkbox"> 只看发布候选</label></div><input id="search" type="search" placeholder="搜索标题或文件路径" aria-label="搜索笔记"><div class="filters"><button id="selectVisible">选择当前结果</button><button id="clearVisible">取消当前结果</button></div><p class="count" id="count"></p><div id="missing"></div><div class="notes" id="notes"></div><div class="actions"><button id="save">保存选择</button><button class="primary" id="analyze">分析本次副本</button></div><p style="font-size:11px">批量选择只包含当前结果，后续新文件不会自动选中。保存选择不会导出或上传。</p></section>
+<div class="layout"><section class="panel"><h2>笔记目录与发布设置</h2>
+<div class="filters"><select id="folder" aria-label="筛选目录"><option value="">全部目录</option></select><label><input id="includeSubfolders" type="checkbox" checked> 包含子目录</label><label><input id="only" type="checkbox"> 只看已选择</label><label><input id="candidate" type="checkbox"> 只看发布候选</label></div>
+<input id="search" type="search" placeholder="搜索标题、路径或 Tag" aria-label="搜索笔记">
+<div class="filters"><select id="noteSection" aria-label="筛选栏目"><option value="">全部栏目</option><option value="notes">渲染手记</option><option value="tutorials">学习系列</option><option value="work">作品与实践</option></select><button id="selectVisible">选择当前结果</button><button id="clearVisible">取消当前结果</button></div>
+<p class="count" id="count"></p><div id="missing"></div><div class="tree-toolbar"><span>勾选文件夹可选择当前结果中的整组笔记</span><button id="expandFolders">展开全部</button><button id="collapseFolders">收起全部</button></div><div class="notes" id="notes" aria-label="笔记文件夹"></div>
+<details class="batch-metadata"><summary>批量设置栏目与 Tag <span id="batchCount"></span></summary><p class="asset-hint">仅修改当前筛选中已勾选的笔记；未勾选和其他目录不受影响。</p><div class="metadata-grid">
+<label class="field">发布栏目<select id="batchSection"><option value="">保持原栏目</option><option value="notes">渲染手记</option><option value="tutorials">学习系列</option><option value="work">作品与实践</option></select></label>
+<label class="field">Tag 操作<select id="batchTagMode"><option value="add">追加 Tag</option><option value="replace">替换全部 Tag</option><option value="remove">移除指定 Tag</option></select></label>
+<label class="field metadata-wide">Tag · 用逗号分隔<input id="batchTags" type="text" placeholder="Shader, 技术美术, Unreal Engine"></label>
+<label class="field metadata-wide"><span><input id="batchSetSeries" type="checkbox"> 同时设置系列（留空可清除）</span><input id="batchSeries" type="text" placeholder="例如：我独自升级"></label></div><div class="actions"><button id="batchMetadataApply">应用到已选笔记</button></div></details>
+<form id="noteEditor" class="note-editor" hidden><div class="editor-heading"><h3>单篇发布设置</h3><button type="button" id="noteMetaClose">关闭 / 放弃未应用编辑</button></div><p id="editorPath" class="asset-hint"></p><p class="asset-hint">修改标题、栏目和标签只影响网站副本。默认继承笔记属性，原笔记保持不变。</p><div class="metadata-grid">
+<label class="field metadata-wide">网站标题<input id="editTitle" type="text" required maxlength="200"></label>
+<label class="field">发布栏目<select id="editSection"><option value="notes">渲染手记</option><option value="tutorials">学习系列</option><option value="work">作品与实践</option></select></label>
+<label class="field">发布日期<input id="editDate" type="date" required></label>
+<label class="field metadata-wide">Tag · 用逗号分隔<input id="editTags" type="text" placeholder="Shader, 技术美术, Unreal Engine"></label>
+<label class="field metadata-wide">摘要<textarea id="editSummary" rows="3" maxlength="2000" placeholder="简要说明这篇内容"></textarea></label>
+<label class="field">所属系列<input id="editSeries" type="text" maxlength="120" placeholder="可留空"></label>
+<label class="field">系列排序<input id="editOrder" type="number" step="1" placeholder="100"></label>
+</div><div id="workMetadata" hidden><p class="asset-hint">作品需要封面与摘要。本地封面会一同列入附件审核。</p><div class="metadata-grid">
+<label class="field metadata-wide">封面图片<input id="editCover" type="text" placeholder="相对笔记的图片路径、库内路径或 https:// 地址"></label>
+<label class="field">引擎 · 逗号分隔<input id="editEngine" type="text" placeholder="Unity, Unreal Engine"></label>
+<label class="field">职责 · 逗号分隔<input id="editRole" type="text" placeholder="Shader, Tech Art"></label>
+<label class="field">作品年份<input id="editYear" type="number" min="2000" max="2100" step="1"></label>
+<label class="field"><span><input id="editFeatured" type="checkbox"> 精选作品</span></label></div></div>
+<p id="editorHint" class="asset-hint" role="status"></p><div class="actions"><button type="submit" id="noteMetaApply" class="primary">应用此篇设置</button><button type="button" id="noteMetaReset">恢复笔记原属性</button></div></form>
+<div class="actions"><button id="save">保存选择与设置</button><button class="primary" id="analyze">分析本次副本</button></div><p class="asset-hint">目录勾选只包含当前结果，后续新增文件不会自动选中。设置完成后，分析并审核将要公开的内容。</p></section>
 <section class="panel"><h2>本次变更与附件审核</h2><div id="review"><div class="empty">尚未分析本次副本。</div></div><div class="actions"><button id="prepare" class="primary" disabled>生成待预览副本</button><button id="apply" disabled>确认写入本地网站</button><a id="sitePreview" href="__PREVIEW_URL__" target="_blank" rel="noreferrer" style="align-self:center">打开网站预览</a></div><p style="font-size:11px">“写入本地网站”仅更新本机副本，包含已确认的撤回；不会提交 Git 或执行部署。</p><div id="staged" hidden><h3>正文副本检查</h3><select id="previewNote" aria-label="选择预览正文"></select><pre id="preview" tabindex="0"></pre></div></section></div>
 <section class="panel publish-panel" aria-labelledby="publishTitle">
 <div class="publish-heading"><div><h2 id="publishTitle">预览满意，就让文章上线</h2><p>先写入本地网站，再发布已审核的文章与附件。部署完成后，线上网站会自动更新。</p></div><button id="publishReview" class="primary">发布到 GitHub Pages</button></div>
@@ -17,7 +42,13 @@
 <footer>修改和保存笔记不会自动上线。只有点击发布并确认后，才会上传已生成的网站副本；原始笔记库保留在本机。</footer></main>
 <script>
 const token='__TOKEN__', $=id=>document.getElementById(id);let notes=[],selected=new Set(),assetModes={},plan=null,stage=null,working=false,scanned=false,selectionDirty=false,ffmpeg=false,deployState={busy:false,phase:'idle'},deployReview=null,deployPoll=null,statusFetching=false;
-let approvedAssets=new Set();
+let approvedAssets=new Set(),compatible=true;
+let noteMetadata={},metadataDirty=new Set(),editingPath=null,editorInitial=null,editorDirty=false;
+const expandedFolders=new Map();
+const sectionLabels={notes:'渲染手记',tutorials:'学习系列',work:'作品与实践'};
+const metadataInputs={title:'editTitle',section:'editSection',date:'editDate',tags:'editTags',summary:'editSummary',series:'editSeries',order:'editOrder',cover:'editCover',engine:'editEngine',role:'editRole',year:'editYear',featured:'editFeatured'};
+const tagList=value=>[...new Set(String(value).split(/[,，;；\n]/).map(s=>s.trim().replace(/^#/, '')).filter(Boolean))];
+function noteMeta(n){const m={...{section:'notes',title:n.title,date:new Date().toISOString().slice(0,10),tags:[],summary:'',series:'',order:100,cover:'',engine:[],role:[],year:new Date().getFullYear(),featured:false},...(n.sourceMetadata||n.metadata||{}),...(noteMetadata[n.path]||{})};if(!n.sourceYearExplicit&&!Object.hasOwn(noteMetadata[n.path]||{},'year'))m.year=new Date(m.date).getUTCFullYear();return m}
 const assetFilters={search:'',type:'',min:'',max:'',sort:'size-desc',approval:''};
 const imageExts=['.png','.jpg','.jpeg','.webp','.avif'],videoExts=['.mp4','.webm','.mov','.m4v'];
 const assetModeLabels=[['original','不压缩 · 保留原件'],['lossless','无损优先 · 静态图片'],['optimized','优化体积 · 最长边 1920px'],['video','转为 MP4 · GIF / 视频']];
@@ -28,18 +59,26 @@ function message(text,error=false){$('message').textContent=text;$('message').cl
 async function api(route,data){const response=await fetch('/api/'+route,{method:data===undefined?'GET':'POST',headers:{'X-Publisher-Token':token,...(data===undefined?{}:{'Content-Type':'application/json'})},...(data===undefined?{}:{body:JSON.stringify(data)})});const result=await response.json();if(!response.ok)throw Error(result.error);return result}
 async function job(fn){if(working)return;working=true;syncButtons();document.querySelector('main').setAttribute('aria-busy','true');try{await fn()}catch(e){message(e.message,true)}finally{working=false;document.querySelector('main').removeAttribute('aria-busy');syncButtons()}}
 function syncButtons(){
-  const busy=working||deployState.busy;
-  document.querySelectorAll('button,input,select').forEach(control=>{control.disabled=busy||control.dataset.blocked==='true'});
+  const busy=working||deployState.busy||!compatible;
+  document.querySelectorAll('button,input,select,textarea').forEach(control=>{control.disabled=busy||control.dataset.blocked==='true'});
   for(const id of ['save','analyze','selectVisible','clearVisible'])$(id).disabled=busy||!scanned;
-  $('prepare').disabled=busy||!plan||plan.errors.length>0||plan.assets.some(a=>!approvedAssets.has(approvalId(a)));
-  $('apply').disabled=busy||!stage;
-  $('deployConfirm').disabled=busy||!deployReview?.canPublish;
+  if(editorDirty)for(const id of ['save','analyze','rescan','batchMetadataApply','publishReview'])$(id).disabled=true;
+  const batchCount=visible().filter(n=>selected.has(n.path)&&!n.blocked).length;
+  $('batchCount').textContent=`· ${batchCount} 篇`;
+  $('batchMetadataApply').textContent=`应用到已选笔记（${batchCount}）`;
+  $('batchMetadataApply').disabled=busy||editorDirty||!batchCount;
+  $('batchSeries').disabled=busy||!$('batchSetSeries').checked;
+  for(const id of ['editCover','editEngine','editRole','editYear','editFeatured'])$(id).disabled=busy||$('editSection').value!=='work';
+  $('prepare').disabled=busy||editorDirty||!plan||plan.errors.length>0||plan.assets.some(a=>!approvedAssets.has(approvalId(a)));
+  $('apply').disabled=busy||editorDirty||!stage;
+  $('deployConfirm').disabled=busy||editorDirty||!deployReview?.canPublish;
   $('deployRefresh').disabled=statusFetching;
   if($('assetApplyMode')){
     const matches=filteredAssets(),eligible=matches.filter(a=>canUseMode(a,$('assetBulkMode').value));
-    $('assetApplyMode').disabled=busy||!eligible.length;
-    $('assetApprove').disabled=busy||!matches.length;
-    $('assetUnapprove').disabled=busy||!matches.length;
+    $('assetApplyMode').disabled=busy||editorDirty||!eligible.length;
+    $('assetApprove').disabled=busy||editorDirty||!matches.length;
+    $('assetUnapprove').disabled=busy||editorDirty||!matches.length;
+    if(editorDirty)document.querySelectorAll('#assetList button,#assetList select,#assetList input').forEach(control=>control.disabled=true);
     $('assetApplyMode').textContent=`应用到筛选结果（${eligible.length}）`;
     $('assetApprove').textContent=`确认筛选结果（${matches.length}）`;
     $('assetUnapprove').textContent=`取消确认（${matches.length}）`;
@@ -48,12 +87,73 @@ function syncButtons(){
 }
 function invalidate(){plan=null;stage=null;approvedAssets.clear();deployReview=null;$('deployReview').hidden=true;$('staged').hidden=true;$('preview').textContent='';$('review').replaceChildren(el('div','选择或策略已变化，请重新分析。','empty'));syncButtons()}
 function changed(){selectionDirty=true;invalidate()}
-function visible(){const q=$('search').value.toLowerCase(),folder=$('folder').value;return notes.filter(n=>(!q||(n.title+' '+n.path).toLowerCase().includes(q))&&(!folder||(folder==='__root__'?!n.path.includes('/'):n.path.startsWith(folder+'/')))&&(!$('only').checked||selected.has(n.path))&&(!$('candidate').checked||n.candidate))}
-function render(){const list=visible();$('notes').replaceChildren();$('count').textContent=`共 ${notes.length} 篇 · 当前 ${list.length} 篇 · 已选择 ${selected.size} 篇${selectionDirty?' · 选择未保存':''}`;if(!list.length)$('notes').append(el('div',notes.length?'没有符合筛选条件的笔记。':'没有可管理的 Markdown 笔记。','empty'));for(const n of list){const row=el('label',undefined,'note'),check=el('input');check.type='checkbox';check.checked=selected.has(n.path);check.dataset.blocked=String(n.blocked&&!selected.has(n.path));check.setAttribute('aria-label','选择 '+n.title);check.onchange=()=>{check.checked?selected.add(n.path):selected.delete(n.path);changed();render()};const text=el('div');text.append(el('strong',n.title),el('span',n.blocked?'禁止生成':n.status,'badge'),el('small',n.path));if(n.error)text.append(el('small',n.error,'error-text'));row.append(check,text);$('notes').append(row)}syncButtons()}
-async function scan(preserve=false){const pending=preserve&&selectionDirty?[...selected].map(p=>({path:p,id:notes.find(n=>n.path===p)?.id})):null;const r=await api('scan');notes=r.notes;selected=new Set(pending?pending.map(p=>notes.find(n=>n.id===p.id)?.path||p.path):r.selected);assetModes={...r.assets};ffmpeg=r.ffmpeg;scanned=true;selectionDirty=!!pending;showMissing([...selected].filter(p=>!notes.some(n=>n.path===p)));const folder=$('folder').value;$('folder').replaceChildren(new Option('全部目录',''));if(notes.some(n=>!n.path.includes('/')))$('folder').add(new Option('笔记库根目录','__root__'));[...new Set(notes.filter(n=>n.path.includes('/')).map(n=>n.path.split('/')[0]))].sort().forEach(f=>$('folder').add(new Option(f,f)));$('folder').value=[...$('folder').options].some(o=>o.value===folder)?folder:'';render();message(`扫描完成：${notes.length} 篇可管理笔记，已选择 ${selected.size} 篇。${pending?'未保存的选择已保留。':''}${r.ffmpeg?'视频转换工具已就绪。':'视频转码工具不可用，可保留原件。'}`)}
-function showMissing(paths){$('missing').replaceChildren();for(const old of paths){const row=el('div',undefined,'message error');row.append(el('p','已选文件找不到：'+old));const select=el('select');select.setAttribute('aria-label','选择移动后的文件');select.add(new Option('选择移动后的笔记…',''));notes.filter(n=>!n.blocked).forEach(n=>select.add(new Option(n.path,n.path)));const link=el('button','关联并保留旧网址');link.onclick=()=>job(async()=>{if(!select.value)throw Error('先选择新的文件位置');await api('relink',{oldPath:old,newPath:select.value});invalidate();await scan(true)});const remove=el('button','取消此选择');remove.onclick=()=>{selected.delete(old);row.remove();changed();render()};row.append(select,link,remove);$('missing').append(row)}}
-async function save(){await api('select',{selected:[...selected],assets:assetModes});selectionDirty=false;render()}
-async function analyzeAssets(){const result=await api('analyze',{});if(result.assetModes)assetModes={...result.assetModes};return result}
+function visible(){
+  const q=$('search').value.trim().toLowerCase(),folder=$('folder').value,section=$('noteSection').value;
+  return notes.filter(n=>{const m=noteMeta(n),parent=n.path.includes('/')?n.path.slice(0,n.path.lastIndexOf('/')):'';
+    return (!q||[m.title,n.path,...m.tags].join(' ').toLowerCase().includes(q))&&(!folder||(folder==='__root__'?!parent:$('includeSubfolders').checked?n.path.startsWith(folder+'/'):parent===folder))&&(!section||m.section===section)&&(!$('only').checked||selected.has(n.path))&&(!$('candidate').checked||n.candidate);
+  });
+}
+function folderPaths(){const paths=new Set();for(const n of notes){const parts=n.path.split('/');for(let i=1;i<parts.length;i++)paths.add(parts.slice(0,i).join('/'))}return [...paths].sort((a,b)=>a.localeCompare(b,'zh-CN'))}
+function updateFolderOptions(){const current=$('folder').value;$('folder').replaceChildren(new Option('全部目录',''));if(notes.some(n=>!n.path.includes('/')))$('folder').add(new Option('笔记库根目录','__root__'));for(const path of folderPaths())$('folder').add(new Option(path,path));$('folder').value=[...$('folder').options].some(o=>o.value===current)?current:''}
+function render(){
+  const list=visible(),container=$('notes'),scroll=container.scrollTop;container.replaceChildren();
+  $('count').textContent=`共 ${notes.length} 篇 · 当前 ${list.length} 篇 · 已选择 ${selected.size} 篇${selectionDirty?' · 选择或设置未保存':''}`;
+  if(!list.length)container.append(el('div',notes.length?'没有符合筛选条件的笔记。':'没有可管理的 Markdown 笔记。','empty'));
+  const root={dirs:new Map(),files:[],all:[]};
+  for(const n of list){let node=root;const parts=n.path.split('/');root.all.push(n);for(let i=0;i<parts.length-1;i++){if(!node.dirs.has(parts[i]))node.dirs.set(parts[i],{path:parts.slice(0,i+1).join('/'),name:parts[i],dirs:new Map(),files:[],all:[]});node=node.dirs.get(parts[i]);node.all.push(n)}node.files.push(n)}
+  const rowFor=n=>{const m=noteMeta(n),row=el('div',undefined,'note'),check=el('input');row.dataset.path=n.path;check.type='checkbox';check.checked=selected.has(n.path);check.dataset.blocked=String(n.blocked&&!selected.has(n.path));check.setAttribute('aria-label','选择 '+m.title);check.onchange=()=>{check.checked?selected.add(n.path):selected.delete(n.path);changed();render()};
+    const text=el('div',undefined,'note-info');text.append(el('strong',m.title),el('span',n.blocked?'禁止生成':n.status,'badge'),el('small',n.path));
+    const meta=el('div',undefined,'note-metadata');meta.append(el('span',sectionLabels[m.section]||'渲染手记','section-badge'));for(const tag of m.tags)meta.append(el('span','#'+tag,'note-tag'));if(m.series)meta.append(el('span',m.series,'note-series'));text.append(meta);
+    if(n.error)text.append(el('small',n.error,'error-text'));
+    const edit=el('button','设置','note-edit');edit.type='button';edit.setAttribute('aria-label','编辑发布设置 '+n.path);edit.onclick=()=>openNoteEditor(n.path);row.append(check,text,edit);return row;
+  };
+  const append=(node,target)=>{
+    for(const n of node.files.sort((a,b)=>a.path.localeCompare(b.path,'zh-CN')))target.append(rowFor(n));
+    for(const folder of [...node.dirs.values()].sort((a,b)=>a.name.localeCompare(b.name,'zh-CN'))){
+      const group=el('div',undefined,'folder-group'),head=el('div',undefined,'folder-heading'),toggle=el('button',undefined,'folder-toggle'),check=el('input');
+      const scope=folder.all.filter(n=>!n.blocked||selected.has(n.path)),chosen=scope.filter(n=>selected.has(n.path)).length;
+      const auto=!!$('search').value.trim()||!!$('folder').value||$('only').checked||$('candidate').checked||!!$('noteSection').value,open=expandedFolders.has(folder.path)?expandedFolders.get(folder.path):auto;
+      toggle.type='button';toggle.setAttribute('aria-label',(open?'收起目录 ':'展开目录 ')+folder.path);toggle.setAttribute('aria-expanded',String(open));
+      const symbol=el('span',open?'−':'+','folder-symbol');symbol.setAttribute('aria-hidden','true');toggle.append(symbol,el('span',folder.name,'folder-name'),el('small',`${chosen} / ${scope.length}`));toggle.title=folder.path;toggle.onclick=()=>{expandedFolders.set(folder.path,!open);render()};
+      check.type='checkbox';check.setAttribute('aria-label','选择目录 '+folder.path);check.checked=scope.length>0&&chosen===scope.length;check.indeterminate=chosen>0&&chosen<scope.length;check.dataset.blocked=String(!scope.length);
+      check.onchange=()=>{const selecting=check.checked;for(const n of scope){if(selecting&&!n.blocked)selected.add(n.path);else if(!selecting)selected.delete(n.path)}changed();render()};
+      head.append(check,toggle);group.append(head);if(open){const children=el('div',undefined,'folder-children');append(folder,children);group.append(children)}target.append(group);
+    }
+  };
+  append(root,container);container.scrollTop=scroll;syncButtons();
+}
+async function scan(preserve=false){
+  const pending=preserve&&selectionDirty?[...selected].map(path=>({path,id:notes.find(n=>n.path===path)?.id})):null;
+  const edits=preserve?[...metadataDirty].map(path=>({path,id:notes.find(n=>n.path===path)?.id,value:noteMetadata[path]})):[];
+  const r=await api('scan');if(!Array.isArray(r.sections)||!r.metadata){compatible=false;throw Error('此窗口连接的是旧版发布服务。请重新双击 F:\\MyWeb\\文章发布管理器.cmd，并使用新打开的管理器窗口。')}notes=r.notes;selected=new Set(pending?pending.map(p=>notes.find(n=>n.id===p.id)?.path||p.path):r.selected);assetModes={...r.assets};
+  noteMetadata={...(r.metadata||Object.fromEntries(notes.map(n=>[n.path,n.metadataOverride||{}])))};metadataDirty.clear();
+  for(const edit of edits){const path=notes.find(n=>n.id===edit.id)?.path||edit.path;noteMetadata[path]=edit.value;metadataDirty.add(path)}
+  ffmpeg=r.ffmpeg;scanned=true;selectionDirty=!!pending||!!edits.length;
+  showMissing([...new Set([...selected,...metadataDirty])].filter(p=>!notes.some(n=>n.path===p)));updateFolderOptions();render();
+  if(editingPath&&!editorDirty){const current=notes.find(n=>n.path===editingPath);if(current)fillNoteEditor(current);else closeNoteEditor()}
+  message(`扫描完成：${notes.length} 篇可管理笔记，${folderPaths().length} 个目录，已选择 ${selected.size} 篇。${pending||edits.length?'未保存的选择已保留，发布设置也已保留。':''}${r.ffmpeg?'视频转换工具已就绪。':'视频转码工具不可用，可保留原件。'}`);
+}
+function editorValues(){const result={};for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);result[key]=['tags','engine','role'].includes(key)?tagList(input.value):key==='featured'?input.checked:['order','year'].includes(key)?Number(input.value|| (key==='order'?100:new Date().getFullYear())):input.value.trim()}return result}
+function syncEditorSection(){const work=$('editSection').value==='work';$('workMetadata').hidden=!work;$('editCover').required=work;$('editSummary').required=work}
+function fillNoteEditor(n){editingPath=n.path;const m=noteMeta(n);for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);if(key==='featured')input.checked=!!m[key];else input.value=Array.isArray(m[key])?m[key].join(', '):m[key]??''}editorInitial=editorValues();editorDirty=false;$('editorPath').textContent=n.path;$('editorHint').textContent='完成后点击“应用此篇设置”，再保存或分析。';syncEditorSection();$('noteEditor').hidden=false;syncButtons()}
+function openNoteEditor(path){if(editorDirty&&editingPath!==path){message('当前发布设置尚未应用，请先应用或关闭编辑。',true);return}const n=notes.find(n=>n.path===path);if(!n)return;if(editingPath!==path||!editorDirty)fillNoteEditor(n);$('noteEditor').scrollIntoView({block:'nearest'});$('editTitle').focus({preventScroll:true})}
+function closeNoteEditor(){editingPath=null;editorInitial=null;editorDirty=false;$('noteEditor').hidden=true;syncButtons()}
+function setNoteOverride(path,patch,invalidateNow=true){noteMetadata[path]={...(noteMetadata[path]||{}),...patch};metadataDirty.add(path);if(invalidateNow)changed()}
+$('noteEditor').oninput=()=>{editorDirty=true;syncEditorSection();$('editorHint').textContent='有未应用的编辑，请先应用此篇设置。';syncButtons()};
+$('noteEditor').onsubmit=event=>{event.preventDefault();if(!$('noteEditor').reportValidity())return;const values=editorValues(),patch=Object.fromEntries(Object.entries(values).filter(([key,value])=>JSON.stringify(value)!==JSON.stringify(editorInitial[key])));if(Object.keys(patch).length)setNoteOverride(editingPath,patch);editorDirty=false;fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('此篇发布设置已应用，请保存或分析本次副本。')};
+$('noteMetaClose').onclick=closeNoteEditor;
+$('noteMetaReset').onclick=()=>{if(!editingPath)return;noteMetadata[editingPath]=null;metadataDirty.add(editingPath);editorDirty=false;changed();fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('已恢复为笔记原属性，请保存或分析本次副本。')};
+$('batchSetSeries').onchange=syncButtons;
+$('batchMetadataApply').onclick=()=>{const matches=visible().filter(n=>selected.has(n.path)&&!n.blocked),tags=tagList($('batchTags').value),mode=$('batchTagMode').value;
+  if(!$('batchSection').value&&!tags.length&&mode!=='replace'&&!$('batchSetSeries').checked){message('请先选择要批量修改的栏目、Tag 或系列。',true);return}
+  for(const n of matches){const patch={},m=noteMeta(n);if($('batchSection').value)patch.section=$('batchSection').value;if(tags.length||mode==='replace')patch.tags=mode==='replace'?tags:mode==='remove'?m.tags.filter(t=>!tags.includes(t)):[...new Set([...m.tags,...tags])];if($('batchSetSeries').checked)patch.series=$('batchSeries').value.trim();setNoteOverride(n.path,patch,false)}
+  changed();if(editingPath)fillNoteEditor(notes.find(n=>n.path===editingPath));render();message(`已为当前筛选中选中的 ${matches.length} 篇笔记更新设置。请保存或分析；作品还需单独检查封面和摘要。`);
+};
+$('expandFolders').onclick=()=>{for(const path of folderPaths())expandedFolders.set(path,true);render()};
+$('collapseFolders').onclick=()=>{for(const path of folderPaths())expandedFolders.set(path,false);render()};
+function showMissing(paths){$('missing').replaceChildren();for(const old of paths){const row=el('div',undefined,'message error');row.append(el('p','已选文件找不到：'+old));const select=el('select');select.setAttribute('aria-label','选择移动后的文件');select.add(new Option('选择移动后的笔记…',''));notes.filter(n=>!n.blocked).forEach(n=>select.add(new Option(n.path,n.path)));const link=el('button','关联并保留旧网址');link.onclick=()=>job(async()=>{if(!select.value)throw Error('先选择新的文件位置');const next=select.value;await api('relink',{oldPath:old,newPath:next});if(selected.delete(old))selected.add(next);if(metadataDirty.delete(old)){noteMetadata[next]=noteMetadata[old];delete noteMetadata[old];metadataDirty.add(next)}if(editingPath===old)editingPath=next;invalidate();await scan(true)});const remove=el('button','取消此选择');remove.onclick=()=>{selected.delete(old);delete noteMetadata[old];metadataDirty.delete(old);row.remove();changed();render()};row.append(select,link,remove);$('missing').append(row)}}
+async function save(){await api('select',{selected:[...selected],assets:assetModes,metadata:Object.fromEntries([...metadataDirty].map(path=>[path,noteMetadata[path]]))});metadataDirty.clear();selectionDirty=false;render()}
+async function analyzeAssets(){const result=await api('analyze',{});if(result.assetModes)assetModes={...result.assetModes};if(result.metadata)noteMetadata={...result.metadata};if(result.scannedNotes){notes=result.scannedNotes;if(result.selected)selected=new Set(result.selected);updateFolderOptions();render();if(editingPath){const current=notes.find(n=>n.path===editingPath);if(current)fillNoteEditor(current);else closeNoteEditor()}}return result}
 function canUseMode(asset,mode){return mode==='original'||(['lossless','optimized'].includes(mode)&&imageExts.includes(asset.ext))||(mode==='video'&&ffmpeg&&(videoExts.includes(asset.ext)||asset.ext==='.gif'))}
 function assetRangeError(){
   const min=assetFilters.min===''?0:Number(assetFilters.min),max=assetFilters.max===''?Infinity:Number(assetFilters.max);
@@ -73,6 +173,7 @@ function clearAssetStage(){stage=null;$('staged').hidden=true;$('assetResults')?
 function showPlan(){
   const box=$('review');box.replaceChildren();
   for(const [key,title]of [['added','新增'],['updated','修改'],['removed','撤回']]){box.append(el('h3',title+' · '+plan.changes[key].length));plan.changes[key].forEach(t=>box.append(el('div',t,'change')))}
+  if(plan.notes?.length){const details=el('details',undefined,'metadata-review');details.open=true;details.append(el('summary',`栏目与发布设置 · ${plan.notes.length} 篇`));for(const n of plan.notes){const m=n.metadata||{},article=el('article');article.append(el('strong',n.title),el('p',`${sectionLabels[m.section]||'渲染手记'}${m.series?' · '+m.series:''}${m.date?' · '+m.date:''}`));if(m.tags?.length)article.append(el('p',m.tags.map(t=>'#'+t).join(' · '),'review-tags'));if(m.cover)article.append(el('p','封面：'+m.cover));details.append(article)}box.append(details)}
   if(plan.errors.length){box.append(el('h3','需要处理的问题'));plan.errors.forEach(e=>box.append(el('p',e.path+'：'+e.message,'error-text')))}
   if(plan.warnings.length){const d=el('details');d.append(el('summary','提示 · '+plan.warnings.length));plan.warnings.forEach(w=>d.append(el('p',w,'warning')));box.append(d)}
   box.append(el('h3',`附件 · ${plan.assets.length} 项 · 原始 ${size(plan.assets.reduce((s,a)=>s+a.bytes,0))}`));
@@ -142,7 +243,7 @@ function renderAssets(){
   }
   syncButtons();
 }
-$('rescan').onclick=()=>job(async()=>{invalidate();await scan(true)});['search','folder','only','candidate'].forEach(id=>$(id).addEventListener('input',render));$('selectVisible').onclick=()=>{visible().filter(n=>!n.blocked).forEach(n=>selected.add(n.path));changed();render()};$('clearVisible').onclick=()=>{visible().forEach(n=>selected.delete(n.path));changed();render()};$('save').onclick=()=>job(async()=>{await save();message('选择已保存，尚未生成网站副本。')});$('analyze').onclick=()=>job(async()=>{invalidate();await save();message('正在检查正文与引用…');plan=await analyzeAssets();showPlan();message(plan.errors.length?'分析发现问题，请修正后重新分析。':'分析完成。可以按类型、大小筛选附件，批量设置压缩方式并确认，再生成副本。',plan.errors.length>0)});
+$('rescan').onclick=()=>job(async()=>{invalidate();await scan(true)});['search','folder','only','candidate','includeSubfolders','noteSection'].forEach(id=>$(id).addEventListener('input',()=>{expandedFolders.clear();render()}));$('selectVisible').onclick=()=>{visible().filter(n=>!n.blocked).forEach(n=>selected.add(n.path));changed();render()};$('clearVisible').onclick=()=>{visible().forEach(n=>selected.delete(n.path));changed();render()};$('save').onclick=()=>job(async()=>{await save();message('选择与发布设置已保存，尚未生成网站副本。')});$('analyze').onclick=()=>job(async()=>{invalidate();await save();message('正在检查正文与引用…');plan=await analyzeAssets();showPlan();message(plan.errors.length?'分析发现问题，请修正后重新分析。':'分析完成。可以按类型、大小筛选附件，批量设置压缩方式并确认，再生成副本。',plan.errors.length>0)});
 $('prepare').onclick=()=>job(async()=>{message('正在生成媒体和正文副本，大视频可能需要几分钟…');stage=await api('prepare',{id:plan.id,approved:plan.assets.filter(a=>approvedAssets.has(approvalId(a))).map(a=>a.key)});const before=stage.assets.reduce((s,a)=>s+a.originalBytes,0),after=stage.assets.reduce((s,a)=>s+a.bytes,0);message(`待预览副本已生成：${stage.notes.length} 篇，媒体 ${size(before)} → ${size(after)}。尚未写入网站。`);showAssetResults();$('staged').hidden=!stage.notes.length;$('previewNote').replaceChildren();stage.notes.forEach(n=>$('previewNote').add(new Option(n.title,n.slug)));if(stage.notes.length)await preview()});
 function showAssetResults(){
   $('assetResults')?.remove();if(!stage.assets.length)return;

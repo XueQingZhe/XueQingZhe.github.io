@@ -16,6 +16,7 @@ import { collectCatalog, catalogPreset } from './catalog.mjs';
 import { readSiteContent, siteCandidates, publicSiteEntry, boundedSite, reconciliationMatches } from './site-content.mjs';
 import { TopicStore } from './topics.mjs';
 import { ContentSettingsStore, contentKey } from './content-settings.mjs';
+import { CollectionEditor } from './collection-editor.mjs';
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
 const writer = unified().use(remarkStringify, { fences: true, bullet: '-' }).use(remarkGfm).use(remarkMath);
@@ -101,17 +102,20 @@ export class Publisher {
     this.plans = new Map(); this.stages = new Map(); this.busy = false;
     this.topics = new TopicStore({ site: this.site, state: this.state });
     this.contentSettings = new ContentSettingsStore({ site: this.site, state: this.state, normalize: normalizeOverride });
+    this.collectionEditor = new CollectionEditor({ publisher: this, normalize: normalizeOverride });
   }
   async init() {
     await fs.mkdir(this.state, { recursive: true });
     this.db = JSON.parse(await fs.readFile(path.join(this.state, 'selection.json'), 'utf8').catch(() => '{"entries":{},"selected":[],"assets":{}}'));
     this.db.assets ??= {};
+    await this.collectionEditor.recover();
     await this.recover();
   }
   async save(db = this.db) {
     const file = path.join(this.state, 'selection.json');
     await fs.writeFile(file + '.tmp', JSON.stringify(db, null, 2)); await fs.rename(file + '.tmp', file);
   }
+  async saveCollection(input) { return this.collectionEditor.save(input); }
   async bounded(rel) {
     if (typeof rel !== 'string' || !rel || path.isAbsolute(rel) || /(^|[\\/])\.\.([\\/]|$)/.test(rel)) throw Error('路径越界');
     const p = path.resolve(this.vault, rel);

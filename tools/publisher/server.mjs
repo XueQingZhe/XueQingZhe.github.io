@@ -89,6 +89,7 @@ const server = http.createServer(async (req, res) => {
       if (url.pathname === '/api/deploy/review') { await publisher.assertApplied(); return json(200, await deployment.review()); }
       if (url.pathname === '/api/deploy/start') { await publisher.assertApplied(); return json(202, await deployment.start(data.id)); }
       if(url.pathname==='/api/content-settings'){await publisher.contentSettings.save(data,publisher.siteContent);return json(200,await publisher.scan());}
+      if(url.pathname==='/api/collection-editor'){const result=await publisher.saveCollection(data);await publisher.scan();return json(200,result);}
       if(url.pathname==='/api/collections'){const result=await publisher.contentSettings.createCollection(data);await publisher.scan();return json(200,result);}
       if (url.pathname === '/api/site-link') return json(200, await publisher.linkSite(data.path, data.key));
       if (url.pathname === '/api/topics') return json(200, await publisher.topics.save(data, publisher.topicSources()));

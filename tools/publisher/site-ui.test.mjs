@@ -15,7 +15,7 @@ const articleFixtures = [
   { key: 'notes:ue-lighting', id: 'ue-lighting', title: 'UE lighting study', url: '/blog/ue-lighting/', section: 'notes', metadata: { ...sourceMetadata, title: 'UE lighting study', tags: ['UE'] }, notes: [], work: [] },
   { key: 'tutorials:shader-basics', id: 'shader-basics', title: 'Shader learning series', url: '/tutorials/shader-basics/', section: 'tutorials', metadata: { ...sourceMetadata, title: 'Shader learning series', section: 'tutorials', tags: ['Learning'] }, notes: [], work: [] },
   { key: 'work:water-study', id: 'water-study', title: 'Water study', url: '/work/water-study/', section: 'work', metadata: { ...sourceMetadata, title: 'Water study', section: 'work', summary: 'Synthetic water project', cover: 'https://example.invalid/water.png' }, notes: ['notes:shader-basics'], work: [] },
-  { key: 'work:ue5-per-material', id: 'ue5-per-material', title: 'UE 材质专题', url: '/work/ue5-per-material/', section: 'work', metadata: { ...sourceMetadata, title: 'UE 材质专题', section: 'work', summary: 'Three existing site articles', cover: 'https://example.invalid/ue.png' }, notes: ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting'], work: [] },
+  { key: 'work:ue5-per-material', id: 'ue5-per-material', title: 'UE 材质专题', url: '/work/ue5-per-material/', section: 'work', metadata: { ...sourceMetadata, title: 'UE 材质专题', section: 'work', summary: 'Three existing site articles', cover: 'https://example.invalid/ue.png', tags: [], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting'], work: [] },
 ].map(item => ({ ...item, collection: item.key.split(':')[0], linkable: true, active: true }));
 const topicFixtures = [{ key: 'ue5-per-material', title: 'UE 材质专题', summary: 'Three existing site articles', notes: ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting'], url: '/work/ue5-per-material/' }];
 
@@ -47,11 +47,12 @@ async function setup(t, { selected = [], viewport } = {}) {
     if (url.pathname === '/api/publication-status') return send({ entries: Object.fromEntries(mock.siteContent.map(entry => [entry.key, { state: 'uploaded', label: '已上传', reason: 'Synthetic remote equality' }])), checkedAt: '2026-09-22T01:00:00Z', stale: false });
     if (url.pathname === '/api/scan') return send({ notes: currentNotes(), selected: mock.selected, metadata: mock.metadata, assets: {}, siteContent: mock.siteContent, sections, catalog, ffmpeg: false, missingSelected: [] });
     if (url.pathname === '/api/topics' && req.method === 'GET') return send(topicResponse());
-    if (url.pathname === '/api/topics' && req.method === 'POST') {
+    if (url.pathname === '/api/collection-editor' && req.method === 'POST') {
       const index = mock.topics.findIndex(topic => topic.key === data.key);
       if (index < 0) return send({ error: 'Unknown synthetic topic' }, 400);
-      mock.topics[index] = { ...mock.topics[index], ...structuredClone(data) }; mock.pending = true;
-      return send(topicResponse());
+      mock.topics[index] = { ...mock.topics[index], ...structuredClone(data.metadata), notes: [...data.notes] }; mock.pending = true;
+      const entry = mock.siteContent.find(entry => entry.url === mock.topics[index].url); entry.metadata = { ...entry.metadata, ...data.metadata }; entry.title = data.metadata.title;
+      return send({ key: data.key, metadata: entry.metadata, pending: true });
     }
     if (url.pathname === '/api/site-link') { if (data.key) mock.links[data.path] = data.key; else delete mock.links[data.path]; return send({ ok: true }); }
     if (url.pathname === '/api/select') { mock.selected = [...data.selected]; Object.assign(mock.metadata, data.metadata); return send({ ok: true }); }
@@ -135,10 +136,10 @@ test('existing topic relationships can be removed, reordered and extended withou
   await page.locator('#topicArticleSearch').fill('Shader');
   await page.locator('#topicArticle').selectOption('tutorials:shader-basics'); await page.locator('#topicAdd').click();
   assert.deepEqual(await topicNotes(page), ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics']);
-  assert.equal(calls(mock, 'topics', 'POST').length, 0);
+  assert.equal(calls(mock, 'collection-editor', 'POST').length, 0);
   assert.deepEqual(mock.appliedTopics, topicFixtures);
   await page.locator('#topicSave').click(); await settled(page);
-  assert.deepEqual(calls(mock, 'topics', 'POST').at(-1).data, { key: 'ue5-per-material', title: 'UE 材质专题', summary: 'Three existing site articles', notes: ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics'] });
+  assert.deepEqual(calls(mock, 'collection-editor', 'POST').at(-1).data, { key: 'ue5-per-material', metadata: { title: 'UE 材质专题', summary: 'Three existing site articles', cover: 'https://example.invalid/ue.png', tags: [], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics'] });
   assert.equal(mock.pending, true);
   assert.deepEqual(mock.appliedTopics, topicFixtures, 'saving a topic draft must not update website content immediately');
   assert.match(await page.locator('#topicStatus').innerText(), /草稿|待|尚未|未写入|已暂存|已保存/);
@@ -150,7 +151,7 @@ test('unapplied topic edits block publication actions and can be cancelled witho
   await openTopic(page); await page.getByRole('button', { name: '移除 UE lighting study', exact: true }).click();
   for (const id of ['analyze', 'rescan', 'prepare', 'apply', 'publishReview', 'topicSelect']) assert.equal(await page.locator('#' + id).isDisabled(), true, id + ' cannot bypass an unapplied topic edit');
   await page.locator('#topicCancel').click();
-  assert.equal(calls(mock, 'topics', 'POST').length, 0);
+  assert.equal(calls(mock, 'collection-editor', 'POST').length, 0);
   assert.deepEqual(mock.topics, topicFixtures);
   assert.equal(await page.locator('#analyze').isEnabled(), true);
   await openTopic(page);
@@ -170,7 +171,7 @@ test('saving a newly selected vault article refreshes topic choices with its app
   assert.match(await page.locator('#topicArticle option[value="published:n-local"]').innerText(), /New public shader note/);
   await page.locator('#topicArticle').selectOption('published:n-local'); await page.locator('#topicAdd').click();
   await page.locator('#topicSave').click(); await settled(page);
-  assert.deepEqual(calls(mock, 'topics', 'POST').at(-1).data.notes, ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting', 'published:n-local']);
+  assert.deepEqual(calls(mock, 'collection-editor', 'POST').at(-1).data.notes, ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting', 'published:n-local']);
   assert.equal(mock.metadata['Local.md'].title, 'New public shader note');
   assert.deepEqual(mock.appliedTopics, topicFixtures);
   assert.deepEqual(errors, []);

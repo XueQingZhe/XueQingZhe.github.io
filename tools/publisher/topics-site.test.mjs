@@ -29,6 +29,7 @@ test('synchronized content keeps original URLs and topic ordering supports alias
   });
   await fs.mkdir(path.join(site,'public'),{recursive:true});await fs.mkdir(path.join(site,'content/published/notes'),{recursive:true});
   await fs.cp(path.join(project,'src'),path.join(site,'src'),{recursive:true});
+  await fs.writeFile(path.join(site,'src/data/publisher-content.json'),JSON.stringify({version:1,entries:{},collections:{}}));
   for(const name of ['astro.config.mjs','package.json'])await fs.copyFile(path.join(project,name),path.join(site,name));
   for(const name of ['node_modules','public/art','public/assets','public/covers','public/fonts']){const dest=path.join(site,name);await fs.symlink(path.join(project,name),dest,'junction');junctions.push(dest);}
   for(const name of ['favicon.svg','og.png','robots.txt','.nojekyll'])await fs.copyFile(path.join(project,'public',name),path.join(site,'public',name));

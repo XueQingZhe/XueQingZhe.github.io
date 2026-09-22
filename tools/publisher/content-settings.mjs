@@ -8,6 +8,11 @@ const object = value => value && typeof value === 'object' && !Array.isArray(val
 export const contentKey = entry => entry.replaces || entry.metadata?.replaces || entry.key;
 const serialize = data => JSON.stringify(data, null, 2) + '\n';
 const empty = () => ({ version: 1, entries: {}, collections: {} });
+const mergeCover = (source, override) => {
+  const merged = { ...source, ...override };
+  if (Object.hasOwn(override ?? {}, 'cover') && override.cover !== source.cover) delete merged.coverVideo;
+  return merged;
+};
 
 export class ContentSettingsStore {
   constructor({ site, state, normalize }) {
@@ -47,8 +52,8 @@ export class ContentSettingsStore {
       const key = contentKey(entry), topicKey = key.startsWith('work:') ? key.slice(5) : key;
       const topic = entry.section === 'work' ? topicDocument.topics[topicKey] ?? topicDocument.topics[key] ?? {} : {};
       const topicMetadata = Object.fromEntries(['title', 'summary'].filter(field => Object.hasOwn(topic, field)).map(field => [field, topic[field]]));
-      const currentMetadata = { ...entry.metadata, ...topicMetadata, ...current.data.entries[key] };
-      const settings = document.entries[key] ?? {}, metadata = { ...currentMetadata, ...settings };
+      const currentMetadata = mergeCover({ ...entry.metadata, ...topicMetadata }, current.data.entries[key]);
+      const settings = document.entries[key] ?? {}, metadata = mergeCover({ ...entry.metadata, ...topicMetadata }, settings);
       return { ...entry, canonicalKey: key, currentMetadata, metadata, title: metadata.title, section: metadata.section, notes: metadata.notes ?? entry.notes, work: metadata.work ?? entry.work, settings, settingsPending: Object.hasOwn(pending.data.entries, key) };
     });
     for (const [id, data] of Object.entries(document.collections)) {

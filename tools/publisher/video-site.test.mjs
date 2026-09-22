@@ -30,6 +30,8 @@ test('video work covers load on desktop intent, stop with visibility and motion,
   await fs.mkdir(path.join(site,'public/published-assets'),{recursive:true});
   await fs.mkdir(path.join(site,'content/published/notes'),{recursive:true});
   await fs.cp(path.join(project,'src'),path.join(site,'src'),{recursive:true});
+  await fs.writeFile(path.join(site,'src/data/publisher-content.json'),JSON.stringify({version:1,entries:{},collections:{}}));
+  await fs.writeFile(path.join(site,'src/data/publisher-topics.json'),JSON.stringify({version:1,topics:{}}));
   for(const name of ['astro.config.mjs','package.json'])await fs.copyFile(path.join(project,name),path.join(site,name));
   // Explicit static-only allowlist: never read real content/ or public/published-assets/.
   for(const name of ['node_modules','public/art','public/assets','public/covers','public/fonts']){

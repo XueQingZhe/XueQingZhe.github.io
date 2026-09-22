@@ -1,9 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
 import LivingScene from '../components/LivingScene.astro';
-import {allNotes,allWork,tutorials} from '../lib/content';
+import {allNotes,portfolioWork,tutorials} from '../lib/content';
 import '../styles/home.css';
-const workCount=(await allWork()).length;
+const workCount=(await portfolioWork()).length;
 const notes=await allNotes();const chapters=await tutorials();
 const rooms=[
  {id:'work',href:'/work/',number:'01',name:'造境',en:'WORK',description:'把想象，雕琢成画面',count:`${String(workCount).padStart(2,'0')} 件作品`,caption:'一束光，成为一种可能。'},

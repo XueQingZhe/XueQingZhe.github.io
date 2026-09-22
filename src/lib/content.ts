@@ -56,6 +56,7 @@ function normalize(entry:SourceEntry|{collection:'collections';id:string;data:Co
     cover:values.cover||'/covers/placeholder.svg',order:values.order??100,featured:values.featured??false,status:values.status??'shipped',
     draft:values.draft??false,legacyUrl:'legacyUrl' in entry.data?entry.data.legacyUrl:undefined,replaces:'replaces' in entry.data?entry.data.replaces:undefined,
   } as ContentData;
+  if(Object.hasOwn(override,'cover')&&override.cover!==entry.data.cover)data.coverVideo=undefined;
   if(entry.collection==='collections')data.workType='collection';
   return {...entry,data,topicNotesExplicit:Object.hasOwn(override,'notes')||Object.hasOwn(topic,'notes')} as ArticleEntry;
 }
@@ -95,6 +96,13 @@ async function visibleContent() {
 export async function allArticles() { return (await visibleContent()).sort((a,b)=>b.data.date.valueOf()-a.data.date.valueOf()||articleKey(a).localeCompare(articleKey(b))); }
 export async function allNotes() { return allArticles(); }
 export async function allWork() { return (await visibleContent()).filter(entry=>sectionOf(entry)==='work').sort((a,b)=>b.data.year-a.data.year||articleOrder(a)-articleOrder(b)); }
+/** Gallery entries are collections and standalone works not already reached through a live collection. */
+export async function portfolioWork() {
+  const articles=await allArticles();
+  const works=articles.filter(entry=>sectionOf(entry)==='work').sort((a,b)=>b.data.year-a.data.year||articleOrder(a)-articleOrder(b));
+  const grouped=new Set(works.filter(entry=>entry.data.workType==='collection').flatMap(topic=>topicArticles(topic,articles).map(articleKey)));
+  return works.filter(entry=>entry.data.workType==='collection'||!grouped.has(articleKey(entry)));
+}
 export async function tutorials() { return (await allArticles()).filter(entry=>sectionOf(entry)==='tutorials').sort((a,b)=>articleOrder(a)-articleOrder(b)||a.data.date.valueOf()-b.data.date.valueOf()); }
 export function articleOrder(entry:ArticleEntry) { return entry.data.order??100; }
 export function articleSeries(entry:ArticleEntry) { return entry.data.series?.trim()||''; }

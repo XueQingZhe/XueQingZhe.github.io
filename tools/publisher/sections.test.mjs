@@ -160,9 +160,11 @@ test('published sections build into real lists, stable detail pages, exact tags 
   const independent = elements(study, a => a.id === 'series-独立问题研习')[0];
   assert.ok(text(independent).includes('Fixture Standalone Lesson'));
   assert.ok(text(independent).includes('Fixture Moved Lesson'));
-  const satellites = elements(study, a => a.class === 'orbit-point');
-  assert.ok(satellites.length <= 4);
-  assert.equal(new Set(satellites.map(n => { const a=attrs(elements(n, (_,node)=>node.tagName==='rect')[0]); return a.x+':'+a.y; })).size, satellites.length);
+  const seriesPortals = elements(study, a => Object.hasOwn(a,'data-series-portal'));
+  const studySeries = elements(study, a => Object.hasOwn(a,'data-study-series'));
+  assert.equal(seriesPortals.length,studySeries.length,'Every series needs a hero entry');
+  for(const portal of seriesPortals){const target=studySeries.find(node=>attrs(node).id===attrs(portal)['data-series-portal']);assert.ok(target);assert.equal(text(elements(portal,(_,node)=>node.tagName==='h2')[0]),text(elements(target,(_,node)=>node.tagName==='h2')[0]));}
+  assert.equal(elements(study,a=>a.id==='solo').length,1,'Previously published study bookmarks remain valid');
   const projectTile = elements(work, a => a.href === url('Portfolio/Project.md') && Object.hasOwn(a, 'data-artwork'))[0];
   assert.equal(attrs(elements(projectTile, a => Object.hasOwn(a, 'data-work-cover'))[0]).src, coverUrl);
   for (const name of selected) {
@@ -196,7 +198,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.ok(elements(home, a => a['data-room'] === 'notes').some(node => text(node).includes(noteLinks.length + ' 篇公开内容')));
   assert.ok(elements(home, a => a['data-room'] === 'study').some(node => text(node).includes(studyLinks.length + ' 个章节')));
   // Settings can change primary type without moving the original canonical URL.
-  assert.ok(workLinks.includes('/notes/site-settings-source/'));assert.ok(!workLinks.includes('/work/site-settings-project/'));
+  assert.ok(!workLinks.includes('/notes/site-settings-source/'),'A grouped single work belongs in its collection, not a duplicate gallery tile');assert.ok(noteLinks.includes('/notes/site-settings-source/'));assert.ok(!workLinks.includes('/work/site-settings-project/'));
   assert.ok(studyLinks.includes('/work/site-settings-project/'));assert.ok(studyLinks.indexOf('/notes/site-settings-chapter/')<studyLinks.indexOf('/work/site-settings-project/'));
   assert.match(await html('notes/site-settings-source'),/data-work-detail=/);assert.match(await html('work/site-settings-project'),/class="prose body article-body"/);
   assert.match(await html('notes/'+slug('Journal/Deep/Journal.md')),/Configured Journal/);assert.match(journal,/settingssummarysentinel/);
@@ -208,9 +210,9 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.deepEqual(listLinks(collectionPage,'data-topic-articles'),[url('Journal/Deep/Journal.md'),'/work/site-settings-project/','/notes/site-settings-source/']);
   assert.ok(elements(await html('notes/site-settings-source'),a=>Object.hasOwn(a,'data-parent-topic')&&a.href===collectionUrl).length,'Single work has a collection backlink');
   assert.ok(elements(await html('notes/'+slug('Journal/Deep/Journal.md')),a=>Object.hasOwn(a,'data-parent-topic')&&a.href===collectionUrl).length,'Article has a collection backlink');
-  assert.match(await html('work/collection-empty'),/作品合集 · 0 篇文章/);
+  assert.match(text(elements(await html('work/collection-empty'),a=>a.class==='collection-eyebrow')[0]),/作品合集\s*· 0 篇文章/);
   assert.equal(attrs(elements(work,a=>Object.hasOwn(a,'data-artwork')&&a.href==='/work/site-cleared-collection/')[0])['data-work-type'],'collection','Removing the final member must not turn a legacy collection into a single work');
-  assert.match(await html('work/site-cleared-collection'),/作品合集 · 0 篇文章/);
+  assert.match(text(elements(await html('work/site-cleared-collection'),a=>a.class==='collection-eyebrow')[0]),/作品合集\s*· 0 篇文章/);
   assert.equal(attrs(elements(work,a=>Object.hasOwn(a,'data-artwork')&&a.href==='/work/site-explicit-single/')[0])['data-work-type'],'single','An explicit single-work setting overrides earlier collection intent');
   // Established source collections still produce their original addresses and visuals.
   assert.ok(workLinks.includes('/work/urp-pbr/')); assert.ok(noteLinks.includes('/notes/urp-bloom/'));

@@ -51,7 +51,7 @@ export class TopicStore {
       const notes = [...new Set(references.map(ref => resolve(ref) ? articleKey(resolve(ref)) : ref))];
       return {key,workType:isCollection(entry)?'collection':'single',title:entry.settings?.title ?? override.title ?? entry.title,summary:entry.settings?.summary ?? override.summary ?? entry.metadata?.summary ?? '',notes,url:entry.url,pending:own(pending.data.topics,key),overrides:{title:own(override,'title'),summary:own(override,'summary')}};
     });
-    return {topics,articles:visible.map(e => ({key:articleKey(e),title:e.title,url:e.url,pending:!!e.pending})),pending:Object.keys(pending.data.topics).length>0};
+    return {topics,articles:visible.map(e => ({key:articleKey(e),title:e.title,url:e.url,cover:e.metadata?.cover??'',summary:e.metadata?.summary??'',section:e.section,pending:!!e.pending})),pending:Object.keys(pending.data.topics).length>0};
   }
   async save(input, entries) {
     if(!object(input) || Object.keys(input).some(key => !['key','title','summary','notes'].includes(key))) throw Error('专题设置包含无效字段');

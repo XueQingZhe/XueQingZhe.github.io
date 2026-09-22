@@ -3,7 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { Publisher } from './core.mjs';
+import { Publisher, frontmatter } from './core.mjs';
+import { CoverMedia } from './cover-media.mjs';
 import { GitPublisher } from './deploy.mjs';
 import { publisherVersion } from './version.mjs';
 import { spawn } from 'node:child_process';
@@ -17,6 +18,7 @@ const origin = `http://127.0.0.1:${port}`;
 const previewUrl = process.env.PUBLISHER_PREVIEW_URL || 'http://127.0.0.1:4325/';
 const publisher = new Publisher({ site, vault: process.env.PUBLISHER_VAULT || 'F:/我的笔记/MyNote', state: process.env.PUBLISHER_STATE || path.resolve(site, '../private-publisher') });
 await publisher.init();
+const coverMedia = new CoverMedia({ publisher, parseFrontmatter: frontmatter });
 let locked = false;
 async function command(script,args){await new Promise((resolve,reject)=>{const p=spawn(process.execPath,[path.join(site,script),...args],{cwd:site,windowsHide:true,env:{...process.env,ASTRO_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});let log='';for(const stream of [p.stdout,p.stderr])stream.on('data',d=>log=(log+d).slice(-6000));p.on('error',reject);p.on('exit',code=>code===0?resolve():reject(Error('网站构建失败，已保留原副本：'+log)))})}
 async function rebuild(dir){await command('node_modules/astro/astro.js',['build','--force','--outDir',dir]);await command('node_modules/pagefind/lib/runner/bin.cjs',['--site',dir]);}
@@ -34,7 +36,7 @@ const deployment = await new GitPublisher({
 const server = http.createServer(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY'); res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
   const json = (status, body) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify(body)); };
   try {
     if (req.headers.host !== `127.0.0.1:${port}`) return json(403, { error: '仅接受本机地址' });
@@ -49,8 +51,13 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
     }
     if (url.pathname === '/favicon.ico') { res.writeHead(204); return res.end(); }
+    if (['GET', 'HEAD'].includes(req.method) && ['/api/cover-media/thumbnail', '/api/cover-media/preview'].includes(url.pathname)) {
+      if (req.headers.origin && req.headers.origin !== origin || req.headers['sec-fetch-site'] === 'cross-site') return json(403, { error: '素材预览仅接受本机同源页面' });
+      await coverMedia.serve(req, res, url); return;
+    }
     if (req.headers['x-publisher-token'] !== token || (req.headers.origin && req.headers.origin !== origin)) return json(403, { error: '本地会话验证失败，请刷新页面' });
     if (req.method === 'GET' && url.pathname === '/api/deploy/status') return json(200, deployment.status());
+    if (req.method === 'GET' && url.pathname === '/api/cover-media') return json(200, await coverMedia.list(url.searchParams));
     if (locked || deployment.busy) return json(409, { error: '正在处理，请稍候；可继续查看发布进度。' });
     locked = true;
     try {
@@ -88,6 +95,6 @@ const server = http.createServer(async (req, res) => {
       }
       return json(404, { error: '接口不存在' });
     } finally { locked = false; }
-  } catch (e) { return json(400, { error: e.message }); }
+  } catch (e) { if (res.headersSent) { res.destroy(); return; } return json(e.status ?? 400, { error: e.message }); }
 });
 server.listen(port, '127.0.0.1', () => console.log(`本地发布管理器：${origin}\n默认零选择。写入本地副本后，点击“发布到 GitHub Pages”才会上传并部署。`));

@@ -57,8 +57,8 @@ const specs = [
 
     <!-- 2 · 主视觉 -->
     <div class="hero case-visual">
-      <div class="shot">
-        <img
+      <div class:list={['shot',{'shot-video':d.coverVideo}]}>
+        {d.coverVideo?<video src={d.coverVideo} poster={d.cover} controls playsinline preload="none" width="1600" height="900" data-work-cover data-work-key={workKey(entry)} data-work-video aria-label={`${d.title} · 作品演示`}><a href={d.coverVideo}>打开作品演示视频</a></video>:<img
           src={d.cover}
           alt={d.coverAlt ?? d.title}
           width="1600"
@@ -68,9 +68,9 @@ const specs = [
           fetchpriority="high"
           data-zoom
           tabindex="0"
-        />
+        />}
       </div>
-      <div class="case-visual-caption"><span>作品主视觉</span><span>点击画面，查看细节</span></div>
+      <div class="case-visual-caption"><span>{d.coverVideo?'作品演示':'作品主视觉'}</span><span>{d.coverVideo?'点击播放，可全屏观看':'点击画面，查看细节'}</span></div>
     </div>
 
     <!-- 3 · 规格栏 -->
@@ -213,6 +213,7 @@ const specs = [
     background: var(--surface-2);
   }
   .shot img { display:block;width:100%;height:100%;object-fit:contain; }
+  .shot video { display:block;width:100%;height:100%;object-fit:contain;background:var(--surface-2); }
 
   /* ---- 规格栏：扫一眼就知道是什么活 ---- */
   .specs {

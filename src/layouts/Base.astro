@@ -54,7 +54,7 @@ const space=requestedSpace||(home?'portal':pathname.startsWith('/work/')?'work':
     function motionUI(){const stopped=root.dataset.motion==='paused'||motionQuery.matches;motionButton?.setAttribute('aria-pressed',String(stopped));motionButton?.setAttribute('aria-label',stopped?'播放场景动效':'暂停场景动效');if(motionButton)motionButton.disabled=motionQuery.matches;}
     motionUI();motionQuery.addEventListener('change',motionUI);motionButton?.addEventListener('click',()=>{const next=root.dataset.motion==='paused'?'running':'paused';root.dataset.motion=next;try{localStorage.setItem('app-motion',next)}catch{}motionUI()});
     new MutationObserver(motionUI).observe(root,{attributes:true,attributeFilter:['data-motion']});
-    document.querySelectorAll<HTMLVideoElement>('video').forEach(v=>{v.autoplay=false;v.controls=true;v.preload='none'});
+    document.querySelectorAll<HTMLVideoElement>('video:not([data-work-preview])').forEach(v=>{v.autoplay=false;v.controls=true;v.preload='none'});
     document.querySelectorAll('pre').forEach(pre=>{if(!pre.querySelector('code'))return;const button=document.createElement('button');button.className='copy-code';button.textContent='复制';button.type='button';button.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(pre.querySelector('code')!.textContent||'');button.textContent='已复制'}catch{button.textContent='请手动复制'}setTimeout(()=>button.textContent='复制',1600)});pre.append(button)});
     addEventListener('keydown',e=>{const el=e.target as HTMLElement;if(e.key==='/'&&!/INPUT|TEXTAREA|SELECT/.test(el.tagName)&&!el.isContentEditable&&!e.ctrlKey&&!e.metaKey){e.preventDefault();location.href='/search/'}});
   </script>

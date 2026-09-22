@@ -26,7 +26,17 @@
 <div class="field metadata-wide"><span>系列 · 可选</span><input id="editSeries" type="hidden"><div id="editSeriesPicker" class="term-picker"></div></div>
 <label class="field">系列排序<input id="editOrder" type="number" step="1" placeholder="100"></label>
 </div><div id="workMetadata" hidden><p class="asset-hint">作品需要封面与摘要。本地封面会一同列入附件审核。</p><div class="metadata-grid">
-<label class="field metadata-wide">封面图片<input id="editCover" type="text" placeholder="相对笔记的图片路径、库内路径或 https:// 地址"></label>
+<div class="field metadata-wide cover-field"><span>封面图片或视频</span>
+<div id="coverSelected" class="cover-selected"><p class="asset-hint">尚未选择封面，可从笔记图片与视频中点选。</p></div>
+<div class="actions cover-actions"><button type="button" id="coverBrowse">选择图片或视频</button><button type="button" id="coverClear">移除封面</button></div>
+<label class="field cover-path">所选路径（也可粘贴外链）<input id="editCover" type="text" placeholder="选择素材后自动填写；也可粘贴图片 https:// 地址"></label>
+<p id="coverHint" class="asset-hint">视频封面会生成静态封面图，作品详情可播放原视频。素材会一同进入附件审核。</p>
+<section id="coverPicker" class="cover-picker" aria-labelledby="coverPickerTitle" hidden>
+<div class="cover-picker-heading"><h4 id="coverPickerTitle">选择封面素材</h4><button type="button" id="coverClose">收起素材库</button></div>
+<div class="cover-filters"><label class="field">范围<select id="coverScope"><option value="note">本篇引用</option><option value="all">全部素材</option></select></label><label class="field">类型<select id="coverType"><option value="all">图片与视频</option><option value="image">图片</option><option value="video">视频</option></select></label><label class="field cover-search">查找素材<input id="coverSearch" class="picker-search" type="search" placeholder="搜索文件名或目录" autocomplete="off"></label></div>
+<p id="coverPickerStatus" class="asset-hint" role="status" aria-live="polite"></p><div id="coverItems" class="cover-items" aria-label="可选封面素材"></div>
+<div class="actions"><button type="button" id="coverMore" hidden>加载更多</button><button type="button" id="coverRefresh">刷新素材</button></div>
+</section></div>
 <div class="field metadata-wide"><span>引擎</span><input id="editEngine" type="hidden"><div id="editEnginePicker" class="term-picker"></div></div>
 <div class="field metadata-wide"><span>职责</span><input id="editRole" type="hidden"><div id="editRolePicker" class="term-picker"></div></div>
 <label class="field">作品年份<input id="editYear" type="number" min="2000" max="2100" step="1"></label>
@@ -47,6 +57,7 @@ let termCatalog={tags:[],categories:[],series:[],engine:[],role:[]};
 const pickers=new Map();
 let applyReviewId=null,localWrite={phase:'idle',message:''};
 let noteMetadata={},metadataDirty=new Set(),editingPath=null,editorInitial=null,editorDirty=false;
+let coverRequest=0,coverController=null,coverDebounce=null,coverItems=[],coverCurrent=null,coverCurrentInput='',coverTotal=0,coverHasMore=false,coverLoading=false,coverScopePath=null,coverPolicy=null;
 const expandedFolders=new Map();
 const sectionLabels={notes:'渲染手记',tutorials:'学习系列',work:'作品与实践'};
 const metadataInputs={category:'editCategory',title:'editTitle',section:'editSection',date:'editDate',tags:'editTags',summary:'editSummary',series:'editSeries',order:'editOrder',cover:'editCover',engine:'editEngine',role:'editRole',year:'editYear',featured:'editFeatured'};
@@ -72,6 +83,9 @@ function syncButtons(){
   $('batchMetadataApply').disabled=busy||editorDirty||!batchCount;
   $('batchSeries').disabled=busy||!$('batchSetSeries').checked;
   for(const id of ['editCover','editEngine','editRole','editYear','editFeatured'])$(id).disabled=busy||$('editSection').value!=='work';
+  for(const control of document.querySelectorAll('.cover-field button,.cover-field select,.cover-field input'))control.disabled=busy||$('editSection').value!=='work'||control.dataset.blocked==='true';
+  $('coverClear').disabled=busy||$('editSection').value!=='work'||!$('editCover').value;
+  $('coverMore').disabled=busy||coverLoading||!coverHasMore;
   $('prepare').disabled=busy||editorDirty||!plan||plan.errors.length>0||plan.assets.some(a=>!approvedAssets.has(approvalId(a)));
   $('apply').disabled=busy||editorDirty||!stage;
   $('applyConfirm').disabled=busy||editorDirty||!stage||applyReviewId!==stage.id;
@@ -233,13 +247,69 @@ async function scan(preserve=false){
   message(`扫描完成：${notes.length} 篇可管理笔记，${folderPaths().length} 个目录，已选择 ${selected.size} 篇。${pending||edits.length?'未保存的选择已保留，发布设置也已保留。':''}${r.ffmpeg?'视频转换工具已就绪。':'视频转码工具不可用，可保留原件。'}`);
 }
 function editorValues(){const result={};for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);result[key]=['tags','engine','role'].includes(key)?tagList(input.value):key==='featured'?input.checked:['order','year'].includes(key)?Number(input.value|| (key==='order'?100:new Date().getFullYear())):input.value.trim()}return result}
-function syncEditorSection(){const work=$('editSection').value==='work';$('workMetadata').hidden=!work;$('editCover').required=work;$('editSummary').required=work}
-function fillNoteEditor(n){if(editingPath!==n.path)for(const picker of pickers.values())if(picker.prefix==='edit')$(picker.search).value='';editingPath=n.path;const m=noteMeta(n);for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);if(key==='featured')input.checked=!!m[key];else input.value=Array.isArray(m[key])?m[key].join(', '):m[key]??''}editorInitial=editorValues();editorDirty=false;refreshPickers('edit');$('editorPath').textContent=n.path;$('editorHint').textContent='完成后点击“应用此篇设置”，再保存或分析。';syncEditorSection();$('noteEditor').hidden=false;syncButtons()}
+function stopCoverPreview(){for(const video of $('coverSelected').querySelectorAll('video')){video.pause();video.removeAttribute('src');video.load()}}
+function closeCoverPicker(){clearTimeout(coverDebounce);coverRequest++;coverController?.abort();coverController=null;coverLoading=false;$('coverPicker').hidden=true}
+function resetCoverPicker(){closeCoverPicker();stopCoverPreview();coverItems=[];coverCurrent=null;coverCurrentInput='';coverPolicy=null;coverTotal=0;coverHasMore=false;coverScopePath=null;$('coverScope').value='note';$('coverType').value='all';$('coverSearch').value='';$('coverItems').replaceChildren();$('coverPickerStatus').textContent='';$('coverMore').hidden=true}
+function renderCoverSelected(){
+  stopCoverPreview();const box=$('coverSelected'),value=$('editCover').value.trim();box.replaceChildren();
+  if(!value){box.append(el('p','尚未选择封面，可从笔记图片与视频中点选。','asset-hint'));return}
+  const item=coverCurrentInput===value?coverCurrent:null;
+  if(item){
+    const preview=el(item.type==='video'?'video':'img');preview.className='cover-selected-media';
+    if(item.type==='video'){preview.controls=true;preview.playsInline=true;preview.preload='none';preview.poster=item.thumbnailUrl||'';if(item.previewUrl)preview.src=item.previewUrl;preview.setAttribute('aria-label','所选封面视频预览')}
+    else{preview.src=item.thumbnailUrl;preview.alt='所选封面预览';preview.decoding='async'}
+    preview.onerror=()=>{preview.hidden=true;if(item.type==='video'&&item.thumbnailUrl){const poster=el('img');poster.src=item.thumbnailUrl;poster.alt='所选视频的静态封面';poster.className='cover-selected-media';box.prepend(poster)}box.append(el('p',item.type==='video'?'浏览器暂时无法播放此视频，可在附件审核中转为 MP4 后预览。':'此素材暂时无法预览，仍可按文件名选择。','asset-hint'))};
+    box.append(preview,el('strong',item.name||item.path),el('small',item.path));
+    if(item.type==='video')box.append(el('p',/\.(mov|m4v)$/i.test(item.path)?'选用后将转为兼容的 MP4，并自动生成静态封面。原视频保留。':'使用视频作为作品预览，自动生成静态封面。可在附件审核中选择压缩方式。','asset-hint'));
+  }else box.append(el('p',/^https:\/\//i.test(value)?'已设置外链图片封面。':'已设置封面路径，可打开素材库查看或更换。','asset-hint'),el('small',value));
+}
+function chooseCover(item){
+  if(!item.selectable||working||deployState.busy||!compatible)return;
+  coverCurrent=item;coverCurrentInput=item.value;$('editCover').value=item.value;
+  coverPolicy=item.type==='video'?{value:item.value,path:item.path,mode:/\.(mov|m4v)$/i.test(item.path)?'video':assetModes[item.path]||'original'}:null;
+  renderCoverSelected();renderCoverItems();$('editCover').dispatchEvent(new Event('input',{bubbles:true}));
+}
+function renderCoverItems(){
+  const box=$('coverItems');box.replaceChildren();
+  for(const item of coverItems){
+    const card=el('button',undefined,'cover-option');card.type='button';card.dataset.coverPath=item.path;card.dataset.blocked=String(!item.selectable);card.setAttribute('aria-label','选择封面 '+item.path);card.setAttribute('aria-pressed',String($('editCover').value.trim()===item.value||coverCurrentInput===$('editCover').value.trim()&&coverCurrent?.path===item.path));
+    const frame=el('span',undefined,'cover-option-frame'),img=el('img');img.src=item.thumbnailUrl||'';img.alt='';img.loading='lazy';img.decoding='async';img.onerror=()=>{img.hidden=true;frame.classList.add('unavailable')};frame.append(img,el('span',item.type==='video'?'视频':'图片','cover-kind'));
+    card.append(frame,el('strong',item.name||item.path),el('small',item.path),el('small',size(item.bytes)+(item.referenced?' · 本篇引用':'')));
+    if(!item.selectable)card.append(el('small',item.reason||'当前不可选作封面','cover-unavailable'));
+    card.onclick=()=>chooseCover(item);box.append(card);
+  }
+  if(!coverItems.length&&!coverLoading)box.append(el('p',$('coverScope').value==='note'?'这篇笔记没有匹配素材，可切换到“全部素材”选择。':'没有匹配的图片或视频，请更换搜索词或类型。','asset-hint'));
+  $('coverMore').hidden=!coverHasMore;syncButtons();
+}
+async function loadCoverMedia(append=false,previewOnly=false){
+  if(!editingPath||$('editSection').value!=='work')return;
+  clearTimeout(coverDebounce);coverController?.abort();const controller=new AbortController();coverController=controller;const request=++coverRequest,note=editingPath,value=$('editCover').value.trim();
+  coverLoading=true;if(!previewOnly)$('coverPickerStatus').textContent='正在读取素材…';syncButtons();
+  const params=new URLSearchParams({note,scope:$('coverScope').value,type:$('coverType').value,q:$('coverSearch').value.trim(),offset:String(append?coverItems.length:0),limit:'24',cover:value});
+  try{
+    const response=await fetch('/api/cover-media?'+params,{headers:{'X-Publisher-Token':token},signal:controller.signal});const data=await response.json();
+    if(!response.ok)throw Error(response.status===404?'素材选择服务尚未启动，请重新双击 F:\\MyWeb\\文章发布管理器.cmd。':data.error||'素材读取失败');
+    if(request!==coverRequest||editingPath!==note)return;
+    if(data.current&&$('editCover').value.trim()===value){coverCurrent=data.current;coverCurrentInput=value;renderCoverSelected()}
+    if(!previewOnly){coverItems=append?[...coverItems,...data.items.filter(item=>!coverItems.some(old=>old.path===item.path))]:data.items;coverTotal=data.total;coverHasMore=data.hasMore;coverScopePath=note;coverLoading=false;renderCoverItems();$('coverPickerStatus').textContent=`已显示 ${coverItems.length} / ${coverTotal} 项。点击缩略图选用；视频可在上方播放预览。${data.ffmpeg?'':' 视频封面需要本机视频转换工具，当前可先选图片。'}`}
+  }catch(error){if(error.name==='AbortError'||request!==coverRequest)return;if(!previewOnly){coverLoading=false;renderCoverItems();$('coverPickerStatus').textContent='读取失败：'+error.message+' 可点击“刷新素材”重试。'}}
+  finally{if(request===coverRequest){coverLoading=false;coverController=null;syncButtons()}}
+}
+$('coverBrowse').onclick=()=>{$('coverPicker').hidden=false;loadCoverMedia();$('coverPicker').scrollIntoView({block:'nearest'})};
+$('coverClose').onclick=()=>{closeCoverPicker();syncButtons();$('coverBrowse').focus()};
+$('coverClear').onclick=()=>{coverCurrent=null;coverCurrentInput='';coverPolicy=null;$('editCover').value='';renderCoverSelected();renderCoverItems();$('editCover').dispatchEvent(new Event('input',{bubbles:true}))};
+for(const id of ['coverScope','coverType'])$(id).onchange=()=>loadCoverMedia();
+$('coverSearch').oninput=()=>{clearTimeout(coverDebounce);coverRequest++;coverController?.abort();coverDebounce=setTimeout(()=>loadCoverMedia(),200)};
+$('coverMore').onclick=()=>loadCoverMedia(true);$('coverRefresh').onclick=()=>loadCoverMedia();
+$('editCover').oninput=()=>{if($('editCover').value.trim()!==coverCurrentInput){coverCurrent=null;coverCurrentInput='';coverPolicy=null;renderCoverSelected();renderCoverItems()}};
+$('editCover').onchange=()=>{if($('editCover').value.trim()&&!/^https:\/\//i.test($('editCover').value.trim()))loadCoverMedia(false,true)};
+function syncEditorSection(){const work=$('editSection').value==='work';$('workMetadata').hidden=!work;$('editCover').required=work;$('editSummary').required=work;if(!work)closeCoverPicker()}
+function fillNoteEditor(n){if(editingPath!==n.path)for(const picker of pickers.values())if(picker.prefix==='edit')$(picker.search).value='';resetCoverPicker();editingPath=n.path;const m=noteMeta(n);for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);if(key==='featured')input.checked=!!m[key];else input.value=Array.isArray(m[key])?m[key].join(', '):m[key]??''}editorInitial=editorValues();editorDirty=false;refreshPickers('edit');$('editorPath').textContent=n.path;$('editorHint').textContent='完成后点击“应用此篇设置”，再保存或分析。';syncEditorSection();$('noteEditor').hidden=false;renderCoverSelected();syncButtons();if(m.section==='work'&&m.cover&&!/^https:\/\//i.test(m.cover))loadCoverMedia(false,true)}
 function openNoteEditor(path){if(editorDirty&&editingPath!==path){message('当前发布设置尚未应用，请先应用或关闭编辑。',true);return}const n=notes.find(n=>n.path===path);if(!n)return;if(editingPath!==path||!editorDirty)fillNoteEditor(n);$('noteEditor').scrollIntoView({block:'nearest'});$('editTitle').focus({preventScroll:true})}
-function closeNoteEditor(){editingPath=null;editorInitial=null;editorDirty=false;$('noteEditor').hidden=true;syncButtons()}
+function closeNoteEditor(){resetCoverPicker();editingPath=null;editorInitial=null;editorDirty=false;$('noteEditor').hidden=true;syncButtons()}
 function setNoteOverride(path,patch,invalidateNow=true){noteMetadata[path]={...(noteMetadata[path]||{}),...patch};metadataDirty.add(path);if(invalidateNow)changed()}
-$('noteEditor').oninput=event=>{if(event.target.classList.contains('picker-search'))return;editorDirty=true;syncEditorSection();$('editorHint').textContent='有未应用的编辑，请先应用此篇设置。';syncButtons()};
-$('noteEditor').onsubmit=event=>{event.preventDefault();if(!$('noteEditor').reportValidity())return;const values=editorValues(),patch=Object.fromEntries(Object.entries(values).filter(([key,value])=>JSON.stringify(value)!==JSON.stringify(editorInitial[key])));if(Object.keys(patch).length)setNoteOverride(editingPath,patch);editorDirty=false;fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('此篇发布设置已应用，请保存或分析本次副本。')};
+$('noteEditor').oninput=event=>{if(event.target.classList.contains('picker-search')||event.target.closest('#coverPicker'))return;editorDirty=true;syncEditorSection();$('editorHint').textContent='有未应用的编辑，请先应用此篇设置。';syncButtons()};
+$('noteEditor').onsubmit=event=>{event.preventDefault();if(!$('noteEditor').reportValidity())return;const values=editorValues(),patch=Object.fromEntries(Object.entries(values).filter(([key,value])=>JSON.stringify(value)!==JSON.stringify(editorInitial[key])));if(coverPolicy&&values.cover===coverPolicy.value&&values.section==='work'){assetModes[coverPolicy.path]=coverPolicy.mode;changed()}if(Object.keys(patch).length)setNoteOverride(editingPath,patch);editorDirty=false;fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('此篇发布设置已应用，请保存或分析本次副本。')};
 $('noteMetaClose').onclick=closeNoteEditor;
 $('noteMetaReset').onclick=()=>{if(!editingPath)return;noteMetadata[editingPath]=null;metadataDirty.add(editingPath);editorDirty=false;changed();fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('已恢复为笔记原属性，请保存或分析本次副本。')};
 $('batchSetSeries').onchange=syncButtons;$('batchSetCategory').onchange=syncButtons;

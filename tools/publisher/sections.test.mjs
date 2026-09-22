@@ -24,7 +24,9 @@ function elements(html, predicate) {
 }
 
 test('published sections build into real lists, stable detail pages, exact tags and the search index', { timeout: 300000 }, async t => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'publisher-sections-'));
+  // Keep Windows path spelling consistent: DOS-short TEMP paths can make Vite lose CSS dependencies.
+  const tempBase = process.platform === 'win32' && process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Temp') : os.tmpdir();
+  const root = await fs.mkdtemp(path.join(tempBase, 'publisher-sections-'));
   const site = path.join(root, 'site'), vault = path.join(root, 'vault'), state = path.join(root, 'private');
   const junctions = [];
   let browser, server;
@@ -33,7 +35,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
     if (server) await new Promise(resolve => { server.close(resolve); server.closeAllConnections(); });
     // Remove junctions themselves before recursive cleanup; their targets belong to the real project.
     for (const junction of junctions) await fs.unlink(junction).catch(error => { if (error.code !== 'ENOENT') throw error; });
-    assert.equal(path.dirname(root), os.tmpdir());
+    assert.equal(path.dirname(root), tempBase);
     assert.ok(path.basename(root).startsWith('publisher-sections-'));
     await fs.rm(root, { recursive: true, force: true, maxRetries: 4, retryDelay: 200 });
   });
@@ -47,7 +49,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   }
   for (const name of ['favicon.svg', 'og.png', 'robots.txt', '.nojekyll']) await fs.copyFile(path.join(project, 'public', name), path.join(site, 'public', name));
   const config = path.join(site, 'astro.config.mjs');
-  await fs.writeFile(config, (await fs.readFile(config, 'utf8')).replace('export default defineConfig({', 'export default defineConfig({\n  vite: { cacheDir: ".vite-section-test" },'));
+  await fs.writeFile(config, (await fs.readFile(config, 'utf8')).replace('export default defineConfig({', 'export default defineConfig({\n  cacheDir: "./.astro-section-test",\n  vite: { cacheDir: ".vite-section-test" },'));
 
   const sources = {
     'Journal/Deep/Journal.md': '# journalfixtureword\n\nPublished journal body.',
@@ -108,6 +110,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   const dist = path.join(site, 'dist');
   const html = route => fs.readFile(path.join(dist, route, 'index.html'), 'utf8');
   const [journal, study, work, home, rss, feed] = await Promise.all([html('notes'), html('tutorials'), html('work'), html(''), fs.readFile(path.join(dist, 'rss.xml'), 'utf8'), fs.readFile(path.join(dist, 'feed.xml'), 'utf8')]);
+  for (const source of [journal,study,work,home]) assert.match(source,/rel="stylesheet"/,'Index pages must retain their production styles');
   for (const source of [journal,study,work]) {
     const categories=elements(source,(a,n)=>n.tagName==='button'&&Object.hasOwn(a,'data-category')).map(n=>attrs(n)['data-category']);
     assert.ok(categories.includes('图形学基础'));
@@ -140,6 +143,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.equal(attrs(elements(projectTile, a => Object.hasOwn(a, 'data-work-cover'))[0]).src, coverUrl);
   for (const name of selected) {
     const page = await html('notes/' + slug(name));
+    assert.match(page,/rel="stylesheet"/,name+' must retain its detail styles');
     assert.ok(elements(page, a => a.rel === 'canonical' && a.href === 'https://xueqingzhe.github.io' + url(name)).length);
     assert.ok(!page.includes('DO_NOT_EXPORT_SECTION_TEST_SECRET'));
     assert.ok(!page.includes('publisher-asset:'));

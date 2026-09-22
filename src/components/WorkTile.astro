@@ -1,11 +1,12 @@
 ---
 import { labelOf } from '../data/taxonomy';
-interface Props { index:number;slug:string;href?:string;title:string;summary:string;cover:string;coverAlt?:string;engine?:string[];tech?:string[];year:number;status?:string;glow?:string;layout?:string; }
-const {index,slug,href=`/work/${slug}/`,title,summary,cover,coverAlt,engine=[],tech=[],year,status,layout='standard'}=Astro.props;
+interface Props { index:number;slug:string;href?:string;title:string;summary:string;cover:string;coverAlt?:string;coverVideo?:string;engine?:string[];tech?:string[];year:number;status?:string;glow?:string;layout?:string; }
+const {index,slug,href=`/work/${slug}/`,title,summary,cover,coverAlt,coverVideo,engine=[],tech=[],year,status,layout='standard'}=Astro.props;
 ---
 <a class:list={['work-tile',`work-${layout}`]} href={href} data-artwork data-work-key={slug}>
   <div class="work-image" data-gallery-frame>
-    <div class="work-image-plane"><img src={cover} alt={coverAlt||title} width="960" height="600" loading="lazy" decoding="async" data-work-cover data-work-key={slug}/></div>
+    <div class="work-image-plane"><img src={cover} alt={coverAlt||title} width="960" height="600" loading="lazy" decoding="async" data-work-cover data-work-key={slug}/>{coverVideo&&<video class="work-video-preview" data-work-preview data-video-src={coverVideo} muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" disablepictureinpicture disableremoteplayback></video>}</div>
+    {coverVideo&&<span class="work-video-label"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 4 6 4-6 4V4Z"/></svg>动态作品</span>}
     <span class="work-reflection" aria-hidden="true"></span>
     <span class="work-aperture" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <span class="work-inspect" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="8"/><circle cx="14" cy="14" r="2.5"/><path d="M14 2v4m0 16v4M2 14h4m16 0h4"/></svg><span>查看作品<small>INSPECT</small></span></span>
@@ -17,7 +18,11 @@ const {index,slug,href=`/work/${slug}/`,title,summary,cover,coverAlt,engine=[],t
     <div class="work-bottom"><span class="work-tech">{tech.slice(0,3).map(t=>labelOf('tech',t)).join(' · ')}</span><span class="work-read"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.15" aria-hidden="true"><path d="M2 10s3-5 8-5 8 5 8 5-3 5-8 5-8-5-8-5Z"/><circle cx="10" cy="10" r="2.2"/></svg><span>{status==='wip'?'查看进展':'阅读项目'}</span></span></div>
   </div>
 </a>
+<script>
+  import '../scripts/work-video-previews';
+</script>
 <style>
+  .work-video-preview{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;opacity:0;transition:opacity .25s;background:var(--surface-2)}.work-tile[data-video-playing] .work-video-preview{opacity:1}.work-video-label{position:absolute;left:21px;bottom:21px;display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:20px;color:#fff;background:#131c25bc;font-size:10px;line-height:1.5;pointer-events:none}.work-video-label svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.1}:global(html[data-work-navigation]) .work-video-preview{opacity:0!important;transition:none!important}
   .work-tile{display:flex;flex-direction:column;min-width:0;text-decoration:none;color:var(--ink);outline-offset:9px;--frame-rx:0deg;--frame-ry:0deg;--light-x:50%;--light-y:45%;--inspect-x:77%;--inspect-y:76%}
   .work-image{position:relative;aspect-ratio:8/5;padding:9px;border:1px solid var(--line);background:var(--surface);isolation:isolate;transform:perspective(1100px) rotateX(var(--frame-rx)) rotateY(var(--frame-ry));transform-origin:50% 50%;box-shadow:0 8px 28px -24px color-mix(in srgb,var(--ink) 45%,transparent);transition:box-shadow .45s,border-color .35s}
   .work-image-plane{position:absolute;inset:9px;background:var(--surface-2);overflow:hidden}

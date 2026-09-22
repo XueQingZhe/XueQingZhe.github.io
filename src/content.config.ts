@@ -49,6 +49,7 @@ const work = defineCollection({
     summary: z.string(),
     /** 16:9 封面，建议统一 1600×900 */
     cover: z.string(),
+    coverVideo: z.string().optional(),
     coverAlt: z.string().optional(),
 
     media: z.array(mediaItem).default([]),
@@ -101,7 +102,7 @@ const articleSchema = z.object({
   legacyUrl: z.string().optional(),
   kind: z.enum(['article','tutorial','work']).default('article'), track: z.string().optional(),
   section: z.enum(['notes','tutorials','work']).optional(),
-  cover: z.string().optional(), coverAlt: z.string().optional(),
+  cover: z.string().optional(), coverAlt: z.string().optional(), coverVideo: z.string().optional(),
   engine: z.array(z.string()).default([]), role: z.array(z.string()).default([]),
   year: z.number().int().min(2000).max(2100).optional(),
   featured: z.boolean().default(false), status: z.enum(['wip','shipped']).default('shipped'),

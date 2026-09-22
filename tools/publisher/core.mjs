@@ -232,7 +232,12 @@ export class Publisher {
     const scanned = await this.scan();
     const selected = [...this.db.selected];
     if (selected.some(s => !this.notes.some(n => n.path === s && !n.blocked))) throw Error('已选笔记缺失或被标记为草稿，请重新检查选择');
-    const set = new Set(selected), assets = new Map(), sources = new Map(), output = [], errors = [], warnings = [];
+    const set = new Set(selected), assets = new Map(), sources = new Map(), output = [], errors = [], warnings = [], assetDefaults = {};
+    // MOV/M4V covers need a browser-compatible copy. An explicit strategy still wins.
+    for (const rel of selected) {
+      const cover = this.notes.find(note => note.path === rel)?.metadata.cover;
+      if (cover && !/^https:\/\//i.test(cover)) try { const file = await this.resolve(cover, rel); if (['.mov', '.m4v'].includes(path.extname(file).toLowerCase())) assetDefaults[file] = 'video'; } catch { /* Report unresolved covers with their note below. */ }
+    }
     const read = async rel => { if (!sources.has(rel)) sources.set(rel, await fs.readFile(await this.bounded(rel), 'utf8')); return frontmatter(sources.get(rel)); };
     const noteLink = async (target, source) => {
       const rel = await this.resolve(target, source, true);
@@ -257,8 +262,8 @@ export class Publisher {
       const rel = await this.resolve(target, source), ext = path.extname(rel).toLowerCase();
       if (!mediaExts.has(ext)) throw Error(`不支持直接发布此附件类型：${ext}`);
       const full = await this.bounded(rel), data = await fs.readFile(full), digest = hash(data);
-      const key = digest + ':' + (this.db.assets[rel] ?? 'lossless');
-      if (!assets.has(key)) assets.set(key, { key, path: rel, digest, bytes: data.length, mode: this.db.assets[rel] ?? 'lossless', ext, sources: [rel], referencedBy: [source] });
+      const mode = this.db.assets[rel] ?? assetDefaults[rel] ?? 'lossless', key = digest + ':' + mode;
+      if (!assets.has(key)) assets.set(key, { key, path: rel, digest, bytes: data.length, mode, ext, sources: [rel], referencedBy: [source] });
       else { const a = assets.get(key); if (!a.sources.includes(rel)) a.sources.push(rel); if (!a.referencedBy.includes(source)) a.referencedBy.push(source); }
       return { type: 'image', url: `publisher-asset:${key}`, alt: '' };
     };
@@ -355,23 +360,32 @@ export class Publisher {
         if (!data.date && !Object.hasOwn(this.db.entries[rel].metadata ?? {}, 'date')) warnings.push(`${rel}：没有 date，采用首次登记日期 ${metadata.date}`);
         if (metadata.section === 'work' && (!metadata.cover || !metadata.summary)) throw Error('作品与实践需要填写封面和摘要，请在发布设置中补充');
         if (metadata.section === 'work' && (!Number.isInteger(metadata.year) || metadata.year < 2000 || metadata.year > 2100)) throw Error('作品年份必须在 2000 至 2100 之间，请在发布设置中补充作品年份');
-        let cover = metadata.cover;
+        let cover = metadata.cover, coverVideo = '';
         if (cover && !/^https:\/\//i.test(cover)) {
           const resolved = await this.resolve(cover, rel);
-          if (!imageExts.has(path.extname(resolved).toLowerCase())) throw Error('封面必须是图片附件');
-          if (this.db.assets[resolved] === 'video') throw Error('封面不能转为视频，请为封面选择保留原件或静态图片压缩');
-          cover = (await media(cover, rel)).url;
+          const ext = path.extname(resolved).toLowerCase();
+          if (!imageExts.has(ext) && !videoExts.has(ext)) throw Error('封面必须是图片或视频附件');
+          const item = await media(cover, rel), asset = assets.get(item.url.slice('publisher-asset:'.length));
+          if (videoExts.has(ext)) {
+            asset.coverVideo = true;
+            if (!await this.ffmpeg()) throw Error('视频封面需要 FFmpeg 生成静态封面，请安装视频工具或改选图片');
+            if (['.mov', '.m4v'].includes(ext) && asset.mode !== 'video') throw Error('MOV / M4V 视频封面需要转为 MP4，请在附件审核中选择“转为 MP4”');
+            coverVideo = item.url; cover = `publisher-poster:${asset.key}`;
+          } else {
+            if (asset.mode === 'video') throw Error('图片封面不能转为视频，请为封面选择保留原件或静态图片压缩');
+            cover = item.url;
+          }
         } else if (cover) warnings.push(`${rel}：外部封面 ${cover} 保留为外链，未下载`);
         const tree = await convert(rel);
         const kind = { notes: 'article', tutorials: 'tutorial', work: 'work' }[metadata.section];
         const { engine, role, year, featured, ...commonMetadata } = metadata;
-        const meta = { ...commonMetadata, cover, kind, contentId: item.id, draft: false, tech: metadata.tags, ...(metadata.section === 'work' ? { engine, role, year, featured } : {}), ...(typeof data.review_status === 'string' ? { review_status: data.review_status } : {}) };
+        const meta = { ...commonMetadata, cover, ...(coverVideo ? { coverVideo } : {}), kind, contentId: item.id, draft: false, tech: metadata.tags, ...(metadata.section === 'work' ? { engine, role, year, featured } : {}), ...(typeof data.review_status === 'string' ? { review_status: data.review_status } : {}) };
         const markdown='---\n'+YAML.stringify(meta)+'---\n\n'+writer.stringify(tree);
         output.push({ id: item.id, slug: item.slug, title: metadata.title, path: rel, section: metadata.section, kind, metadata, metadataDigest: hash(JSON.stringify(metadata)), digest: item.digest, renderDigest:hash(markdown), markdown });
       } catch (e) { errors.push({ path: rel, message: e.message }); }
     }
     const previous = await this.manifest();
-    const plan = { id: crypto.randomUUID(), selected, output, assets: [...assets.values()], sources: [...sources].map(([rel, raw]) => ({ path: rel, digest: hash(raw) })), errors, warnings: [...new Set(warnings)], changes: { added: output.filter(n => !previous.notes[n.id]).map(n => n.title), updated: output.filter(n => previous.notes[n.id] && previous.notes[n.id].renderDigest !== n.renderDigest).map(n => n.title), removed: Object.entries(previous.notes).filter(([id]) => !output.some(n => n.id === id)).map(([, n]) => n.title) } };
+    const plan = { id: crypto.randomUUID(), selected, output, assets: [...assets.values()], assetDefaults, sources: [...sources].map(([rel, raw]) => ({ path: rel, digest: hash(raw) })), errors, warnings: [...new Set(warnings)], changes: { added: output.filter(n => !previous.notes[n.id]).map(n => n.title), updated: output.filter(n => previous.notes[n.id] && previous.notes[n.id].renderDigest !== n.renderDigest).map(n => n.title), removed: Object.entries(previous.notes).filter(([id]) => !output.some(n => n.id === id)).map(([, n]) => n.title) } };
     plan.catalog = scanned.catalog;
     this.plans.set(plan.id, plan); return plan;
   }
@@ -391,10 +405,10 @@ export class Publisher {
     for (const s of [...plan.sources, ...plan.assets.flatMap(a => a.sources.map(p => ({ path: p, digest: a.digest })))]) {
       if (hash(await fs.readFile(await this.bounded(s.path))) !== s.digest) throw Error('源文件已变化，请重新分析并审核');
     }
-    for (const a of plan.assets) if (a.sources.some(s => (this.db.assets[s] ?? 'lossless') !== a.mode)) throw Error('压缩策略已改变，请重新分析');
+    for (const a of plan.assets) if (a.sources.some(s => (this.db.assets[s] ?? plan.assetDefaults?.[s] ?? 'lossless') !== a.mode)) throw Error('压缩策略已改变，请重新分析');
   }
   async transform(asset) {
-    const key = hash('v1:' + asset.key), cache = path.join(this.state, 'cache', key);
+    const key = hash((asset.coverVideo ? 'cover-v1:' : 'v1:') + asset.key), cache = path.join(this.state, 'cache', key);
     const manifest = path.join(cache, 'result.json');
     if (await exists(manifest)) return { ...JSON.parse(await fs.readFile(manifest, 'utf8')), cache, reused: true };
     await fs.mkdir(cache, { recursive: true });
@@ -418,7 +432,8 @@ export class Publisher {
         if (candidate.length < original.length) { data = candidate; ext = '.webp'; }
       }
     }
-    if(videoExts.has(ext)&&!poster){const exe=await this.ffmpeg();if(exe){poster=`${key}-poster.jpg`;await run(exe,['-nostdin','-y','-i',input,'-frames:v','1','-vf','scale=640:-2',path.join(cache,poster)]);}}
+    if(videoExts.has(ext)&&!poster){const exe=await this.ffmpeg();if(exe){poster=`${key}-poster.jpg`;await run(exe,['-nostdin','-y','-i',input,'-frames:v','1','-vf',asset.coverVideo?'scale=1280:720:force_original_aspect_ratio=decrease':'scale=640:-2',path.join(cache,poster)]);}}
+    if (asset.coverVideo && !poster) throw Error('无法生成视频封面的静态图片，请检查 FFmpeg 后重新生成');
     const filename = key + ext;
     await fs.writeFile(path.join(cache, filename), data);
     const result = { filename, bytes: data.length, originalBytes: asset.bytes, poster, video: videoExts.has(ext) };
@@ -439,8 +454,11 @@ export class Publisher {
     }
     for (const note of plan.output) {
       let md = note.markdown;
-      for (const a of transformed) md = md.replaceAll(`publisher-asset:${a.key}`, '/published-assets/' + a.filename);
-      if (md.includes('publisher-asset:')) throw Error('存在未解析附件');
+      for (const a of transformed) {
+        md = md.replaceAll(`publisher-asset:${a.key}`, '/published-assets/' + a.filename);
+        if (a.poster) md = md.replaceAll(`publisher-poster:${a.key}`, '/published-assets/' + a.poster);
+      }
+      if (md.includes('publisher-asset:') || md.includes('publisher-poster:')) throw Error('存在未解析附件或视频封面');
       await fs.writeFile(path.join(dir, 'notes', note.slug + '.md'), md);
     }
     await this.verify(plan);
@@ -510,7 +528,7 @@ export class Publisher {
         if (preview.had) await fs.rename(path.join(this.site, 'dist'), preview.backup);
         await fs.rename(preview.prepared, path.join(this.site, 'dist'));
       }
-      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, metadataDigest: n.metadataDigest, renderDigest:n.renderDigest }])), assets: stage.transformed.map(a => a.filename), generatedAt: new Date().toISOString() };
+      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, metadataDigest: n.metadataDigest, renderDigest:n.renderDigest }])), assets: stage.transformed.flatMap(a => [a.filename, ...(a.poster ? [a.poster] : [])]), generatedAt: new Date().toISOString() };
       await fs.writeFile(path.join(this.state, 'current.json'), JSON.stringify(current));
       await fs.rm(path.join(this.state, 'transaction.json'));
       if (preview) await fs.rm(preview.backup, { recursive: true, force: true }).catch(() => {});

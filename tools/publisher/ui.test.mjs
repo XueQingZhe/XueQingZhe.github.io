@@ -37,7 +37,7 @@ test('publisher UI preserves pending choices, filters root notes, locks review, 
   releaseAnalysis();await page.waitForFunction(()=>!document.querySelector('#prepare').disabled);
   await page.locator('#prepare').click();await page.waitForFunction(()=>!document.querySelector('#apply').disabled);
   assert.match(await page.locator('#preview').innerText(),/Public review/);
-  page.on('dialog',dialog=>dialog.accept());await page.locator('#apply').click();
+  await page.locator('#apply').click();await page.locator('#applyReview').waitFor({state:'visible'});await page.locator('#applyConfirm').click();
   await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('网站副本与搜索索引已更新'));
   assert.equal(await page.locator('#apply').isDisabled(),true);assert.equal(await page.locator('#prepare').isDisabled(),true);
   assert.match(await page.locator('#review').innerText(),/本地网站已更新/);assert.deepEqual(errors,[]);

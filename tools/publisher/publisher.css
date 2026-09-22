@@ -212,6 +212,12 @@ summary { color: #c4d4df; cursor: pointer; }
   overflow-wrap: anywhere;
 }
 .asset-hint { color: #9fb5c5; font-size: 11px; line-height: 1.8; margin: 8px 0 0; overflow-wrap: anywhere; }
+.local-write-status { margin: 14px 0 0; padding: 11px 13px; border: 1px solid var(--line); border-radius: 6px; background: var(--control); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.local-write-status[data-phase=working] { border-color: #648e7d; color: #daebe9; }
+.local-write-status[data-phase=error] { border-color: #76534e; background: #37282b; color: var(--danger); }
+.local-write-status[data-phase=success] { border-color: #45715b; background: #1d3931; color: #c8eed6; }
+.local-write-review { margin-top: 14px; padding: 16px; border: 1px solid #648e7d; border-radius: 6px; background: #202e29; }
+.local-write-review h3 { margin-top: 0; }
 .asset img { border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
 
 .publish-panel { border-color: #52665f; background: #1c2622; }

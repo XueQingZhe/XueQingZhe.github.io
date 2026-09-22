@@ -31,7 +31,7 @@
 <div class="field metadata-wide"><span>职责</span><input id="editRole" type="hidden"><div id="editRolePicker" class="term-picker"></div></div>
 <label class="field">作品年份<input id="editYear" type="number" min="2000" max="2100" step="1"></label>
 <label class="field"><span><input id="editFeatured" type="checkbox"> 精选作品</span></label></div></div>
-<p id="editorHint" class="asset-hint" role="status"></p><div class="actions"><button type="submit" id="noteMetaApply" class="primary">应用此篇设置</button><button type="button" id="noteMetaReset">恢复笔记原属性</button></div></form><h2>本次变更与附件审核</h2><div id="review"><div class="empty">尚未分析本次副本。</div></div><div class="actions"><button id="prepare" class="primary" disabled>生成待预览副本</button><button id="apply" disabled>确认写入本地网站</button><a id="sitePreview" href="__PREVIEW_URL__" target="_blank" rel="noreferrer" style="align-self:center">打开网站预览</a></div><p style="font-size:11px">“写入本地网站”仅更新本机副本，包含已确认的撤回；不会提交 Git 或执行部署。</p><div id="staged" hidden><h3>正文副本检查</h3><select id="previewNote" aria-label="选择预览正文"></select><pre id="preview" tabindex="0"></pre></div></section></div>
+<p id="editorHint" class="asset-hint" role="status"></p><div class="actions"><button type="submit" id="noteMetaApply" class="primary">应用此篇设置</button><button type="button" id="noteMetaReset">恢复笔记原属性</button></div></form><h2>本次变更与附件审核</h2><div id="review"><div class="empty">尚未分析本次副本。</div></div><div class="actions"><button id="prepare" class="primary" disabled>生成待预览副本</button><button id="apply" disabled>确认写入本地网站</button><a id="sitePreview" href="__PREVIEW_URL__" target="_blank" rel="noreferrer" style="align-self:center">打开网站预览</a></div><p style="font-size:11px">“写入本地网站”仅更新本机副本，包含已确认的撤回；不会提交 Git 或执行部署。</p><p id="applyStatus" class="local-write-status" role="status" aria-live="polite">先分析本次副本，再审核附件并生成待预览副本。</p><section id="applyReview" class="local-write-review" aria-labelledby="applyReviewTitle" hidden><h3 id="applyReviewTitle">写入前确认</h3><p id="applySummary"></p><p class="asset-hint">将更新本地网站与搜索索引，原笔记保留。这里不会上传到 GitHub。</p><div class="actions"><button type="button" id="applyConfirm" class="primary">开始写入本地网站</button><button type="button" id="applyCancel">暂不写入</button></div></section><div id="staged" hidden><h3>正文副本检查</h3><select id="previewNote" aria-label="选择预览正文"></select><pre id="preview" tabindex="0"></pre></div></section></div>
 <section class="panel publish-panel" aria-labelledby="publishTitle">
 <div class="publish-heading"><div><h2 id="publishTitle">预览满意，就让文章上线</h2><p>先写入本地网站，再发布已审核的文章与附件。部署完成后，线上网站会自动更新。</p></div><button id="publishReview" class="primary">发布到 GitHub Pages</button></div>
 <ol class="deploy-steps" aria-label="发布步骤"><li data-deploy-step="check">检查网站</li><li data-deploy-step="push">上传更新</li><li data-deploy-step="build">云端构建</li><li data-deploy-step="pages">上线完成</li></ol>
@@ -45,6 +45,7 @@ const token='__TOKEN__', $=id=>document.getElementById(id);let notes=[],selected
 let approvedAssets=new Set(),compatible=true;
 let termCatalog={tags:[],categories:[],series:[],engine:[],role:[]};
 const pickers=new Map();
+let applyReviewId=null,localWrite={phase:'idle',message:''};
 let noteMetadata={},metadataDirty=new Set(),editingPath=null,editorInitial=null,editorDirty=false;
 const expandedFolders=new Map();
 const sectionLabels={notes:'渲染手记',tutorials:'学习系列',work:'作品与实践'};
@@ -73,6 +74,9 @@ function syncButtons(){
   for(const id of ['editCover','editEngine','editRole','editYear','editFeatured'])$(id).disabled=busy||$('editSection').value!=='work';
   $('prepare').disabled=busy||editorDirty||!plan||plan.errors.length>0||plan.assets.some(a=>!approvedAssets.has(approvalId(a)));
   $('apply').disabled=busy||editorDirty||!stage;
+  $('applyConfirm').disabled=busy||editorDirty||!stage||applyReviewId!==stage.id;
+  $('applyReview').hidden=!stage||applyReviewId!==stage.id;
+  renderWriteStatus();
   $('deployConfirm').disabled=busy||editorDirty||!deployReview?.canPublish;
   $('deployRefresh').disabled=statusFetching;
   if($('assetApplyMode')){
@@ -87,7 +91,23 @@ function syncButtons(){
     $('assetBatchHint').textContent=matches.length>eligible.length?`此策略适用 ${eligible.length} 项，另外 ${matches.length-eligible.length} 项类型不适用，会保留当前设置。`:'批量操作只影响当前筛选结果。设置压缩方式后，再确认这组附件。';
   }
 }
-function invalidate(){plan=null;stage=null;approvedAssets.clear();deployReview=null;$('deployReview').hidden=true;$('staged').hidden=true;$('preview').textContent='';$('review').replaceChildren(el('div','选择或策略已变化，请重新分析。','empty'));syncButtons()}
+function resetWriteReview(){applyReviewId=null;localWrite={phase:'idle',message:''};$('applyReview').hidden=true}
+function renderWriteStatus(){
+  let hint=localWrite.message;
+  if(!hint){
+    if(!compatible)hint='发布服务版本已更新，请重新打开文章发布管理器。';
+    else if(editorDirty)hint='这篇文章还有未应用的设置，请先应用或放弃编辑，再继续写入。';
+    else if(deployState.busy)hint='正在发布线上网站，请等待部署完成后再写入。';
+    else if(working)hint='正在处理当前操作，请稍候。';
+    else if(stage)hint=applyReviewId===stage.id?'请核对下面的写入与撤回数量，再开始写入。':'副本已就绪。检查正文后，点击“确认写入本地网站”。';
+    else if(!plan)hint='先分析本次副本，再审核附件并生成待预览副本。';
+    else if(plan.errors.length)hint='分析发现问题，请先修正上方列出的问题并重新分析。';
+    else {const remaining=plan.assets.filter(a=>!approvedAssets.has(approvalId(a))).length;hint=remaining?`还有 ${remaining} 项附件未确认。审核后生成待预览副本，才能写入网站。`:'附件已审核。请先点击“生成待预览副本”，再确认写入网站。'}
+  }
+  $('applyStatus').textContent=hint;$('applyStatus').dataset.phase=localWrite.phase;
+  $('apply').title=hint;$('apply').setAttribute('aria-describedby','applyStatus');
+}
+function invalidate(){plan=null;stage=null;resetWriteReview();approvedAssets.clear();deployReview=null;$('deployReview').hidden=true;$('staged').hidden=true;$('preview').textContent='';$('review').replaceChildren(el('div','选择或策略已变化，请重新分析。','empty'));syncButtons()}
 function changed(){selectionDirty=true;invalidate()}
 function pickerScope(prefix){
   if(prefix==='edit')return $('editSection').value;
@@ -249,7 +269,7 @@ function filteredAssets(){
   });
   return matches.sort((a,b)=>sort==='size-asc'?a.bytes-b.bytes:sort==='name'?a.path.localeCompare(b.path,'zh-CN'):b.bytes-a.bytes);
 }
-function clearAssetStage(){stage=null;$('staged').hidden=true;$('assetResults')?.remove();deployReview=null;$('deployReview').hidden=true}
+function clearAssetStage(){stage=null;resetWriteReview();$('staged').hidden=true;$('assetResults')?.remove();deployReview=null;$('deployReview').hidden=true}
 function showPlan(){
   const box=$('review');box.replaceChildren();
   for(const [key,title]of [['added','新增'],['updated','修改'],['removed','撤回']]){box.append(el('h3',title+' · '+plan.changes[key].length));plan.changes[key].forEach(t=>box.append(el('div',t,'change')))}
@@ -324,7 +344,7 @@ function renderAssets(){
   syncButtons();
 }
 $('rescan').onclick=()=>job(async()=>{invalidate();await scan(true)});['search','folder','only','candidate','includeSubfolders','noteSection','noteCategory'].forEach(id=>$(id).addEventListener('input',()=>{expandedFolders.clear();render()}));$('selectVisible').onclick=()=>{visible().filter(n=>!n.blocked).forEach(n=>selected.add(n.path));changed();render()};$('clearVisible').onclick=()=>{visible().forEach(n=>selected.delete(n.path));changed();render()};$('save').onclick=()=>job(async()=>{await save();message('选择与发布设置已保存，尚未生成网站副本。')});$('analyze').onclick=()=>job(async()=>{invalidate();await save();message('正在检查正文与引用…');plan=await analyzeAssets();showPlan();message(plan.errors.length?'分析发现问题，请修正后重新分析。':'分析完成。可以按类型、大小筛选附件，批量设置压缩方式并确认，再生成副本。',plan.errors.length>0)});
-$('prepare').onclick=()=>job(async()=>{message('正在生成媒体和正文副本，大视频可能需要几分钟…');stage=await api('prepare',{id:plan.id,approved:plan.assets.filter(a=>approvedAssets.has(approvalId(a))).map(a=>a.key)});const before=stage.assets.reduce((s,a)=>s+a.originalBytes,0),after=stage.assets.reduce((s,a)=>s+a.bytes,0);message(`待预览副本已生成：${stage.notes.length} 篇，媒体 ${size(before)} → ${size(after)}。尚未写入网站。`);showAssetResults();$('staged').hidden=!stage.notes.length;$('previewNote').replaceChildren();stage.notes.forEach(n=>$('previewNote').add(new Option(n.title,n.slug)));if(stage.notes.length)await preview()});
+$('prepare').onclick=()=>job(async()=>{resetWriteReview();message('正在生成媒体和正文副本，大视频可能需要几分钟…');stage=await api('prepare',{id:plan.id,approved:plan.assets.filter(a=>approvedAssets.has(approvalId(a))).map(a=>a.key)});const before=stage.assets.reduce((s,a)=>s+a.originalBytes,0),after=stage.assets.reduce((s,a)=>s+a.bytes,0);message(`待预览副本已生成：${stage.notes.length} 篇，媒体 ${size(before)} → ${size(after)}。尚未写入网站。`);showAssetResults();$('staged').hidden=!stage.notes.length;$('previewNote').replaceChildren();stage.notes.forEach(n=>$('previewNote').add(new Option(n.title,n.slug)));if(stage.notes.length)await preview()});
 function showAssetResults(){
   $('assetResults')?.remove();if(!stage.assets.length)return;
   const details=el('details');details.id='assetResults';details.append(el('summary',`查看 ${stage.assets.length} 项附件的实际处理结果`));
@@ -335,7 +355,30 @@ function showAssetResults(){
   $('review').append(details);
 }
 async function preview(){const r=await api('stage?id='+encodeURIComponent(stage.id)+'&slug='+encodeURIComponent($('previewNote').value));$('preview').textContent=r.markdown}$('previewNote').onchange=()=>job(preview);
-$('apply').onclick=()=>job(async()=>{if(!confirm(`确认写入 ${stage.notes.length} 篇本地网站副本？\n撤回 ${stage.changes.removed.length} 篇。\n原笔记不变，不执行上传。`))return;message('正在校验构建并更新本地网站与搜索索引…');const r=await api('apply',{id:stage.id});invalidate();$('review').replaceChildren(el('div','本地网站已更新。修改选择后可再次分析。','empty'));await scan();message(r.message+' 预览满意后，点击下方“发布到 GitHub Pages”。')});
+$('apply').onclick=()=>{
+  if(working||deployState.busy||editorDirty||!stage||!compatible)return;
+  applyReviewId=stage.id;localWrite={phase:'idle',message:''};
+  $('applySummary').textContent=`本次写入 ${stage.notes.length} 篇文章、${stage.assets.length} 项附件；撤回 ${stage.changes.removed.length} 篇文章。`;
+  syncButtons();$('applyReview').scrollIntoView({block:'nearest'});$('applyConfirm').focus({preventScroll:true});
+};
+$('applyCancel').onclick=()=>{resetWriteReview();syncButtons();$('apply').focus()};
+$('applyConfirm').onclick=()=>{
+  if(!stage||applyReviewId!==stage.id||editorDirty||working||deployState.busy||!compatible)return;
+  const id=stage.id;
+  job(async()=>{
+    const started=Date.now(),progress=()=>{localWrite={phase:'working',message:`正在校验构建并更新本地网站与搜索索引…已等待 ${Math.floor((Date.now()-started)/1000)} 秒。完成后会在这里显示结果。`};renderWriteStatus()};
+    progress();message('正在校验构建并更新本地网站与搜索索引…');
+    const ticker=setInterval(progress,1000);let result;
+    try{result=await api('apply',{id})}
+    catch(error){localWrite={phase:'error',message:`写入未完成：${error.message}。可检查原因后重试；若服务连接中断，请先查看本地预览是否已更新。`};message(localWrite.message,true);return}
+    finally{clearInterval(ticker)}
+    invalidate();$('review').replaceChildren(el('div','本地网站已更新。修改选择后可再次分析。','empty'));
+    localWrite={phase:'success',message:result.message+' 点击“打开网站预览”检查效果。'};renderWriteStatus();
+    try{await scan();message(result.message+' 预览满意后，点击下方“发布到 GitHub Pages”。')}
+    catch(error){localWrite.message=result.message+' 目录刷新失败：'+error.message+'。写入已完成，可打开网站预览，稍后重新扫描目录。';message(localWrite.message,true)}
+    renderWriteStatus();
+  });
+};
 function deployLink(id,value){const a=$(id);try{const url=new URL(value);if(url.protocol!=='https:')throw Error();a.href=url.href;a.hidden=false}catch{a.hidden=true;a.removeAttribute('href')}}
 function showDeployment(status){
   deployState=status;const box=$('deployStatus');box.textContent=status.message||'本地修改准备好后，即可发布。';box.dataset.phase=status.phase||'idle';

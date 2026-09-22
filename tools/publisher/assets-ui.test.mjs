@@ -43,7 +43,7 @@ async function setup(t, { ffmpeg = false, viewport } = {}) {
     let raw = ''; for await (const chunk of req) raw += chunk;
     const data = JSON.parse(raw || '{}'); mock.calls.push({ url: req.url, method: req.method, data });
     if (req.url === '/api/deploy/status') return send({ busy: false, phase: 'idle', message: '尚无发布任务。' });
-    if (req.url === '/api/scan') return send({ sections:[{value:'notes'},{value:'tutorials'},{value:'work'}],metadata:{},notes: [{ path: 'Synthetic.md', id: 'synthetic', title: 'Synthetic note', status: '未生成', blocked: false }], selected: mock.selected, assets: mock.modes, missingSelected: [], ffmpeg });
+    if (req.url === '/api/scan') return send({ sections:[{value:'notes'},{value:'tutorials'},{value:'work'}],metadata:{},catalog:{tags:[],categories:[],series:[],engine:[],role:[]},notes: [{ path: 'Synthetic.md', id: 'synthetic', title: 'Synthetic note', status: '未生成', blocked: false }], selected: mock.selected, assets: mock.modes, missingSelected: [], ffmpeg });
     if (req.url === '/api/select') { mock.modes = structuredClone(data.assets); mock.selected = data.selected; return send({ ok: true }); }
     if (req.url === '/api/analyze') {
       if (mock.renameOnNextAnalysis) {

@@ -67,12 +67,13 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.equal(scanned.notes.some(n => n.path === 'Journal/Deep/Journal.md'), true);
   const selected = Object.keys(sources).filter(name => !name.startsWith('Private/'));
   const metadata = {
-    'Journal/Deep/Journal.md': { section: 'notes', title: 'Fixture Journal', summary: 'Journal summary', tags: ['Technical Art', 'Journal Test'], date: '2026-01-01' },
-    'Lessons/Custom/Second.md': { section: 'tutorials', title: 'Fixture Second Lesson', series: '自定义合成系列', tags: ['Technical'], order: 2, date: '2026-01-02' },
-    'Lessons/Custom/First.md': { section: 'tutorials', title: 'Fixture First Lesson', series: '自定义合成系列', tags: ['Technical Art'], order: 1, date: '2026-01-03' },
+    'Journal/Deep/Journal.md': { section: 'notes', category: '图形学基础', series:'我独自升级', title: 'Fixture Journal', summary: 'Journal summary', tags: ['Technical Art', 'Journal Test', '算法笔记'], date: '2026-01-01' },
+    'Lessons/Custom/Second.md': { section: 'tutorials', category: '渲染 实验', title: 'Fixture Second Lesson', series: '自定义合成系列', tags: ['Technical', '算法笔记'], order: 2, date: '2026-01-02' },
+    'Lessons/Custom/First.md': { section: 'tutorials', category: '图形学基础', title: 'Fixture First Lesson', series: '自定义合成系列', tags: ['Technical Art', '算法笔记'], order: 1, date: '2026-01-03' },
     'Lessons/Standalone.md': { section: 'tutorials', title: 'Fixture Standalone Lesson', tags: ['Independent Study'], date: '2026-01-04' },
-    'Portfolio/Project.md': { section: 'work', title: 'Fixture Portfolio Project', summary: 'A generated project summary', cover: 'cover.png', tags: ['Technical Art'], engine: ['Unreal Engine'], role: ['Technical Artist'], year: 2026, featured: true, date: '2026-01-05' },
-    'Moving.md': { section: 'notes', title: 'Fixture Moved Lesson', tags: ['Moving Entry'], date: '2026-01-06' },
+    'Portfolio/Project.md': { section: 'work', category: '图形学基础', title: 'Fixture Portfolio Project', summary: 'A generated project summary', cover: 'cover.png', tags: ['Technical Art', '算法笔记'], engine: ['Unreal Engine'], role: ['Technical Artist'], year: 2026, featured: true, date: '2026-01-05' },
+    'Moving.md': { section: 'notes', category: '算法笔记', title: 'Fixture Moved Lesson', tags: ['Moving Entry'], date: '2026-01-06' },
+    'Private/Secret.md': { section: 'notes', category: '未发布分类', tags: ['私人标签'] },
   };
   await p.select(selected, { 'Portfolio/cover.png': 'lossless' }, metadata);
   let plan = await p.analyze(); assert.deepEqual(plan.errors, []); assert.equal(plan.assets.length, 1);
@@ -95,7 +96,8 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.equal((await fs.readdir(path.join(site, 'content/published/notes'))).length, selected.length);
   assert.deepEqual((await fs.readdir(path.join(site, 'public/published-assets'))), [path.basename(coverUrl)]);
   const projectMd = frontmatter(await fs.readFile(path.join(site, 'content/published/notes', slug('Portfolio/Project.md') + '.md'), 'utf8'));
-  assert.equal(projectMd.data.cover, coverUrl); assert.deepEqual(projectMd.data.tech, ['Technical Art']);
+  assert.equal(projectMd.data.cover, coverUrl); assert.deepEqual(projectMd.data.tech, ['Technical Art','算法笔记']);
+  assert.equal(projectMd.data.category, '图形学基础');
   assert.deepEqual(projectMd.data.engine, ['Unreal Engine']); assert.deepEqual(projectMd.data.role, ['Technical Artist']);
 
   const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' };
@@ -106,6 +108,15 @@ test('published sections build into real lists, stable detail pages, exact tags 
   const dist = path.join(site, 'dist');
   const html = route => fs.readFile(path.join(dist, route, 'index.html'), 'utf8');
   const [journal, study, work, home, rss, feed] = await Promise.all([html('notes'), html('tutorials'), html('work'), html(''), fs.readFile(path.join(dist, 'rss.xml'), 'utf8'), fs.readFile(path.join(dist, 'feed.xml'), 'utf8')]);
+  for (const source of [journal,study,work]) {
+    const categories=elements(source,(a,n)=>n.tagName==='button'&&Object.hasOwn(a,'data-category')).map(n=>attrs(n)['data-category']);
+    assert.ok(categories.includes('图形学基础'));
+    assert.ok(!categories.includes('未发布分类'));
+    assert.ok(!source.includes('私人标签'));
+    assert.ok(elements(source,(a,n)=>n.tagName==='button'&&text(n).includes('算法笔记')).length,'New Chinese tag missing from public controls');
+  }
+  assert.ok(!elements(journal,(a,n)=>n.tagName==='button'&&a['data-category']==='算法笔记').length,'Moved category must disappear from notes');
+  assert.ok(elements(study,(a,n)=>n.tagName==='button'&&a['data-category']==='算法笔记').length,'Moved category must be discovered in study');
   const listLinks = (source, marker) => elements(source, a => Object.hasOwn(a, marker)).flatMap(node => elements(node, (a,n) => n.tagName === 'a').map(n => attrs(n).href));
   const noteLinks = elements(journal, a => a.class?.split(' ').includes('note-item')).flatMap(node => elements(node, (a,n) => n.tagName === 'a').map(n => attrs(n).href));
   const studyLinks = listLinks(study, 'data-study-entry');
@@ -114,6 +125,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   for (const name of selected.filter(name => name !== 'Journal/Deep/Journal.md')) assert.ok(!noteLinks.includes(url(name)), name + ' must not appear as a journal');
   for (const name of ['Lessons/Custom/First.md', 'Lessons/Custom/Second.md', 'Lessons/Standalone.md', 'Moving.md']) assert.ok(studyLinks.includes(url(name)), name + ' missing from study');
   assert.ok(!studyLinks.includes(url('Portfolio/Project.md')));
+  assert.ok(!studyLinks.includes(url('Journal/Deep/Journal.md')),'A journal series must not move its category into study');
   assert.ok(workLinks.includes(url('Portfolio/Project.md'))); assert.ok(!workLinks.includes(url('Journal/Deep/Journal.md')));
   assert.ok(studyLinks.indexOf(url('Lessons/Custom/First.md')) < studyLinks.indexOf(url('Lessons/Custom/Second.md')));
   const customSeries = elements(study, a => a.id === 'series-自定义合成系列')[0];
@@ -133,20 +145,23 @@ test('published sections build into real lists, stable detail pages, exact tags 
     assert.ok(!page.includes('publisher-asset:'));
   }
   const workDetail = await html('notes/' + slug('Portfolio/Project.md'));
+  assert.ok(elements(workDetail,a=>Object.hasOwn(a,'data-category-link')&&a.href==='/work/?category='+encodeURIComponent('图形学基础')).length);
   assert.ok(elements(workDetail, a => a['data-work-detail'] === 'published:' + slug('Portfolio/Project.md')).length);
   assert.ok(elements(workDetail, a => a['data-work-return'] !== undefined && a.href === '/work/').length);
   assert.ok(elements(workDetail, a => a.href === '/work/' && a['aria-current'] === 'page').length);
   assert.ok(elements(workDetail, a => a.src === coverUrl && Object.hasOwn(a, 'data-work-cover')).length);
   const firstDetail = await html('notes/' + slug('Lessons/Custom/First.md'));
+  assert.ok(elements(firstDetail,a=>Object.hasOwn(a,'data-category-link')&&a.href==='/tutorials/?category='+encodeURIComponent('图形学基础')).length);
+  assert.ok(elements(await html('notes/'+slug('Journal/Deep/Journal.md')),a=>Object.hasOwn(a,'data-category-link')&&a.href==='/notes/?category='+encodeURIComponent('图形学基础')).length);
   assert.ok(elements(firstDetail, a => a.href === '/tutorials/' && a['aria-current'] === 'page').length);
   assert.ok(elements(firstDetail, a => a.class === 'article-pager').some(node => elements(node, a => a.href === url('Lessons/Custom/Second.md')).length));
   assert.ok(elements(await html('notes/' + slug('Lessons/Custom/Second.md')), a => a.class === 'article-pager').some(node => elements(node, a => a.href === url('Lessons/Custom/First.md')).length));
   const workCell = elements(work, a => a.class === 'work-cell').find(n => elements(n, a => a.href === url('Portfolio/Project.md')).length);
-  assert.deepEqual(JSON.parse(attrs(workCell)['data-tech']), ['Technical Art']);
+  assert.deepEqual(JSON.parse(attrs(workCell)['data-tech']), ['Technical Art','算法笔记']);
   assert.deepEqual(JSON.parse(attrs(workCell)['data-engine']), ['Unreal Engine']);
   assert.deepEqual(JSON.parse(attrs(workCell)['data-role']), ['Technical Artist']);
   const noteCell = elements(journal, a => a.class === 'note-item').find(n => elements(n, a => a.href === url('Journal/Deep/Journal.md')).length);
-  assert.deepEqual(JSON.parse(attrs(noteCell)['data-tags']), ['Technical Art', 'Journal Test']);
+  assert.deepEqual(JSON.parse(attrs(noteCell)['data-tags']), ['Technical Art', 'Journal Test','算法笔记']);
   for (const name of selected.filter(name => name !== 'Portfolio/Project.md')) assert.ok(rss.includes(url(name)), name + ' missing from RSS');
   assert.ok(!rss.includes(url('Portfolio/Project.md'))); assert.equal(rss, feed);
   assert.ok(elements(home, a => a['data-room'] === 'work').some(node => text(node).includes(workLinks.length + ' 件作品')));
@@ -183,17 +198,49 @@ test('published sections build into real lists, stable detail pages, exact tags 
   }
   const tagResults = await page.evaluate(async () => { const results=await (await import('/pagefind/pagefind.js')).search('"Technical Art"'); return Promise.all(results.results.map(async r=>(await r.data()).url)); });
   for (const name of ['Journal/Deep/Journal.md','Lessons/Custom/First.md','Portfolio/Project.md']) assert.ok(tagResults.includes(url(name)), 'Metadata tag is not searchable: ' + name);
+  const chineseTagResults = await page.evaluate(async () => { const results=await (await import('/pagefind/pagefind.js')).search('"算法笔记"'); return Promise.all(results.results.map(async r=>(await r.data()).url)); });
+  for (const name of ['Journal/Deep/Journal.md','Lessons/Custom/First.md','Lessons/Custom/Second.md','Portfolio/Project.md']) assert.ok(chineseTagResults.includes(url(name)), 'New Chinese tag is not searchable: ' + name);
   const secretResults = await page.evaluate(async () => { const results=await (await import('/pagefind/pagefind.js')).search('"vaultsecretexclusionqazword"'); return Promise.all(results.results.map(r=>r.data())); });
   assert.equal(secretResults.length, 0);
   const filters = await page.evaluate(async () => (await import('/pagefind/pagefind.js')).filters());
   assert.ok(filters['栏目']['手记']); assert.ok(filters['栏目']['研习']); assert.ok(filters['栏目']['作品']);
+  assert.ok(filters['子栏目']['图形学基础']); assert.ok(!filters['子栏目']['未发布分类']);
+  const visibleNotes=()=>page.locator('.note-item:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
+  const visibleStudy=()=>page.locator('[data-study-entry]:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
+  await page.goto(base+'/notes/?'+new URLSearchParams({category:'图形学基础',tag:'算法笔记',q:'Journal'}));
+  await page.waitForFunction(()=>document.querySelector('button[data-category="图形学基础"]')?.getAttribute('aria-pressed')==='true');
+  assert.deepEqual(await visibleNotes(),[url('Journal/Deep/Journal.md')]);
+  await page.locator('#note-query').fill('not-a-matching-title');
+  assert.deepEqual(await visibleNotes(),[]);
+  await page.locator('#note-query').fill('Journal');
+  assert.deepEqual(await visibleNotes(),[url('Journal/Deep/Journal.md')]);
+  assert.equal(new URL(page.url()).searchParams.get('category'),'图形学基础');
+  assert.equal(new URL(page.url()).searchParams.get('tag'),'算法笔记');
+  await page.goto(base+url('Journal/Deep/Journal.md'));
+  await page.locator('.article-tags a').filter({hasText:'算法笔记'}).click();
+  await page.waitForURL(u=>u.pathname==='/notes/'&&u.searchParams.get('category')==='图形学基础'&&u.searchParams.get('tag')==='算法笔记');
+  assert.deepEqual(await visibleNotes(),[url('Journal/Deep/Journal.md')]);
+  await page.goto(base+'/tutorials/?'+new URLSearchParams({category:'图形学基础',tag:'算法笔记'}));
+  await page.waitForFunction(()=>document.querySelector('button[data-category="图形学基础"]')?.getAttribute('aria-pressed')==='true');
+  assert.deepEqual(await visibleStudy(),[url('Lessons/Custom/First.md')]);
+  await page.locator('button[data-category="渲染 实验"]').click();
+  assert.deepEqual(await visibleStudy(),[url('Lessons/Custom/Second.md')]);
+  assert.equal(new URL(page.url()).searchParams.get('category'),'渲染 实验');
+  assert.equal(new URL(page.url()).searchParams.get('tag'),'算法笔记');
+  assert.equal(await page.locator('[data-study-series]:not([hidden])').count(),1,'Category and series must remain independent');
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('button[data-category="渲染 实验"]')?.getAttribute('aria-pressed')==='true');
+  assert.deepEqual(await visibleStudy(),[url('Lessons/Custom/Second.md')]);
+  await page.locator('[data-study-reset]').click();
+  assert.equal(new URL(page.url()).searchParams.has('category'),false); assert.equal(new URL(page.url()).searchParams.has('tag'),false);
+  assert.ok((await visibleStudy()).includes(url('Lessons/Standalone.md')),'Uncategorized entries remain visible');
   await page.goto(base + '/notes/?tag=Technical%20Art');
   await page.waitForFunction(() => document.querySelector('button[data-tag="Technical Art"]')?.getAttribute('aria-pressed') === 'true');
   assert.deepEqual(await page.locator('.note-item:not([hidden]) a').evaluateAll(nodes => nodes.map(n=>n.getAttribute('href'))), [url('Journal/Deep/Journal.md')]);
   await page.goto(base + '/tutorials/?tag=Technical%20Art');
   await page.waitForFunction(() => document.querySelector('[data-study-tag="Technical Art"]')?.getAttribute('aria-pressed') === 'true');
   assert.deepEqual(await page.locator('[data-study-entry]:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href'))), [url('Lessons/Custom/First.md')]);
-  await page.goto(base + '/work/?engine=Unreal%20Engine&tech=Technical%20Art&role=Technical%20Artist');
+  await page.goto(base + '/work/?engine=Unreal%20Engine&tech='+encodeURIComponent('算法笔记')+'&role=Technical%20Artist&category='+encodeURIComponent('图形学基础'));
   await page.waitForFunction(() => document.querySelector('button[data-term="Technical Artist"]')?.getAttribute('aria-pressed') === 'true');
   assert.deepEqual(await page.locator('.work-cell:not([hidden]) [data-artwork]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href'))), [url('Portfolio/Project.md')]);
   await page.locator('.work-cell:not([hidden]) [data-artwork]').click();
@@ -201,6 +248,8 @@ test('published sections build into real lists, stable detail pages, exact tags 
   await page.waitForFunction(() => document.querySelector('[data-work-return]')?.getAttribute('href')?.includes('role=Technical%20Artist'));
   await page.locator('[data-work-return]').click();
   await page.waitForURL(/\/work\/\?engine=/);
+  assert.equal(new URL(page.url()).searchParams.get('category'),'图形学基础');
+  assert.equal(new URL(page.url()).searchParams.get('tech'),'算法笔记');
   assert.deepEqual(await page.locator('.work-cell:not([hidden]) [data-artwork]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href'))), [url('Portfolio/Project.md')]);
   for (const [name, body] of Object.entries(sources)) assert.equal(await fs.readFile(path.join(vault, name), 'utf8'), body);
   assert.deepEqual(await fs.readFile(path.join(vault, 'Portfolio/cover.png')), image);

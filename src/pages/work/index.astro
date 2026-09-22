@@ -3,11 +3,13 @@ import Base from '../../layouts/Base.astro';
 import WorkTile from '../../components/WorkTile.astro';
 import LivingScene from '../../components/LivingScene.astro';
 import SectionHead from '../../components/SectionHead.astro';
+import CategoryFilter from '../../components/CategoryFilter.astro';
 import '../../styles/editorial-pages.css';
-import { allWork,workUrl,workKey } from '../../lib/content';
+import { allWork,workUrl,workKey,categoryCounts } from '../../lib/content';
 import { labelOf,FACET_LABEL } from '../../data/taxonomy';
 import type { Facet } from '../../data/taxonomy';
 const items=await allWork();
+const categories=categoryCounts(items);
 const facets:Facet[]=['engine','tech','role'];
 const groups=facets.map(f=>{const count=new Map<string,number>();for(const w of items)for(const k of w.data[f])count.set(k,(count.get(k)??0)+1);return {facet:f,terms:[...count.entries()].sort((a,b)=>b[1]-a[1])};}).filter(g=>g.terms.length>0);
 ---
@@ -21,12 +23,13 @@ const groups=facets.map(f=>{const count=new Map<string,number>();for(const w of 
   </header>
   <section aria-label="作品索引" data-work-index>
     <SectionHead label="作品索引 / Portfolio" count={`${items.length} PROJECTS`}/>
+    <CategoryFilter categories={categories} total={items.length} work/>
     <div class="filters" aria-label="筛选作品">
       {groups.map(g=><div class="filter-row"><span class="filter-name">{FACET_LABEL[g.facet]}</span><div class="editorial-filter" role="group" aria-label={`按${FACET_LABEL[g.facet]}筛选`}><button type="button" data-facet={g.facet} data-term="" aria-pressed="true">全部</button>{g.terms.map(([term,count])=><button type="button" data-facet={g.facet} data-term={term} aria-pressed="false">{labelOf(g.facet,term)}<b>{count}</b></button>)}</div></div>)}
     </div>
     <div class="editorial-result"><span id="work-results" role="status" aria-live="polite">共 {items.length} 件作品</span><button type="button" class="editorial-reset" id="work-reset" hidden>清除筛选</button></div>
     <p class="editorial-empty" id="work-empty" hidden>这一组条件下还没有作品。试试其他标签，或清除筛选。</p>
-    <div class="work-tiles">{items.map((w,i)=><div class="work-cell" data-reveal data-engine={JSON.stringify(w.data.engine)} data-tech={JSON.stringify(w.data.tech)} data-role={JSON.stringify(w.data.role)}><WorkTile index={i+1} slug={workKey(w)} href={workUrl(w)} {...w.data}/></div>)}</div>
+    <div class="work-tiles">{items.map((w,i)=><div class="work-cell" data-reveal data-category={w.data.category} data-engine={JSON.stringify(w.data.engine)} data-tech={JSON.stringify(w.data.tech)} data-role={JSON.stringify(w.data.role)}><WorkTile index={i+1} slug={workKey(w)} href={workUrl(w)} {...w.data}/></div>)}</div>
   </section>
 </Base>
 <script>
@@ -38,11 +41,11 @@ const groups=facets.map(f=>{const count=new Map<string,number>();for(const w of 
     const result=index.querySelector<HTMLElement>('#work-results')!;
     const empty=index.querySelector<HTMLElement>('#work-empty')!;
     const reset=index.querySelector<HTMLButtonElement>('#work-reset')!;
-    const facets=['engine','tech','role'];
-    const selected:Record<string,string>={engine:'',tech:'',role:''};
+    const facets=['category','engine','tech','role'];
+    const selected:Record<string,string>={category:'',engine:'',tech:'',role:''};
     function read(){const params=new URLSearchParams(location.search);for(const facet of facets){const term=params.get(facet)||'';selected[facet]=buttons.some(b=>b.dataset.facet===facet&&b.dataset.term===term)?term:'';}}
     function apply(sync=false){
-      let shown=0;for(const cell of cells){const visible=facets.every(f=>!selected[f]||JSON.parse(cell.dataset[f]||'[]').includes(selected[f]));cell.hidden=!visible;if(visible)shown++;}
+      let shown=0;for(const cell of cells){const visible=facets.every(f=>!selected[f]||(f==='category'?cell.dataset.category===selected[f]:JSON.parse(cell.dataset[f]||'[]').includes(selected[f])));cell.hidden=!visible;if(visible)shown++;}
       for(const button of buttons)button.setAttribute('aria-pressed',String(selected[button.dataset.facet!]===button.dataset.term));
       result.textContent=shown===cells.length?`共 ${shown} 件作品`:`找到 ${shown} / ${cells.length} 件作品`;empty.hidden=shown>0;reset.hidden=!facets.some(f=>selected[f]);
       if(sync){const url=new URL(location.href);for(const f of facets){selected[f]?url.searchParams.set(f,selected[f]):url.searchParams.delete(f);}history.replaceState(null,'',url);}

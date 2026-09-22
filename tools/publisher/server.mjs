@@ -74,10 +74,11 @@ const server = http.createServer(async (req, res) => {
       if (url.pathname === '/api/deploy/review') return json(200, await deployment.review());
       if (url.pathname === '/api/deploy/start') return json(202, await deployment.start(data.id));
       if (url.pathname === '/api/select') { await publisher.select(data.selected, data.assets, data.metadata); return json(200, { ok: true, metadata: publisher.metadataOverrides() }); }
+      if (url.pathname === '/api/catalog') return json(200, { catalog: await publisher.addCatalog(data) });
       if(url.pathname==='/api/relink'){await publisher.relink(data.oldPath,data.newPath);return json(200,{ok:true})}
       if (url.pathname === '/api/analyze') {
         const p = await publisher.analyze();
-        return json(200, { id: p.id, notes: p.output.map(({ markdown, ...n }) => n), scannedNotes: publisher.notes, selected: publisher.db.selected, assets: p.assets, assetModes: publisher.db.assets, metadata: publisher.metadataOverrides(), errors: p.errors, warnings: p.warnings, changes: p.changes });
+        return json(200, { id: p.id, notes: p.output.map(({ markdown, ...n }) => n), scannedNotes: publisher.notes, selected: publisher.db.selected, assets: p.assets, assetModes: publisher.db.assets, metadata: publisher.metadataOverrides(), catalog: p.catalog, errors: p.errors, warnings: p.warnings, changes: p.changes });
       }
       if (url.pathname === '/api/prepare') return json(200, await publisher.prepare(data.id, data.approved));
       if (url.pathname === '/api/apply') {

@@ -27,7 +27,7 @@ async function setup(t, { selected = [], viewport, assets = [], omittedScanField
     fs.readFile(new URL('./publisher.css', import.meta.url), 'utf8'),
   ]);
   const source = html.replace('__TOKEN__', 'a'.repeat(64)).replace('__PREVIEW_URL__', 'http://127.0.0.1:4325/');
-  const mock = { catalog: structuredClone(fixture), selected: [...selected], metadata: {}, calls: [], plans: 0 };
+  const mock = { catalog: structuredClone(fixture), selected: [...selected], metadata: {}, calls: [], plans: 0, terms: { tags: ['Inherited', 'Computer Graphics'].map(value => ({ value, label: value, count: 1 })), categories: [], series: [], engine: [], role: [] } };
   const currentNotes = () => mock.catalog.map(note => {
     const metadataOverride = mock.metadata[note.path] || {};
     const metadata = { ...note.sourceMetadata, ...metadataOverride };
@@ -44,7 +44,7 @@ async function setup(t, { selected = [], viewport, assets = [], omittedScanField
     if (req.url === '/api/deploy/status') return send({ busy: false, phase: 'idle', message: '尚无发布任务。' });
     if (req.url === '/api/deploy/review') return send({ id: 'deployment', canPublish: true, repository: 'example/site', branch: 'main', changes: [{ status: 'M', path: 'content/published/synthetic.md' }], commits: [], blockers: [] });
     if (req.url === '/api/scan') {
-      const result = { notes: currentNotes(), selected: mock.selected, assets: {}, metadata: mock.metadata, sections, missingSelected: [], ffmpeg: false };
+      const result = { notes: currentNotes(), selected: mock.selected, assets: {}, metadata: mock.metadata, sections, catalog: mock.terms, missingSelected: [], ffmpeg: false };
       for (const field of omittedScanFields) delete result[field];
       return send(result);
     }
@@ -55,7 +55,13 @@ async function setup(t, { selected = [], viewport, assets = [], omittedScanField
       }
       return send({ ok: true });
     }
-    if (req.url === '/api/analyze') return send({ id: 'plan-' + ++mock.plans, assets, assetModes: {}, errors: [], warnings: [], changes: { added: mock.selected.map(file => currentNotes().find(note => note.path === file)?.title || file), updated: [], removed: [] } });
+    if (req.url === '/api/catalog') {
+      const group = { tag: 'tags', category: 'categories', series: 'series' }[data.kind];
+      if (!group) return send({ error: 'Unexpected catalog kind' }, 400);
+      if (!mock.terms[group].some(item => item.value === data.value && (data.kind === 'tag' || item.section === data.section))) mock.terms[group].push({ value: data.value, label: data.value, count: 0, ...(data.kind === 'tag' ? {} : { section: data.section }) });
+      return send({ catalog: mock.terms });
+    }
+    if (req.url === '/api/analyze') return send({ id: 'plan-' + ++mock.plans, assets, assetModes: {}, catalog: mock.terms, errors: [], warnings: [], changes: { added: mock.selected.map(file => currentNotes().find(note => note.path === file)?.title || file), updated: [], removed: [] } });
     if (req.url === '/api/prepare') return send({ id: 'stage', notes: [{ title: 'Synthetic preview', slug: 'synthetic' }], assets: [], changes: { removed: [] } });
     if (req.url.startsWith('/api/stage?')) return send({ markdown: '# Synthetic public preview' });
     return send({ error: 'Unexpected mock request: ' + req.url }, 404);
@@ -90,6 +96,26 @@ async function edit(page, file) {
 }
 async function closeEditor(page) { if (await page.locator('#noteEditor').isVisible()) await page.locator('#noteMetaClose').click(); }
 async function openBatch(page) { if (!(await page.locator('.batch-metadata').evaluate(element => element.open))) await page.locator('.batch-metadata summary').click(); }
+async function setTerms(page, prefix, value, kind = 'Tag') {
+  const field = kind === 'Tag' ? 'Tags' : kind;
+  const label = { Tag: 'Tag', Engine: '引擎', Role: '职责' }[kind];
+  const picker = page.locator('#' + prefix + field + 'Picker');
+  for (const item of (await page.locator('#' + prefix + field).inputValue()).split(/[,，]/).map(item => item.trim()).filter(Boolean)) await picker.getByRole('button', { name: '移除 ' + label + ' ' + item, exact: true }).click();
+  for (const item of [...new Set(value.split(/[,，]/).map(item => item.trim()).filter(Boolean))]) {
+    await page.locator('#' + prefix + kind + 'Search').fill(item);
+    const existing = picker.getByRole('button', { name: '添加 ' + label + ' ' + item, exact: true });
+    if (await existing.count()) await existing.click();
+    else { await page.locator('#' + prefix + kind + 'Create').click(); await settled(page); }
+  }
+}
+async function setSeries(page, prefix, value) {
+  const picker = page.locator('#' + prefix + 'SeriesPicker');
+  if (!value) { await picker.getByRole('button', { name: '不设系列', exact: true }).click(); return; }
+  await page.locator('#' + prefix + 'SeriesSearch').fill(value);
+  const existing = picker.getByRole('button', { name: '选择系列 ' + value, exact: true });
+  if (await existing.count()) await existing.click();
+  else { await page.locator('#' + prefix + 'SeriesCreate').click(); await settled(page); }
+}
 
 test('nested directory tree preserves hierarchy, tri-state selection and private-note exclusion', async t => {
   const { page, mock, errors } = await setup(t);
@@ -150,8 +176,8 @@ test('per-note publish metadata supports sections, spaced tags, local changes an
   await page.locator('#editTitle').fill('Matrix tutorial');
   await page.locator('#editSummary').fill('A readable public summary');
   await page.locator('#editDate').fill('2026-09-22');
-  await page.locator('#editTags').fill('Linear Algebra, WebGL, Linear Algebra，Computer Graphics');
-  await page.locator('#editSeries').fill('Rendering basics'); await page.locator('#editOrder').fill('2');
+  await setTerms(page, 'edit', 'Linear Algebra, WebGL, Linear Algebra，Computer Graphics');
+  await setSeries(page, 'edit', 'Rendering basics'); await page.locator('#editOrder').fill('2');
   for (const id of ['save', 'analyze', 'rescan']) assert.equal(await page.locator('#' + id).isDisabled(), true, 'an uncommitted editor draft must not be discarded');
   await page.locator('#noteMetaApply').click();
   assert.equal(mock.calls.filter(call => call.url === '/api/select').length, 0, 'applying the editor only changes pending local settings');
@@ -178,10 +204,10 @@ test('work metadata fields save typed values and all three sections are availabl
   await edit(page, 'Projects/Water.md');
   assert.deepEqual(await page.locator('#editSection option').evaluateAll(options => options.map(option => option.value)), ['notes', 'tutorials', 'work']);
   await page.locator('#editSection').selectOption('work');
-  for (const id of ['editCover', 'editEngine', 'editRole', 'editYear', 'editFeatured']) assert.equal(await page.locator('#' + id).isVisible(), true);
+  for (const id of ['editCover', 'editEnginePicker', 'editRolePicker', 'editYear', 'editFeatured']) assert.equal(await page.locator('#' + id).isVisible(), true);
   await page.locator('#editCover').fill('Assets/water.png');
-  await page.locator('#editEngine').fill('Unreal Engine, WebGL');
-  await page.locator('#editRole').fill('Technical Art, Rendering');
+  await setTerms(page, 'edit', 'Unreal Engine, WebGL', 'Engine');
+  await setTerms(page, 'edit', 'Technical Art, Rendering', 'Role');
   await page.locator('#editYear').fill('2025'); await page.locator('#editFeatured').check();
   await page.locator('#noteMetaApply').click(); await save(page);
   assert.deepEqual(lastSave(mock).metadata['Projects/Water.md'], { section: 'work', cover: 'Assets/water.png', engine: ['Unreal Engine', 'WebGL'], role: ['Technical Art', 'Rendering'], year: 2025, featured: true });
@@ -194,21 +220,21 @@ test('bulk metadata affects only selected search results and preserves or remove
   await page.locator('#folder').selectOption('Study/Math');
   await openBatch(page);
   await page.locator('#batchSection').selectOption('tutorials');
-  await page.locator('#batchTags').fill('WebGL, Computer Graphics');
+  await setTerms(page, 'batch', 'WebGL, Computer Graphics');
   await page.locator('#batchTagMode').selectOption('add');
-  await page.locator('#batchSetSeries').check(); await page.locator('#batchSeries').fill('Math for graphics');
+  await page.locator('#batchSetSeries').check(); await setSeries(page, 'batch', 'Math for graphics');
   await page.locator('#batchMetadataApply').click(); await save(page);
   for (const file of ['Study/Math/Algebra.md', 'Study/Math/Advanced/Spaces.md']) {
-    assert.deepEqual(mock.metadata[file], { section: 'tutorials', tags: ['Inherited', 'Computer Graphics', 'WebGL'], series: 'Math for graphics' });
+    assert.deepEqual(mock.metadata[file], { section: 'tutorials', category: '', tags: ['Inherited', 'Computer Graphics', 'WebGL'], series: 'Math for graphics' });
   }
   for (const file of ['Root.md', 'Study/Overview.md', 'Study/Math/Blocked.md', 'Study/Art/Color.md']) assert.equal(Object.keys(mock.metadata[file] || {}).length, 0, file + ' must remain untouched');
   await page.locator('#search').fill('Algebra');
   await page.locator('#batchSection').selectOption(''); await page.locator('#batchSetSeries').uncheck();
-  await page.locator('#batchTagMode').selectOption('remove'); await page.locator('#batchTags').fill('Inherited');
+  await page.locator('#batchTagMode').selectOption('remove'); await setTerms(page, 'batch', 'Inherited');
   await page.locator('#batchMetadataApply').click(); await save(page);
   assert.deepEqual(mock.metadata['Study/Math/Algebra.md'].tags, ['Computer Graphics', 'WebGL']);
   assert.deepEqual(mock.metadata['Study/Math/Advanced/Spaces.md'].tags, ['Inherited', 'Computer Graphics', 'WebGL']);
-  await page.locator('#batchTagMode').selectOption('replace'); await page.locator('#batchTags').fill('');
+  await page.locator('#batchTagMode').selectOption('replace'); await setTerms(page, 'batch', '');
   await page.locator('#batchMetadataApply').click(); await save(page);
   assert.deepEqual(mock.metadata['Study/Math/Algebra.md'].tags, [], 'replace with an empty value deliberately clears tags');
   assert.deepEqual(errors, []);
@@ -218,7 +244,7 @@ test('rescan follows note identity after a move while retaining unsaved selectio
   const { page, mock, errors } = await setup(t);
   await noteCheck(page, 'Root note').check(); await edit(page, 'Root.md');
   await page.locator('#editTitle').fill('Pending renamed article');
-  await page.locator('#editTags').fill('Pending, Computer Graphics');
+  await setTerms(page, 'edit', 'Pending, Computer Graphics');
   await page.locator('#noteMetaApply').click();
   mock.catalog[0].path = 'Imported/Renamed.md';
   await page.locator('#rescan').click(); await settled(page); await expand(page, 'Imported');
@@ -245,7 +271,7 @@ test('editing publication metadata invalidates an existing review and prepared s
   assert.equal(await page.locator('#staged').isVisible(), false);
   await page.locator('#analyze').click(); await settled(page);
   await openBatch(page);
-  await page.locator('#batchTags').fill('Updated'); await page.locator('#batchMetadataApply').click();
+  await setTerms(page, 'batch', 'Updated'); await page.locator('#batchMetadataApply').click();
   assert.equal(await page.locator('#prepare').isDisabled(), true, 'batch changes also invalidate the plan');
   assert.deepEqual(errors, []);
 });
@@ -274,7 +300,7 @@ test('historical notes can edit tags without hidden work-year validation blockin
   await page.locator('#rescan').click(); await settled(page); await edit(page, 'Root.md');
   assert.equal(await page.locator('#editYear').inputValue(), '1980');
   for (const id of ['editCover', 'editEngine', 'editRole', 'editYear', 'editFeatured']) assert.equal(await page.locator('#' + id).isDisabled(), true);
-  await page.locator('#editTags').fill('History, Personal Notes');
+  await setTerms(page, 'edit', 'History, Personal Notes');
   await page.locator('#noteMetaApply').click();
   assert.equal(await page.locator('#save').isEnabled(), true, 'a notes form must apply even if its derived year is outside the work-only range');
   await save(page);
@@ -326,7 +352,7 @@ test('an unapplied note draft blocks deployment confirmation and attachment acti
 });
 
 test('an older local API cannot silently discard section and tag settings', async t => {
-  for (const field of ['sections', 'metadata']) await t.test('missing ' + field, async child => {
+  for (const field of ['sections', 'metadata', 'catalog']) await t.test('missing ' + field, async child => {
     const { page, mock, errors } = await setup(child, { omittedScanFields: [field] });
     assert.match(await page.locator('#message').innerText(), /旧版发布服务/);
     assert.match(await page.locator('#message').innerText(), /重新双击 F:\\MyWeb\\文章发布管理器\.cmd/);

@@ -44,6 +44,7 @@ const work = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/work" }),
   schema: z.object({
     title: z.string(),
+    category: z.string().trim().default(''),
     /** 一句话讲清做了什么。不要复制 title —— 老站上大半条目就是这么废掉的。 */
     summary: z.string(),
     /** 16:9 封面，建议统一 1600×900 */
@@ -81,6 +82,7 @@ const notes = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/notes" }),
   schema: z.object({
     title: z.string(),
+    category: z.string().trim().default(''),
     /** obsidian_sync.py 会校验这两个必填字段 */
     date: z.coerce.date(),
     summary: z.string().optional(),
@@ -93,6 +95,7 @@ const notes = defineCollection({
 
 const articleSchema = z.object({
   title: z.string(), date: z.coerce.date(), summary: z.string().optional(),
+  category: z.string().trim().default(''),
   tech: z.array(z.string()).default([]), work: z.string().optional(), draft: z.boolean().default(false),
   contentId: z.string().optional(), series: z.string().optional(), order: z.number().default(100),
   legacyUrl: z.string().optional(),

@@ -14,7 +14,7 @@ test('publisher UI preserves pending choices, filters root notes, locks review, 
     const send=body=>res.end(JSON.stringify(body));
     if(req.url==='/'){res.setHeader('Content-Type','text/html');return res.end(source)}
     if(req.url==='/publisher.css'){res.setHeader('Content-Type','text/css');return res.end(await fs.readFile(new URL('./publisher.css',import.meta.url),'utf8'))}
-    if(req.url==='/api/scan')return send({sections:[{value:'notes'},{value:'tutorials'},{value:'work'}],metadata:{},notes,selected,assets:{},missingSelected:[],ffmpeg:false});
+    if(req.url==='/api/scan')return send({sections:[{value:'notes'},{value:'tutorials'},{value:'work'}],catalog:{tags:[],categories:[],series:[],engine:[],role:[]},metadata:{},notes,selected,assets:{},missingSelected:[],ffmpeg:false});
     if(req.url==='/api/deploy/status')return send({busy:false,phase:'idle',message:'等待发布'});
     let raw='';for await(const data of req)raw+=data;const data=JSON.parse(raw||'{}');
     if(req.url==='/api/select'){selected=data.selected;return send({ok:true})}

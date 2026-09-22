@@ -1,0 +1,8 @@
+---
+interface Props { categories:[string,number][]; total:number; work?:boolean; }
+const {categories,total,work=false}=Astro.props;
+---
+{categories.length>0&&<div class="category-controls"><span class="category-label">子栏目</span><div class="editorial-filter" role="group" aria-label="按子栏目筛选"><button type="button" data-category="" data-facet={work?'category':undefined} data-term={work?'':undefined} aria-pressed="true">全部子栏目<b>{total}</b></button>{categories.map(([category,count])=><button type="button" data-category={category} data-facet={work?'category':undefined} data-term={work?category:undefined} aria-pressed="false">{category}<b>{count}</b></button>)}</div></div>}
+<style>
+  .category-controls{display:flex;align-items:baseline;gap:20px;margin:8px 0 20px}.category-label{flex:none;color:var(--ink-3);font-size:12px;line-height:2}.category-controls .editorial-filter{min-width:0}.category-controls button{font-size:12px;min-height:38px;overflow-wrap:anywhere}.category-controls button b{font-size:10px}@media(max-width:700px){.category-controls{align-items:flex-start;gap:12px}.category-label{padding-top:7px}.category-controls button{font-size:11px;min-height:36px}}
+</style>

@@ -12,6 +12,7 @@ import remarkStringify from 'remark-stringify';
 import GithubSlugger from 'github-slugger';
 import { parseFragment } from 'parse5';
 import { normalizeDisplayMath } from '../markdown-utils.mjs';
+import { collectCatalog, catalogPreset } from './catalog.mjs';
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath);
 const writer = unified().use(remarkStringify, { fences: true, bullet: '-' }).use(remarkGfm).use(remarkMath);
@@ -30,7 +31,7 @@ const escapeHtml = s => String(s).replaceAll('&','&amp;').replaceAll('"','&quot;
 const childrenOf = function* (node) { for (const child of node.children ?? []) { yield child; yield* childrenOf(child); } };
 const blockId = node => node.type === 'paragraph' && node.children.at(-1)?.type === 'text' ? node.children.at(-1).value.match(/\s+\^([\w-]+)\s*$/)?.[1] : undefined;
 export const sections = [{ value: 'notes', label: '渲染手记' }, { value: 'tutorials', label: '学习系列' }, { value: 'work', label: '作品与实践' }];
-const metadataFields = ['section', 'title', 'date', 'summary', 'tags', 'series', 'order', 'cover', 'engine', 'role', 'year', 'featured'];
+const metadataFields = ['section', 'category', 'title', 'date', 'summary', 'tags', 'series', 'order', 'cover', 'engine', 'role', 'year', 'featured'];
 const imageExts = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif']);
 function metadataValue(key, value) {
   if (['tags', 'engine', 'role'].includes(key)) {
@@ -52,6 +53,7 @@ function metadataValue(key, value) {
   const limit = key === 'summary' ? 2000 : key === 'cover' ? 2048 : 200;
   if (typeof value !== 'string' || value.length > limit || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) throw Error(`${key} 必须是 ${limit} 字以内的文字`);
   const text = value.trim();
+  if (key === 'category' && /[\r\n\t\u007f]/.test(text)) throw Error('子栏目名称必须为单行文字');
   if (key === 'title' && !text) throw Error('标题不能为空');
   if (key === 'section' && !sections.some(section => section.value === text)) throw Error('栏目必须为渲染手记、学习系列或作品与实践');
   if (key === 'cover' && text) {
@@ -65,7 +67,7 @@ function normalizeOverride(value) {
   return Object.fromEntries(metadataFields.filter(key => Object.hasOwn(value, key)).map(key => [key, metadataValue(key, value[key])]));
 }
 function effectiveMetadata(data, entry, rel, override = entry.metadata ?? {}, errors = null) {
-  const defaults = { section: 'notes', title: path.basename(rel, '.md'), date: entry.firstSeen, summary: '', tags: [], series: '', order: 100, cover: '', engine: [], role: [], year: Number(entry.firstSeen.slice(0, 4)), featured: false };
+  const defaults = { section: 'notes', category: '', title: path.basename(rel, '.md'), date: entry.firstSeen, summary: '', tags: [], series: '', order: 100, cover: '', engine: [], role: [], year: Number(entry.firstSeen.slice(0, 4)), featured: false };
   const inherited = { ...data, section: data.section ?? ({ article: 'notes', tutorial: 'tutorials', work: 'work' }[data.kind] ?? 'notes'), tags: data.tags ?? data.tech ?? [] };
   const result = Object.fromEntries(metadataFields.map(key => {
     try { return [key, metadataValue(key, Object.hasOwn(override, key) ? override[key] : inherited[key] ?? defaults[key])]; }
@@ -157,9 +159,21 @@ export class Publisher {
     this.notes = notes; await this.save();
     const previous = await this.manifest();
     for (const note of notes) note.status = previous.notes?.[note.id] ? (previous.notes[note.id].digest === note.digest && previous.notes[note.id].metadataDigest === note.metadataDigest ? '已生成副本' : '有更新') : '未生成';
-    return { notes, selected: this.db.selected, missingSelected: this.db.selected.filter(s=>!notes.some(n=>n.path===s)), assets: this.db.assets, metadata: this.metadataOverrides(), sections, previous: Object.values(previous.notes ?? {}), ffmpeg: await this.ffmpeg() !== null };
+    return { notes, selected: this.db.selected, missingSelected: this.db.selected.filter(s=>!notes.some(n=>n.path===s)), assets: this.db.assets, metadata: this.metadataOverrides(), sections, catalog: await this.catalog(), previous: Object.values(previous.notes ?? {}), ffmpeg: await this.ffmpeg() !== null };
   }
   metadataOverrides() { return Object.fromEntries(this.notes.map(note => [note.path, this.db.entries[note.path]?.metadata ?? {}])); }
+  async catalog() {
+    const local = (this.notes ?? []).map(note => ({ id: note.id, metadata: effectiveMetadata(this.sourceMetadata.get(note.path), this.db.entries[note.path], note.path, this.db.entries[note.path].metadata ?? {}, []) }));
+    return collectCatalog({ site: this.site, local, presets: this.db.catalogPresets ?? [], parse: frontmatter });
+  }
+  async addCatalog(input) {
+    const preset = catalogPreset(input), existing = this.db.catalogPresets ?? [];
+    const current = await this.catalog(), bucket = { tag: 'tags', series: 'series', category: 'categories' }[preset.kind];
+    if (current[bucket].some(item => item.value === preset.value && item.section === preset.section)) return current;
+    if (existing.length >= 500) throw Error('自定义词库最多保存 500 个词条');
+    const next = structuredClone(this.db); next.catalogPresets = [...existing, preset];
+    await this.save(next); this.db = next; return this.catalog();
+  }
   async select(selected, assetModes = {}, metadata = {}) {
     if (!Array.isArray(selected) || selected.some(s => !this.notes?.some(n => n.path === s))) throw Error('请选择扫描结果中的笔记');
     const unique = [...new Set(selected)];
@@ -215,7 +229,7 @@ export class Publisher {
     await this.bounded(matches[0]); return matches[0];
   }
   async analyze() {
-    await this.scan();
+    const scanned = await this.scan();
     const selected = [...this.db.selected];
     if (selected.some(s => !this.notes.some(n => n.path === s && !n.blocked))) throw Error('已选笔记缺失或被标记为草稿，请重新检查选择');
     const set = new Set(selected), assets = new Map(), sources = new Map(), output = [], errors = [], warnings = [];
@@ -358,6 +372,7 @@ export class Publisher {
     }
     const previous = await this.manifest();
     const plan = { id: crypto.randomUUID(), selected, output, assets: [...assets.values()], sources: [...sources].map(([rel, raw]) => ({ path: rel, digest: hash(raw) })), errors, warnings: [...new Set(warnings)], changes: { added: output.filter(n => !previous.notes[n.id]).map(n => n.title), updated: output.filter(n => previous.notes[n.id] && previous.notes[n.id].renderDigest !== n.renderDigest).map(n => n.title), removed: Object.entries(previous.notes).filter(([id]) => !output.some(n => n.id === id)).map(([, n]) => n.title) } };
+    plan.catalog = scanned.catalog;
     this.plans.set(plan.id, plan); return plan;
   }
   async ffmpeg() {

@@ -1,11 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
 import SectionHead from '../../components/SectionHead.astro';
+import CategoryFilter from '../../components/CategoryFilter.astro';
 import LivingScene from '../../components/LivingScene.astro';
 import '../../styles/editorial-pages.css';
-import { allNotes,noteUrl } from '../../lib/content';
+import { allNotes,noteUrl,categoryCounts } from '../../lib/content';
 import { labelOf } from '../../data/taxonomy';
 const items=(await allNotes()).filter(n=>!n.data.draft).sort((a,b)=>b.data.date.valueOf()-a.data.date.valueOf());
+const categories=categoryCounts(items);
 const groups=new Map<number,typeof items>();
 for(const n of items){const year=n.data.date.getUTCFullYear();if(!groups.has(year))groups.set(year,[]);groups.get(year)!.push(n);}
 const years=[...groups.keys()].sort((a,b)=>b-a);
@@ -18,11 +20,12 @@ const pad=(n:number)=>String(n).padStart(2,'0');
     <header class="page-stage journal-stage"><LivingScene variant="notes"/><div class="stage-scrim" aria-hidden="true"></div><div class="journal-rules" aria-hidden="true"></div><span class="stage-index">02 / A GROWING NOTEBOOK</span><h1 data-kinetic data-kinetic-style="wide">JOURNAL</h1><div class="journal-heading-bottom"><p class="stage-subtitle" data-kinetic data-kinetic-style="ink">思绪沉积</p><p>把看见的、想到的、没想明白的，<br/>都留在这里。</p></div><span class="journal-count">{pad(items.length)}<small>ENTRIES / ONGOING</small></span></header>
     <section aria-label="笔记索引" data-notes-index>
       <SectionHead label="手记目录 / Notebook" count={`${pad(items.length)} ENTRIES`}/>
+      <CategoryFilter categories={categories} total={items.length}/>
       <div class="note-search"><label for="note-query">寻找一篇手记</label><div class="search-field"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.4 15.4 5 5"/></svg><input id="note-query" type="search" placeholder="输入标题、摘要或技术关键词…" autocomplete="off"/></div></div>
       <div class="editorial-filter note-filters" role="group" aria-label="按技术筛选笔记"><button type="button" data-tag="" aria-pressed="true">全部<b>{items.length}</b></button>{facets.map(([tag,count])=><button type="button" data-tag={tag} aria-pressed="false">{labelOf('tech',tag)}<b>{count}</b></button>)}</div>
       <div class="editorial-result"><span id="note-results" role="status" aria-live="polite">共 {items.length} 篇手记</span><button type="button" class="editorial-reset" id="note-reset" hidden>清除筛选</button></div>
-      <p class="editorial-empty" id="note-empty" hidden>还没有找到这篇手记。可以缩短关键词，或清除标签再试试。</p>
-      {years.map(year=><section class="note-year" data-year={year} id={`year-${year}`} aria-labelledby={`heading-${year}`}><div class="year-heading"><h2 id={`heading-${year}`} data-kinetic>{year}</h2><span class="year-count">{pad(groups.get(year)!.length)} 篇</span></div><ul class="note-list">{groups.get(year)!.map((n,i)=><li class="note-item" data-reveal data-tags={JSON.stringify(n.data.tech)} data-search={`${n.data.title} ${n.data.summary||''} ${n.data.tech.map(t=>labelOf('tech',t)).join(' ')}`}><a href={noteUrl(n)}><div class="note-sequence"><span>{pad(i+1)}</span><time datetime={n.data.date.toISOString()}>{pad(n.data.date.getUTCMonth()+1)}.{pad(n.data.date.getUTCDate())}</time></div><div class="note-text"><h3>{n.data.title}</h3>{n.data.summary&&<p>{n.data.summary}</p>}<span class="note-tags">{n.data.tech.slice(0,3).map(t=>labelOf('tech',t)).join(' / ')}</span></div><span class="note-read" aria-hidden="true">阅读</span></a></li>)}</ul></section>)}
+      <p class="editorial-empty" id="note-empty" hidden>还没有找到这篇手记。可以缩短关键词，或清除子栏目与标签再试试。</p>
+      {years.map(year=><section class="note-year" data-year={year} id={`year-${year}`} aria-labelledby={`heading-${year}`}><div class="year-heading"><h2 id={`heading-${year}`} data-kinetic>{year}</h2><span class="year-count">{pad(groups.get(year)!.length)} 篇</span></div><ul class="note-list">{groups.get(year)!.map((n,i)=><li class="note-item" data-reveal data-category={n.data.category} data-tags={JSON.stringify(n.data.tech)} data-search={`${n.data.title} ${n.data.category} ${n.data.summary||''} ${n.data.tech.map(t=>labelOf('tech',t)).join(' ')}`}><a href={noteUrl(n)}><div class="note-sequence"><span>{pad(i+1)}</span><time datetime={n.data.date.toISOString()}>{pad(n.data.date.getUTCMonth()+1)}.{pad(n.data.date.getUTCDate())}</time></div><div class="note-text"><h3>{n.data.title}</h3>{n.data.summary&&<p>{n.data.summary}</p>}<span class="note-tags">{n.data.tech.slice(0,3).map(t=>labelOf('tech',t)).join(' / ')}</span></div><span class="note-read" aria-hidden="true">阅读</span></a></li>)}</ul></section>)}
     </section>
   </div>
 </Base>
@@ -30,25 +33,28 @@ const pad=(n:number)=>String(n).padStart(2,'0');
   const index=document.querySelector<HTMLElement>('[data-notes-index]');
   if(index){
     const buttons=[...index.querySelectorAll<HTMLButtonElement>('button[data-tag]')];
+    const categoryButtons=[...index.querySelectorAll<HTMLButtonElement>('button[data-category]')];
     const query=index.querySelector<HTMLInputElement>('#note-query')!;
     const items=[...index.querySelectorAll<HTMLElement>('.note-item')];
     const years=[...index.querySelectorAll<HTMLElement>('.note-year')];
     const empty=index.querySelector<HTMLElement>('#note-empty')!;
     const results=index.querySelector<HTMLElement>('#note-results')!;
     const reset=index.querySelector<HTMLButtonElement>('#note-reset')!;
-    let tag='';
-    function read(){const params=new URLSearchParams(location.search);const requested=params.get('tag')||'';tag=buttons.some(b=>b.dataset.tag===requested)?requested:'';query.value=params.get('q')||'';}
+    let tag='',category='';
+    function read(){const params=new URLSearchParams(location.search);const requested=params.get('tag')||'';tag=buttons.some(b=>b.dataset.tag===requested)?requested:'';const requestedCategory=params.get('category')||'';category=categoryButtons.some(b=>b.dataset.category===requestedCategory)?requestedCategory:'';query.value=params.get('q')||'';}
     function apply(sync=false){
       const text=query.value.trim().toLocaleLowerCase();let shown=0;
-      for(const item of items){const visible=(!tag||JSON.parse(item.dataset.tags||'[]').includes(tag))&&(!text||(item.dataset.search||'').toLocaleLowerCase().includes(text));item.hidden=!visible;if(visible)shown++;}
+      for(const item of items){const visible=(!category||item.dataset.category===category)&&(!tag||JSON.parse(item.dataset.tags||'[]').includes(tag))&&(!text||(item.dataset.search||'').toLocaleLowerCase().includes(text));item.hidden=!visible;if(visible)shown++;}
       for(const year of years){const count=[...year.querySelectorAll<HTMLElement>('.note-item')].filter(item=>!item.hidden).length;year.hidden=count===0;year.querySelector('.year-count')!.textContent=`${String(count).padStart(2,'0')} 篇`;}
       for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.tag===tag));
-      empty.hidden=shown>0;results.textContent=shown===items.length?`共 ${shown} 篇手记`:`找到 ${shown} / ${items.length} 篇手记`;reset.hidden=!tag&&!query.value;
-      if(sync){const url=new URL(location.href);tag?url.searchParams.set('tag',tag):url.searchParams.delete('tag');query.value?url.searchParams.set('q',query.value):url.searchParams.delete('q');history.replaceState(null,'',url);}
+      for(const button of categoryButtons)button.setAttribute('aria-pressed',String(button.dataset.category===category));
+      empty.hidden=shown>0;results.textContent=shown===items.length?`共 ${shown} 篇手记`:`找到 ${shown} / ${items.length} 篇手记`;reset.hidden=!tag&&!category&&!query.value;
+      if(sync){const url=new URL(location.href);category?url.searchParams.set('category',category):url.searchParams.delete('category');tag?url.searchParams.set('tag',tag):url.searchParams.delete('tag');query.value?url.searchParams.set('q',query.value):url.searchParams.delete('q');history.replaceState(null,'',url);}
       document.dispatchEvent(new CustomEvent('site:layout'));
     }
     for(const button of buttons)button.addEventListener('click',()=>{tag=button.dataset.tag||'';apply(true);});
-    query.addEventListener('input',()=>apply(true));reset.addEventListener('click',()=>{tag='';query.value='';apply(true);query.focus();});
+    for(const button of categoryButtons)button.addEventListener('click',()=>{category=button.dataset.category||'';apply(true);});
+    query.addEventListener('input',()=>apply(true));reset.addEventListener('click',()=>{tag='';category='';query.value='';apply(true);query.focus();});
     addEventListener('popstate',()=>{read();apply();});read();apply();
   }
 </script>

@@ -27,6 +27,16 @@ export function noteUrl(n: { collection?: string; id: string; data: { legacyUrl?
 export function workUrl(n: { collection: string; id: string }) { return n.collection === 'published' ? `/notes/${n.id}/` : `/work/${n.id}/`; }
 export function workKey(n: { collection: string; id: string }) { return n.collection === 'published' ? `published:${n.id}` : n.id; }
 
+/** A category exists publicly only when a visible entry in this section uses it. */
+export function categoryCounts(entries: {data:{category?:string}}[]) {
+  const counts = new Map<string,number>();
+  for (const entry of entries) {
+    const category = entry.data.category?.trim();
+    if (category) counts.set(category,(counts.get(category) ?? 0)+1);
+  }
+  return [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0],'zh-CN'));
+}
+
 export async function allWork() {
   const [existing,published] = await Promise.all([getCollection('work'),getCollection('published')]);
   const converted = published.filter(n => !n.data.draft && sectionOf(n) === 'work').map(n => ({...n,data:{

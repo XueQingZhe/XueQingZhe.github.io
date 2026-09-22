@@ -33,7 +33,7 @@ async function fixture(t, initialStatus = idle) {
     let raw = ''; for await (const data of req) raw += data;
     const data = JSON.parse(raw || '{}');
     mock.calls.push({ method: req.method, url: req.url, data, token: req.headers['x-publisher-token'] });
-    if (req.url === '/api/scan') return send({ sections:[{value:'notes'},{value:'tutorials'},{value:'work'}],metadata:{},notes: [], selected: [], assets: {}, missingSelected: [], ffmpeg: false });
+    if (req.url === '/api/scan') return send({ sections:[{value:'notes'},{value:'tutorials'},{value:'work'}],metadata:{},catalog:{tags:[],categories:[],series:[],engine:[],role:[]},notes: [], selected: [], assets: {}, missingSelected: [], ffmpeg: false });
     if (req.url === '/api/deploy/status') return send(mock.status);
     if (req.url === '/api/deploy/review' && req.method === 'POST') return send(mock.review);
     if (req.url === '/api/deploy/start' && req.method === 'POST') {

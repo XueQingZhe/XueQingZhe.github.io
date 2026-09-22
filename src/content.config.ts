@@ -51,6 +51,7 @@ const work = defineCollection({
     cover: z.string(),
     coverVideo: z.string().optional(),
     coverAlt: z.string().optional(),
+    workType: z.enum(['single','collection']).optional(),
 
     media: z.array(mediaItem).default([]),
 
@@ -103,6 +104,7 @@ const articleSchema = z.object({
   replaces: z.string().regex(/^(notes|legacy|work):.+$/).optional(),
   kind: z.enum(['article','tutorial','work']).default('article'), track: z.string().optional(),
   section: z.enum(['notes','tutorials','work']).optional(),
+  workType: z.enum(['single','collection']).optional(),
   cover: z.string().optional(), coverAlt: z.string().optional(), coverVideo: z.string().optional(),
   engine: z.array(z.string()).default([]), role: z.array(z.string()).default([]),
   year: z.number().int().min(2000).max(2100).optional(),

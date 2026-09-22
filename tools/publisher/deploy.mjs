@@ -7,10 +7,12 @@ import http from 'node:http';
 import https from 'node:https';
 import tls from 'node:tls';
 
-const ROOTS = ['content/published/notes', 'public/published-assets', 'src/content', 'public/assets', 'src/data/publisher-topics.json'];
+const CONTENT_ROOTS = ['content/published/notes', 'public/published-assets', 'src/content', 'public/assets'];
+const CONFIG_FILES = ['src/data/publisher-topics.json', 'src/data/publisher-content.json'];
+const ROOTS = [...CONTENT_ROOTS, ...CONFIG_FILES];
 const REPOSITORY = 'XueQingZhe/XueQingZhe.github.io';
 const SITE_URL = 'https://xueqingzhe.github.io/';
-const allowed = file => file === 'src/data/publisher-topics.json' || ROOTS.some(root => file.startsWith(root + '/'));
+const allowed = file => CONFIG_FILES.includes(file) || CONTENT_ROOTS.some(root => file.startsWith(root + '/'));
 const clean = value => String(value).replace(/https?:\/\/[^\s/@]+:[^\s/@]+@/g, 'https://[redacted]@').replace(/(?:gh[pousr]_[A-Za-z0-9_]+|github_pat_[A-Za-z0-9_]+)/g, '[redacted]');
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));

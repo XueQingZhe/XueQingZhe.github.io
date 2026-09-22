@@ -27,7 +27,7 @@ test('publisher UI preserves pending choices, filters root notes, locks review, 
   server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(resolve=>server.close(resolve)));
   const browser=await chromium.launch({headless:true,...(process.env.PUBLISHER_TEST_BROWSER?{channel:process.env.PUBLISHER_TEST_BROWSER}:{})});t.after(()=>browser.close());const page=await browser.newPage();
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  await page.goto(`http://127.0.0.1:${server.address().port}`);await page.locator('#notes .note').first().waitFor();
+  await page.goto(`http://127.0.0.1:${server.address().port}`);await page.locator('#vaultPanel > summary').click();await page.locator('#notes .note').first().waitFor();
   await page.locator('#folder').selectOption('__root__');assert.equal(await page.locator('#notes .note').count(),1);
   await page.getByLabel('选择 Root note',{exact:true}).check();await page.locator('#rescan').click();
   await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('未保存的选择已保留'));

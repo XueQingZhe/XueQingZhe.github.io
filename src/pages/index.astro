@@ -1,14 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
 import LivingScene from '../components/LivingScene.astro';
-import {allNotes,allWork,tutorials,articleSeries} from '../lib/content';
+import {allNotes,allWork,tutorials} from '../lib/content';
 import '../styles/home.css';
 const workCount=(await allWork()).length;
 const notes=await allNotes();const chapters=await tutorials();
 const rooms=[
  {id:'work',href:'/work/',number:'01',name:'造境',en:'WORK',description:'把想象，雕琢成画面',count:`${String(workCount).padStart(2,'0')} 件作品`,caption:'一束光，成为一种可能。'},
- {id:'notes',href:'/notes/',number:'02',name:'拾光',en:'JOURNAL',description:'收集思绪生长的痕迹',count:`${notes.length} 篇手记`,caption:'每个念头，都有它的回声。'},
- {id:'study',href:'/tutorials/',number:'03',name:'寻径',en:'STUDY',description:'沿着好奇，走得更远',count:`${chapters.length+notes.filter(n=>n.collection==='legacy'&&articleSeries(n)==='我独自升级').length} 个章节`,caption:'让好奇心，画出自己的轨道。'},
+ {id:'notes',href:'/notes/',number:'02',name:'拾光',en:'JOURNAL',description:'从这里，找到每一篇记录',count:`${notes.length} 篇公开内容`,caption:'每个念头，都有它的回声。'},
+ {id:'study',href:'/tutorials/',number:'03',name:'寻径',en:'STUDY',description:'沿着好奇，走得更远',count:`${chapters.length} 个章节`,caption:'让好奇心，画出自己的轨道。'},
  {id:'about',href:'/about/',number:'04',name:'回声',en:'ABOUT',description:'认识这个世界的记录者',count:'关于我',caption:'很高兴，在这里遇见你。'}
 ];
 ---

@@ -3,13 +3,12 @@ import Base from '../../layouts/Base.astro';
 import LivingScene from '../../components/LivingScene.astro';
 import CategoryFilter from '../../components/CategoryFilter.astro';
 import '../../styles/editorial-pages.css';
-import { allNotes,tutorials,noteUrl,articleSeries,articleOrder,categoryCounts,type ArticleEntry } from '../../lib/content';
+import { tutorials,noteUrl,articleSeries,articleOrder,categoryCounts,type ArticleEntry } from '../../lib/content';
 import { labelOf } from '../../data/taxonomy';
 const chapters=await tutorials();
-const learning=(await allNotes()).filter(n=>n.collection==='legacy'&&articleSeries(n)==='我独自升级');
 const series=[...new Set(chapters.map(articleSeries))].filter(name=>name && name!=='我独自升级');
 const seriesMeta=(name:string)=>name.startsWith('Unity')?{engine:'UNITY / URP',description:'在 Unity 中逐步搭建角色渲染：从基础材质、法线与描边，到 Ramp 光照与面部阴影。'}:name.startsWith('UE')?{engine:'UNREAL ENGINE',description:'把角色着色的思路带入 Unreal，记录材质实现、渲染控制与效果调整的过程。'}:name.startsWith('Blender')?{engine:'BLENDER',description:'在 Blender 中理解角色的材质、光照与节点，逐步还原风格化画面的层次。'}:{engine:'STUDY SERIES',description:'把相连的想法整理成系列，沿着实践和理解逐步展开。'};
-const solo=[...learning,...chapters.filter(n=>articleSeries(n)==='我独自升级')].sort((a,b)=>articleOrder(a)-articleOrder(b)||a.data.date.valueOf()-b.data.date.valueOf());
+const solo=chapters.filter(n=>articleSeries(n)==='我独自升级').sort((a,b)=>articleOrder(a)-articleOrder(b)||a.data.date.valueOf()-b.data.date.valueOf());
 const groups:{id:string;name:string;engine:string;description:string;items:ArticleEntry[];solo:boolean}[]=[
  ...(solo.length?[{id:'solo',name:'我独自升级',engine:'LEARNING JOURNAL',description:'从基础出发，记录每一次尝试和理解。主线慢慢展开，支线也会通向新的发现。',items:solo,solo:true}]:[]),
  ...series.map(name=>({id:`series-${name}`,name,...seriesMeta(name),items:chapters.filter(n=>articleSeries(n)===name).sort((a,b)=>articleOrder(a)-articleOrder(b)||a.data.date.valueOf()-b.data.date.valueOf()),solo:false})),

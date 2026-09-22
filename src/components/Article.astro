@@ -27,7 +27,7 @@ const readingMinutes=Math.max(1,Math.ceil((raw.match(/[\u3400-\u9fff]/g)?.length
     {data.summary&&<p class="article-summary">{data.summary}</p>}
     <div class="article-meta"><time datetime={data.date.toISOString()}>{data.date.toISOString().slice(0,10).replaceAll('-',' / ')}</time><span class="reading-time"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6.2"/><path d="M9 5.2V9l2.6 1.7"/></svg>约 {readingMinutes} 分钟阅读</span>{data.tech?.length>0&&<span class="article-tags">{data.tech.map((tag:string)=><a href={`${sectionPath}?${new URLSearchParams({...data.category?{category:data.category}:{},tag})}`}>{labelOf('tech',tag)}</a>)}</span>}</div>
     {data.category&&<p class="article-category"><small>子栏目</small><a data-category-link href={categoryUrl}>{data.category}</a></p>}
-    {topicLinks.length>0&&<div class="article-topics">{topicLinks.map(({topic,index,items})=><a href={workUrl(topic)} data-parent-topic><span>所属专题</span><strong>{topic.data.title}</strong><small>第 {index+1} / {items.length} 篇</small></a>)}</div>}
+    {topicLinks.length>0&&<div class="article-topics">{topicLinks.map(({topic,index,items})=><a href={workUrl(topic)} data-parent-topic><span>所属合集</span><strong>{topic.data.title}</strong><small>第 {index+1} / {items.length} 篇</small></a>)}</div>}
     <ReadingTools canonicalPath={noteUrl(entry)} />
   </header>
   <div class:list={['article-grid',{'has-contents':contents.length>2}]}>
@@ -35,7 +35,7 @@ const readingMinutes=Math.max(1,Math.ceil((raw.match(/[\u3400-\u9fff]/g)?.length
     <div class="article-column">
       <article class="prose body article-body" data-pagefind-body data-pagefind-filter={`栏目:${tutorial?'研习':'手记'}`} ><span aria-hidden="true" data-pagefind-index-attrs="data-tags" data-tags={data.tech.join(' ')}></span>{data.category&&<span aria-hidden="true" data-pagefind-index-attrs="data-category" data-category={data.category} data-pagefind-filter={`子栏目:${data.category}`}></span>}<Content/></article>
       <div class="article-end"><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0"/><circle cx="21" cy="9" r="1.5"/></svg><p>记录于此，探索继续。</p><a href="#main">回到开篇</a></div>
-      {topicLinks.map(({topic,prev:before,next:after})=>(before||after)&&<section class="topic-continuation" data-topic-siblings><p><a href={workUrl(topic)}>{topic.data.title}</a><span>沿着专题继续阅读</span></p><nav class="article-pager" aria-label={`${topic.data.title}相邻文章`}>{before?<a href={noteUrl(before)}><small>专题上一篇</small><span>{before.data.title}</span></a>:<span/>}{after&&<a href={noteUrl(after)}><small>专题下一篇</small><span>{after.data.title}</span></a>}</nav></section>)}
+      {topicLinks.map(({topic,prev:before,next:after})=>(before||after)&&<section class="topic-continuation" data-topic-siblings><p><a href={workUrl(topic)}>{topic.data.title}</a><span>沿着合集继续阅读</span></p><nav class="article-pager" aria-label={`${topic.data.title}相邻文章`}>{before?<a href={noteUrl(before)}><small>合集上一篇</small><span>{before.data.title}</span></a>:<span/>}{after&&<a href={noteUrl(after)}><small>合集下一篇</small><span>{after.data.title}</span></a>}</nav></section>)}
       {!topicLinks.length&&(prev||next)&&<nav class="article-pager" aria-label="相邻文章">{prev?<a href={noteUrl(prev)}><small> 上一篇</small><span>{prev.data.title}</span></a>:<span/>}{next&&<a href={noteUrl(next)}><small>下一篇 </small><span>{next.data.title}</span></a>}</nav>}
     </div>
   </div>

@@ -51,7 +51,7 @@ async function labelsFromTaxonomy(site) {
   return labels;
 }
 
-export async function collectCatalog({ site, local = [], presets = [], parse }) {
+export async function collectCatalog({ site, local = [], presets = [], parse, siteEntries = null }) {
   site = await fs.realpath(site);
   const labels = await labelsFromTaxonomy(site);
   const buckets = Object.fromEntries(['tags', 'series', 'categories', 'engine', 'role'].map(kind => [kind, new Map()]));
@@ -68,7 +68,7 @@ export async function collectCatalog({ site, local = [], presets = [], parse }) 
     for (const kind of ['engine', 'role']) for (const value of terms(metadata[kind])) add(kind, value, document);
     add('series', metadata.series, document, section); add('categories', metadata.category, document, section);
   };
-  for (const [relative, defaultSection] of [['src/content/notes', 'notes'], ['src/content/legacy', 'notes'], ['src/content/work', 'work'], ['content/published/notes', 'notes']]) {
+  for (const [relative, defaultSection] of siteEntries ? [] : [['src/content/notes', 'notes'], ['src/content/legacy', 'notes'], ['src/content/work', 'work'], ['content/published/notes', 'notes']]) {
     for (const file of await publicFiles(site, relative)) {
       try {
         const metadata = parse(await fs.readFile(file, 'utf8')).data;
@@ -81,6 +81,7 @@ export async function collectCatalog({ site, local = [], presets = [], parse }) 
       } catch { /* Malformed public sources cannot add catalog entries. */ }
     }
   }
+  for (const entry of siteEntries ?? []) if (entry.active && !entry.draft) consume(entry.metadata, entry.contentId ? 'id:' + entry.contentId : 'site:' + entry.key, entry.metadata.section);
   for (const note of local) consume(note.metadata, 'id:' + note.id, note.metadata.section);
   for (const preset of presets) {
     try { const normalized = catalogPreset(preset); add(presetKinds.get(normalized.kind), normalized.value, null, normalized.section); } catch { /* Ignore invalid private entries without rewriting them. */ }

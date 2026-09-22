@@ -4,6 +4,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { Publisher, frontmatter } from './core.mjs';
+import { PublicationStatus } from './publication-status.mjs';
+import { SiteCovers } from './site-covers.mjs';
 import { CoverMedia } from './cover-media.mjs';
 import { GitPublisher } from './deploy.mjs';
 import { publisherVersion } from './version.mjs';
@@ -19,6 +21,8 @@ const previewUrl = process.env.PUBLISHER_PREVIEW_URL || 'http://127.0.0.1:4325/'
 const publisher = new Publisher({ site, vault: process.env.PUBLISHER_VAULT || 'F:/我的笔记/MyNote', state: process.env.PUBLISHER_STATE || path.resolve(site, '../private-publisher') });
 await publisher.init();
 const coverMedia = new CoverMedia({ publisher, parseFrontmatter: frontmatter });
+const publicationStatus = new PublicationStatus({site});
+const siteCovers = new SiteCovers({site});
 let locked = false;
 async function command(script,args){await new Promise((resolve,reject)=>{const p=spawn(process.execPath,[path.join(site,script),...args],{cwd:site,windowsHide:true,env:{...process.env,ASTRO_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});let log='';for(const stream of [p.stdout,p.stderr])stream.on('data',d=>log=(log+d).slice(-6000));p.on('error',reject);p.on('exit',code=>code===0?resolve():reject(Error('网站构建失败，已保留原副本：'+log)))})}
 async function rebuild(dir){await command('node_modules/astro/astro.js',['build','--force','--outDir',dir]);await command('node_modules/pagefind/lib/runner/bin.cjs',['--site',dir]);}
@@ -51,12 +55,15 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
     }
     if (url.pathname === '/favicon.ico') { res.writeHead(204); return res.end(); }
+    if(req.method==='GET'&&url.pathname==='/api/site-cover-preview'){if(req.headers.origin&&req.headers.origin!==origin||req.headers['sec-fetch-site']==='cross-site')return json(403,{error:'仅接受本机预览'});await siteCovers.serve(req,res,url);return;}
     if (['GET', 'HEAD'].includes(req.method) && ['/api/cover-media/thumbnail', '/api/cover-media/preview'].includes(url.pathname)) {
       if (req.headers.origin && req.headers.origin !== origin || req.headers['sec-fetch-site'] === 'cross-site') return json(403, { error: '素材预览仅接受本机同源页面' });
       await coverMedia.serve(req, res, url); return;
     }
     if (req.headers['x-publisher-token'] !== token || (req.headers.origin && req.headers.origin !== origin)) return json(403, { error: '本地会话验证失败，请刷新页面' });
     if (req.method === 'GET' && url.pathname === '/api/deploy/status') return json(200, deployment.status());
+    if(req.method==='GET'&&url.pathname==='/api/publication-status')return json(200,await publicationStatus.scan(publisher.siteContent??[],{refresh:url.searchParams.get('refresh')==='1'}));
+    if(req.method==='GET'&&url.pathname==='/api/site-covers')return json(200,await siteCovers.list(url.searchParams));
     if (req.method === 'GET' && url.pathname === '/api/cover-media') return json(200, await coverMedia.list(url.searchParams));
     if (locked || deployment.busy) return json(409, { error: '正在处理，请稍候；可继续查看发布进度。' });
     locked = true;
@@ -79,8 +86,10 @@ const server = http.createServer(async (req, res) => {
       if (req.headers.origin !== origin || !req.headers['content-type']?.startsWith('application/json')) return json(403, { error: '请求来源无效' });
       let body = ''; for await (const chunk of req) { body += chunk; if (body.length > 2_000_000) throw Error('请求过大'); }
       const data = JSON.parse(body || '{}');
-      if (url.pathname === '/api/deploy/review') return json(200, await deployment.review());
-      if (url.pathname === '/api/deploy/start') return json(202, await deployment.start(data.id));
+      if (url.pathname === '/api/deploy/review') { await publisher.assertApplied(); return json(200, await deployment.review()); }
+      if (url.pathname === '/api/deploy/start') { await publisher.assertApplied(); return json(202, await deployment.start(data.id)); }
+      if(url.pathname==='/api/content-settings'){await publisher.contentSettings.save(data,publisher.siteContent);return json(200,await publisher.scan());}
+      if(url.pathname==='/api/collections'){const result=await publisher.contentSettings.createCollection(data);await publisher.scan();return json(200,result);}
       if (url.pathname === '/api/site-link') return json(200, await publisher.linkSite(data.path, data.key));
       if (url.pathname === '/api/topics') return json(200, await publisher.topics.save(data, publisher.topicSources()));
       if (url.pathname === '/api/select') { await publisher.select(data.selected, data.assets, data.metadata); return json(200, { ok: true, metadata: publisher.metadataOverrides() }); }

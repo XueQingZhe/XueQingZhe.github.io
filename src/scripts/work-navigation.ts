@@ -23,7 +23,8 @@ function localURL(value: string): URL | undefined {
 function validOrigin(value: unknown): value is Origin {
   const origin = value as Origin | null;
   return !!origin && typeof origin.key === 'string' && typeof origin.detailPath === 'string'
-    && localURL(origin.listUrl)?.pathname === '/work/' && /^\/(?:work|notes)\/.+\/$/.test(origin.detailPath)
+    && localURL(origin.listUrl)?.pathname === '/work/' && /^\/(?!\/).+\/$/.test(origin.detailPath)
+    && localURL(origin.detailPath)?.pathname === origin.detailPath && origin.detailPath !== '/work/'
     && Number.isFinite(origin.scrollY) && origin.scrollY >= 0 && Number.isFinite(origin.scrollX) && Number.isFinite(origin.width);
 }
 function readPending(): Pending | undefined {

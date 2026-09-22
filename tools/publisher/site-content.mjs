@@ -19,6 +19,40 @@ const textFingerprint = body => {
   // propose a manual association, so formatting whitespace is deliberately ignored.
   return walk(parser.parse(body.replace(/!\[\[[^\]\r\n]+\]\]/g, ''))).normalize('NFKC').replace(/\s+/g, '');
 };
+// Unlike the loose candidate fingerprint, reconciliation retains the exact
+// order and names of media. Exported directories/URL encoding may differ.
+export function strongBodyFingerprint(raw, parse) {
+  const body = parse(raw).body.replace(/!\[\[([^\]\r\n]+)\]\]/g, (_, target) => `![](${encodeURI(target.split('|')[0].replaceAll('\\', '/'))})`);
+  const mediaName = value => {
+    let decoded = value; try { decoded = decodeURIComponent(value); } catch {}
+    return decoded.replaceAll('\\', '/').split('/').at(-1).normalize('NFKC').toLocaleLowerCase();
+  };
+  const walk = node => {
+    if (node.type === 'image') return ['media', mediaName(node.url)];
+    if (node.type === 'imageReference') return ['reference', node.identifier];
+    if (node.type === 'definition') return ['definition', node.identifier, mediaName(node.url)];
+    if (node.type === 'html') return ['html', node.value.trim()];
+    if (node.type === 'code') return ['code', node.lang ?? '', node.value.replaceAll('\r\n', '\n').trim()];
+    if (node.type === 'link') return ['link', node.url, (node.children ?? []).map(walk)];
+    if (node.value != null) return [node.type, node.value.normalize('NFKC').replace(/\s+/g, '')];
+    return [node.type, ...(node.children ?? []).map(walk)];
+  };
+  return body.trim() ? hash(JSON.stringify(walk(parser.parse(body)))) : '';
+}
+
+export function reconciliationMatches(scanned, entries, parse) {
+  const eligible = entries.filter(entry => entry.active && !entry.draft && entry.linkable), matches = new Map(), targets = new Map();
+  for (const note of scanned) {
+    if (note.error || note.data.draft === true || note.data.publish === false) continue;
+    if (textFingerprint(parse(note.raw).body).length < 40) continue;
+    const fingerprint = strongBodyFingerprint(note.raw, parse);
+    const candidates = eligible.filter(entry => fingerprint && entry.strongFingerprint === fingerprint);
+    if (candidates.length !== 1) continue;
+    matches.set(note.rel, candidates[0].key);
+    targets.set(candidates[0].key, (targets.get(candidates[0].key) ?? 0) + 1);
+  }
+  return new Map([...matches].filter(([, key]) => targets.get(key) === 1));
+}
 const roots = [['notes', 'src/content/notes'], ['legacy', 'src/content/legacy'], ['work', 'src/content/work'], ['published', 'content/published/notes']];
 
 export async function boundedSite(site, relative) {
@@ -44,12 +78,12 @@ export async function readSiteContent(site, parse) {
         const data = parsed.data, relativeId = slash(path.relative(directory, file)).replace(/\.mdx?$/i, '');
         const id = typeof data.slug === 'string' && data.slug ? data.slug : relativeId.split('/').map(segment => githubSlug(segment)).join('/').replace(/\/index$/, '');
         if (!id || /(^|\/)\.\.($|\/)/.test(id)) continue;
-        const key = `${collection}:${id}`, section = collection === 'work' ? 'work' : data.section ?? ({ work: 'work', tutorial: 'tutorials' }[data.kind] ?? 'notes');
+        const key = `${collection}:${id}`, section = data.section ?? (collection === 'work' || data.kind === 'work' ? 'work' : data.kind === 'tutorial' || typeof data.series === 'string' && data.series.trim() ? 'tutorials' : 'notes');
         const legacyUrl = typeof data.legacyUrl === 'string' && /^\/(?!\/)/.test(data.legacyUrl) && !/[?#\\]/.test(data.legacyUrl) ? data.legacyUrl : '';
         const url = legacyUrl || `/${collection === 'work' ? 'work' : 'notes'}/${id}/`;
         const metadata = { ...data, section, title: typeof data.title === 'string' ? data.title : path.basename(relativeId), tags: data.tags ?? data.tech ?? [], ...(data.date == null && collection === 'work' && Number.isInteger(data.year) ? { date: `${data.year}-01-01` } : {}) };
         const fingerprint = textFingerprint(parsed.body);
-        entries.push({ key, collection, id, path: relative, title: metadata.title, url, section, metadata, work: typeof data.work === 'string' ? data.work : '', notes: typeof data.notes === 'string' ? [data.notes] : Array.isArray(data.notes) ? data.notes.filter(item => typeof item === 'string') : [], digest: hash(raw), bodyDigest: hash(normalizeBody(parsed.body)), fingerprint: fingerprint.length >= 40 ? hash(fingerprint) : '', normalizedTitle: normalizeTitle(metadata.title), candidateTitle: candidateTitle(metadata.title), contentId: typeof data.contentId === 'string' ? data.contentId : '', draft: data.draft === true || data.publish === false, replaces: typeof data.replaces === 'string' ? data.replaces : '', linkable: collection !== 'published', active: data.draft !== true && data.publish !== false });
+        entries.push({ key, collection, id, path: relative, title: metadata.title, url, section, metadata, work: typeof data.work === 'string' ? data.work : '', notes: typeof data.notes === 'string' ? [data.notes] : Array.isArray(data.notes) ? data.notes.filter(item => typeof item === 'string') : [], digest: hash(raw), bodyDigest: hash(normalizeBody(parsed.body)), strongFingerprint: strongBodyFingerprint(raw, parse), fingerprint: fingerprint.length >= 40 ? hash(fingerprint) : '', normalizedTitle: normalizeTitle(metadata.title), candidateTitle: candidateTitle(metadata.title), contentId: typeof data.contentId === 'string' ? data.contentId : '', draft: data.draft === true || data.publish === false, replaces: typeof data.replaces === 'string' ? data.replaces : '', linkable: collection !== 'published', active: data.draft !== true && data.publish !== false });
       }
     };
     await walk(directory);
@@ -73,6 +107,6 @@ export function siteCandidates(raw, title, entries, parse) {
 }
 
 export function publicSiteEntry(entry) {
-  const { bodyDigest, fingerprint, normalizedTitle, candidateTitle, ...visible } = entry;
+  const { bodyDigest, fingerprint, strongFingerprint, normalizedTitle, candidateTitle, ...visible } = entry;
   return visible;
 }

@@ -74,6 +74,7 @@ async function setup(t, { selected = [], viewport, assets = [], omittedScanField
   page.setDefaultTimeout(6000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/`); await settled(page);
+  await page.locator('#vaultPanel > summary').click();
   return { page, mock, errors };
 }
 
@@ -179,9 +180,8 @@ test('per-note publish metadata supports sections, spaced tags, local changes an
   await setTerms(page, 'edit', 'Linear Algebra, WebGL, Linear Algebra，Computer Graphics');
   await setSeries(page, 'edit', 'Rendering basics'); await page.locator('#editOrder').fill('2');
   for (const id of ['save', 'analyze', 'rescan']) assert.equal(await page.locator('#' + id).isDisabled(), true, 'an uncommitted editor draft must not be discarded');
-  await page.locator('#noteMetaApply').click();
-  assert.equal(mock.calls.filter(call => call.url === '/api/select').length, 0, 'applying the editor only changes pending local settings');
-  await save(page);
+  await page.locator('#noteMetaApply').click(); await settled(page);
+  assert.equal(mock.calls.filter(call => call.url === '/api/select').length, 1, 'saving the editor persists the settings immediately');
   assert.deepEqual(lastSave(mock).metadata['Root.md'], {
     section: 'tutorials', title: 'Matrix tutorial', summary: 'A readable public summary', date: '2026-09-22', tags: ['Linear Algebra', 'WebGL', 'Computer Graphics'], series: 'Rendering basics', order: 2,
   });
@@ -209,7 +209,7 @@ test('work metadata fields save typed values and all three sections are availabl
   await setTerms(page, 'edit', 'Unreal Engine, WebGL', 'Engine');
   await setTerms(page, 'edit', 'Technical Art, Rendering', 'Role');
   await page.locator('#editYear').fill('2025'); await page.locator('#editFeatured').check();
-  await page.locator('#noteMetaApply').click(); await save(page);
+  await page.locator('#noteMetaApply').click(); await settled(page);
   assert.deepEqual(lastSave(mock).metadata['Projects/Water.md'], { section: 'work', cover: 'Assets/water.png', engine: ['Unreal Engine', 'WebGL'], role: ['Technical Art', 'Rendering'], year: 2025, featured: true });
   assert.deepEqual(errors, []);
 });
@@ -240,13 +240,15 @@ test('bulk metadata affects only selected search results and preserves or remove
   assert.deepEqual(errors, []);
 });
 
-test('rescan follows note identity after a move while retaining unsaved selections and metadata', async t => {
+test('rescan follows a backend-relinked note after a move while retaining saved metadata', async t => {
   const { page, mock, errors } = await setup(t);
   await noteCheck(page, 'Root note').check(); await edit(page, 'Root.md');
   await page.locator('#editTitle').fill('Pending renamed article');
   await setTerms(page, 'edit', 'Pending, Computer Graphics');
-  await page.locator('#noteMetaApply').click();
+  await page.locator('#noteMetaApply').click(); await settled(page);
   mock.catalog[0].path = 'Imported/Renamed.md';
+  mock.metadata['Imported/Renamed.md'] = mock.metadata['Root.md']; delete mock.metadata['Root.md'];
+  mock.selected = mock.selected.map(file => file === 'Root.md' ? 'Imported/Renamed.md' : file);
   await page.locator('#rescan').click(); await settled(page); await expand(page, 'Imported');
   assert.equal(await noteCheck(page, 'Pending renamed article').isChecked(), true);
   await edit(page, 'Imported/Renamed.md');
@@ -265,7 +267,7 @@ test('editing publication metadata invalidates an existing review and prepared s
   assert.equal(await page.locator('#prepare').isEnabled(), true);
   await page.locator('#prepare').click(); await settled(page);
   assert.equal(await page.locator('#apply').isEnabled(), true);
-  await edit(page, 'Root.md'); await page.locator('#editSection').selectOption('tutorials'); await page.locator('#noteMetaApply').click();
+  await edit(page, 'Root.md'); await page.locator('#editSection').selectOption('tutorials'); await setSeries(page, 'edit', 'Rendering basics'); await page.locator('#noteMetaApply').click(); await settled(page);
   assert.equal(await page.locator('#prepare').isDisabled(), true);
   assert.equal(await page.locator('#apply').isDisabled(), true);
   assert.equal(await page.locator('#staged').isVisible(), false);
@@ -301,7 +303,7 @@ test('historical notes can edit tags without hidden work-year validation blockin
   assert.equal(await page.locator('#editYear').inputValue(), '1980');
   for (const id of ['editCover', 'editEngine', 'editRole', 'editYear', 'editFeatured']) assert.equal(await page.locator('#' + id).isDisabled(), true);
   await setTerms(page, 'edit', 'History, Personal Notes');
-  await page.locator('#noteMetaApply').click();
+  await page.locator('#noteMetaApply').click(); await settled(page);
   assert.equal(await page.locator('#save').isEnabled(), true, 'a notes form must apply even if its derived year is outside the work-only range');
   await save(page);
   assert.deepEqual(mock.metadata['Root.md'], { tags: ['History', 'Personal Notes'] });
@@ -315,12 +317,12 @@ test('changing a publication date updates an implicit work year while preserving
   mock.catalog[1].sourceMetadata.year = 2022;
   await page.locator('#rescan').click(); await settled(page);
   await edit(page, 'Root.md'); await page.locator('#editDate').fill('2024-02-12');
-  await page.locator('#noteMetaApply').click(); await page.locator('#editSection').selectOption('work');
+  await page.locator('#noteMetaApply').click(); await settled(page); await page.locator('#editSection').selectOption('work');
   assert.equal(await page.locator('#editYear').inputValue(), '2024', 'implicit work years follow the newly applied publication date');
   await closeEditor(page); await save(page);
   assert.deepEqual(mock.metadata['Root.md'], { date: '2024-02-12' }, 'deriving the display year must not freeze it as an override');
   await edit(page, 'Study/Overview.md'); await page.locator('#editDate').fill('2024-02-12');
-  await page.locator('#noteMetaApply').click(); await page.locator('#editSection').selectOption('work');
+  await page.locator('#noteMetaApply').click(); await settled(page); await page.locator('#editSection').selectOption('work');
   assert.equal(await page.locator('#editYear').inputValue(), '2022', 'a source-specified work year is independent of the publication date');
   await closeEditor(page); await save(page);
   assert.deepEqual(mock.metadata['Study/Overview.md'], { date: '2024-02-12' });

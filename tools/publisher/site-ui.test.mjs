@@ -44,6 +44,7 @@ async function setup(t, { selected = [], viewport } = {}) {
     let raw = ''; for await (const chunk of req) raw += chunk;
     const data = JSON.parse(raw || '{}'); mock.calls.push({ route: url.pathname, method: req.method, data });
     if (url.pathname === '/api/deploy/status') return send({ busy: false, phase: 'idle', message: '尚无发布任务。' });
+    if (url.pathname === '/api/publication-status') return send({ entries: Object.fromEntries(mock.siteContent.map(entry => [entry.key, { state: 'uploaded', label: '已上传', reason: 'Synthetic remote equality' }])), checkedAt: '2026-09-22T01:00:00Z', stale: false });
     if (url.pathname === '/api/scan') return send({ notes: currentNotes(), selected: mock.selected, metadata: mock.metadata, assets: {}, siteContent: mock.siteContent, sections, catalog, ffmpeg: false, missingSelected: [] });
     if (url.pathname === '/api/topics' && req.method === 'GET') return send(topicResponse());
     if (url.pathname === '/api/topics' && req.method === 'POST') {
@@ -66,12 +67,13 @@ async function setup(t, { selected = [], viewport } = {}) {
   const page = await browser.newPage({ reducedMotion: 'reduce', ...(viewport ? { viewport } : {}) }); page.setDefaultTimeout(6000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/`); await settled(page);
+  await page.locator('#vaultPanel > summary').click();
   return { page, mock, errors };
 }
 
 async function settled(page) { await page.waitForFunction(() => !document.querySelector('main').hasAttribute('aria-busy')); }
 const calls = (mock, route, method) => mock.calls.filter(call => call.route === '/api/' + route && (!method || call.method === method));
-async function openInventory(page) { const details = page.locator('#siteInventory'); if (!(await details.evaluate(element => element.open))) await details.locator('summary').first().click(); }
+async function openInventory(page) { await page.locator('#siteInventory').waitFor({ state: 'visible' }); }
 async function editLocal(page) { await page.getByRole('button', { name: '编辑发布设置 Local.md', exact: true }).click(); }
 async function openTopic(page) { await openInventory(page); await page.locator('[data-edit-topic="ue5-per-material"]').click(); await page.locator('#topicEditor').waitFor({ state: 'visible' }); }
 const topicNotes = page => page.locator('#topicNotes [data-article-key]').evaluateAll(rows => rows.map(row => row.dataset.articleKey));
@@ -115,7 +117,7 @@ test('an unapplied article draft blocks association until its metadata is applie
   await editLocal(page); await page.locator('#editTitle').fill('Pending title');
   assert.equal(await page.locator('#siteLinkSave').isDisabled(), true);
   assert.equal(calls(mock, 'site-link').length, 0);
-  await page.locator('#noteMetaApply').click(); await page.locator('#save').click(); await settled(page);
+  await page.locator('#noteMetaApply').click(); await settled(page);
   await page.locator('#siteLinkSelect').selectOption('notes:shader-basics');
   await page.locator('#siteLinkSave').click(); await settled(page);
   assert.equal(calls(mock, 'site-link').length, 1);
@@ -133,20 +135,19 @@ test('existing topic relationships can be removed, reordered and extended withou
   await page.locator('#topicArticleSearch').fill('Shader');
   await page.locator('#topicArticle').selectOption('tutorials:shader-basics'); await page.locator('#topicAdd').click();
   assert.deepEqual(await topicNotes(page), ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics']);
-  await page.locator('#topicTitle').fill('UE material journal'); await page.locator('#topicSummary').fill('A revised collection of shader studies');
   assert.equal(calls(mock, 'topics', 'POST').length, 0);
   assert.deepEqual(mock.appliedTopics, topicFixtures);
   await page.locator('#topicSave').click(); await settled(page);
-  assert.deepEqual(calls(mock, 'topics', 'POST').at(-1).data, { key: 'ue5-per-material', title: 'UE material journal', summary: 'A revised collection of shader studies', notes: ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics'] });
+  assert.deepEqual(calls(mock, 'topics', 'POST').at(-1).data, { key: 'ue5-per-material', title: 'UE 材质专题', summary: 'Three existing site articles', notes: ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics'] });
   assert.equal(mock.pending, true);
   assert.deepEqual(mock.appliedTopics, topicFixtures, 'saving a topic draft must not update website content immediately');
-  assert.match(await page.locator('#topicStatus').innerText(), /草稿|待|尚未|未写入|已暂存/);
+  assert.match(await page.locator('#topicStatus').innerText(), /草稿|待|尚未|未写入|已暂存|已保存/);
   assert.deepEqual(errors, []);
 });
 
 test('unapplied topic edits block publication actions and can be cancelled without saving a draft', async t => {
   const { page, mock, errors } = await setup(t);
-  await openTopic(page); await page.locator('#topicTitle').fill('Do not keep this title');
+  await openTopic(page); await page.getByRole('button', { name: '移除 UE lighting study', exact: true }).click();
   for (const id of ['analyze', 'rescan', 'prepare', 'apply', 'publishReview', 'topicSelect']) assert.equal(await page.locator('#' + id).isDisabled(), true, id + ' cannot bypass an unapplied topic edit');
   await page.locator('#topicCancel').click();
   assert.equal(calls(mock, 'topics', 'POST').length, 0);
@@ -163,7 +164,7 @@ test('saving a newly selected vault article refreshes topic choices with its app
   assert.equal(await page.locator('#topicArticle option[value="published:n-local"]').count(), 0);
   await page.getByLabel('选择 Local article', { exact: true }).check();
   await editLocal(page); await page.locator('#editTitle').fill('New public shader note');
-  await page.locator('#noteMetaApply').click(); await page.locator('#save').click(); await settled(page);
+  await page.locator('#noteMetaApply').click(); await settled(page);
   assert.equal(calls(mock, 'scan').length, 1, 'saving selection and metadata should refresh choices directly');
   assert.equal(await page.locator('#topicArticle option[value="published:n-local"]').count(), 1);
   assert.match(await page.locator('#topicArticle option[value="published:n-local"]').innerText(), /New public shader note/);
@@ -177,20 +178,20 @@ test('saving a newly selected vault article refreshes topic choices with its app
 
 test('topic-only changes follow analysis, preparation and the on-page local-write confirmation', async t => {
   const { page, mock, errors } = await setup(t, { selected: [] });
-  await openTopic(page); await page.locator('#topicTitle').fill('Updated UE topic');
+  await openTopic(page); await page.getByRole('button', { name: '移除 UE lighting study', exact: true }).click();
   await page.locator('#topicSave').click(); await settled(page);
   await page.locator('#analyze').click(); await settled(page);
-  assert.match(await page.locator('#review').innerText(), /Updated UE topic/);
+  assert.match(await page.locator('#review').innerText(), /UE 材质专题/);
   assert.equal(await page.locator('#prepare').isEnabled(), true, 'topic changes do not require selecting a new local note');
   await page.locator('#prepare').click(); await settled(page);
   assert.equal(await page.locator('#apply').isEnabled(), true);
   await page.locator('#apply').click();
-  assert.match(await page.locator('#applySummary').innerText(), /专题[^\d]*1|1[^\d]*专题/);
+  assert.match(await page.locator('#applySummary').innerText(), /(?:专题|合集)[^\d]*1|1[^\d]*(?:专题|合集)/);
   assert.equal(calls(mock, 'apply').length, 0);
   await page.locator('#applyConfirm').click(); await settled(page);
   assert.deepEqual(calls(mock, 'apply').map(call => call.data), [{ id: 'stage' }]);
   assert.deepEqual(mock.selected, []);
-  assert.equal(mock.appliedTopics[0].title, 'Updated UE topic'); assert.equal(mock.pending, false);
+  assert.deepEqual(mock.appliedTopics[0].notes, ['notes:shader-basics', 'notes:ue-materials']); assert.equal(mock.pending, false);
   assert.match(await page.locator('#applyStatus').innerText(), /成功|已更新|已写入/);
   assert.deepEqual(errors, []);
 });

@@ -3,18 +3,19 @@
 :root{color-scheme:light;--bg:#f3f7f7;--paper:#fff;--ink:#213b49;--muted:#526974;--line:#d5e2e5;--accent:#176b80}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 system-ui,"Microsoft YaHei",sans-serif}header{padding:28px 5%;border-bottom:1px solid var(--line);background:var(--paper);display:flex;justify-content:space-between;align-items:center;gap:20px}h1{font-size:25px;margin:0}p{margin:7px 0;color:var(--muted)}main{padding:26px 5%;max-width:1600px;margin:auto}.steps{display:flex;gap:22px;color:var(--muted);font-size:12px;margin-bottom:25px}.steps b{color:var(--accent)}.layout{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(400px,1.3fr);gap:24px}.panel{background:white;border:1px solid var(--line);border-radius:12px;padding:22px;min-width:0}h2{font-size:18px;margin:0 0 15px}h3{font-size:14px;margin:24px 0 8px}input,select,button{font:inherit}input[type=search],select{border:1px solid #a4bac3;border-radius:6px;padding:8px;background:white;color:var(--ink);max-width:100%}input[type=search]{width:100%;margin:12px 0}input[type=checkbox]{accent-color:var(--accent);width:17px;height:17px;flex:none}button{padding:8px 13px;border:1px solid #a4bac3;border-radius:6px;cursor:pointer;background:white;color:var(--ink)}button.primary{background:var(--accent);color:white;border-color:var(--accent)}button:disabled{opacity:.45;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #e5aa63;outline-offset:2px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.filters{display:flex;gap:10px;flex-wrap:wrap}.note{padding:12px 0;border-bottom:1px solid var(--line);display:flex;align-items:start;gap:10px}.note small,.asset small{display:block;color:var(--muted);overflow-wrap:anywhere;font-size:11px}.note strong{font-size:13px}.badge{font-size:10px;color:var(--accent);margin-left:8px}.notes{max-height:62vh;overflow:auto}.count{font-size:12px;color:var(--muted);margin:12px 0}.message{white-space:pre-wrap;padding:12px 15px;border-left:3px solid var(--accent);background:#e9f3f5;margin-bottom:20px;overflow-wrap:anywhere}.message.error{background:#fff0ed;border-color:#b54031}.asset{padding:12px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:start}.asset>div{flex:1;min-width:0}.asset select{font-size:12px;margin-top:8px}.change{margin:5px 0;font-size:13px}.warning{color:#845a27}.error-text{color:#a1392c}.muted{color:var(--muted)}.empty{padding:36px 15px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:8px}pre{max-height:55vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.7 ui-monospace,monospace;background:var(--bg);padding:15px}details{margin-top:15px}footer{font-size:11px;color:var(--muted);margin:25px 0}.summary{display:flex;gap:20px;margin:15px 0}.summary b{font-size:23px;display:block}.summary span{font-size:11px;color:var(--muted)}[hidden]{display:none!important}@media(max-width:900px){.layout{grid-template-columns:1fr}header{align-items:start;flex-direction:column}.steps{flex-wrap:wrap}.notes{max-height:45vh}}
 .publish-panel{margin-top:24px;border-color:#9abec6;background:linear-gradient(125deg,#fff,#f0f8f6)}.publish-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}.publish-heading h2{margin-bottom:5px}.publish-heading .primary{padding:12px 22px;font-weight:600}.deploy-status{margin:20px 0 0;padding:14px 16px;border-radius:8px;background:#e5f0ef;overflow-wrap:anywhere}.deploy-status[data-phase=error],.deploy-status[data-phase=interrupted]{background:#fff0e9}.deploy-status[data-phase=success]{background:#e3f1e6}.deploy-links{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-top:10px}a{color:var(--accent);text-underline-offset:3px}.deploy-files{max-height:260px;overflow:auto;padding:0;list-style:none}.deploy-files li{display:flex;gap:14px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}.deploy-files code{overflow-wrap:anywhere;min-width:0}.deploy-files span{min-width:35px;color:var(--accent)}.deploy-review{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}.deploy-meta{font-size:12px}.deploy-steps{display:flex;gap:10px;flex-wrap:wrap;list-style:none;padding:0;margin:14px 0 0;font-size:12px;color:var(--muted)}.deploy-steps li{padding:5px 12px;border:1px solid var(--line);border-radius:20px}.deploy-steps li[aria-current=step]{background:var(--accent);border-color:var(--accent);color:white}.deploy-steps li.done{border-color:#8ab3a2;color:#326454}@media(max-width:650px){.publish-heading{align-items:flex-start;flex-direction:column}.publish-heading .primary{width:100%}.deploy-steps{gap:6px}.deploy-steps li{padding:4px 9px}}
 </style><link rel="stylesheet" href="/publisher.css"></head><body>
-<header><div><p style="letter-spacing:3px;font-size:10px">LOCAL PUBLISHER / 只在本机运行</p><h1>文章发布管理器</h1><p>选择笔记，预览文章，一键更新线上网站。</p></div><button id="rescan">重新扫描</button></header>
-<main><div class="steps"><b>01 选择笔记</b><span>02 审核内容与附件</span><span>03 生成副本</span><span>04 预览网站</span><span>05 发布上线</span></div><div id="message" class="message" role="status" aria-live="polite">正在读取本地笔记目录…</div>
-<details id="siteInventory" class="panel site-inventory" hidden><summary>网站现有内容与作品专题 <span class="asset-hint">查看现有文章，调整专题关联</span></summary>
-<p class="asset-hint">这里读取本地网站的全部内容。笔记与已有文章关联后，后续更新沿用原网址；专题设置需审核并写入后生效。新笔记先勾选并保存选择，就能添加到专题。</p>
-<div class="site-filters"><input id="siteSearch" type="search" aria-label="搜索网站内容" placeholder="搜索网站标题或网址"><select id="siteSection" aria-label="网站内容栏目"><option value="">全部栏目</option><option value="notes">渲染手记</option><option value="tutorials">学习系列</option><option value="work">作品与专题</option></select></div>
+<header><div><p style="letter-spacing:3px;font-size:10px">LOCAL PUBLISHER / 只在本机运行</p><h1>网站发布工作台</h1><p>先核对网站现状，再编辑设置、预览并发布变更。</p></div><button id="rescan">重新扫描</button></header>
+<main><div class="steps"><b>01 核对网站内容</b><span>02 编辑与审核变更</span><span>03 本地预览</span><span>04 上传发布</span></div><div id="message" class="message" role="status" aria-live="polite">正在核对本地网站和笔记库…</div>
+<section id="siteInventory" class="panel site-inventory" hidden><div class="workspace-heading"><div><h2>网站内容</h2><p>手记索引全部内容 · 作品展示单篇与合集 · 研习按系列阅读</p></div><div class="actions"><button id="importNotes" type="button">从笔记库添加</button><button id="newCollection" type="button">新建作品合集</button></div></div>
+<div id="inventoryStats" class="inventory-stats"></div><div class="site-filters"><input id="siteSearch" type="search" aria-label="搜索网站内容" placeholder="搜索标题、Tag 或网址"><select id="siteSection" aria-label="网站内容类型"><option value="">全部内容 / 手记索引</option><option value="work">作品</option><option value="tutorials">研习系列</option><option value="notes">普通文章</option></select><select id="siteStatus" aria-label="筛选发布状态"><option value="">全部状态</option><option value="pending">有待处理变更</option><option value="uploaded">已上传</option><option value="modified">本地有修改</option><option value="local">尚未上传</option><option value="unknown">待核对</option></select></div>
+<div class="inventory-status"><p id="publicationHint" class="asset-hint" role="status">正在核对 GitHub 版本…</p><button id="publicationRefresh" type="button">刷新上传状态</button></div>
 <p id="siteCount" class="count"></p><div id="siteItems" class="site-items"></div>
-<label class="field">编辑作品专题<select id="topicSelect"><option value="">选择作品或专题…</option></select></label>
-<form id="topicEditor" hidden><div class="metadata-grid"><label class="field metadata-wide">专题标题<input id="topicTitle" type="text" required maxlength="200"></label><label class="field metadata-wide">专题摘要<textarea id="topicSummary" required maxlength="2000" rows="3"></textarea></label></div>
-<h3>专题内的文章 · 按显示顺序</h3><ol id="topicNotes" class="topic-notes"></ol>
-<label class="field">添加关联文章<input id="topicArticleSearch" type="search" placeholder="搜索文章标题或网址" aria-label="搜索专题候选文章"><select id="topicArticle" aria-label="选择专题关联文章"><option value="">选择要加入的文章…</option></select></label><button id="topicAdd" type="button">加入专题</button>
-<p id="topicStatus" class="asset-hint" role="status"></p><div class="actions"><button id="topicSave" type="submit" class="primary">暂存专题设置</button><button id="topicCancel" type="button">关闭 / 放弃未暂存修改</button></div></form></details>
-<div class="layout"><section class="panel"><h2>笔记目录与发布设置</h2><div id="sectionOverview" class="section-overview" aria-label="浏览现有栏目"></div>
+<form id="collectionCreator" class="collection-creator" hidden><h3>新建作品合集</h3><p>合集有自己的作品页，用来组织多篇文章，例如 UE5.5 引擎源码改造。</p><label class="field">合集名称<input id="collectionTitle" type="text" required maxlength="200"></label><label class="field">合集简介<textarea id="collectionSummary" required maxlength="2000" rows="3"></textarea></label><div class="actions"><button id="collectionCreate" type="submit" class="primary">创建并选择成员文章</button><button id="collectionCancel" type="button">取消</button></div></form>
+<label class="field topic-switcher">管理作品合集<select id="topicSelect"><option value="">选择作品合集…</option></select></label>
+<form id="topicEditor" hidden><h3 id="topicHeading">合集成员</h3><div class="metadata-grid" hidden><label class="field metadata-wide">专题标题<input id="topicTitle" type="text" required maxlength="200"></label><label class="field metadata-wide">专题摘要<textarea id="topicSummary" required maxlength="2000" rows="3"></textarea></label></div>
+<h3>合集文章 · 按显示顺序</h3><ol id="topicNotes" class="topic-notes"></ol>
+<label class="field">添加关联文章<input id="topicArticleSearch" type="search" placeholder="搜索文章标题或网址" aria-label="搜索专题候选文章"><select id="topicArticle" aria-label="选择专题关联文章"><option value="">选择要加入的文章…</option></select></label><button id="topicAdd" type="button">加入合集</button>
+<p id="topicStatus" class="asset-hint" role="status"></p><div class="actions"><button id="topicSave" type="submit" class="primary">保存合集成员</button><button id="topicCancel" type="button">关闭 / 放弃未保存修改</button></div></form></section>
+<div class="layout"><details class="panel vault-panel" id="vaultPanel"><summary>笔记库 · 导入与正文同步</summary><p class="asset-hint">这里选择需要同步正文的笔记。已加入的笔记会保留在网站；网站原有条目可直接在上方编辑设置。</p><div id="sectionOverview" class="section-overview" aria-label="浏览现有栏目"></div>
 <div class="filters"><select id="folder" aria-label="筛选目录"><option value="">全部目录</option></select><label><input id="includeSubfolders" type="checkbox" checked> 包含子目录</label><label><input id="only" type="checkbox"> 只看已选择</label><label><input id="candidate" type="checkbox"> 只看发布候选</label></div>
 <input id="search" type="search" placeholder="搜索标题、路径或 Tag" aria-label="搜索笔记">
 <div class="filters"><select id="noteCategory" aria-label="筛选子栏目"><option value="">全部子栏目</option></select><select id="noteSection" aria-label="筛选栏目"><option value="">全部栏目</option><option value="notes">渲染手记</option><option value="tutorials">学习系列</option><option value="work">作品与实践</option></select><button id="selectVisible">选择当前结果</button><button id="clearVisible">取消当前结果</button></div>
@@ -25,16 +26,16 @@
 <div class="field metadata-wide"><span>从已有 Tag 中选择</span><input id="batchTags" type="hidden"><div id="batchTagsPicker" class="term-picker"></div></div>
 <div class="field metadata-wide"><label><input id="batchSetCategory" type="checkbox"> 统一设置子栏目</label><input id="batchCategory" type="hidden"><div id="batchCategoryPicker" class="term-picker"></div></div><div class="field metadata-wide"><label><input id="batchSetSeries" type="checkbox"> 统一设置系列</label><input id="batchSeries" type="hidden"><div id="batchSeriesPicker" class="term-picker"></div></div></div><div class="actions"><button id="batchMetadataApply">应用到已选笔记</button></div></details>
 
-<div class="actions"><button id="save">保存选择与设置</button><button class="primary" id="analyze">分析本次副本</button></div><p class="asset-hint">目录勾选只包含当前结果，后续新增文件不会自动选中。设置完成后，分析并审核将要公开的内容。</p></section>
-<section class="panel editor-review-panel"><form id="noteEditor" class="note-editor" hidden><div class="editor-heading"><h3>单篇发布设置</h3><button type="button" id="noteMetaClose">关闭 / 放弃未应用编辑</button></div><p id="editorPath" class="asset-hint"></p><section id="siteLinkPanel" class="site-link-panel" hidden><h4>与网站已有文章关联</h4><p id="siteLinkStatus" class="asset-hint"></p><select id="siteLinkSelect" aria-label="选择已有网站文章"><option value="">选择已有的网站文章…</option></select><div class="actions"><button id="siteLinkSave" type="button">关联并保留原网址</button><button id="siteLinkClear" type="button">解除关联</button></div></section><p class="asset-hint">先选发布入口和子栏目，再点选 Tag。没有合适的选项时可搜索并新建，之后就能复用。</p><div class="metadata-grid">
+<div class="actions"><button id="save">保存导入选择</button></div><p class="asset-hint">目录勾选只包含当前结果。取消已生成笔记会在审核中列出撤回；网站原有条目会恢复原文。</p></details>
+<section class="panel editor-review-panel"><form id="noteEditor" class="note-editor" hidden><div id="editorSourceInfo" class="editor-source-info"></div><div class="editor-heading"><h3>发布设置</h3><button type="button" id="noteMetaClose">关闭 / 放弃未保存修改</button></div><p id="editorPath" class="asset-hint"></p><section id="siteLinkPanel" class="site-link-panel" hidden><h4>与网站已有文章关联</h4><p id="siteLinkStatus" class="asset-hint"></p><select id="siteLinkSelect" aria-label="选择已有网站文章"><option value="">选择已有的网站文章…</option></select><div class="actions"><button id="siteLinkSave" type="button">关联并保留原网址</button><button id="siteLinkClear" type="button">解除关联</button></div></section><p class="asset-hint">所有内容都会进入手记索引。选择内容类型后，只显示对应的发布选项。</p><div class="metadata-grid">
 <label class="field metadata-wide">网站标题<input id="editTitle" type="text" required maxlength="200"></label>
-<label class="field">发布栏目<select id="editSection"><option value="notes">渲染手记</option><option value="tutorials">学习系列</option><option value="work">作品与实践</option></select></label>
+<label class="field">内容类型<select id="editSection"><option value="notes">普通文章</option><option value="tutorials">研习系列文章</option><option value="work">作品</option></select></label>
 <label class="field">发布日期<input id="editDate" type="date" required></label>
-<div class="field metadata-wide"><span>子栏目</span><input id="editCategory" type="hidden"><div id="editCategoryPicker" class="term-picker"></div></div><div class="field metadata-wide"><span>Tag · 可多选</span><input id="editTags" type="hidden"><div id="editTagsPicker" class="term-picker"></div></div>
+<details id="categoryAdvanced" class="field metadata-wide"><summary>更多设置 · 分类（可选）</summary><input id="editCategory" type="hidden"><div id="editCategoryPicker" class="term-picker"></div></details><div class="field metadata-wide"><span>Tag · 可多选</span><input id="editTags" type="hidden"><div id="editTagsPicker" class="term-picker"></div></div>
 <label class="field metadata-wide">摘要<textarea id="editSummary" rows="3" maxlength="2000" placeholder="简要说明这篇内容"></textarea></label>
-<div class="field metadata-wide"><span>系列 · 可选</span><input id="editSeries" type="hidden"><div id="editSeriesPicker" class="term-picker"></div></div>
-<label class="field">系列排序<input id="editOrder" type="number" step="1" placeholder="100"></label>
-</div><div id="workMetadata" hidden><p class="asset-hint">作品需要封面与摘要。本地封面会一同列入附件审核。</p><div class="metadata-grid">
+<div id="seriesField" class="field metadata-wide"><span>所属研习系列</span><input id="editSeries" type="hidden"><div id="editSeriesPicker" class="term-picker"></div></div>
+<label id="orderField" class="field">系列篇序<input id="editOrder" type="number" step="1" placeholder="100"></label>
+</div><div id="workMetadata" hidden><label class="field">作品形式<select id="editWorkType"><option value="single">单篇作品</option><option value="collection">作品合集 · 多篇文章</option></select></label><button id="editCollectionMembers" type="button" hidden>管理合集文章</button><p class="asset-hint">作品显示封面和摘要；合集可组织多篇文章。</p><div class="metadata-grid">
 <div class="field metadata-wide cover-field"><span>封面图片或视频</span>
 <div id="coverSelected" class="cover-selected"><p class="asset-hint">尚未选择封面，可从笔记图片与视频中点选。</p></div>
 <div class="actions cover-actions"><button type="button" id="coverBrowse">选择图片或视频</button><button type="button" id="coverClear">移除封面</button></div>
@@ -50,7 +51,7 @@
 <div class="field metadata-wide"><span>职责</span><input id="editRole" type="hidden"><div id="editRolePicker" class="term-picker"></div></div>
 <label class="field">作品年份<input id="editYear" type="number" min="2000" max="2100" step="1"></label>
 <label class="field"><span><input id="editFeatured" type="checkbox"> 精选作品</span></label></div></div>
-<p id="editorHint" class="asset-hint" role="status"></p><div class="actions"><button type="submit" id="noteMetaApply" class="primary">应用此篇设置</button><button type="button" id="noteMetaReset">恢复笔记原属性</button></div></form><h2>本次变更与附件审核</h2><div id="review"><div class="empty">尚未分析本次副本。</div></div><div class="actions"><button id="prepare" class="primary" disabled>生成待预览副本</button><button id="apply" disabled>确认写入本地网站</button><a id="sitePreview" href="__PREVIEW_URL__" target="_blank" rel="noreferrer" style="align-self:center">打开网站预览</a></div><p style="font-size:11px">“写入本地网站”仅更新本机副本，包含已确认的撤回；不会提交 Git 或执行部署。</p><p id="applyStatus" class="local-write-status" role="status" aria-live="polite">先分析本次副本，再审核附件并生成待预览副本。</p><section id="applyReview" class="local-write-review" aria-labelledby="applyReviewTitle" hidden><h3 id="applyReviewTitle">写入前确认</h3><p id="applySummary"></p><p class="asset-hint">将更新本地网站与搜索索引，原笔记保留。这里不会上传到 GitHub。</p><div class="actions"><button type="button" id="applyConfirm" class="primary">开始写入本地网站</button><button type="button" id="applyCancel">暂不写入</button></div></section><div id="staged" hidden><h3>正文副本检查</h3><select id="previewNote" aria-label="选择预览正文"></select><pre id="preview" tabindex="0"></pre></div></section></div>
+<p id="editorHint" class="asset-hint" role="status"></p><div class="actions"><button type="submit" id="noteMetaApply" class="primary">保存发布设置</button><button type="button" id="noteMetaReset">恢复笔记原属性</button></div></form><div class="workspace-heading"><h2>本次待发布变更</h2><button class="primary" id="analyze">检查待发布变更</button></div><p class="asset-hint">先保存设置或正文同步选择，再检查本次改动。</p><div id="review"><div class="empty">尚未分析本次副本。</div></div><div class="actions"><button id="prepare" class="primary" disabled>生成待预览副本</button><button id="apply" disabled>确认写入本地网站</button><a id="sitePreview" href="__PREVIEW_URL__" target="_blank" rel="noreferrer" style="align-self:center">打开网站预览</a></div><p style="font-size:11px">“写入本地网站”仅更新本机副本，包含已确认的撤回；不会提交 Git 或执行部署。</p><p id="applyStatus" class="local-write-status" role="status" aria-live="polite">先分析本次副本，再审核附件并生成待预览副本。</p><section id="applyReview" class="local-write-review" aria-labelledby="applyReviewTitle" hidden><h3 id="applyReviewTitle">写入前确认</h3><p id="applySummary"></p><p class="asset-hint">将更新本地网站与搜索索引，原笔记保留。这里不会上传到 GitHub。</p><div class="actions"><button type="button" id="applyConfirm" class="primary">开始写入本地网站</button><button type="button" id="applyCancel">暂不写入</button></div></section><div id="staged" hidden><h3>正文副本检查</h3><select id="previewNote" aria-label="选择预览正文"></select><pre id="preview" tabindex="0"></pre></div></section></div>
 <section class="panel publish-panel" aria-labelledby="publishTitle">
 <div class="publish-heading"><div><h2 id="publishTitle">预览满意，就让文章上线</h2><p>先写入本地网站，再发布已审核的文章与附件。部署完成后，线上网站会自动更新。</p></div><button id="publishReview" class="primary">发布到 GitHub Pages</button></div>
 <ol class="deploy-steps" aria-label="发布步骤"><li data-deploy-step="check">检查网站</li><li data-deploy-step="push">上传更新</li><li data-deploy-step="build">云端构建</li><li data-deploy-step="pages">上线完成</li></ol>
@@ -60,46 +61,76 @@
 </section>
 <footer>修改和保存笔记不会自动上线。只有点击发布并确认后，才会上传已生成的网站副本；原始笔记库保留在本机。</footer></main>
 <script>
+let contentSettings={entries:[],pending:false},publicationState={entries:{},checkedAt:null,stale:false},publicationLoading=false,publicationQueued=false,publicationRequest=0,editingSiteKey=null;
 let siteContent=[],topicCatalog={topics:[],articles:[],pending:false},topicDirty=false,topicDraft=null;
 const siteURL=value=>typeof value==='string'&&/^\/(?!\/)/.test(value)&&!/[\\\u0000-\u001f]/.test(value)?new URL(value,$('sitePreview').href).href:null;
 function siteAnchor(title,url){const a=el('a',title),href=siteURL(url);if(href){a.href=href;a.target='_blank';a.rel='noreferrer'}return a}
 function syncSiteButtons(busy){
   if(topicDirty)for(const id of ['save','analyze','rescan','prepare','apply','applyConfirm','publishReview','deployConfirm','topicSelect'])$(id).disabled=true;
-  for(const button of document.querySelectorAll('[data-edit-topic]'))button.disabled=busy||topicDirty;
+  for(const button of document.querySelectorAll('[data-edit-topic],[data-edit-site]'))button.disabled=busy||topicDirty||editorDirty;
+  $('publicationRefresh').disabled=publicationLoading||busy;
+  $('newCollection').disabled=busy||editorDirty||topicDirty;
+  $('noteMetaReset').disabled=busy||!!editingSiteKey;
+  const virtual=siteContent.find(e=>e.key===editingSiteKey)?.collection==='collections';for(const id of ['editSection','editWorkType'])$(id).disabled=busy||virtual;
   $('topicSave').disabled=busy||editorDirty||!topicDraft;
   $('topicCancel').disabled=busy;
   $('topicAdd').disabled=busy||!$('topicArticle').value;
   $('siteLinkSave').disabled=busy||editorDirty||topicDirty||!$('siteLinkSelect').value;
-  $('siteLinkClear').disabled=busy||editorDirty||topicDirty||notes.find(n=>n.path===editingPath)?.siteMatch?.state!=='linked'||notes.find(n=>n.path===editingPath)?.siteMatch?.key?.startsWith('published:');
+  $('siteLinkClear').disabled=busy||editorDirty||topicDirty||editorNote()?.siteMatch?.state!=='linked'||editorNote()?.siteMatch?.key?.startsWith('published:');
   for(const button of document.querySelectorAll('#topicNotes button'))button.disabled=busy||button.dataset.blocked==='true';
 }
 async function refreshSiteContent(response){
   if(!Array.isArray(response.siteContent))return;
-  siteContent=response.siteContent;
+  siteContent=response.siteContent;contentSettings=response.contentSettings||{entries:[],pending:false};
   $('siteInventory').hidden=false;
   topicCatalog=await api('topics');
   renderSiteContent();renderTopicOptions();
   if(!topicDirty&&topicDraft){const next=topicCatalog.topics.find(t=>t.key===topicDraft.key);if(next)fillTopic(next);else closeTopic()}
 }
+function canonicalKey(entry){return entry.metadata?.replaces||entry.key}
+function editorNote(){return notes.find(n=>n.path===editingPath)||(editingSiteKey?relatedSource(siteContent.find(e=>e.key===editingSiteKey)||{}):null)}
+function settingsFor(entry){return contentSettings.entries.find(e=>e.key===canonicalKey(entry)||e.key===entry.key)}
+function currentMetadata(entry){return {...entry.metadata,...settingsFor(entry)?.metadata}}
+function linkedSite(note){return siteContent.find(e=>!e.replacedBy&&(e.key===note.siteMatch?.key||canonicalKey(e)===note.siteMatch?.key||e.contentId===note.id&&note.id))}
+function relatedSource(entry){return notes.find(n=>n.siteMatch?.state==='linked'&&(n.siteMatch.key===entry.key||n.siteMatch.key===canonicalKey(entry)))??notes.find(n=>n.id===entry.contentId)}
+function topicFor(entry){return topicCatalog.topics.find(t=>t.url===entry.url)}
+function workType(entry){return currentMetadata(entry).workType||topicFor(entry)?.workType||(topicFor(entry)?.notes.length?'collection':'single')}
 function renderSiteContent(){
-  const q=$('siteSearch').value.trim().toLocaleLowerCase(),section=$('siteSection').value;
-  const all=siteContent.filter(e=>!e.draft&&!e.replacedBy),matches=all.filter(e=>(!section||e.section===section)&&(!q||[e.title,e.url,...e.metadata?.tags||[],...e.metadata?.tech||[]].join(' ').toLocaleLowerCase().includes(q)));
-  $('siteCount').textContent=`网站已有 ${all.length} 项内容 · 当前 ${matches.length} 项${topicCatalog.pending?' · 有专题设置待写入':''}`;
+  const q=$('siteSearch').value.trim().toLocaleLowerCase(),section=$('siteSection').value,state=$('siteStatus').value;
+  const all=siteContent.filter(e=>!e.draft&&!e.replacedBy);
+  const matches=all.filter(e=>{const m=currentMetadata(e),status=publicationState.entries[e.key]?.state||'unknown',pending=settingsFor(e)?.pending||topicFor(e)?.pending||relatedSource(e)?.status==='有更新';return (!section||(m.section||e.section)===section)&&(!state||(state==='pending'?pending||['local','modified'].includes(status):status===state))&&(!q||[m.title,e.url,...m.tags||m.tech||[]].join(' ').toLocaleLowerCase().includes(q))});
+  const stats=$('inventoryStats');stats.replaceChildren();for(const [label,count]of [['网站内容',all.length],['已上传',all.filter(e=>publicationState.entries[e.key]?.state==='uploaded').length],['待上传',all.filter(e=>['local','modified'].includes(publicationState.entries[e.key]?.state)).length],['设置待写入',all.filter(e=>settingsFor(e)?.pending||topicFor(e)?.pending).length]]){const card=el('div');card.append(el('strong',String(count)),el('span',label));stats.append(card)}
+  $('siteCount').textContent=`显示 ${matches.length} / ${all.length} 项 · 手记将索引全部公开内容`;
   const box=$('siteItems');box.replaceChildren();
   for(const entry of matches){
-    const row=el('article',undefined,'site-item');row.dataset.siteKey=entry.key;
-    const info=el('div');info.append(siteAnchor(entry.title,entry.url),el('small',`${sectionLabels[entry.section]||'文章'} · ${entry.url}`));
-    const linked=notes.find(n=>n.siteMatch?.key===entry.key&&n.siteMatch.state==='linked')??notes.find(n=>n.id===entry.contentId);
-    info.append(el('small',linked?'已关联笔记：'+linked.path:entry.managed?'发布器副本':'网站已有 · 尚未关联笔记'));
-    row.append(info);
-    if(entry.section==='work'){
-      const key=entry.metadata?.replaces?.startsWith('work:')?entry.metadata.replaces.slice(5):entry.collection==='published'?entry.key:entry.id;
-      const topic=topicCatalog.topics.find(t=>t.key===key),button=el('button',`编辑专题 · ${topic?.notes.length??0} 篇`);
-      button.type='button';button.dataset.editTopic=key;button.onclick=()=>openTopic(key);row.append(button);
-    }else if(linked){const button=el('button','编辑关联笔记');button.type='button';button.onclick=()=>openNoteEditor(linked.path);row.append(button)}
-    box.append(row);
+    const m=currentMetadata(entry),kind=m.section||entry.section,row=el('article',undefined,'site-item');row.dataset.siteKey=entry.key;
+    const info=el('div',undefined,'site-item-info'),line=el('div',undefined,'site-item-title');line.append(siteAnchor(m.title||entry.title,entry.url));
+    const status=publicationState.entries[entry.key]||{state:'unknown',label:'待核对'},badge=el('span',status.label,'publication-badge');badge.dataset.state=status.state;badge.title=status.reason||'';line.append(badge);info.append(line);
+    const type=kind==='work'?(workType(entry)==='collection'?'作品合集 · '+(topicFor(entry)?.notes.length||0)+' 篇':'单篇作品'):kind==='tutorials'?'研习系列 · '+(m.series||'未设置系列'):'普通文章';
+    info.append(el('small',type+' · '+entry.url));const tags=el('div',undefined,'inventory-tags');for(const tag of m.tags||m.tech||[])tags.append(el('span',tag,'note-tag'));info.append(tags);
+    const source=relatedSource(entry),detail=el('small',source?'笔记来源：'+source.path:'网站原有内容 · 可直接编辑发布设置');
+    info.append(detail);if(settingsFor(entry)?.pending)info.append(el('small','设置已保存，待写入预览','pending-setting'));if(topicFor(entry)?.pending)info.append(el('small','合集成员已保存，待写入预览','pending-setting'));if(source?.status==='有更新')info.append(el('small','笔记正文或设置有更新','pending-setting'));
+    const actions=el('div',undefined,'site-item-actions'),edit=el('button','发布设置');edit.type='button';edit.dataset.editSite=entry.key;edit.onclick=()=>openSiteEditor(entry.key);actions.append(edit);
+    if(kind==='work'&&workType(entry)==='collection'){const topic=topicFor(entry),button=el('button','管理合集 · '+(topic?.notes.length||0)+' 篇');button.type='button';button.dataset.editTopic=topic?.key||'';button.dataset.blocked=String(!topic);button.onclick=()=>{if(topic)openTopic(topic.key)};actions.append(button)}
+    if(source&&source.status==='有更新'){const sync=el('button',selected.has(source.path)?'已纳入正文同步':'纳入正文同步');sync.type='button';sync.dataset.blocked=String(selected.has(source.path));sync.onclick=()=>job(async()=>{selected.add(source.path);changed();await save();renderSiteContent();message('正文已纳入本次同步，点击“检查待发布变更”审核。')});actions.append(sync)}
+    row.append(info,actions);box.append(row);
   }
-  if(!matches.length)box.append(el('p','没有匹配的网站内容。','empty'));
+  if(!matches.length)box.append(el('p',all.length?'没有符合筛选条件的内容。':'网站还没有内容，从笔记库添加第一篇文章。','empty'));
+}
+async function refreshPublication(force=false){
+  if(publicationLoading){publicationQueued=true;return}publicationLoading=true;const request=++publicationRequest;$('publicationRefresh').disabled=true;$('publicationHint').textContent='正在读取 GitHub main 分支并核对本地内容…';
+  try{const result=await api('publication-status'+(force?'?refresh=1':''));if(request!==publicationRequest)return;publicationState=result;renderSiteContent();$('publicationHint').textContent=result.stale?'本次无法核对 GitHub；显示待核对，不把本地副本当作已上传。':'已按 GitHub main 核对'+(result.checkedAt?' · '+new Date(result.checkedAt).toLocaleTimeString('zh-CN'):'')+'。“已上传”表示代码已上传，是否上线以下方部署结果为准。'}
+  catch(error){$('publicationHint').textContent='上传状态暂时无法核对：'+error.message;publicationState={entries:{},stale:true};renderSiteContent()}
+  finally{publicationLoading=false;syncButtons();if(publicationQueued){publicationQueued=false;refreshPublication(force)}}
+}
+function fillSiteEditor(entry){
+  resetCoverPicker();editingPath=null;editingSiteKey=entry.key;const m={...{section:entry.section,category:'',title:entry.title,date:new Date().toISOString().slice(0,10),tags:[],summary:'',series:'',order:100,cover:'',engine:[],role:[],year:new Date().getFullYear(),featured:false},...currentMetadata(entry),workType:workType(entry)};
+  if(m.tech&&!m.tags?.length)m.tags=m.tech;m.date=String(m.date||new Date(m.year,0,1).toISOString()).slice(0,10);
+  for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);if(key==='featured')input.checked=!!m[key];else input.value=Array.isArray(m[key])?m[key].join(', '):m[key]??''}
+  editorInitial=editorValues();editorDirty=false;const source=relatedSource(entry);if(source)renderSiteLink(source);else $('siteLinkPanel').hidden=true;$('editorPath').textContent=entry.url;$('editorSourceInfo').textContent='已读取网站当前设置。保存后先写入本地预览，再上传发布。';$('editorHint').textContent='修改后点击“保存发布设置”。';$('noteMetaReset').hidden=true;refreshPickers('edit');syncEditorSection();$('noteEditor').hidden=false;renderCoverSelected();syncButtons();
+}
+function openSiteEditor(key){
+  if(editorDirty||topicDirty){message('当前还有未保存修改，请先保存或放弃。',true);return}const entry=siteContent.find(e=>e.key===key);if(!entry)return;fillSiteEditor(entry);$('noteEditor').scrollIntoView({block:'start'});$('editTitle').focus({preventScroll:true});
 }
 function renderSiteLink(note){
   $('siteLinkPanel').hidden=!siteContent.length;
@@ -111,32 +142,33 @@ function renderSiteLink(note){
   const status=$('siteLinkStatus');status.replaceChildren(el('span',match?.reason||'如果网站已经有这篇文章，请在此关联。以后更新会沿用原网址。'));
   const target=siteContent.find(e=>e.key===match?.key);
   if(target){status.append(document.createTextNode(' '),siteAnchor('查看网站现有版本',target.url))}
-  const topic=topicCatalog.topics.find(t=>t.url===target?.url);if(topic&&(topic.overrides?.title||topic.overrides?.summary)){const hint=el('p','此作品的标题或摘要由专题设置管理。'),button=el('button','编辑专题标题与摘要');button.type='button';button.onclick=()=>openTopic(topic.key);status.append(hint,button)}
+  const topic=topicCatalog.topics.find(t=>t.url===target?.url);if(topic&&(topic.overrides?.title||topic.overrides?.summary)){const hint=el('p','此作品的标题与摘要可在网站发布设置中修改。'),button=el('button','编辑作品发布设置');button.type='button';button.onclick=()=>openSiteEditor(target.key);status.append(hint,button)}
 }
 function renderTopicOptions(){
-  const select=$('topicSelect'),current=topicDraft?.key||select.value;select.replaceChildren(new Option('选择作品或专题…',''));
-  for(const topic of topicCatalog.topics)select.add(new Option(`${topic.title} · ${topic.notes.length} 篇${topic.pending?' · 待写入':''}`,topic.key));
+  const select=$('topicSelect'),current=topicDraft?.key||select.value;select.replaceChildren(new Option('选择作品合集…',''));
+  for(const topic of topicCatalog.topics.filter(t=>{const e=siteContent.find(e=>e.url===t.url);return e&&workType(e)==='collection'}))select.add(new Option(`${topic.title} · ${topic.notes.length} 篇${topic.pending?' · 待写入':''}`,topic.key));
   select.value=current;renderTopicArticles();
 }
 function renderTopicArticles(){
   const q=$('topicArticleSearch').value.trim().toLocaleLowerCase(),select=$('topicArticle'),previous=select.value;
   select.replaceChildren(new Option('选择要加入的文章…',''));
-  for(const article of topicCatalog.articles.filter(a=>!topicDraft?.notes.includes(a.key)&&(!q||(a.title+' '+a.url).toLocaleLowerCase().includes(q))))select.add(new Option(`${article.title}${article.pending?' · 本次待生成':''} · ${article.url}`,article.key));
+  for(const article of topicCatalog.articles.filter(a=>!topicDraft?.notes.includes(a.key)&&a.url!==topicCatalog.topics.find(t=>t.key===topicDraft?.key)?.url&&(!q||(a.title+' '+a.url).toLocaleLowerCase().includes(q))))select.add(new Option(`${article.title}${article.pending?' · 本次待生成':''} · ${article.url}`,article.key));
   if([...select.options].some(o=>o.value===previous))select.value=previous;
 }
 function fillTopic(topic){
   topicDraft={key:topic.key,title:topic.title,summary:topic.summary,notes:[...topic.notes]};topicDirty=false;
-  $('topicTitle').value=topic.title;$('topicSummary').value=topic.summary;$('topicSelect').value=topic.key;$('topicEditor').hidden=false;
-  $('topicStatus').textContent=topic.pending?'这份专题设置已暂存，分析并写入本地网站后生效。':'关联文章按下面的顺序显示。移除只解除专题关联，文章本身仍保留。';
+  $('topicHeading').textContent=topic.title+' · 合集成员';$('topicTitle').value=topic.title;$('topicSummary').value=topic.summary;$('topicSelect').value=topic.key;$('topicEditor').hidden=false;
+  $('topicStatus').textContent=topic.pending?'合集成员已保存，检查并写入本地网站后生效。':'关联文章按下面的顺序显示。移除只解除合集关联，文章本身仍保留。';
   renderTopicList();renderTopicArticles();syncButtons();
 }
 function openTopic(key){
-  if(topicDirty){message('先暂存当前专题设置，或放弃未暂存的修改。',true);return}
+  if(editorDirty){message('请先保存或放弃发布设置，再编辑合集。',true);return}
+  if(topicDirty){message('请先保存当前合集成员，或放弃修改。',true);return}
   const topic=topicCatalog.topics.find(t=>t.key===key);if(!topic)return;
   $('siteInventory').open=true;fillTopic(topic);$('topicEditor').scrollIntoView({block:'nearest'});
 }
 function closeTopic(){topicDirty=false;topicDraft=null;$('topicEditor').hidden=true;$('topicSelect').value='';syncButtons()}
-function markTopicDirty(){topicDirty=true;invalidate();$('topicStatus').textContent='有未暂存的修改。完成后点击“暂存专题设置”。';syncButtons()}
+function markTopicDirty(){topicDirty=true;invalidate();$('topicStatus').textContent='有未保存的修改。完成后点击“保存合集成员”。';syncButtons()}
 function renderTopicList(){
   const list=$('topicNotes');list.replaceChildren();if(!topicDraft)return;
   topicDraft.notes.forEach((key,index)=>{
@@ -152,9 +184,13 @@ function renderTopicList(){
   if(!topicDraft.notes.length)list.append(el('li','暂无关联文章，可从下方添加。','empty'));
 }
 function initSiteManager(){
-  $('siteSearch').oninput=renderSiteContent;$('siteSection').onchange=renderSiteContent;
+  $('siteSearch').oninput=renderSiteContent;$('siteSection').onchange=renderSiteContent;$('siteStatus').onchange=renderSiteContent;$('publicationRefresh').onclick=()=>refreshPublication(true);
+  $('importNotes').onclick=()=>{$('vaultPanel').open=true;$('vaultPanel').scrollIntoView({block:'start'})};
+  $('newCollection').onclick=()=>{$('collectionCreator').hidden=false;$('collectionTitle').focus()};$('collectionCancel').onclick=()=>{$('collectionCreator').hidden=true};
+  $('collectionCreator').onsubmit=event=>{event.preventDefault();if(!$('collectionCreator').reportValidity())return;job(async()=>{const result=await api('collections',{title:$('collectionTitle').value,summary:$('collectionSummary').value});$('collectionCreator').hidden=true;$('collectionCreator').reset();await scan(true);const topic=topicCatalog.topics.find(t=>t.key===result.key);if(topic)openTopic(topic.key);message('作品合集已创建。添加成员文章后，检查并写入本地预览。')})};
+  $('editCollectionMembers').onclick=()=>{const entry=siteContent.find(e=>e.key===editingSiteKey),topic=entry&&topicFor(entry);if(topic)openTopic(topic.key)};
   $('siteLinkSelect').onchange=syncButtons;
-  async function linkSite(key){const notePath=editingPath;await save();await api('site-link',{path:notePath,key});invalidate();await scan(true);message(key?'已关联网站文章；后续生成会更新原网址。请检查继承的栏目、封面与 Tag。':'已解除关联。网站原有文章保留。')}
+  async function linkSite(key){const notePath=editorNote()?.path;if(!notePath)throw Error('没有可关联的笔记来源');await save();await api('site-link',{path:notePath,key});invalidate();await scan(true);message(key?'已关联网站文章；后续生成会更新原网址。请检查继承的栏目、封面与 Tag。':'已解除关联。网站原有文章保留。')}
   $('siteLinkSave').onclick=()=>job(()=>linkSite($('siteLinkSelect').value));$('siteLinkClear').onclick=()=>job(()=>linkSite(null));
   $('topicSelect').onchange=()=>{$('topicSelect').value?openTopic($('topicSelect').value):closeTopic()};
   $('topicTitle').oninput=markTopicDirty;$('topicSummary').oninput=markTopicDirty;
@@ -162,7 +198,7 @@ function initSiteManager(){
   $('topicAdd').onclick=()=>{if(!topicDraft||!$('topicArticle').value)return;topicDraft.notes.push($('topicArticle').value);renderTopicList();renderTopicArticles();markTopicDirty()};
   $('topicCancel').onclick=closeTopic;
   $('topicEditor').onsubmit=event=>{event.preventDefault();if(!$('topicEditor').reportValidity()||!topicDraft)return;job(async()=>{
-    const key=topicDraft.key;topicCatalog=await api('topics',{key,title:$('topicTitle').value,summary:$('topicSummary').value,notes:topicDraft.notes});topicDirty=false;invalidate();renderTopicOptions();renderSiteContent();fillTopic(topicCatalog.topics.find(t=>t.key===key));message('专题设置已暂存。点击“分析本次副本”，审核后写入本地网站。');
+    const key=topicDraft.key;topicCatalog=await api('topics',{key,title:$('topicTitle').value,summary:$('topicSummary').value,notes:topicDraft.notes});topicDirty=false;invalidate();renderTopicOptions();renderSiteContent();fillTopic(topicCatalog.topics.find(t=>t.key===key));message('合集成员已保存。点击“检查待发布变更”，审核后写入本地预览。');
   })};
 }
 
@@ -174,10 +210,10 @@ let applyReviewId=null,localWrite={phase:'idle',message:''};
 let noteMetadata={},metadataDirty=new Set(),editingPath=null,editorInitial=null,editorDirty=false;
 let coverRequest=0,coverController=null,coverDebounce=null,coverItems=[],coverCurrent=null,coverCurrentInput='',coverTotal=0,coverHasMore=false,coverLoading=false,coverScopePath=null,coverPolicy=null;
 const expandedFolders=new Map();
-const sectionLabels={notes:'渲染手记',tutorials:'学习系列',work:'作品与实践'};
-const metadataInputs={category:'editCategory',title:'editTitle',section:'editSection',date:'editDate',tags:'editTags',summary:'editSummary',series:'editSeries',order:'editOrder',cover:'editCover',engine:'editEngine',role:'editRole',year:'editYear',featured:'editFeatured'};
+const sectionLabels={notes:'普通文章',tutorials:'研习系列',work:'作品'};
+const metadataInputs={workType:'editWorkType',category:'editCategory',title:'editTitle',section:'editSection',date:'editDate',tags:'editTags',summary:'editSummary',series:'editSeries',order:'editOrder',cover:'editCover',engine:'editEngine',role:'editRole',year:'editYear',featured:'editFeatured'};
 const tagList=value=>[...new Set(String(value).split(/[,，;；\n]/).map(s=>s.trim()).filter(Boolean))];
-function noteMeta(n){const m={...{section:'notes',category:'',title:n.title,date:new Date().toISOString().slice(0,10),tags:[],summary:'',series:'',order:100,cover:'',engine:[],role:[],year:new Date().getFullYear(),featured:false},...(n.sourceMetadata||n.metadata||{}),...(noteMetadata[n.path]||{})};if(!n.sourceYearExplicit&&!Object.hasOwn(noteMetadata[n.path]||{},'year'))m.year=new Date(m.date).getUTCFullYear();return m}
+function noteMeta(n){const m={...{section:'notes',category:'',title:n.title,date:new Date().toISOString().slice(0,10),tags:[],summary:'',series:'',order:100,cover:'',engine:[],role:[],year:new Date().getFullYear(),featured:false},...(n.sourceMetadata||n.metadata||{}),...(noteMetadata[n.path]||{}),...(linkedSite(n)?.settings||{})};if(!n.sourceYearExplicit&&!Object.hasOwn(noteMetadata[n.path]||{},'year'))m.year=new Date(m.date).getUTCFullYear();return m}
 const assetFilters={search:'',type:'',min:'',max:'',sort:'size-desc',approval:''};
 const imageExts=['.png','.jpg','.jpeg','.webp','.avif'],videoExts=['.mp4','.webm','.mov','.m4v'];
 const assetModeLabels=[['original','不压缩 · 保留原件'],['lossless','无损优先 · 静态图片'],['optimized','优化体积 · 最长边 1920px'],['video','转为 MP4 · GIF / 视频']];
@@ -313,7 +349,7 @@ function setupPicker(prefix,field,kind,multiple,label){
 }
 for(const prefix of ['edit','batch']){setupPicker(prefix,'Category','category',false,'子栏目');setupPicker(prefix,'Tags','tag',true,'Tag');setupPicker(prefix,'Series','series',false,'系列')}
 setupPicker('edit','Engine','engine',true,'引擎');setupPicker('edit','Role','role',true,'职责');
-$('editSection').addEventListener('change',()=>{if(!editingPath)return;$('editCategory').value='';$('editSeries').value='';refreshPickers('edit');syncButtons()});
+$('editSection').addEventListener('change',()=>{if(!editingPath&&!editingSiteKey)return;$('editCategory').value='';$('editSeries').value='';refreshPickers('edit');syncButtons()});
 $('batchSection').addEventListener('change',()=>{$('batchCategory').value='';$('batchSeries').value='';$('batchSetCategory').checked=false;$('batchSetSeries').checked=false;refreshPickers('batch');syncButtons()});
 function visible(){
   const q=$('search').value.trim().toLowerCase(),folder=$('folder').value,section=$('noteSection').value,category=$('noteCategory').value;
@@ -353,7 +389,7 @@ function render(){
   };
   append(root,container);container.scrollTop=scroll;refreshPickers('batch');updateCategoryFilter();syncButtons();
 }
-async function scan(preserve=false){
+async function scan(preserve=false,refreshRemote=false){
   const pending=preserve&&selectionDirty?[...selected].map(path=>({path,id:notes.find(n=>n.path===path)?.id})):null;
   const edits=preserve?[...metadataDirty].map(path=>({path,id:notes.find(n=>n.path===path)?.id,value:noteMetadata[path]})):[];
   const r=await api('scan');if(!Array.isArray(r.sections)||!r.metadata||!r.catalog){compatible=false;throw Error('此窗口连接的是旧版发布服务。请重新双击 F:\\MyWeb\\文章发布管理器.cmd，并使用新打开的管理器窗口。')}notes=r.notes;selected=new Set(pending?pending.map(p=>notes.find(n=>n.id===p.id)?.path||p.path):r.selected);assetModes={...r.assets};
@@ -362,8 +398,10 @@ async function scan(preserve=false){
   if(r.catalog)termCatalog=r.catalog;ffmpeg=r.ffmpeg;scanned=true;selectionDirty=!!pending||!!edits.length;updateCategoryFilter();
   await refreshSiteContent(r);
   showMissing([...new Set([...selected,...metadataDirty])].filter(p=>!notes.some(n=>n.path===p)));updateFolderOptions();render();
+  if(editingSiteKey&&!editorDirty){const current=siteContent.find(e=>e.key===editingSiteKey);if(current)fillSiteEditor(current);else closeNoteEditor()}
   if(editingPath&&!editorDirty){const current=notes.find(n=>n.path===editingPath);if(current)fillNoteEditor(current);else closeNoteEditor()}
-  message(`扫描完成：${notes.length} 篇可管理笔记，${folderPaths().length} 个目录，已选择 ${selected.size} 篇。${pending||edits.length?'未保存的选择已保留，发布设置也已保留。':''}${r.ffmpeg?'视频转换工具已就绪。':'视频转码工具不可用，可保留原件。'}`);
+  refreshPublication(refreshRemote);
+  message(`核对完成：网站 ${siteContent.filter(e=>!e.replacedBy).length} 项，笔记库 ${notes.length} 篇可管理笔记，${folderPaths().length} 个目录，已选择 ${selected.size} 篇。${pending||edits.length?'未保存的选择已保留，发布设置也已保留。':''}${r.ffmpeg?'视频转换工具已就绪。':'视频转码工具不可用，可保留原件。'}`);
 }
 function editorValues(){const result={};for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);result[key]=['tags','engine','role'].includes(key)?tagList(input.value):key==='featured'?input.checked:['order','year'].includes(key)?Number(input.value|| (key==='order'?100:new Date().getFullYear())):input.value.trim()}return result}
 function stopCoverPreview(){for(const video of $('coverSelected').querySelectorAll('video')){video.pause();video.removeAttribute('src');video.load()}}
@@ -401,14 +439,14 @@ function renderCoverItems(){
   $('coverMore').hidden=!coverHasMore;syncButtons();
 }
 async function loadCoverMedia(append=false,previewOnly=false){
-  if(!editingPath||$('editSection').value!=='work')return;
-  clearTimeout(coverDebounce);coverController?.abort();const controller=new AbortController();coverController=controller;const request=++coverRequest,note=editingPath,value=$('editCover').value.trim();
+  if((!editingPath&&!editingSiteKey)||$('editSection').value!=='work')return;
+  clearTimeout(coverDebounce);coverController?.abort();const controller=new AbortController();coverController=controller;const request=++coverRequest,note=editingSiteKey||editingPath,value=$('editCover').value.trim();
   coverLoading=true;if(!previewOnly)$('coverPickerStatus').textContent='正在读取素材…';syncButtons();
   const params=new URLSearchParams({note,scope:$('coverScope').value,type:$('coverType').value,q:$('coverSearch').value.trim(),offset:String(append?coverItems.length:0),limit:'24',cover:value});
   try{
-    const response=await fetch('/api/cover-media?'+params,{headers:{'X-Publisher-Token':token},signal:controller.signal});const data=await response.json();
+    const response=await fetch((editingSiteKey?'/api/site-covers?':'/api/cover-media?')+params,{headers:{'X-Publisher-Token':token},signal:controller.signal});const data=await response.json();
     if(!response.ok)throw Error(response.status===404?'素材选择服务尚未启动，请重新双击 F:\\MyWeb\\文章发布管理器.cmd。':data.error||'素材读取失败');
-    if(request!==coverRequest||editingPath!==note)return;
+    if(request!==coverRequest||(editingSiteKey||editingPath)!==note)return;
     if(data.current&&$('editCover').value.trim()===value){coverCurrent=data.current;coverCurrentInput=value;renderCoverSelected()}
     if(!previewOnly){coverItems=append?[...coverItems,...data.items.filter(item=>!coverItems.some(old=>old.path===item.path))]:data.items;coverTotal=data.total;coverHasMore=data.hasMore;coverScopePath=note;coverLoading=false;renderCoverItems();$('coverPickerStatus').textContent=`已显示 ${coverItems.length} / ${coverTotal} 项。点击缩略图选用；视频可在上方播放预览。${data.ffmpeg?'':' 视频封面需要本机视频转换工具，当前可先选图片。'}`}
   }catch(error){if(error.name==='AbortError'||request!==coverRequest)return;if(!previewOnly){coverLoading=false;renderCoverItems();$('coverPickerStatus').textContent='读取失败：'+error.message+' 可点击“刷新素材”重试。'}}
@@ -422,22 +460,25 @@ $('coverSearch').oninput=()=>{clearTimeout(coverDebounce);coverRequest++;coverCo
 $('coverMore').onclick=()=>loadCoverMedia(true);$('coverRefresh').onclick=()=>loadCoverMedia();
 $('editCover').oninput=()=>{if($('editCover').value.trim()!==coverCurrentInput){coverCurrent=null;coverCurrentInput='';coverPolicy=null;renderCoverSelected();renderCoverItems()}};
 $('editCover').onchange=()=>{if($('editCover').value.trim()&&!/^https:\/\//i.test($('editCover').value.trim()))loadCoverMedia(false,true)};
-function syncEditorSection(){const work=$('editSection').value==='work';$('workMetadata').hidden=!work;$('editCover').required=work;$('editSummary').required=work;if(!work)closeCoverPicker()}
-function fillNoteEditor(n){if(editingPath!==n.path)for(const picker of pickers.values())if(picker.prefix==='edit')$(picker.search).value='';resetCoverPicker();editingPath=n.path;renderSiteLink(n);const m=noteMeta(n);for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);if(key==='featured')input.checked=!!m[key];else input.value=Array.isArray(m[key])?m[key].join(', '):m[key]??''}editorInitial=editorValues();editorDirty=false;refreshPickers('edit');$('editorPath').textContent=n.path;$('editorHint').textContent='完成后点击“应用此篇设置”，再保存或分析。';syncEditorSection();$('noteEditor').hidden=false;renderCoverSelected();syncButtons();if(m.section==='work'&&m.cover&&!/^https:\/\//i.test(m.cover))loadCoverMedia(false,true)}
-function openNoteEditor(path){if(editorDirty&&editingPath!==path){message('当前发布设置尚未应用，请先应用或关闭编辑。',true);return}const n=notes.find(n=>n.path===path);if(!n)return;if(editingPath!==path||!editorDirty)fillNoteEditor(n);$('noteEditor').scrollIntoView({block:'nearest'});$('editTitle').focus({preventScroll:true})}
-function closeNoteEditor(){resetCoverPicker();editingPath=null;editorInitial=null;editorDirty=false;$('noteEditor').hidden=true;syncButtons()}
+function syncEditorSection(){const work=$('editSection').value==='work',series=$('editSection').value==='tutorials',collection=work&&$('editWorkType').value==='collection';$('workMetadata').hidden=!work;$('seriesField').hidden=!series;$('orderField').hidden=!series;$('editCover').required=work&&!collection;$('editSummary').required=work;$('editCollectionMembers').hidden=!collection||!editingSiteKey;$('coverScope').closest('label').hidden=!!editingSiteKey;$('coverBrowse').textContent=editingSiteKey?'选择网站现有图片':'选择图片或视频';if(!work)closeCoverPicker()}
+function fillNoteEditor(n){if(editingPath!==n.path)for(const picker of pickers.values())if(picker.prefix==='edit')$(picker.search).value='';resetCoverPicker();editingSiteKey=null;editingPath=n.path;$('noteMetaReset').hidden=false;$('editorSourceInfo').textContent='笔记来源：'+n.path;renderSiteLink(n);const m=noteMeta(n);for(const [key,id]of Object.entries(metadataInputs)){const input=$(id);if(key==='featured')input.checked=!!m[key];else input.value=Array.isArray(m[key])?m[key].join(', '):m[key]??(key==='workType'?'single':'')}editorInitial=editorValues();editorDirty=false;refreshPickers('edit');$('editorPath').textContent=n.path;$('editorHint').textContent='完成后点击“保存发布设置”。';syncEditorSection();$('noteEditor').hidden=false;renderCoverSelected();syncButtons();if(m.section==='work'&&m.cover&&!/^https:\/\//i.test(m.cover))loadCoverMedia(false,true)}
+function openNoteEditor(path){if(editorDirty&&editingPath!==path){message('当前发布设置尚未应用，请先应用或关闭编辑。',true);return}const n=notes.find(n=>n.path===path);if(!n)return;const site=linkedSite(n);if(site)return openSiteEditor(site.key);if(editingPath!==path||!editorDirty)fillNoteEditor(n);$('noteEditor').scrollIntoView({block:'nearest'});$('editTitle').focus({preventScroll:true})}
+function closeNoteEditor(){resetCoverPicker();editingSiteKey=null;editingPath=null;editorInitial=null;editorDirty=false;$('noteEditor').hidden=true;syncButtons()}
 function setNoteOverride(path,patch,invalidateNow=true){noteMetadata[path]={...(noteMetadata[path]||{}),...patch};metadataDirty.add(path);if(invalidateNow)changed()}
-$('noteEditor').oninput=event=>{if(event.target.classList.contains('picker-search')||event.target.closest('#coverPicker')||event.target.closest('#siteLinkPanel'))return;editorDirty=true;syncEditorSection();$('editorHint').textContent='有未应用的编辑，请先应用此篇设置。';syncButtons()};
-$('noteEditor').onsubmit=event=>{event.preventDefault();if(!$('noteEditor').reportValidity())return;const values=editorValues(),patch=Object.fromEntries(Object.entries(values).filter(([key,value])=>JSON.stringify(value)!==JSON.stringify(editorInitial[key])));if(coverPolicy&&values.cover===coverPolicy.value&&values.section==='work'){assetModes[coverPolicy.path]=coverPolicy.mode;changed()}if(Object.keys(patch).length)setNoteOverride(editingPath,patch);editorDirty=false;fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('此篇发布设置已应用，请保存或分析本次副本。')};
+$('noteEditor').oninput=event=>{if(event.target.classList.contains('picker-search')||event.target.closest('#coverPicker')||event.target.closest('#siteLinkPanel'))return;editorDirty=true;syncEditorSection();$('editorHint').textContent='有未保存的编辑，请点击“保存发布设置”。';syncButtons()};
+$('noteEditor').onsubmit=event=>{event.preventDefault();if(!$('noteEditor').reportValidity())return;const values=editorValues();if(values.section==='tutorials'&&!values.series){$('editorHint').textContent='请先选择或新建所属研习系列。';return}const patch=Object.fromEntries(Object.entries(values).filter(([key,value])=>JSON.stringify(value)!==JSON.stringify(editorInitial[key])));if(values.section!=='tutorials'&&editorInitial.section==='tutorials')patch.series='';if(values.section==='work'&&values.workType==='collection'&&!values.cover)patch.cover='/covers/placeholder.svg';job(async()=>{
+  if(editingSiteKey){const key=editingSiteKey;if(Object.keys(patch).length)await api('content-settings',{key:canonicalKey(siteContent.find(e=>e.key===key)),metadata:patch});editorDirty=false;invalidate();await scan(true);const entry=siteContent.find(e=>e.key===key);if(entry)fillSiteEditor(entry);message('发布设置已保存。检查待发布变更后，写入本地预览。')}
+  else{if(coverPolicy&&values.cover===coverPolicy.value&&values.section==='work')assetModes[coverPolicy.path]=coverPolicy.mode;if(Object.keys(patch).length)setNoteOverride(editingPath,patch);editorDirty=false;await save();fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('此篇发布设置已保存。可以直接检查待发布变更。')}
+})};
 $('noteMetaClose').onclick=closeNoteEditor;
 $('noteMetaReset').onclick=()=>{if(!editingPath)return;noteMetadata[editingPath]=null;metadataDirty.add(editingPath);editorDirty=false;changed();fillNoteEditor(notes.find(n=>n.path===editingPath));render();message('已恢复为笔记原属性，请保存或分析本次副本。')};
 $('batchSetSeries').onchange=syncButtons;$('batchSetCategory').onchange=syncButtons;
-$('batchMetadataApply').onclick=()=>{const matches=visible().filter(n=>selected.has(n.path)&&!n.blocked),tags=tagList($('batchTags').value),mode=$('batchTagMode').value;
+$('batchMetadataApply').onclick=()=>job(async()=>{const matches=visible().filter(n=>selected.has(n.path)&&!n.blocked),tags=tagList($('batchTags').value),mode=$('batchTagMode').value;
   if(!pickerScope('batch')&&($('batchSetCategory').checked||$('batchSetSeries').checked)){message('请先选择统一的发布入口，再批量设置子栏目或系列。',true);return}
   if(!$('batchSection').value&&!tags.length&&mode!=='replace'&&!$('batchSetSeries').checked&&!$('batchSetCategory').checked){message('请先选择要批量修改的栏目、Tag 或系列。',true);return}
-  for(const n of matches){const patch={},m=noteMeta(n);if($('batchSection').value){patch.section=$('batchSection').value;if(patch.section!==m.section){patch.category='';patch.series=''}}if($('batchSetCategory').checked)patch.category=$('batchCategory').value;if(tags.length||mode==='replace')patch.tags=mode==='replace'?tags:mode==='remove'?m.tags.filter(t=>!tags.includes(t)):[...new Set([...m.tags,...tags])];if($('batchSetSeries').checked)patch.series=$('batchSeries').value.trim();setNoteOverride(n.path,patch,false)}
-  changed();if(editingPath)fillNoteEditor(notes.find(n=>n.path===editingPath));render();message(`已为当前筛选中选中的 ${matches.length} 篇笔记更新设置。请保存或分析；作品还需单独检查封面和摘要。`);
-};
+  for(const n of matches){const patch={},m=noteMeta(n);if($('batchSection').value){patch.section=$('batchSection').value;if(patch.section!==m.section){patch.category='';patch.series=''}}if($('batchSetCategory').checked)patch.category=$('batchCategory').value;if(tags.length||mode==='replace')patch.tags=mode==='replace'?tags:mode==='remove'?m.tags.filter(t=>!tags.includes(t)):[...new Set([...m.tags,...tags])];if($('batchSetSeries').checked)patch.series=$('batchSeries').value.trim();const site=linkedSite(n);if(site)await api('content-settings',{key:canonicalKey(site),metadata:patch});else setNoteOverride(n.path,patch,false)}
+  changed();await save();await scan(true);message(`已为当前筛选中选中的 ${matches.length} 篇笔记保存设置。点击“检查待发布变更”继续；作品需要封面和摘要。`);
+});
 $('expandFolders').onclick=()=>{for(const path of folderPaths())expandedFolders.set(path,true);render()};
 $('collapseFolders').onclick=()=>{for(const path of folderPaths())expandedFolders.set(path,false);render()};
 function showMissing(paths){$('missing').replaceChildren();for(const old of paths){const row=el('div',undefined,'message error');row.append(el('p','已选文件找不到：'+old));const select=el('select');select.setAttribute('aria-label','选择移动后的文件');select.add(new Option('选择移动后的笔记…',''));notes.filter(n=>!n.blocked).forEach(n=>select.add(new Option(n.path,n.path)));const link=el('button','关联并保留旧网址');link.onclick=()=>job(async()=>{if(!select.value)throw Error('先选择新的文件位置');const next=select.value;await api('relink',{oldPath:old,newPath:next});if(selected.delete(old))selected.add(next);if(metadataDirty.delete(old)){noteMetadata[next]=noteMetadata[old];delete noteMetadata[old];metadataDirty.add(next)}if(editingPath===old)editingPath=next;invalidate();await scan(true)});const remove=el('button','取消此选择');remove.onclick=()=>{selected.delete(old);delete noteMetadata[old];metadataDirty.delete(old);row.remove();changed();render()};row.append(select,link,remove);$('missing').append(row)}}
@@ -462,6 +503,7 @@ function clearAssetStage(){stage=null;resetWriteReview();$('staged').hidden=true
 function showPlan(){
   const box=$('review');box.replaceChildren();
   for(const [key,title]of [['added','新增'],['updated','修改'],['removed','撤回'],['restored','恢复网站原文']]){box.append(el('h3',title+' · '+(plan.changes[key]||[]).length));(plan.changes[key]||[]).forEach(t=>box.append(el('div',t,'change')))}
+  if(plan.changes.contentSettings?.length){const detail=el('details');detail.open=true;detail.append(el('summary','发布设置 · '+plan.changes.contentSettings.length+' 项'));for(const item of plan.changes.contentSettings){detail.append(el('h3',(item.added?'新建合集：':'')+item.title),el('p',(sectionLabels[item.metadata.section]||'普通文章')+(item.metadata.series?' · '+item.metadata.series:'')),el('p',(item.metadata.tags||[]).map(t=>'#'+t).join(' · ')))}box.append(detail)}
   if(plan.changes.topics?.length){const detail=el('details');detail.open=true;detail.append(el('summary','专题调整 · '+plan.changes.topics.length));for(const t of plan.changes.topics){detail.append(el('h3',t.title));const list=el('ol');for(const n of t.notes)list.append(el('li',n.title));detail.append(list);if(!t.notes.length)detail.append(el('p','清空关联文章，文章本身保留。'))}box.append(detail)}
   if(plan.notes?.length){const details=el('details',undefined,'metadata-review');details.open=true;details.append(el('summary',`栏目与发布设置 · ${plan.notes.length} 篇`));for(const n of plan.notes){const m=n.metadata||{},article=el('article');article.append(el('strong',n.title),el('p',`${sectionLabels[m.section]||'渲染手记'}${m.series?' · '+m.series:''}${m.date?' · '+m.date:''}`));if(m.category)article.append(el('p','子栏目：'+m.category));if(m.tags?.length)article.append(el('p',m.tags.map(t=>'#'+t).join(' · '),'review-tags'));if(m.cover)article.append(el('p','封面：'+m.cover));details.append(article)}box.append(details)}
   if(plan.errors.length){box.append(el('h3','需要处理的问题'));plan.errors.forEach(e=>box.append(el('p',e.path+'：'+e.message,'error-text')))}
@@ -533,7 +575,7 @@ function renderAssets(){
   }
   syncButtons();
 }
-$('rescan').onclick=()=>job(async()=>{invalidate();await scan(true)});['search','folder','only','candidate','includeSubfolders','noteSection','noteCategory'].forEach(id=>$(id).addEventListener('input',()=>{expandedFolders.clear();render()}));$('selectVisible').onclick=()=>{visible().filter(n=>!n.blocked).forEach(n=>selected.add(n.path));changed();render()};$('clearVisible').onclick=()=>{visible().forEach(n=>selected.delete(n.path));changed();render()};$('save').onclick=()=>job(async()=>{await save();message('选择与发布设置已保存，尚未生成网站副本。')});$('analyze').onclick=()=>job(async()=>{invalidate();await save();message('正在检查正文与引用…');plan=await analyzeAssets();showPlan();message(plan.errors.length?'分析发现问题，请修正后重新分析。':'分析完成。可以按类型、大小筛选附件，批量设置压缩方式并确认，再生成副本。',plan.errors.length>0)});
+$('rescan').onclick=()=>job(async()=>{invalidate();await scan(true,true)});['search','folder','only','candidate','includeSubfolders','noteSection','noteCategory'].forEach(id=>$(id).addEventListener('input',()=>{expandedFolders.clear();render()}));$('selectVisible').onclick=()=>{visible().filter(n=>!n.blocked).forEach(n=>selected.add(n.path));changed();render()};$('clearVisible').onclick=()=>{visible().forEach(n=>selected.delete(n.path));changed();render()};$('save').onclick=()=>job(async()=>{await save();message('选择与发布设置已保存，尚未生成网站副本。')});$('analyze').onclick=()=>job(async()=>{invalidate();await save();message('正在检查正文与引用…');plan=await analyzeAssets();showPlan();message(plan.errors.length?'分析发现问题，请修正后重新分析。':'分析完成。可以按类型、大小筛选附件，批量设置压缩方式并确认，再生成副本。',plan.errors.length>0)});
 $('prepare').onclick=()=>job(async()=>{resetWriteReview();message('正在生成媒体和正文副本，大视频可能需要几分钟…');stage=await api('prepare',{id:plan.id,approved:plan.assets.filter(a=>approvedAssets.has(approvalId(a))).map(a=>a.key)});const before=stage.assets.reduce((s,a)=>s+a.originalBytes,0),after=stage.assets.reduce((s,a)=>s+a.bytes,0);message(`待预览副本已生成：${stage.notes.length} 篇，媒体 ${size(before)} → ${size(after)}。尚未写入网站。`);showAssetResults();$('staged').hidden=!stage.notes.length;$('previewNote').replaceChildren();stage.notes.forEach(n=>$('previewNote').add(new Option(n.title,n.slug)));if(stage.notes.length)await preview()});
 function showAssetResults(){
   $('assetResults')?.remove();if(!stage.assets.length)return;
@@ -548,7 +590,7 @@ async function preview(){const r=await api('stage?id='+encodeURIComponent(stage.
 $('apply').onclick=()=>{
   if(working||deployState.busy||editorDirty||!stage||!compatible)return;
   applyReviewId=stage.id;localWrite={phase:'idle',message:''};
-  $('applySummary').textContent=`本次写入 ${stage.notes.length} 篇文章、${stage.assets.length} 项附件；撤回 ${stage.changes.removed.length} 篇文章${stage.changes.restored?.length?'；恢复 '+stage.changes.restored.length+' 篇网站原文':''}${stage.changes.topics?.length?'；调整 '+stage.changes.topics.length+' 个作品专题':''}。`;
+  $('applySummary').textContent=`本次写入 ${stage.notes.length} 篇文章、${stage.assets.length} 项附件；撤回 ${stage.changes.removed.length} 篇文章${stage.changes.contentSettings?.length?'；更新 '+stage.changes.contentSettings.length+' 项发布设置':''}${stage.changes.restored?.length?'；恢复 '+stage.changes.restored.length+' 篇网站原文':''}${stage.changes.topics?.length?'；调整 '+stage.changes.topics.length+' 个作品专题':''}。`;
   syncButtons();$('applyReview').scrollIntoView({block:'nearest'});$('applyConfirm').focus({preventScroll:true});
 };
 $('applyCancel').onclick=()=>{resetWriteReview();syncButtons();$('apply').focus()};
@@ -584,11 +626,11 @@ async function refreshDeployment(){
   if(statusFetching)return;const wasBusy=deployState.busy;statusFetching=true;syncButtons();
   try{showDeployment(await api('deploy/status'))}catch(e){$('deployStatus').textContent='暂时无法读取发布状态：'+e.message+'。可点击刷新重试。';$('deployStatus').dataset.phase='error'}
   finally{statusFetching=false;syncButtons();scheduleDeploymentPoll()}
-  if(wasBusy&&!deployState.busy&&!scanned&&!working)await job(scan);
+  if(wasBusy&&!deployState.busy){if(!scanned&&!working)await job(scan);else refreshPublication(true)}
 }
 $('deployRefresh').onclick=refreshDeployment;
 $('publishReview').onclick=()=>job(async()=>{
-  if(selectionDirty||stage||plan)throw Error('还有未写入的笔记修改，请先完成“确认写入本地网站”并预览，再发布。');
+  if(selectionDirty||stage||plan||contentSettings.pending||topicCatalog.pending)throw Error('还有未写入的内容或发布设置，请先点击“检查待发布变更”，完成本地写入和预览，再发布。');
   $('deployStatus').textContent='正在检查待发布更新与线上版本…';
   deployReview=null;const r=await api('deploy/review',{});deployReview=r;$('deployReview').hidden=false;
   $('deployTarget').textContent=r.repository?`发布到 ${r.repository} · ${r.branch}`:'';
@@ -602,9 +644,9 @@ $('publishReview').onclick=()=>job(async()=>{
 });
 $('deployCancel').onclick=()=>{deployReview=null;$('deployReview').hidden=true;syncButtons()};
 $('deployConfirm').onclick=()=>job(async()=>{
-  if(!deployReview?.canPublish)return;
+  if(!deployReview?.canPublish)return;if(contentSettings.pending||topicCatalog.pending||selectionDirty||stage||plan)throw Error('发布设置仍待写入，请先完成本地预览。');
   const r=await api('deploy/start',{id:deployReview.id});showDeployment(r);scheduleDeploymentPoll();message('发布已开始。下方会显示进度，部署完成后即可访问线上网站。');
 });
 initSiteManager();
-job(async()=>{await refreshDeployment();if(!deployState.busy)await scan();else message('正在恢复发布进度，请等待本次部署完成。')});
+job(async()=>{await refreshDeployment();if(!deployState.busy){await scan()}else message('正在恢复发布进度，请等待本次部署完成。')});
 </script></body></html>

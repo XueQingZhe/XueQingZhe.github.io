@@ -70,6 +70,7 @@ async function setup(t, { ffmpeg = true, viewport, modes = {} } = {}) {
   const page = await browser.newPage({ reducedMotion: 'reduce', ...(viewport ? { viewport } : {}) }); page.setDefaultTimeout(6000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/`); await settled(page);
+  await page.locator('#vaultPanel > summary').click();
   await edit(page, 'Root.md');
   await page.locator('#coverSelected img').waitFor();
   return { page, mock, errors };
@@ -81,7 +82,7 @@ const item = (page, file) => page.locator('#coverItems button[data-cover-path=' 
 const coverPaths = page => page.locator('#coverItems button[data-cover-path]').evaluateAll(items => items.map(item => item.dataset.coverPath));
 const selectionCalls = mock => mock.calls.filter(call => call.route === '/api/select');
 async function openPicker(page) { await page.locator('#coverBrowse').click(); await page.locator('#coverPicker').waitFor({ state: 'visible' }); await page.locator('#coverItems button[data-cover-path]').first().waitFor(); }
-async function applyAndSave(page) { if (await page.locator('#coverPicker').isVisible()) await page.locator('#coverClose').click(); await page.locator('#noteMetaApply').click(); await page.locator('#save').click(); await settled(page); }
+async function applyAndSave(page) { if (await page.locator('#coverPicker').isVisible()) await page.locator('#coverClose').click(); await page.locator('#noteMetaApply').click(); await settled(page); }
 async function changeFilter(page, id, value) {
   const response = page.waitForResponse(response => new URL(response.url()).pathname === '/api/cover-media');
   await page.locator('#' + id).selectOption(value); await (await response).finished(); await paint(page);

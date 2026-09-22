@@ -142,7 +142,7 @@ test('metadata and selections save atomically and persist through restart', asyn
 
 test('overrides follow unique renames and explicit relinks with stable content identities', async t => {
   const { p, write, vault } = await fixture(t);
-  await write('Old.md', '正文'); await p.scan(); await p.select(['Old.md'], {}, { 'Old.md': { title: '网站标题', section: 'tutorials', tags: ['Linear Algebra'] } });
+  await write('Old.md', '正文'); await p.scan(); await p.select(['Old.md'], {}, { 'Old.md': { title: '网站标题', section: 'tutorials', series: 'Linear Algebra', tags: ['Linear Algebra'] } });
   const identity = p.db.entries['Old.md'].id, slug = p.db.entries['Old.md'].slug;
   await fs.rename(path.join(vault, 'Old.md'), path.join(vault, 'Renamed.md'));
   let scan = await p.scan();
@@ -180,7 +180,7 @@ test('historical articles and tutorials omit work-only fields; works require a v
   const { p, write } = await fixture(t);
   await write('A.md', '---\ndate: 1980-02-03\n---\n正文'); await p.scan();
   for (const section of ['notes', 'tutorials']) {
-    await p.select(['A.md'], {}, { 'A.md': { section, engine: ['Unreal Engine'], role: ['Technical Artist'], featured: true } });
+    await p.select(['A.md'], {}, { 'A.md': { section, ...(section === 'tutorials' ? { series: 'Rendering history' } : {}), engine: ['Unreal Engine'], role: ['Technical Artist'], featured: true } });
     const plan = await p.analyze(); assert.deepEqual(plan.errors, []);
     const meta = frontmatter(plan.output[0].markdown).data;
     assert.equal(meta.date, '1980-02-03'); assert.equal(meta.section, section);

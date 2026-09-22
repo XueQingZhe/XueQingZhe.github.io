@@ -40,7 +40,7 @@ test('catalog aggregates nested public sources, safe labels and local effective 
   assert.equal(item(catalog, 'role', 'Tooling').label, '工具');
   assert.equal(item(catalog, 'series', '我独自升级', 'tutorials').count, 3);
   assert.equal(item(catalog, 'categories', '数学', 'tutorials').count, 3);
-  assert.equal(item(catalog, 'categories', '图形学', 'notes').count, 1);
+  assert.equal(item(catalog, 'categories', '图形学', 'tutorials').count, 1);
   assert.equal(item(catalog, 'categories', '图形学', 'work').count, 1);
   assert.equal(item(catalog, 'tags', 'DRAFT_PUBLIC_SOURCE'), undefined);
   await p.select([], {}, { 'folder/A.md': { tags: ['Changed Local Tag'], category: '物理', section: 'notes' } });
@@ -59,8 +59,8 @@ test('matching local and generated public identities count once per term', async
   const stage = await p.prepare(plan.id, []); await p.apply(stage.id);
   const catalog = (await p.scan()).catalog;
   assert.equal(item(catalog, 'tags', 'Shared Tag').count, 1);
-  assert.equal(item(catalog, 'series', '同一系列', 'notes').count, 1);
-  assert.equal(item(catalog, 'categories', '数学', 'notes').count, 1);
+  assert.equal(item(catalog, 'series', '同一系列', 'tutorials').count, 1);
+  assert.equal(item(catalog, 'categories', '数学', 'tutorials').count, 1);
 });
 
 test('new terms remain private, survive restart and do not invalidate a reviewed plan', async t => {
@@ -110,7 +110,7 @@ test('category metadata is scoped, inherited, follows renames and invalidates pr
   const raw = '---\ncategory: 源子栏目\n---\n正文'; await write(vault, 'A.md', raw); await p.scan();
   assert.equal(p.notes[0].sourceMetadata.category, '源子栏目');
   await p.select(['A.md']); let plan = await p.analyze(); const stage = await p.prepare(plan.id, []);
-  await p.select(['A.md'], {}, { 'A.md': { category: '物理 模拟', section: 'tutorials' } });
+  await p.select(['A.md'], {}, { 'A.md': { category: '物理 模拟', section: 'tutorials', series: '物理模拟' } });
   await assert.rejects(p.apply(stage.id), /发布设置已改变/);
   await fs.rename(path.join(vault, 'A.md'), path.join(vault, 'Moved.md')); await p.scan();
   assert.equal(p.metadataOverrides()['Moved.md'].category, '物理 模拟');
@@ -129,7 +129,7 @@ test('catalog ignores symbolic links to content outside the site', async t => {
   assert.equal(item(catalog, 'tags', 'DO_NOT_READ_EXTERNAL'), undefined);
 });
 
-test('legacy learning journal appears in both site scopes without counting its tags twice', async t => {
+test('series-bearing legacy content inherits tutorial type unless a primary section is explicit', async t => {
   const { p, write, site } = await fixture(t);
   await write(site, 'src/content/legacy/public.md', '---\nkind: article\nseries: 我独自升级\ncategory: 数学\ntech: [线性代数]\n---\n公开旧文');
   await write(site, 'src/content/legacy/private.md', '---\nkind: article\nseries: 我独自升级\ncategory: 草稿分类\ntech: [草稿标签]\ndraft: true\n---\n草稿');
@@ -137,12 +137,13 @@ test('legacy learning journal appears in both site scopes without counting its t
   await write(site, 'src/content/notes/local.md', '---\nseries: 我独自升级\ncategory: 普通笔记分类\ntech: [笔记标签]\n---\n普通笔记');
   await write(site, 'content/published/notes/public.md', '---\nsection: notes\nseries: 我独自升级\ncategory: 新笔记分类\ntech: [新笔记标签]\n---\n生成笔记');
   const catalog = (await p.scan()).catalog;
-  assert.equal(item(catalog, 'series', '我独自升级', 'tutorials').count, 1);
-  assert.equal(item(catalog, 'series', '我独自升级', 'notes').count, 3);
+  assert.equal(item(catalog, 'series', '我独自升级', 'tutorials').count, 2);
+  assert.equal(item(catalog, 'series', '我独自升级', 'notes').count, 1);
   assert.equal(item(catalog, 'series', '我独自升级', 'work').count, 1);
-  assert.equal(item(catalog, 'categories', '数学', 'notes').count, 1);
+  assert.equal(item(catalog, 'categories', '数学', 'notes'), undefined);
   assert.equal(item(catalog, 'categories', '数学', 'tutorials').count, 1);
   assert.equal(item(catalog, 'tags', '线性代数').count, 1);
-  for (const value of ['草稿分类', '作品分类', '普通笔记分类', '新笔记分类']) assert.equal(item(catalog, 'categories', value, 'tutorials'), undefined);
+  assert.equal(item(catalog, 'categories', '普通笔记分类', 'tutorials').count, 1);
+  for (const value of ['草稿分类', '作品分类', '新笔记分类']) assert.equal(item(catalog, 'categories', value, 'tutorials'), undefined);
   assert.equal(item(catalog, 'tags', '草稿标签'), undefined);
 });

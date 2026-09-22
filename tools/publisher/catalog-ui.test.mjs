@@ -19,6 +19,7 @@ const fixtureCatalog = {
   series: [
     { value: 'Field Notes', label: 'Field Notes', section: 'notes', count: 2 },
     { value: 'Site Only Series', label: 'Site Only Series', section: 'notes', count: 8 },
+    { value: 'Site Only Series', label: 'Site Only Series', section: 'tutorials', count: 8 },
     { value: 'Graphics Foundations', label: 'Graphics Foundations', section: 'tutorials', count: 4 },
     { value: 'Water Studies', label: 'Water Studies', section: 'work', count: 1 },
   ],
@@ -82,12 +83,13 @@ async function setup(t, { selected = [], viewport } = {}) {
   page.setDefaultTimeout(6000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(`http://127.0.0.1:${server.address().port}/`); await settled(page);
+  await page.locator('#vaultPanel > summary').click();
   return { page, mock, errors };
 }
 
 async function settled(page) { await page.waitForFunction(() => !document.querySelector('main').hasAttribute('aria-busy')); }
-async function edit(page, file = 'Root.md') { await page.getByRole('button', { name: '编辑发布设置 ' + file, exact: true }).click(); }
-async function applyAndSave(page) { await page.locator('#noteMetaApply').click(); await page.locator('#save').click(); await settled(page); }
+async function edit(page, file = 'Root.md') { await page.getByRole('button', { name: '编辑发布设置 ' + file, exact: true }).click(); if (!(await page.locator('#categoryAdvanced').evaluate(element => element.open))) await page.locator('#categoryAdvanced > summary').click(); }
+async function applyAndSave(page) { await page.locator('#noteMetaApply').click(); await settled(page); }
 const chosenTags = (page, prefix = 'edit') => page.locator('#' + prefix + 'Tags').inputValue().then(value => value.split(/[,，]/).map(item => item.trim()).filter(Boolean));
 const apiCalls = (mock, route) => mock.calls.filter(call => call.url === '/api/' + route);
 async function openBatch(page) { if (!(await page.locator('.batch-metadata').evaluate(element => element.open))) await page.locator('.batch-metadata summary').click(); }
@@ -101,13 +103,16 @@ test('publisher offers site-only tags, categories and series without requiring t
   await page.locator('#editCategorySearch').fill('Site Only');
   await page.locator('#noteEditor').getByRole('button', { name: '选择子栏目 Site Only Category', exact: true }).click();
   assert.equal(await page.locator('#editCategory').inputValue(), 'Site Only Category');
+  await applyAndSave(page);
+  assert.deepEqual(mock.metadata['Root.md'], { tags: ['Inherited', 'Computer Graphics', 'Site Only Tag'], category: 'Site Only Category' });
+  await edit(page, 'Tutorial.md');
   await page.locator('#editSeriesSearch').fill('Site Only');
   await page.locator('#noteEditor').getByRole('button', { name: '选择系列 Site Only Series', exact: true }).click();
   assert.equal(await page.locator('#editSeries').inputValue(), 'Site Only Series');
   assert.equal(apiCalls(mock, 'catalog').length, 0, 'choosing existing catalog values does not create duplicates');
-  assert.equal(apiCalls(mock, 'select').length, 0, 'choosing values does not publish or persist the note yet');
+  assert.equal(apiCalls(mock, 'select').length, 1, 'choosing the tutorial series does not save until explicitly requested');
   await applyAndSave(page);
-  assert.deepEqual(mock.metadata['Root.md'], { tags: ['Inherited', 'Computer Graphics', 'Site Only Tag'], category: 'Site Only Category', series: 'Site Only Series' });
+  assert.deepEqual(mock.metadata['Tutorial.md'], { series: 'Site Only Series' });
   assert.deepEqual(errors, []);
 });
 
@@ -174,26 +179,25 @@ test('categories and series are scoped to their parent section and can be explic
 
 test('typing a search without choosing a result does not clear existing category, series or tags', async t => {
   const { page, mock, errors } = await setup(t);
-  await edit(page);
+  await edit(page, 'Tutorial.md');
   await page.locator('#editTagSearch').fill('unmatched tag');
   await page.locator('#editCategorySearch').fill('unmatched category');
   await page.locator('#editSeriesSearch').fill('unmatched series');
   await page.locator('#editSummary').fill('Only the summary changed');
   await applyAndSave(page);
-  assert.deepEqual(mock.metadata['Root.md'], { summary: 'Only the summary changed' });
+  assert.deepEqual(mock.metadata['Tutorial.md'], { summary: 'Only the summary changed' });
   assert.equal(apiCalls(mock, 'catalog').length, 0);
   assert.deepEqual(errors, []);
 });
 
-test('an explicit no-category or no-series choice removes inherited grouping without affecting tags', async t => {
+test('an explicit no-category choice removes inherited grouping without exposing series on ordinary notes', async t => {
   const { page, mock, errors } = await setup(t);
   await edit(page);
   await page.locator('#editCategoryPicker').getByRole('button', { name: '不设子栏目', exact: true }).click();
-  await page.locator('#editSeriesPicker').getByRole('button', { name: '不设系列', exact: true }).click();
   assert.equal(await page.locator('#editCategory').inputValue(), '');
-  assert.equal(await page.locator('#editSeries').inputValue(), '');
+  assert.equal(await page.locator('#seriesField').isVisible(), false);
   await applyAndSave(page);
-  assert.deepEqual(mock.metadata['Root.md'], { category: '', series: '' });
+  assert.deepEqual(mock.metadata['Root.md'], { category: '' });
   assert.deepEqual(errors, []);
 });
 

@@ -29,7 +29,7 @@ test('topic inventory preserves original explicit order and accepts namespaced c
 test('explicit empty topic unlinks inherited reverse relations without deleting articles',async t=>{
   const {store,entries}=await fixture(t);
   await store.save({key:'ue',title:'UE',summary:'已完成',notes:[]},entries);
-  const scan=await store.scan(entries);assert.deepEqual(scan.topics[0].notes,[]);assert.equal(scan.articles.length,4);
+  const scan=await store.scan(entries);assert.deepEqual(scan.topics[0].notes,[]);assert.equal(scan.articles.length,4);assert.equal(scan.topics[0].workType,'collection');
 });
 test('topic plan detects external website edits and post-stage private changes',async t=>{
   const {root,store,entries}=await fixture(t);

@@ -18,19 +18,21 @@ async function fixture(t) {
 }
 const note = (scan, filename = 'A.md') => scan.notes.find(item => item.path === filename);
 
-test('site catalog discovers article/work relationships and suggests exact, revised and ambiguous matches without adoption', async t => {
+test('site inventory reconciles unique exact bodies and preserves ambiguous title candidates', async t => {
   const { p, write, vault, site } = await fixture(t);
-  await write(site, 'src/content/legacy/old.md', '---\ntitle: 旧文章\ndate: 2024-02-03\nlegacyUrl: /blog/2024/旧文章/\ntech: [Shader]\nwork: rendering\n---\n完全一致的正文');
+  const body = '完全一致的正文。这篇文章详细介绍渲染流程、深度测试、模板测试以及材质排序规则，并通过完整的源码片段解释实施过程。';
+  await write(site, 'src/content/legacy/old.md', '---\ntitle: 旧文章\ndate: 2024-02-03\nlegacyUrl: /blog/2024/旧文章/\ntech: [Shader]\nwork: rendering\n---\n' + body);
   await write(site, 'src/content/notes/a.md', '---\ntitle: 重名文章\ndate: 2024-02-03\n---\n旧正文一');
   await write(site, 'src/content/notes/b.md', '---\ntitle: 重名文章\ndate: 2024-02-04\n---\n旧正文二');
   await write(site, 'src/content/work/rendering.md', '---\ntitle: 渲染专题\nyear: 2024\nnotes: [legacy:old]\ncover: /covers/rendering.svg\nsummary: 作品描述\n---\n专题正文');
-  await write(vault, 'A.md', '---\ntitle: 本地名称\n---\n完全一致的正文');
+  await write(vault, 'A.md', '---\ntitle: 本地名称\n---\n' + body);
   await write(vault, 'Renamed.md', '---\ntitle: 重名文章\n---\n已经修改了正文');
   const scan = await p.scan();
   assert.equal(scan.siteContent.length, 4);
-  assert.deepEqual(note(scan).siteMatch.candidates, ['legacy:old']);
-  assert.equal(note(scan).siteMatch.state, 'candidate'); assert.equal(note(scan).status, '网站已有·待关联');
-  assert.equal(p.db.entries['A.md'].siteLink, undefined); assert.equal(note(scan).metadata.work, '');
+  assert.equal(note(scan).siteMatch.key, 'legacy:old');
+  assert.equal(note(scan).siteMatch.state, 'linked'); assert.equal(note(scan).siteMatch.automatic, true);
+  assert.equal(p.db.entries['A.md'].siteLink, 'legacy:old'); assert.equal(note(scan).metadata.work, 'rendering');
+  assert.deepEqual(scan.selected, []);
   assert.deepEqual(note(scan, 'Renamed.md').siteMatch.candidates, ['notes:a', 'notes:b']);
   assert.match(note(scan, 'Renamed.md').siteMatch.reason, /同名/);
   const legacy = scan.siteContent.find(item => item.key === 'legacy:old');
@@ -38,16 +40,16 @@ test('site catalog discovers article/work relationships and suggests exact, revi
   assert.deepEqual(scan.siteContent.find(item => item.key === 'work:rendering').notes, ['legacy:old']);
 });
 
-test('rendered body fingerprints suggest media-rewritten matches without fuzzy title adoption', async t => {
+test('media-aware fingerprints reconcile rewritten image directories with identical filenames', async t => {
   const { p, write, vault, site } = await fixture(t);
   const body = 'A detailed shared explanation of lighting, materials and rendering with enough text to identify the same article safely.';
   await write(site, 'src/content/notes/a.md', `---\ntitle: Website\ndate: 2024-02-03\n---\n${body}\n\n![Image](/assets/pic.png)`);
   await write(vault, 'A.md', `---\ntitle: Local\n---\n${body}\n\n![Image](pic.png)`);
-  const scan = await p.scan(); assert.deepEqual(note(scan).siteMatch.candidates, ['notes:a']); assert.match(note(scan).siteMatch.reason, /格式/);
-  assert.equal(p.db.entries['A.md'].siteLink, undefined);
+  const scan = await p.scan(); assert.equal(note(scan).siteMatch.key, 'notes:a'); assert.match(note(scan).siteMatch.reason, /自动核对/);
+  assert.equal(p.db.entries['A.md'].siteLink, 'notes:a');
 });
 
-test('Wiki image exports and title version variants suggest revised and old notes without linking either', async t => {
+test('Wiki image exports reconcile exact revised body while a different old version stays a candidate', async t => {
   const { p, write, vault, site } = await fixture(t);
   const first = '逐材质半透明排序允许材质以不同顺序绘制。这里记录具体渲染流程以及使用时需要检查的深度测试条件。';
   const second = '调整绘制顺序之前，需要先观察场景中的混合结果，再比较各个材质对应的输出。';
@@ -56,11 +58,10 @@ test('Wiki image exports and title version variants suggest revised and old note
   await write(vault, '逐材质半透明排序(旧版).md', '旧版保留不同的实验过程，正文尚未整理。');
   await write(vault, '逐材质OverlayMaterial.md', '这是另外一篇材质实验。');
   const scan = await p.scan();
-  for (const filename of ['逐材质半透明排序(修订).md', '逐材质半透明排序(旧版).md']) {
-    assert.deepEqual(note(scan, filename).siteMatch.candidates, ['notes:ue5-translucency-sort']);
-    assert.equal(p.db.entries[filename].siteLink, undefined);
-  }
-  assert.match(note(scan, '逐材质半透明排序(修订).md').siteMatch.reason, /正文文字一致/);
+  assert.equal(note(scan, '逐材质半透明排序(修订).md').siteMatch.key, 'notes:ue5-translucency-sort');
+  assert.equal(note(scan, '逐材质半透明排序(修订).md').siteMatch.automatic, true);
+  assert.deepEqual(note(scan, '逐材质半透明排序(旧版).md').siteMatch.candidates, ['notes:ue5-translucency-sort']);
+  assert.equal(p.db.entries['逐材质半透明排序(旧版).md'].siteLink, undefined);
   assert.match(note(scan, '逐材质半透明排序(旧版).md').siteMatch.reason, /版本标记/);
   assert.equal(note(scan, '逐材质OverlayMaterial.md').siteMatch.state, 'none');
 });
@@ -125,7 +126,7 @@ test('old manifests distinguish existing copies awaiting verification from chang
   const manifestFile = path.join(state, 'current.json');
   const manifest = await p.manifest(), old = manifest.notes[plan.output[0].id];
   delete old.fileDigest;
-  const { work, notes, ...previousMetadata } = plan.output[0].metadata;
+  const { work, notes, workType, ...previousMetadata } = plan.output[0].metadata;
   old.metadataDigest = crypto.createHash('sha256').update(JSON.stringify(previousMetadata)).digest('hex');
   await fs.writeFile(manifestFile, JSON.stringify(manifest));
   let scan = await p.scan(); assert.equal(note(scan).status, '已有副本·待校验'); assert.match(note(scan).statusReason, /旧发布记录/);

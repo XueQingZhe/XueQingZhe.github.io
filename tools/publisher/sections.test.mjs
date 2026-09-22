@@ -72,7 +72,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
     'Journal/Deep/Journal.md': { section: 'notes', category: '图形学基础', series:'我独自升级', title: 'Fixture Journal', summary: 'Journal summary', tags: ['Technical Art', 'Journal Test', '算法笔记'], date: '2026-01-01' },
     'Lessons/Custom/Second.md': { section: 'tutorials', category: '渲染 实验', title: 'Fixture Second Lesson', series: '自定义合成系列', tags: ['Technical', '算法笔记'], order: 2, date: '2026-01-02' },
     'Lessons/Custom/First.md': { section: 'tutorials', category: '图形学基础', title: 'Fixture First Lesson', series: '自定义合成系列', tags: ['Technical Art', '算法笔记'], order: 1, date: '2026-01-03' },
-    'Lessons/Standalone.md': { section: 'tutorials', title: 'Fixture Standalone Lesson', tags: ['Independent Study'], date: '2026-01-04' },
+    'Lessons/Standalone.md': { section: 'tutorials', series:'独立问题研习', title: 'Fixture Standalone Lesson', tags: ['Independent Study'], date: '2026-01-04' },
     'Portfolio/Project.md': { section: 'work', category: '图形学基础', title: 'Fixture Portfolio Project', summary: 'A generated project summary', cover: 'cover.png', tags: ['Technical Art', '算法笔记'], engine: ['Unreal Engine'], role: ['Technical Artist'], year: 2026, featured: true, date: '2026-01-05' },
     'Moving.md': { section: 'notes', category: '算法笔记', title: 'Fixture Moved Lesson', tags: ['Moving Entry'], date: '2026-01-06' },
     'Private/Secret.md': { section: 'notes', category: '未发布分类', tags: ['私人标签'] },
@@ -90,7 +90,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   const movedSlug = slug('Moving.md');
   const movedFile = path.join(site, 'content/published/notes', movedSlug + '.md');
   assert.equal(frontmatter(await fs.readFile(movedFile, 'utf8')).data.section, 'notes');
-  await p.select(selected, {}, { 'Moving.md': { ...metadata['Moving.md'], section: 'tutorials' } });
+  await p.select(selected, {}, { 'Moving.md': { ...metadata['Moving.md'], section: 'tutorials', series:'独立问题研习' } });
   plan = await p.analyze(); assert.deepEqual(plan.errors, []);
   stage = await p.prepare(plan.id, plan.assets.map(a => a.key)); await p.apply(stage.id);
   assert.equal(slug('Moving.md'), movedSlug);
@@ -101,6 +101,27 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.equal(projectMd.data.cover, coverUrl); assert.deepEqual(projectMd.data.tech, ['Technical Art','算法笔记']);
   assert.equal(projectMd.data.category, '图形学基础');
   assert.deepEqual(projectMd.data.engine, ['Unreal Engine']); assert.deepEqual(projectMd.data.role, ['Technical Artist']);
+
+  // Only fixture content is edited. Website settings also apply to established source collections.
+  await fs.writeFile(path.join(site,'src/content/notes/site-settings-source.md'),'---\ntitle: Original Source Article\ndate: 2025-02-01\n---\nsettingssourcebody');
+  await fs.writeFile(path.join(site,'src/content/notes/site-settings-chapter.md'),'---\ntitle: Original Chapter\ndate: 2025-02-02\n---\nsettingschapterbody');
+  await fs.writeFile(path.join(site,'src/content/work/site-settings-project.md'),'---\ntitle: Original Project\nsummary: Original summary\ncover: /covers/placeholder.svg\nyear: 2025\nworkType: collection\n---\nsettingsprojectbody');
+  await fs.writeFile(path.join(site,'src/content/legacy/site-historical-series.md'),'---\ntitle: Historical Series Article\ndate: 2022-01-01\nkind: article\nseries: Historical Legacy Series\nlegacyUrl: /blog/2022/historical-series/\n---\nlegacyseriesbody');
+  await fs.writeFile(path.join(site,'src/content/legacy/site-settings-work.md'),'---\ntitle: Historical Work Writeup\ndate: 2022-02-01\nlegacyUrl: /blog/2022/historical-work/\n---\nlegacyworkbody');
+  for(const id of ['site-cleared-collection','site-explicit-single'])await fs.writeFile(path.join(site,'src/content/work',id+'.md'),'---\ntitle: '+id+'\nsummary: Legacy collection\ncover: /covers/placeholder.svg\nyear: 2025\nnotes: [notes:site-settings-chapter]\n---\nLegacy collection body.');
+  await fs.writeFile(path.join(site,'src/data/publisher-topics.json'),JSON.stringify({version:1,topics:{'site-cleared-collection':{notes:[]},'site-explicit-single':{notes:[]}}}));
+  const collectionUrl='/work/collection-fixture/';
+  await fs.writeFile(path.join(site,'src/data/publisher-content.json'),JSON.stringify({version:1,entries:{
+    ['published:'+slug('Journal/Deep/Journal.md')]:{title:'Configured Journal',summary:'settingssummarysentinel'},
+    'notes:site-settings-source':{section:'work',workType:'single',title:'Configured Source Work',summary:'Converted work summary',cover:'/covers/placeholder.svg',tags:['Settings Tag'],engine:['Custom Engine']},
+    'notes:site-settings-chapter':{section:'tutorials',series:'Website Settings Series',order:1,title:'Website First Chapter'},
+    'work:site-settings-project':{section:'tutorials',series:'Website Settings Series',order:2,title:'Website Second Chapter'},
+    'legacy:site-settings-work':{section:'work',workType:'single',summary:'A work with an established legacy address',tags:['Settings Legacy']},
+    'work:site-explicit-single':{workType:'single'},
+  },collections:{
+    'collection-fixture':{title:'Fixture New Collection',summary:'An ordered collection',section:'work',workType:'collection',year:2026,notes:['published:'+slug('Journal/Deep/Journal.md'),'work:site-settings-project','notes:site-settings-source']},
+    'collection-empty':{title:'Fixture Empty Collection',summary:'An intentionally empty collection',section:'work',workType:'collection',year:2026,notes:[]},
+  }}));
 
   const env = { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' };
   try {
@@ -118,22 +139,25 @@ test('published sections build into real lists, stable detail pages, exact tags 
     assert.ok(!source.includes('私人标签'));
     assert.ok(elements(source,(a,n)=>n.tagName==='button'&&text(n).includes('算法笔记')).length,'New Chinese tag missing from public controls');
   }
-  assert.ok(!elements(journal,(a,n)=>n.tagName==='button'&&a['data-category']==='算法笔记').length,'Moved category must disappear from notes');
+  assert.ok(elements(journal,(a,n)=>n.tagName==='button'&&a['data-category']==='算法笔记').length,'The complete index retains categories from series articles');
   assert.ok(elements(study,(a,n)=>n.tagName==='button'&&a['data-category']==='算法笔记').length,'Moved category must be discovered in study');
   const listLinks = (source, marker) => elements(source, a => Object.hasOwn(a, marker)).flatMap(node => elements(node, (a,n) => n.tagName === 'a').map(n => attrs(n).href));
   const noteLinks = elements(journal, a => a.class?.split(' ').includes('note-item')).flatMap(node => elements(node, (a,n) => n.tagName === 'a').map(n => attrs(n).href));
   const studyLinks = listLinks(study, 'data-study-entry');
   const workLinks = elements(work, a => Object.hasOwn(a, 'data-artwork')).map(n => attrs(n).href);
   assert.ok(noteLinks.includes(url('Journal/Deep/Journal.md')));
-  for (const name of selected.filter(name => name !== 'Journal/Deep/Journal.md')) assert.ok(!noteLinks.includes(url(name)), name + ' must not appear as a journal');
+  for (const name of selected) assert.equal(noteLinks.filter(href=>href===url(name)).length,1,name+' must appear exactly once in the complete index');
+  assert.equal(new Set(noteLinks).size,noteLinks.length,'Canonical entries cannot repeat in the journal');
+  for(const href of [...studyLinks,...workLinks])assert.ok(noteLinks.includes(href),'Complete index is missing '+href);
   for (const name of ['Lessons/Custom/First.md', 'Lessons/Custom/Second.md', 'Lessons/Standalone.md', 'Moving.md']) assert.ok(studyLinks.includes(url(name)), name + ' missing from study');
   assert.ok(!studyLinks.includes(url('Portfolio/Project.md')));
   assert.ok(!studyLinks.includes(url('Journal/Deep/Journal.md')),'A journal series must not move its category into study');
+  assert.ok(studyLinks.includes('/blog/2022/historical-series/'),'Legacy series without an explicit section remain grouped in study');
   assert.ok(workLinks.includes(url('Portfolio/Project.md'))); assert.ok(!workLinks.includes(url('Journal/Deep/Journal.md')));
   assert.ok(studyLinks.indexOf(url('Lessons/Custom/First.md')) < studyLinks.indexOf(url('Lessons/Custom/Second.md')));
   const customSeries = elements(study, a => a.id === 'series-自定义合成系列')[0];
   assert.ok(customSeries); assert.match(text(customSeries), /STUDY SERIES/); assert.doesNotMatch(text(customSeries), /BLENDER/);
-  const independent = elements(study, a => a.id === 'independent-study')[0];
+  const independent = elements(study, a => a.id === 'series-独立问题研习')[0];
   assert.ok(text(independent).includes('Fixture Standalone Lesson'));
   assert.ok(text(independent).includes('Fixture Moved Lesson'));
   const satellites = elements(study, a => a.class === 'orbit-point');
@@ -169,8 +193,25 @@ test('published sections build into real lists, stable detail pages, exact tags 
   for (const name of selected.filter(name => name !== 'Portfolio/Project.md')) assert.ok(rss.includes(url(name)), name + ' missing from RSS');
   assert.ok(!rss.includes(url('Portfolio/Project.md'))); assert.equal(rss, feed);
   assert.ok(elements(home, a => a['data-room'] === 'work').some(node => text(node).includes(workLinks.length + ' 件作品')));
-  assert.ok(elements(home, a => a['data-room'] === 'notes').some(node => text(node).includes(noteLinks.length + ' 篇手记')));
+  assert.ok(elements(home, a => a['data-room'] === 'notes').some(node => text(node).includes(noteLinks.length + ' 篇公开内容')));
   assert.ok(elements(home, a => a['data-room'] === 'study').some(node => text(node).includes(studyLinks.length + ' 个章节')));
+  // Settings can change primary type without moving the original canonical URL.
+  assert.ok(workLinks.includes('/notes/site-settings-source/'));assert.ok(!workLinks.includes('/work/site-settings-project/'));
+  assert.ok(studyLinks.includes('/work/site-settings-project/'));assert.ok(studyLinks.indexOf('/notes/site-settings-chapter/')<studyLinks.indexOf('/work/site-settings-project/'));
+  assert.match(await html('notes/site-settings-source'),/data-work-detail=/);assert.match(await html('work/site-settings-project'),/class="prose body article-body"/);
+  assert.match(await html('notes/'+slug('Journal/Deep/Journal.md')),/Configured Journal/);assert.match(journal,/settingssummarysentinel/);
+  assert.ok(workLinks.includes(collectionUrl));assert.ok(workLinks.includes('/work/collection-empty/'));
+  for(const href of [collectionUrl,'/work/collection-empty/'])assert.equal(attrs(elements(work,a=>Object.hasOwn(a,'data-artwork')&&a.href===href)[0])['data-work-type'],'collection');
+  assert.equal(attrs(projectTile)['data-work-type'],'single');
+  assert.equal(attrs(elements(work,a=>Object.hasOwn(a,'data-artwork')&&a.href==='/work/ue5-per-material/')[0])['data-work-type'],'collection');
+  const collectionPage=await html('work/collection-fixture');
+  assert.deepEqual(listLinks(collectionPage,'data-topic-articles'),[url('Journal/Deep/Journal.md'),'/work/site-settings-project/','/notes/site-settings-source/']);
+  assert.ok(elements(await html('notes/site-settings-source'),a=>Object.hasOwn(a,'data-parent-topic')&&a.href===collectionUrl).length,'Single work has a collection backlink');
+  assert.ok(elements(await html('notes/'+slug('Journal/Deep/Journal.md')),a=>Object.hasOwn(a,'data-parent-topic')&&a.href===collectionUrl).length,'Article has a collection backlink');
+  assert.match(await html('work/collection-empty'),/作品合集 · 0 篇文章/);
+  assert.equal(attrs(elements(work,a=>Object.hasOwn(a,'data-artwork')&&a.href==='/work/site-cleared-collection/')[0])['data-work-type'],'collection','Removing the final member must not turn a legacy collection into a single work');
+  assert.match(await html('work/site-cleared-collection'),/作品合集 · 0 篇文章/);
+  assert.equal(attrs(elements(work,a=>Object.hasOwn(a,'data-artwork')&&a.href==='/work/site-explicit-single/')[0])['data-work-type'],'single','An explicit single-work setting overrides earlier collection intent');
   // Established source collections still produce their original addresses and visuals.
   assert.ok(workLinks.includes('/work/urp-pbr/')); assert.ok(noteLinks.includes('/notes/urp-bloom/'));
   assert.match(await html('work/urp-pbr'), /URP 手写 PBR 管线/);
@@ -223,7 +264,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   await page.goto(base+url('Journal/Deep/Journal.md'));
   await page.locator('.article-tags a').filter({hasText:'算法笔记'}).click();
   await page.waitForURL(u=>u.pathname==='/notes/'&&u.searchParams.get('category')==='图形学基础'&&u.searchParams.get('tag')==='算法笔记');
-  assert.deepEqual(await visibleNotes(),[url('Journal/Deep/Journal.md')]);
+  assert.deepEqual((await visibleNotes()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md'),url('Portfolio/Project.md')].sort());
   await page.goto(base+'/tutorials/?'+new URLSearchParams({category:'图形学基础',tag:'算法笔记'}));
   await page.waitForFunction(()=>document.querySelector('button[data-category="图形学基础"]')?.getAttribute('aria-pressed')==='true');
   assert.deepEqual(await visibleStudy(),[url('Lessons/Custom/First.md')]);
@@ -240,7 +281,10 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.ok((await visibleStudy()).includes(url('Lessons/Standalone.md')),'Uncategorized entries remain visible');
   await page.goto(base + '/notes/?tag=Technical%20Art');
   await page.waitForFunction(() => document.querySelector('button[data-tag="Technical Art"]')?.getAttribute('aria-pressed') === 'true');
-  assert.deepEqual(await page.locator('.note-item:not([hidden]) a').evaluateAll(nodes => nodes.map(n=>n.getAttribute('href'))), [url('Journal/Deep/Journal.md')]);
+  assert.deepEqual((await visibleNotes()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md'),url('Portfolio/Project.md')].sort());
+  await page.locator('button[data-kind="tutorial"]').click();assert.deepEqual(await visibleNotes(),[url('Lessons/Custom/First.md')]);
+  assert.equal(new URL(page.url()).searchParams.get('kind'),'tutorial');
+  await page.reload();await page.waitForFunction(()=>document.querySelector('button[data-kind="tutorial"]')?.getAttribute('aria-pressed')==='true');assert.deepEqual(await visibleNotes(),[url('Lessons/Custom/First.md')]);
   await page.goto(base + '/tutorials/?tag=Technical%20Art');
   await page.waitForFunction(() => document.querySelector('[data-study-tag="Technical Art"]')?.getAttribute('aria-pressed') === 'true');
   assert.deepEqual(await page.locator('[data-study-entry]:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href'))), [url('Lessons/Custom/First.md')]);
@@ -255,6 +299,14 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.equal(new URL(page.url()).searchParams.get('category'),'图形学基础');
   assert.equal(new URL(page.url()).searchParams.get('tech'),'算法笔记');
   assert.deepEqual(await page.locator('.work-cell:not([hidden]) [data-artwork]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href'))), [url('Portfolio/Project.md')]);
+  await page.goto(base+'/work/?type=collection');await page.waitForFunction(()=>document.querySelector('button[data-facet="type"][data-term="collection"]')?.getAttribute('aria-pressed')==='true');
+  assert.ok(await page.locator('.work-cell:not([hidden]) [data-artwork]').count());assert.equal(await page.locator('.work-cell:not([hidden]) [data-work-type="single"]').count(),0);
+  await page.goto(base+collectionUrl);await page.locator('[data-topic-articles] a').last().click();await page.waitForURL(base+'/notes/site-settings-source/');await page.locator('[data-parent-topic]').click();await page.waitForURL(base+collectionUrl);
+  await page.goto(base+'/work/?tech=Settings%20Legacy');await page.waitForFunction(()=>document.querySelector('button[data-facet="tech"][data-term="Settings Legacy"]')?.getAttribute('aria-pressed')==='true');
+  await page.locator('.work-cell:not([hidden]) [data-artwork]').click();await page.waitForURL(base+'/blog/2022/historical-work/');
+  await page.waitForFunction(()=>document.querySelector('[data-work-return]')?.getAttribute('href')?.includes('tech=Settings%20Legacy'));
+  await page.locator('[data-work-return]').click();await page.waitForURL(base+'/work/?tech=Settings%20Legacy');
+  assert.equal(await page.locator('.work-cell:not([hidden]) [data-artwork]').count(),1);
   for (const [name, body] of Object.entries(sources)) assert.equal(await fs.readFile(path.join(vault, name), 'utf8'), body);
   assert.deepEqual(await fs.readFile(path.join(vault, 'Portfolio/cover.png')), image);
   assert.equal(await fs.readFile(path.join(site, 'src/content/work/urp-pbr.md'), 'utf8'), await fs.readFile(path.join(project, 'src/content/work/urp-pbr.md'), 'utf8'));

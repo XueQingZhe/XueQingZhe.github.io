@@ -57,6 +57,7 @@ async function setup(t, { withAsset = false, prepared = true } = {}) {
   page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => { dialogs.push(dialog.type()); void dialog.dismiss(); });
   await page.goto(`http://127.0.0.1:${server.address().port}/`); await settled(page);
+  await page.locator('#vaultPanel > summary').click();
   if (prepared) {
     await page.locator('#analyze').click(); await settled(page);
     if (withAsset) await page.locator('#assetApprove').click();

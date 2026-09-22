@@ -9,15 +9,16 @@
     "preview": "astro preview --host 127.0.0.1",
     "sync": "node tools/publisher/server.mjs",
     "publisher": "node tools/publisher/server.mjs",
-    "test": "node --test tools/publisher/core.test.mjs tools/publisher/transaction.test.mjs tools/publisher/deploy.test.mjs tools/publisher/metadata.test.mjs tools/publisher/catalog.test.mjs tools/publisher/cover-media.test.mjs tools/publisher/topics.test.mjs tools/publisher/site-sync.test.mjs",
+    "test": "node --test tools/publisher/core.test.mjs tools/publisher/transaction.test.mjs tools/publisher/deploy.test.mjs tools/publisher/metadata.test.mjs tools/publisher/catalog.test.mjs tools/publisher/cover-media.test.mjs tools/publisher/topics.test.mjs tools/publisher/site-sync.test.mjs tools/publisher/content-settings.test.mjs tools/publisher/publication-status.test.mjs tools/publisher/site-covers.test.mjs tools/publisher/applied-guard.test.mjs",
     "test:integration": "node --test tools/publisher/integration.test.mjs",
     "test:sections": "node --test tools/publisher/sections.test.mjs",
-    "test:ui": "node --test tools/publisher/ui.test.mjs tools/publisher/apply-ui.test.mjs tools/publisher/deploy-ui.test.mjs tools/publisher/assets-ui.test.mjs tools/publisher/notes-ui.test.mjs tools/publisher/catalog-ui.test.mjs tools/publisher/cover-ui.test.mjs tools/publisher/site-ui.test.mjs",
+    "test:ui": "node --test tools/publisher/ui.test.mjs tools/publisher/apply-ui.test.mjs tools/publisher/deploy-ui.test.mjs tools/publisher/assets-ui.test.mjs tools/publisher/notes-ui.test.mjs tools/publisher/catalog-ui.test.mjs tools/publisher/cover-ui.test.mjs tools/publisher/site-ui.test.mjs tools/publisher/workflow-ui.test.mjs",
     "test:topics": "node --test tools/publisher/topics-site.test.mjs",
     "test:video": "node --test tools/publisher/video-site.test.mjs",
     "check:site": "node tools/check-site.mjs",
     "check:release": "node tools/check-release.mjs",
-    "start": "node tools/start-local.mjs"
+    "start": "node tools/start-local.mjs",
+    "test:workflow": "node --test tools/publisher/workflow-e2e.test.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.3",

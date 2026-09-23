@@ -1,5 +1,201 @@
 {
   "version": 1,
-  "entries": {},
-  "collections": {}
+  "entries": {
+    "published:n-2f10e824-bda": {
+      "workType": "single"
+    },
+    "work:ue5-per-material": {
+      "section": "work",
+      "category": "",
+      "title": "UE5.5 引擎源码改造 · 逐材质渲染控制",
+      "date": "2026-01-01",
+      "summary": "改 UE 引擎源码，把默认逐 Mesh 的半透明排序、Stencil 与 OverlayMaterial 全部下放到逐材质粒度，从 MaterialInterface 一路改到渲染层。",
+      "tags": [
+        "Pipeline",
+        "Shader"
+      ],
+      "order": 4,
+      "cover": "/assets/img/MyPJ/Engine/Pasted%20image%2020250413150053.png",
+      "engine": [
+        "UE5"
+      ],
+      "role": [
+        "Pipeline",
+        "Tooling"
+      ],
+      "year": 2026,
+      "featured": true,
+      "workType": "collection",
+      "notes": [
+        "notes:ue5-translucency-sort",
+        "notes:ue5-per-material-stencil",
+        "notes:ue5-overlay-material"
+      ]
+    },
+    "published:n-d15f3326-e92": {
+      "section": "work",
+      "summary": "景深效果",
+      "tags": [
+        "RenderFeature",
+        "rendering",
+        "shader",
+        "PostProcess",
+        "Pipeline",
+        "URP",
+        "unity"
+      ],
+      "cover": "/published-assets/eee68c42f8e9a748a395862722a2a4b21b32f9f7be8b3abc753391075af428d3.webp",
+      "engine": [
+        "Unity",
+        "URP"
+      ],
+      "role": [
+        "Tooling"
+      ],
+      "coverVideo": ""
+    },
+    "published:n-c62aa2f5-cce": {
+      "section": "work",
+      "summary": "FXAA（快速近似抗锯齿",
+      "tags": [
+        "rendering",
+        "PostProcess",
+        "unity",
+        "URP",
+        "Pipeline",
+        "Shader"
+      ],
+      "cover": "/published-assets/d5d6efdfca60b86a550d24b757f94396f177aac4982771d51ff4a972b42d319d.webp",
+      "engine": [
+        "Unity",
+        "URP"
+      ],
+      "role": [
+        "Tooling",
+        "Shader"
+      ],
+      "coverVideo": ""
+    },
+    "work:urp-outline-feature": {
+      "section": "work",
+      "category": "",
+      "title": "URP 屏幕空间描边 RenderFeature",
+      "date": "2025-01-01",
+      "summary": "Roberts / Sobel / Scharr 三种算子与混合方式全参数化，用宏控制变体编译；含点击高亮与 X 光两种衍生用法。",
+      "tags": [
+        "Outline",
+        "RenderFeature",
+        "PostProcess",
+        "HLSL"
+      ],
+      "order": 5,
+      "cover": "/covers/outline-normal.webp",
+      "engine": [
+        "Unity",
+        "URP"
+      ],
+      "role": [
+        "Shader",
+        "Tooling"
+      ],
+      "year": 2025,
+      "featured": true,
+      "workType": "collection",
+      "notes": []
+    },
+    "collections:collection-65154418-418": {
+      "section": "work",
+      "category": "URP - RendererFeature",
+      "title": "URP - RendererFeature ：体积雾",
+      "summary": "URP - RendererFeature ：体积雾",
+      "tags": [
+        "Shader",
+        "Raymarching",
+        "PostProcess",
+        "rendering",
+        "RenderFeature"
+      ],
+      "order": 100,
+      "cover": "/published-assets/651e8fcabc67cf0b423992947450a9512c169ed34cda15034cd9901d7ddf0d13-poster.jpg",
+      "engine": [
+        "Unity",
+        "URP"
+      ],
+      "role": [
+        "Shader",
+        "Tooling"
+      ],
+      "year": 2026,
+      "featured": false,
+      "workType": "collection",
+      "coverVideo": "/published-assets/651e8fcabc67cf0b423992947450a9512c169ed34cda15034cd9901d7ddf0d13.mp4",
+      "notes": [
+        "published:n-2df53d18-975",
+        "published:n-a1903d6c-c71"
+      ]
+    }
+  },
+  "collections": {
+    "collection-urp-volumetric-cloud": {
+      "section": "work",
+      "workType": "collection",
+      "title": "URP 体积云 · 实践合集",
+      "summary": "从体积云渲染到 Perlin 噪声，整理实现过程与相关基础。按目录顺序阅读，也可以直接进入感兴趣的文章。",
+      "cover": "/published-assets/1640931e160364fe4cbea8e7236448aefb67ef41ddfddce4483510b177475efd-poster.jpg",
+      "tags": [
+        "rendering",
+        "PostProcess",
+        "shader",
+        "unity",
+        "URP",
+        "Raymarching",
+        "Compute",
+        "RenderFeature"
+      ],
+      "engine": [
+        "Unity",
+        "URP"
+      ],
+      "role": [
+        "Tooling"
+      ],
+      "year": 2026,
+      "order": 100,
+      "notes": [
+        "published:n-2f10e824-bda",
+        "published:n-e90f2918-1ad"
+      ]
+    },
+    "collection-65154418-418": {
+      "section": "work",
+      "category": "URP - RendererFeature",
+      "title": "URP - RendererFeature ：体积雾",
+      "summary": "URP - RendererFeature ：体积雾",
+      "tags": [
+        "Shader",
+        "Raymarching",
+        "PostProcess",
+        "rendering",
+        "RenderFeature"
+      ],
+      "order": 100,
+      "cover": "/art/blue-hour/generated/landscape.webp",
+      "engine": [
+        "Unity",
+        "URP"
+      ],
+      "role": [
+        "Shader",
+        "Tooling"
+      ],
+      "year": 2026,
+      "featured": false,
+      "workType": "collection",
+      "coverVideo": "",
+      "notes": [
+        "published:n-2df53d18-975",
+        "published:n-a1903d6c-c71"
+      ]
+    }
+  }
 }

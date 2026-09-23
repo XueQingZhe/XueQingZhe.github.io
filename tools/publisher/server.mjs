@@ -22,7 +22,7 @@ const publisher = new Publisher({ site, vault: process.env.PUBLISHER_VAULT || 'F
 await publisher.init();
 const coverMedia = new CoverMedia({ publisher, parseFrontmatter: frontmatter });
 const publicationStatus = new PublicationStatus({site});
-const siteCovers = new SiteCovers({site});
+const siteCovers = new SiteCovers({site, publisher, parseFrontmatter:frontmatter});
 let locked = false;
 async function command(script,args){await new Promise((resolve,reject)=>{const p=spawn(process.execPath,[path.join(site,script),...args],{cwd:site,windowsHide:true,env:{...process.env,ASTRO_TELEMETRY_DISABLED:'1'},stdio:['ignore','pipe','pipe']});let log='';for(const stream of [p.stdout,p.stderr])stream.on('data',d=>log=(log+d).slice(-6000));p.on('error',reject);p.on('exit',code=>code===0?resolve():reject(Error('网站构建失败，已保留原副本：'+log)))})}
 async function rebuild(dir){await command('node_modules/astro/astro.js',['build','--force','--outDir',dir]);await command('node_modules/pagefind/lib/runner/bin.cjs',['--site',dir]);}
@@ -55,7 +55,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
     }
     if (url.pathname === '/favicon.ico') { res.writeHead(204); return res.end(); }
-    if(req.method==='GET'&&url.pathname==='/api/site-cover-preview'){if(req.headers.origin&&req.headers.origin!==origin||req.headers['sec-fetch-site']==='cross-site')return json(403,{error:'仅接受本机预览'});await siteCovers.serve(req,res,url);return;}
+    if(['GET','HEAD'].includes(req.method)&&url.pathname==='/api/site-cover-preview'){if(req.headers.origin&&req.headers.origin!==origin||req.headers['sec-fetch-site']==='cross-site')return json(403,{error:'仅接受本机预览'});await siteCovers.serve(req,res,url);return;}
     if (['GET', 'HEAD'].includes(req.method) && ['/api/cover-media/thumbnail', '/api/cover-media/preview'].includes(url.pathname)) {
       if (req.headers.origin && req.headers.origin !== origin || req.headers['sec-fetch-site'] === 'cross-site') return json(403, { error: '素材预览仅接受本机同源页面' });
       await coverMedia.serve(req, res, url); return;
@@ -88,7 +88,7 @@ const server = http.createServer(async (req, res) => {
       const data = JSON.parse(body || '{}');
       if (url.pathname === '/api/deploy/review') { await publisher.assertApplied(); return json(200, await deployment.review()); }
       if (url.pathname === '/api/deploy/start') { await publisher.assertApplied(); return json(202, await deployment.start(data.id)); }
-      if(url.pathname==='/api/content-settings'){await publisher.contentSettings.save(data,publisher.siteContent);return json(200,await publisher.scan());}
+      if(url.pathname==='/api/content-settings'){await siteCovers.validateSelection(data.metadata);await publisher.contentSettings.save(data,publisher.siteContent);return json(200,await publisher.scan());}
       if(url.pathname==='/api/collection-editor'){const result=await publisher.saveCollection(data);await publisher.scan();return json(200,result);}
       if(url.pathname==='/api/collections'){const result=await publisher.contentSettings.createCollection(data);await publisher.scan();return json(200,result);}
       if (url.pathname === '/api/site-link') return json(200, await publisher.linkSite(data.path, data.key));

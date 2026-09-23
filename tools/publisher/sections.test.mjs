@@ -162,8 +162,10 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.ok(text(independent).includes('Fixture Moved Lesson'));
   const seriesPortals = elements(study, a => Object.hasOwn(a,'data-series-portal'));
   const studySeries = elements(study, a => Object.hasOwn(a,'data-study-series'));
-  assert.equal(seriesPortals.length,studySeries.length,'Every series needs a hero entry');
-  for(const portal of seriesPortals){const target=studySeries.find(node=>attrs(node).id===attrs(portal)['data-series-portal']);assert.ok(target);assert.equal(text(elements(portal,(_,node)=>node.tagName==='h2')[0]),text(elements(target,(_,node)=>node.tagName==='h2')[0]));}
+  assert.equal(seriesPortals.length,4,'Hero keeps four broad directions independently of sub-series count');
+  assert.deepEqual(seriesPortals.map(portal=>text(elements(portal,(_,node)=>node.tagName==='h2')[0])),['我独自升级','Unity','UE','Blender']);
+  for(const portal of seriesPortals){const target=elements(study,a=>a.id==='study-'+attrs(portal)['data-series-portal'])[0];assert.ok(target);assert.equal(text(elements(portal,(_,node)=>node.tagName==='h2')[0]),text(elements(target,(_,node)=>node.tagName==='h2')[0]));}
+  assert.equal(elements(study,a=>Object.hasOwn(a,'data-series-link')).length,studySeries.length,'Every series remains accessible in the detailed index');
   assert.equal(elements(study,a=>a.id==='solo').length,1,'Previously published study bookmarks remain valid');
   const projectTile = elements(work, a => a.href === url('Portfolio/Project.md') && Object.hasOwn(a, 'data-artwork'))[0];
   assert.equal(attrs(elements(projectTile, a => Object.hasOwn(a, 'data-work-cover'))[0]).src, coverUrl);
@@ -251,7 +253,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.equal(secretResults.length, 0);
   const filters = await page.evaluate(async () => (await import('/pagefind/pagefind.js')).filters());
   assert.ok(filters['栏目']['手记']); assert.ok(filters['栏目']['研习']); assert.ok(filters['栏目']['作品']);
-  assert.ok(filters['子栏目']['图形学基础']); assert.ok(!filters['子栏目']['未发布分类']);
+  assert.ok(filters['内容分类']['图形学基础']); assert.ok(!filters['内容分类']['未发布分类']);
   const visibleNotes=()=>page.locator('.note-item:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
   const visibleStudy=()=>page.locator('[data-study-entry]:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
   await page.goto(base+'/notes/?'+new URLSearchParams({category:'图形学基础',tag:'算法笔记',q:'Journal'}));

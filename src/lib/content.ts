@@ -56,7 +56,7 @@ function normalize(entry:SourceEntry|{collection:'collections';id:string;data:Co
     cover:values.cover||'/covers/placeholder.svg',order:values.order??100,featured:values.featured??false,status:values.status??'shipped',
     draft:values.draft??false,legacyUrl:'legacyUrl' in entry.data?entry.data.legacyUrl:undefined,replaces:'replaces' in entry.data?entry.data.replaces:undefined,
   } as ContentData;
-  if(Object.hasOwn(override,'cover')&&override.cover!==entry.data.cover)data.coverVideo=undefined;
+  if(Object.hasOwn(override,'cover')&&override.cover!==entry.data.cover&&!Object.hasOwn(override,'coverVideo'))data.coverVideo=undefined;
   if(entry.collection==='collections')data.workType='collection';
   return {...entry,data,topicNotesExplicit:Object.hasOwn(override,'notes')||Object.hasOwn(topic,'notes')} as ArticleEntry;
 }

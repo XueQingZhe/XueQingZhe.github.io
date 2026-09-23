@@ -139,3 +139,19 @@ test('an imported collection can use the existing website placeholder without tr
   assert.equal(frontmatter(plan.output[0].markdown).data.cover, '/covers/placeholder.svg');
   assert.equal(frontmatter(plan.output[0].markdown).data.workType, 'collection');
 });
+
+
+test('saved website video cover pairs persist and explicit image replacements clear inherited and previously saved video', async t => {
+  const {p,site,write}=await fixture(t);
+  await write(site,'src/content/work/video.md',raw('Video work',body,'summary: Video summary\ncover: /covers/old.jpg\ncoverVideo: /assets/old.mp4\n'));
+  await p.scan();
+  await p.contentSettings.save({key:'work:video',metadata:{cover:'/covers/new.jpg',coverVideo:'/assets/new.mp4'}},p.siteContent);
+  let scan=await p.scan();assert.equal(scan.siteContent[0].metadata.coverVideo,'/assets/new.mp4');
+  const current=(await p.contentSettings.state()).document;await write(site,'src/data/publisher-content.json',JSON.stringify(current));await fs.rm(p.contentSettings.pendingFile);
+  await p.scan();await p.contentSettings.save({key:'work:video',metadata:{title:'Renamed video'}},p.siteContent);
+  scan=await p.scan();assert.equal(scan.siteContent[0].metadata.coverVideo,'/assets/new.mp4');
+  await p.contentSettings.save({key:'work:video',metadata:{cover:'/covers/static.jpg'}},p.siteContent);
+  scan=await p.scan();assert.equal(scan.siteContent[0].metadata.coverVideo,'');
+  assert.equal((await p.contentSettings.state()).pending.data.entries['work:video'].coverVideo,'');
+  await assert.rejects(p.contentSettings.save({key:'work:video',metadata:{coverVideo:'https://other.invalid/video.mp4'}},p.siteContent),/网站内视频/);
+});

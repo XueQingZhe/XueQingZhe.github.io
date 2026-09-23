@@ -101,7 +101,7 @@ test('publisher offers site-only tags, categories and series without requiring t
   await page.locator('#noteEditor').getByRole('button', { name: '添加 Tag Site Only Tag', exact: true }).click();
   assert.deepEqual(await chosenTags(page), ['Inherited', 'Computer Graphics', 'Site Only Tag']);
   await page.locator('#editCategorySearch').fill('Site Only');
-  await page.locator('#noteEditor').getByRole('button', { name: '选择子栏目 Site Only Category', exact: true }).click();
+  await page.locator('#noteEditor').getByRole('button', { name: '选择内容分类 Site Only Category', exact: true }).click();
   assert.equal(await page.locator('#editCategory').inputValue(), 'Site Only Category');
   await applyAndSave(page);
   assert.deepEqual(mock.metadata['Root.md'], { tags: ['Inherited', 'Computer Graphics', 'Site Only Tag'], category: 'Site Only Category' });
@@ -164,7 +164,7 @@ test('categories and series are scoped to their parent section and can be explic
   await page.locator('#editSection').selectOption('tutorials');
   assert.equal(await page.locator('#editCategory').inputValue(), '', 'switching parent sections clears the incompatible category');
   assert.equal(await page.locator('#editSeries').inputValue(), '', 'switching parent sections clears the incompatible series');
-  assert.equal(await page.locator('#noteEditor').getByRole('button', { name: '选择子栏目 Site Only Category', exact: true }).count(), 0);
+  assert.equal(await page.locator('#noteEditor').getByRole('button', { name: '选择内容分类 Site Only Category', exact: true }).count(), 0);
   await page.locator('#editCategorySearch').fill('Rendering Course'); await page.locator('#editCategoryCreate').click(); await settled(page);
   assert.deepEqual(apiCalls(mock, 'catalog').at(-1).data, { kind: 'category', value: 'Rendering Course', section: 'tutorials' });
   assert.equal(await page.locator('#editCategory').inputValue(), 'Rendering Course');
@@ -193,7 +193,7 @@ test('typing a search without choosing a result does not clear existing category
 test('an explicit no-category choice removes inherited grouping without exposing series on ordinary notes', async t => {
   const { page, mock, errors } = await setup(t);
   await edit(page);
-  await page.locator('#editCategoryPicker').getByRole('button', { name: '不设子栏目', exact: true }).click();
+  await page.locator('#editCategoryPicker').getByRole('button', { name: '不设内容分类', exact: true }).click();
   assert.equal(await page.locator('#editCategory').inputValue(), '');
   assert.equal(await page.locator('#seriesField').isVisible(), false);
   await applyAndSave(page);
@@ -242,7 +242,7 @@ test('mixed-entry bulk selections require a parent section before choosing scope
   assert.equal(await page.locator('#batchSeriesSearch').isDisabled(), true);
   await page.locator('#batchSection').selectOption('tutorials');
   assert.equal(await page.locator('#batchCategorySearch').isEnabled(), true);
-  await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择子栏目 Linear Algebra', exact: true }).click();
+  await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择内容分类 Linear Algebra', exact: true }).click();
   await page.locator('#batchSeriesPicker').getByRole('button', { name: '选择系列 Graphics Foundations', exact: true }).click();
   assert.equal(await page.locator('#batchSetCategory').isChecked(), true);
   assert.equal(await page.locator('#batchSetSeries').isChecked(), true);
@@ -261,7 +261,7 @@ test('changing the filtered implicit parent clears stale bulk grouping before ap
   const { page, mock, errors } = await setup(t, { selected: ['Root.md', 'Tutorial.md'] });
   await page.locator('#noteSection').selectOption('notes'); await openBatch(page);
   assert.equal(await page.locator('#batchSection').inputValue(), '', 'the parent is inferred from the selected filtered notes');
-  await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择子栏目 Site Only Category', exact: true }).click();
+  await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择内容分类 Site Only Category', exact: true }).click();
   await page.locator('#batchSeriesPicker').getByRole('button', { name: '选择系列 Site Only Series', exact: true }).click();
   assert.equal(await page.locator('#batchSetCategory').isChecked(), true);
   assert.equal(await page.locator('#batchSetSeries').isChecked(), true);
@@ -286,7 +286,7 @@ test('changing the filtered implicit parent clears stale bulk grouping before ap
 test('adding a differently scoped selection clears bulk grouping and disables its switches until the scope is unambiguous', async t => {
   const { page, mock, errors } = await setup(t, { selected: ['Root.md'] });
   await openBatch(page);
-  await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择子栏目 Site Only Category', exact: true }).click();
+  await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择内容分类 Site Only Category', exact: true }).click();
   await page.locator('#batchSeriesPicker').getByRole('button', { name: '选择系列 Site Only Series', exact: true }).click();
   await page.getByLabel('选择 Learning journal', { exact: true }).check();
   assert.equal(await page.locator('#batchSection').inputValue(), '');
@@ -305,7 +305,7 @@ test('adding a differently scoped selection clears bulk grouping and disables it
     assert.equal(await page.locator('#batchSet' + field).isChecked(), false);
     assert.equal(await page.locator('#batchSet' + field).isEnabled(), true);
   }
-  assert.equal(await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择子栏目 Linear Algebra', exact: true }).isVisible(), true);
+  assert.equal(await page.locator('#batchCategoryPicker').getByRole('button', { name: '选择内容分类 Linear Algebra', exact: true }).isVisible(), true);
   assert.equal(await page.locator('#batchSeriesPicker').getByRole('button', { name: '选择系列 Graphics Foundations', exact: true }).isVisible(), true);
   assert.deepEqual(errors, []);
 });

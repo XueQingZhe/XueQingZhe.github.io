@@ -53,7 +53,7 @@ test('real publisher: reconcile, edit existing content, create collection, impor
   const beforeCollection=await api('scan'),work=beforeCollection.notes.find(n=>n.path==='新作品.md');
   assert.equal(beforeCollection.siteContent.filter(e=>e.collection==='collections').length,0);
   await page.locator('#newCollection').click();await page.locator('#topicTitle').fill('测试作品合集');await page.locator('#topicSummary').fill('独立封面与有序文章组成的专题目录。');
-  await page.locator('#topicCoverBrowse').click();await page.locator('#topicCoverSearch').fill('workflow-cover');
+  await page.locator('#topicCoverBrowse').click();await page.locator('#topicCoverScope').selectOption('all');await page.locator('#topicCoverSearch').fill('workflow-cover');
   await page.locator('[data-topic-cover="/workflow-cover.png"]').click();
   await page.locator('#topicArticle').selectOption('notes:workflow-existing');await page.locator('#topicAdd').click();
   await page.locator('#topicArticle').selectOption('published:'+work.slug);await page.locator('#topicAdd').click();
@@ -75,7 +75,7 @@ test('real publisher: reconcile, edit existing content, create collection, impor
   const read=rel=>fs.readFile(path.join(site,'dist',rel,'index.html'),'utf8');
   const index=await read('notes'),series=await read('tutorials'),works=await read('work'),article=await read('notes/workflow-existing'),group=await read('work/'+collection.id),originalWork=await read('notes/'+work.slug);
   for(const title of ['实际流程：系列文章','新作品','测试作品合集'])assert.ok(index.includes(title),'index missing '+title);
-  assert.ok(series.includes('测试研习系列'));assert.ok(works.includes('测试作品合集'));assert.ok(works.includes('新作品'));assert.ok(article.includes('workflow-tag'));assert.ok(group.includes('/notes/workflow-existing/'));assert.ok(group.includes('/notes/'+work.slug+'/'));
+  assert.ok(series.includes('测试研习系列'));assert.ok(works.includes('测试作品合集'));assert.equal(works.includes('href="/notes/'+work.slug+'/"'),false,'grouped members stay inside their collection');assert.ok(article.includes('workflow-tag'));assert.ok(group.includes('/notes/workflow-existing/'));assert.ok(group.includes('/notes/'+work.slug+'/'));
   assert.ok(group.includes('/workflow-cover.png'),'collection uses its independently chosen cover');assert.ok(originalWork.includes('合成工作流演示'),'first member retains its own article body');assert.equal(group.includes('合成工作流演示'),false,'collection landing must not inline the first member body');
   assert.ok(group.indexOf('/notes/'+work.slug+'/')<group.indexOf('/notes/workflow-existing/'),'collection respects explicit member order');
   const landing=await page.evaluate(html=>{const doc=new DOMParser().parseFromString(html,'text/html');return {cover:doc.querySelector('[data-collection-cover]')?.getAttribute('src'),members:[...doc.querySelectorAll('[data-collection-member] > a')].map(link=>link.getAttribute('href')),contexts:doc.querySelectorAll('[data-collection-context]').length};},group);

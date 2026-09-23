@@ -98,6 +98,12 @@ async function setup(t, { viewport, linked = false } = {}) {
       return send({ ok: true });
     }
     if (url.pathname === '/api/select') return send({ ok: true });
+    if (url.pathname === '/api/site-covers' && url.searchParams.get('scope')==='note') {
+      const image={value:'/article/body.png',path:'/article/body.png',name:'body.png',type:'image',bytes:1000,selectable:true,referenced:true,thumbnailUrl:'/mock-cover',previewUrl:'/mock-cover'};
+      const video={...image,value:'/article/poster.jpg',path:'/article/demo.mp4',name:'demo.mp4',type:'video',coverVideo:'/article/demo.mp4'};
+      const poster={...image,value:'/article/poster.jpg',path:'/article/poster.jpg',name:'poster.jpg'};
+      return send({items:[image,video,poster],total:3,hasMore:false,current:null,ffmpeg:true});
+    }
     if (url.pathname === '/api/site-covers') { const items = ['/collection-cover.png', '/second-cover.png'].filter(value => !url.searchParams.get('q') || value.includes(url.searchParams.get('q'))).map(value => ({ value, path: value, name: value.slice(1), type: 'image', bytes: 1000, selectable: true, thumbnailUrl: '/mock-cover', previewUrl: '/mock-cover' })); return send({ items, total: items.length, hasMore: false, current: null, ffmpeg: false }); }
     return send({ error: 'Unexpected fixture request: ' + req.method + ' ' + url.pathname }, 404);
   });
@@ -370,4 +376,58 @@ test('the dark workbench and collection editor fit a 390px viewport', async t =>
     await page.screenshot({ path: path.join(directory, 'workflow-desktop.png'), fullPage: true });
   }
   assert.deepEqual(errors, []);
+});
+
+
+test('website cover picker starts in current article, saves public video pairs and clears video for its static poster', async t => {
+  const {page,mock,errors}=await setup(t);
+  await edit(page,'work:water');await page.locator('#coverBrowse').click();
+  await page.locator('[data-cover-path="/article/body.png"]').waitFor();
+  assert.equal(await page.locator('#coverScope').inputValue(),'note');
+  assert.equal(await page.locator('#coverScope').isVisible(),true);
+  const query=new URLSearchParams(calls(mock,'site-covers').at(-1).query);
+  assert.equal(query.get('note'),'work:water');assert.equal(query.get('scope'),'note');
+  await page.locator('[data-cover-path="/article/demo.mp4"]').click();assert.equal(await page.locator('#coverItems [aria-pressed="true"]').count(),1);assert.equal(await page.locator('[data-cover-path="/article/demo.mp4"]').getAttribute('aria-pressed'),'true');await save(page);
+  assert.equal(calls(mock,'content-settings').at(-1).data.metadata.cover,'/article/poster.jpg');
+  assert.equal(calls(mock,'content-settings').at(-1).data.metadata.coverVideo,'/article/demo.mp4');
+  await page.locator('#coverBrowse').click();await page.locator('[data-cover-path="/article/poster.jpg"]').click();assert.equal(await page.locator('#coverItems [aria-pressed="true"]').count(),1);assert.equal(await page.locator('[data-cover-path="/article/poster.jpg"]').getAttribute('aria-pressed'),'true');await save(page);
+  assert.equal(calls(mock,'content-settings').at(-1).data.metadata.coverVideo,'');
+  await page.locator('#coverBrowse').click();await page.locator('#coverScope').selectOption('all');
+  await page.locator('[data-cover-path="/collection-cover.png"]').waitFor();
+  assert.equal(new URLSearchParams(calls(mock,'site-covers').at(-1).query).get('scope'),'all');
+  assert.deepEqual(errors,[]);
+});
+
+test('collection cover picker defaults to current member media and keeps full-site assets an explicit option', async t => {
+  const {page,mock}=await setup(t);
+  await page.locator('[data-edit-topic="engine"]').click();await page.locator('#topicCoverBrowse').click();
+  await page.locator('[data-topic-cover="/collection-cover.png"]').waitFor();
+  assert.equal(await page.locator('#topicCoverScope').inputValue(),'members');
+  const query=new URLSearchParams(calls(mock,'site-covers').at(-1).query);
+  assert.equal(query.get('scope'),'members');assert.deepEqual(query.getAll('member'),['notes:shader','notes:learning']);
+  await page.locator('#topicCoverScope').selectOption('all');
+  await page.waitForTimeout(50);
+  assert.equal(new URLSearchParams(calls(mock,'site-covers').at(-1).query).get('scope'),'all');
+});
+
+
+test('a slow collection-cover response cannot restore images from a removed member', async t => {
+  const {page}=await setup(t);
+  let releaseOld,startedOld;
+  const oldStarted=new Promise(resolve=>{startedOld=resolve});
+  const oldRelease=new Promise(resolve=>{releaseOld=resolve});
+  await page.route('**/api/site-covers?**',async route=>{
+    const query=new URL(route.request().url()).searchParams;
+    if(query.get('scope')!=='members')return route.continue();
+    const old=query.getAll('member').includes('notes:shader');
+    if(old){startedOld();await oldRelease;}
+    const value=old?'/old-member.png':'/remaining-member.png';
+    return route.fulfill({contentType:'application/json',body:JSON.stringify({items:[{value,path:value,name:value,type:'image',bytes:100,selectable:true,thumbnailUrl:'/mock-cover'}],total:1,hasMore:false,current:null,ffmpeg:true})});
+  });
+  await page.locator('[data-edit-topic="engine"]').click();await page.locator('#topicCoverBrowse').click();await oldStarted;
+  await page.getByRole('button',{name:'移除 Shader article',exact:true}).click();
+  await page.locator('[data-topic-cover="/remaining-member.png"]').waitFor();
+  releaseOld();await page.waitForTimeout(100);
+  assert.equal(await page.locator('[data-topic-cover="/old-member.png"]').count(),0);
+  assert.equal(await page.locator('[data-topic-cover="/remaining-member.png"]').count(),1);
 });

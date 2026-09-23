@@ -53,7 +53,7 @@ const specs = [
       <p class="sum">{d.summary}</p>
       <p class="case-kind">{collection?`作品合集 · ${notes.length} 篇文章`:'独立作品'}</p>
       {parents.length>0&&<div class="case-parents">{parents.map(({topic,index,items})=><a data-parent-topic href={workUrl(topic)}>所属合集 · {topic.data.title}<small>第 {index+1} / {items.length} 篇</small></a>)}</div>}
-      {d.category&&<p class="case-category"><small>子栏目</small><a data-category-link data-pagefind-filter={`子栏目:${d.category}`} href={`/work/?category=${encodeURIComponent(d.category)}`}>{d.category}</a></p>}
+      {d.category&&<p class="case-category"><small>内容分类</small><a data-category-link data-pagefind-filter={`内容分类:${d.category}`} href={`/work/?category=${encodeURIComponent(d.category)}`}>{d.category}</a></p>}
       {d.status === "wip" && <span class="wip tele">● 进行中</span>}
       <ReadingTools scope={Content?'.case-body':'.project-case'} canonicalPath={workUrl(entry)} />
     </header>

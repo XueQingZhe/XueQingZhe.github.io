@@ -19,7 +19,7 @@ const mime = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
 const fail = (status, message) => Object.assign(Error(message), { status });
 export const mediaValue = file => '/' + file.split('/').map(encodeURIComponent).join('/');
 
-function references(body) {
+export function mediaReferences(body) {
   const tree = parser.parse(body.replace(/%%[\s\S]*?%%/g, ''));
   const targets = new Set(), definitions = new Map();
   const walk = (node, visit) => { visit(node); if (!['code', 'inlineCode', 'math', 'inlineMath'].includes(node.type)) for (const child of node.children ?? []) walk(child, visit); };
@@ -81,7 +81,7 @@ export class CoverMedia {
     if (!this.publisher.fileSet?.has(note) || !/\.md$/i.test(note) || !this.publisher.db.entries[note]) throw fail(400, '请先选择已扫描的笔记');
     const raw = await fs.readFile(await this.publisher.bounded(note), 'utf8');
     const parsed = this.parseFrontmatter(raw), used = new Set();
-    for (const target of references(parsed.body)) {
+    for (const target of mediaReferences(parsed.body)) {
       try { const file = await this.publisher.resolve(target, note); if (typeOf(file)) used.add(file); } catch { /* Missing/ambiguous media will be reported by publication analysis. */ }
     }
     const cover = params.has('cover') ? params.get('cover') : this.publisher.db.entries[note].metadata?.cover ?? parsed.data.cover ?? '';

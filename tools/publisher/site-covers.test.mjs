@@ -32,8 +32,31 @@ test('website covers filter and paginate encoded names, retain current selection
   const filtered = await service.list(new URLSearchParams({ q: '春日', cover: '/covers/A.png', type: 'image' }));
   assert.equal(filtered.total, 1); assert.equal(filtered.items[0].path, '/图片/春日 #100% 光.png'); assert.equal(filtered.current.value, '/covers/A.png');
   assert.equal(path.relative(site, await service.file(filtered.items[0].value)).replaceAll('\\', '/'), 'public/图片/春日 #100% 光.png');
-  assert.equal((await service.list(new URLSearchParams({ type: 'video' }))).total, 0);
+  assert.equal((await service.list(new URLSearchParams({ type: 'video' }))).total, 1);
   for (const params of [{ limit: '0' }, { limit: '61' }, { offset: '-1' }, { offset: '1.5' }, { type: 'pdf' }, { q: 'a'.repeat(201) }]) await assert.rejects(service.list(new URLSearchParams(params)), /筛选条件/);
+});
+
+test('current article and collection members use only their real body media and preserve video pairs', async t => {
+  const { site, write } = await fixture(t);
+  for(const name of ['cloud.jpg','perlin.jpg','poster.jpg','unrelated.jpg','code-only.jpg','plain-poster.jpg'])await write('public/assets/'+name);
+  await write('public/assets/cloud.mp4','video');await write('public/assets/plain.mp4','video');await write('public/assets/example.mp4','code-only');
+  const first={key:'published:cloud',collection:'published',title:'体积云实践',url:'/notes/cloud/',path:'content/published/notes/cloud.md',metadata:{cover:'/assets/poster.jpg',coverVideo:'/assets/cloud.mp4'}};
+  const second={key:'legacy:perlin',collection:'legacy',title:'Perlin 噪声',url:'/blog/perlin/',path:'src/content/legacy/perlin.md',metadata:{}};
+  await write(first.path,'![Cloud](/assets/cloud.jpg)\n<video src="/assets/cloud.mp4" poster="/assets/poster.jpg"></video>\n\n```html\n<video src="/assets/example.mp4" poster="/assets/code-only.jpg"></video>\n```');
+  await write(second.path,'![Perlin](/assets/perlin.jpg)\n<video src="/assets/plain.mp4"></video>');
+  const service=new SiteCovers({site,publisher:{siteContent:[first,second]}});
+  const result=await service.list(new URLSearchParams({scope:'note',note:first.key,type:'all',cover:'/assets/poster.jpg'}));
+  assert.equal(result.total,3);
+  assert.equal(result.items.some(item=>item.path.includes('unrelated')||item.path.includes('code-only')||item.path.includes('example')),false);
+  const video=result.items.find(item=>item.type==='video');assert.equal(video.value,'/assets/poster.jpg');assert.equal(video.coverVideo,'/assets/cloud.mp4');assert.equal(video.selectable,true);assert.equal(result.current.type,'video');
+  await service.validateSelection({cover:video.value,coverVideo:video.coverVideo});
+  await assert.rejects(service.validateSelection({cover:'/assets/cloud.jpg',coverVideo:video.coverVideo}),/不匹配/);
+  const members=new URLSearchParams({scope:'members',type:'image'});members.append('member',first.key);members.append('member',second.key);
+  const collection=await service.list(members);assert.equal(collection.total,4);assert.ok(collection.items.some(item=>item.path==='/assets/plain-poster.jpg'));assert.ok(collection.items.some(item=>item.sources.some(source=>source.title==='Perlin 噪声')));
+  const legacy=await service.list(new URLSearchParams({scope:'note',note:second.key,type:'all'}));assert.equal(legacy.total,3);assert.equal(legacy.items[0].path,'/assets/perlin.jpg');assert.equal(legacy.items.find(item=>item.type==='video').value,'/assets/plain-poster.jpg');
+  assert.equal((await service.list(new URLSearchParams({scope:'members'}))).total,0);
+  await assert.rejects(service.list(new URLSearchParams({scope:'note',note:'notes:missing'})),/选择网站中的文章/);
+  const all=await service.list(new URLSearchParams({scope:'all',type:'image'}));assert.ok(all.items.some(item=>item.path==='/assets/unrelated.jpg'));
 });
 
 test('website image paths reject traversal, encoded traversal, private files and image-named directories', async t => {
@@ -54,6 +77,16 @@ test('signed thumbnails decode real pixels, bind one image and reject malformed 
   for (const ticket of ['', 'x'.repeat(64), '汉'.repeat(64), 'a'.repeat(63)]) { const url = new URL(item.thumbnailUrl, 'http://local'); url.searchParams.set('ticket', ticket); await assert.rejects(serve(url.href), /凭证无效/); }
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="red"/></svg>';
   await write('public/icon.svg', svg); const svgOutput = await serve((await service.item('/icon.svg')).thumbnailUrl); assert.equal((await sharp(svgOutput.body).metadata()).width, 40);
+});
+
+test('website video previews keep signed media URLs and expose byte lengths without treating video as an image', async t => {
+  const {service,write,serve}=await fixture(t);
+  await write('public/movie.mp4','video-bytes');
+  const item=await service.item('/movie.mp4');
+  const response=await serve(item.previewUrl,'HEAD');
+  assert.equal(response.status,200);assert.equal(response.headers['Content-Type'],'video/mp4');assert.equal(response.headers['Content-Length'],11);assert.equal(response.body,undefined);
+  const switched=new URL(item.previewUrl,'http://local');switched.searchParams.set('kind','thumbnail');
+  await assert.rejects(serve(switched.href,'HEAD'),/凭证无效/);
 });
 
 test('cached listings recover after a public file is removed by a fresh website build', async t => {

@@ -21,7 +21,7 @@ const count=String(members.length).padStart(2,'0');
         <p class="collection-eyebrow"><span class="collection-mark" aria-hidden="true"><i></i><i></i><i></i></span>作品合集 <span>· {members.length} 篇文章</span></p>
         <h1 data-pagefind-meta="title" data-work-detail-title>{data.title}</h1>
         {data.summary&&<p class="collection-summary">{data.summary}</p>}
-        <div class="collection-meta"><span>{data.year}</span>{data.engine.map((engine:string)=><span>{labelOf('engine',engine)}</span>)}{data.category&&<a data-category-link data-pagefind-filter={`子栏目:${data.category}`} href={`/work/?category=${encodeURIComponent(data.category)}`}>{data.category}</a>}</div>
+        <div class="collection-meta"><span>{data.year}</span>{data.engine.map((engine:string)=><span>{labelOf('engine',engine)}</span>)}{data.category&&<a data-category-link data-pagefind-filter={`内容分类:${data.category}`} href={`/work/?category=${encodeURIComponent(data.category)}`}>{data.category}</a>}</div>
         {data.tech.length>0&&<p class="collection-tags" data-pagefind-index-attrs="data-tags" data-tags={data.tech.join(' ')}>{data.tech.map((tag:string)=><span>{labelOf('tech',tag)}</span>)}</p>}
         <ReadingTools canonicalPath={workUrl(entry)} scope=".collection-directory" />
       </div>

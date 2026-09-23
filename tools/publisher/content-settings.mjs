@@ -10,7 +10,7 @@ const serialize = data => JSON.stringify(data, null, 2) + '\n';
 const empty = () => ({ version: 1, entries: {}, collections: {} });
 const mergeCover = (source, override) => {
   const merged = { ...source, ...override };
-  if (Object.hasOwn(override ?? {}, 'cover') && override.cover !== source.cover) delete merged.coverVideo;
+  if (Object.hasOwn(override ?? {}, 'cover') && override.cover !== source.cover && !Object.hasOwn(override ?? {}, 'coverVideo')) delete merged.coverVideo;
   return merged;
 };
 
@@ -72,6 +72,9 @@ export class ContentSettingsStore {
     const entry = entries.find(entry => entry.active && !entry.draft && contentKey(entry) === input.key);
     if (!entry) throw Error('网站中找不到这篇内容，请重新核对');
     const metadata = this.normalize(input.metadata);
+    // A cover replacement must explicitly clear an earlier saved video pairing;
+    // omitting the field would resurrect it when current and pending patches merge.
+    if (Object.hasOwn(metadata, 'cover') && !Object.hasOwn(metadata, 'coverVideo') && metadata.cover !== entry.metadata.cover) metadata.coverVideo = '';
     if (metadata.cover && !/^\/(?!\/)/.test(metadata.cover) && !/^https:\/\//i.test(metadata.cover)) throw Error('网站封面请使用网站内图片地址或 HTTPS 图片网址');
     const effective = { ...entry.metadata, ...metadata };
     if (entry.collection === 'collections' && (effective.section !== 'work' || effective.workType !== 'collection')) throw Error('新建的作品合集不能改为其他内容类型或单篇作品，请保留合集形式');

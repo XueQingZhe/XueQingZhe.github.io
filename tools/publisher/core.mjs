@@ -73,8 +73,9 @@ function metadataValue(key, value) {
   return text;
 }
 function normalizeOverride(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !metadataFields.includes(key))) throw Error('元数据包含无效字段');
-  return Object.fromEntries(metadataFields.filter(key => Object.hasOwn(value, key)).map(key => [key, metadataValue(key, value[key])]));
+  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !metadataFields.includes(key) && key !== 'coverVideo')) throw Error('元数据包含无效字段');
+  if (Object.hasOwn(value, 'coverVideo') && (typeof value.coverVideo !== 'string' || value.coverVideo.length > 2048 || value.coverVideo && (!/^\/(?!\/)/.test(value.coverVideo) || !/\.(mp4|webm|mov|m4v)$/i.test(value.coverVideo) || /[\u0000-\u001f?#\\]/.test(value.coverVideo)))) throw Error('视频封面必须使用网站内视频地址');
+  return {...Object.fromEntries(metadataFields.filter(key => Object.hasOwn(value, key)).map(key => [key, metadataValue(key, value[key])])), ...(Object.hasOwn(value,'coverVideo')?{coverVideo:value.coverVideo}:{})};
 }
 function effectiveMetadata(data, entry, rel, override = entry.metadata ?? {}, errors = null) {
   const defaults = { section: 'notes', category: '', title: path.basename(rel, '.md'), date: entry.firstSeen, summary: '', tags: [], series: '', order: 100, cover: '', engine: [], role: [], year: Number(entry.firstSeen.slice(0, 4)), featured: false, work: '', notes: [], workType: '' };
@@ -479,6 +480,30 @@ export class Publisher {
     plan.siteSources = selected.map(rel => this.siteContent.find(item => item.key === this.db.entries[rel].siteLink)).filter(Boolean).map(({ key, path, digest }) => ({ key, path, digest }));
     plan.topics = topicSnapshot; plan.changes.topics = topicSnapshot?.changes ?? [];
     plan.contentSettings = settingsSnapshot; plan.changes.contentSettings = settingsSnapshot?.changes ?? [];
+    // Public covers may outlive the article attachment that first produced them.
+    // Collect only effective, still-visible cover references; never copy new vault files here.
+    const outputKeys = new Set(output.flatMap(note => [`published:${note.slug}`, ...(note.replaces ? [note.replaces] : [])]));
+    const publicCoverSources = [
+      ...output.map(note => ({ title: note.title, metadata: frontmatter(note.markdown).data })),
+      ...this.topicSources().filter(entry => !entry.draft && !entry.replacedBy && !outputKeys.has(entry.key)),
+    ];
+    const retainedPublicAssets = new Map();
+    for (const entry of publicCoverSources) for (const field of ['cover', 'coverVideo']) {
+      const value = entry.metadata?.[field];
+      if (typeof value !== 'string' || !value.startsWith('/published-assets/')) continue;
+      try {
+        const relative = decodeURIComponent(new URL(value, 'http://publisher').pathname).slice(1);
+        if (!relative.startsWith('published-assets/')) throw Error('封面路径越界');
+        const filename = relative.slice('published-assets/'.length), ext = path.posix.extname(filename).toLowerCase();
+        if (!imageExts.has(ext) && !videoExts.has(ext) && ext !== '.svg') throw Error('封面必须是图片或视频');
+        const source = 'public/' + relative;
+        if (retainedPublicAssets.has(source)) continue;
+        const file = await boundedSite(this.site, source), stat = await fs.stat(file);
+        if (!stat.isFile()) throw Error('封面不是文件');
+        retainedPublicAssets.set(source, { path: source, filename, bytes: stat.size, digest: hash(await fs.readFile(file)) });
+      } catch (error) { errors.push({ path: entry.title, message: `已公开封面素材不可用，请重新选择或恢复：${value}（${error.message}）` }); }
+    }
+    plan.retainedPublicAssets = [...retainedPublicAssets.values()];
     plan.catalog = scanned.catalog;
     this.plans.set(plan.id, plan); return plan;
   }
@@ -520,6 +545,10 @@ export class Publisher {
     }
     for (const a of plan.assets) if (a.sources.some(s => (this.db.assets[s] ?? plan.assetDefaults?.[s] ?? 'lossless') !== a.mode)) throw Error('压缩策略已改变，请重新分析');
     for (const source of plan.siteSources ?? []) if (hash(await fs.readFile(await boundedSite(this.site, source.path))) !== source.digest) throw Error('已关联的网站文章已改变，请重新分析并审核');
+    for (const asset of plan.retainedPublicAssets ?? []) {
+      const file = await boundedSite(this.site, asset.path).catch(() => null);
+      if (!file || hash(await fs.readFile(file)) !== (applied ? asset.stagedDigest ?? asset.digest : asset.digest)) throw Error('已公开封面素材已变化，请重新分析并审核');
+    }
     if (plan.topics) await this.topics.verify(plan.topics, { applied });
     if (plan.contentSettings) await this.contentSettings.verify(plan.contentSettings, { applied });
   }
@@ -567,6 +596,14 @@ export class Publisher {
       await fs.copyFile(path.join(r.cache, r.filename), path.join(dir, 'assets', r.filename));
       if (r.poster) await fs.copyFile(path.join(r.cache, r.poster), path.join(dir, 'assets', r.poster));
       transformed.push({ ...a, ...r });
+    }
+    for (const asset of plan.retainedPublicAssets ?? []) {
+      const destination = path.join(dir, 'assets', asset.filename);
+      if (!await exists(destination)) {
+        await fs.mkdir(path.dirname(destination), { recursive: true });
+        await fs.copyFile(await boundedSite(this.site, asset.path), destination);
+      }
+      asset.stagedDigest = hash(await fs.readFile(destination));
     }
     for (const note of plan.output) {
       let md = note.markdown;
@@ -667,7 +704,7 @@ export class Publisher {
         if (preview.had) await fs.rename(path.join(this.site, 'dist'), preview.backup);
         await fs.rename(preview.prepared, path.join(this.site, 'dist'));
       }
-      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, metadataDigest: n.metadataDigest, fileDigest: n.fileDigest, siteSourceDigest: n.siteSourceDigest ?? '', replaces: n.replaces ?? '', renderDigest:n.renderDigest }])), assets: stage.transformed.flatMap(a => [a.filename, ...(a.poster ? [a.poster] : [])]), generatedAt: new Date().toISOString() };
+      const current = { notes: Object.fromEntries(stage.plan.output.map(n => [n.id, { title: n.title, slug: n.slug, digest: n.digest, metadataDigest: n.metadataDigest, fileDigest: n.fileDigest, siteSourceDigest: n.siteSourceDigest ?? '', replaces: n.replaces ?? '', renderDigest:n.renderDigest }])), assets: [...new Set([...stage.transformed.flatMap(a => [a.filename, ...(a.poster ? [a.poster] : [])]), ...(stage.plan.retainedPublicAssets ?? []).map(asset => asset.filename)])], generatedAt: new Date().toISOString() };
       await fs.writeFile(path.join(this.state, 'current.json'), JSON.stringify(current));
       await fs.rm(path.join(this.state, 'transaction.json'));
       if (stage.plan.topics) await this.topics.finish(stage.plan.topics).catch(() => {});

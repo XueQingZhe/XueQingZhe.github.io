@@ -1,0 +1,865 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="notes" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>URP - RendererFeature ：TAA · 吟处雪轻遮</title><meta name="description" content><link rel="canonical" href="https://xueqingzhe.github.io/notes/n-e2f48922-480/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记与研习" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="URP - RendererFeature ：TAA · 吟处雪轻遮"><meta property="og:description" content><meta property="og:url" content="https://xueqingzhe.github.io/notes/n-e2f48922-480/"><meta property="og:image" content="https://xueqingzhe.github.io/og.png"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.DhD71mKu.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/"><span>作品</span><small>WORK</small></a><a href="/notes/" aria-current="page"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-q7kxohas><span id="reading-progress-bar" data-astro-cid-q7kxohas></span></div> <header class="article-header reading-room-header has-outline" data-astro-cid-q7kxohas> <div class="reading-breadcrumb" data-astro-cid-q7kxohas><a class="article-back" href="/notes/" data-astro-cid-q7kxohas><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M7 4H4v14h14v-3M8 4h10v10H8zM11 8h4M11 11h4" data-astro-cid-q7kxohas></path></svg><span data-astro-cid-q7kxohas>返回手记目录</span></a><span class="reading-edition" data-astro-cid-q7kxohas>NOTES / FIELD JOURNAL</span></div> <p class="eyebrow reading-kicker" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><span data-astro-cid-q7kxohas>FROM THE NOTEBOOK</span></p> <h1 data-pagefind-meta="title" data-kinetic data-astro-cid-q7kxohas>URP - RendererFeature ：TAA</h1>  <div class="article-meta" data-astro-cid-q7kxohas><time datetime="2026-09-18T00:00:00.000Z" data-astro-cid-q7kxohas>2026 / 09 / 18</time><span class="reading-time" data-astro-cid-q7kxohas><svg viewBox="0 0 18 18" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><circle cx="9" cy="9" r="6.2" data-astro-cid-q7kxohas></circle><path d="M9 5.2V9l2.6 1.7" data-astro-cid-q7kxohas></path></svg>约 13 分钟阅读</span></div>   <div class="reading-tools" data-reading-tools data-scope=".article-body" data-canonical-path="/notes/n-e2f48922-480/" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <div class="article-grid has-contents" data-astro-cid-q7kxohas> <details class="reading-outline" open data-astro-cid-q7kxohas><summary data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>本篇目录</span><small data-astro-cid-q7kxohas>20 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M4 6l4 4 4-4" data-astro-cid-q7kxohas></path></svg></summary><aside class="toc" data-scope=".article-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 文章目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#参考资源" data-to="参考资源" data-astro-cid-6t6zfk7k> 参考资源 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#采样算法" data-to="采样算法" data-astro-cid-6t6zfk7k> 采样算法 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#抖动采样" data-to="抖动采样" data-astro-cid-6t6zfk7k> 抖动采样 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#halton哈尔顿序列" data-to="halton哈尔顿序列" data-astro-cid-6t6zfk7k> Halton（哈尔顿）序列 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#总体实现流程" data-to="总体实现流程" data-astro-cid-6t6zfk7k> 总体实现流程 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#基础混合和重投影" data-to="基础混合和重投影" data-astro-cid-6t6zfk7k> 基础混合和重投影 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#处理静态物体" data-to="处理静态物体" data-astro-cid-6t6zfk7k> 处理静态物体 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#neighborhood-clamp" data-to="neighborhood-clamp" data-astro-cid-6t6zfk7k> Neighborhood Clamp </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#ycocg-box" data-to="ycocg-box" data-astro-cid-6t6zfk7k> YCoCg Box </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#提前色彩处理tone-map" data-to="提前色彩处理tone-map" data-astro-cid-6t6zfk7k> 提前色彩处理（Tone map） </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#额外的钳制优化a" data-to="额外的钳制优化a" data-astro-cid-6t6zfk7k> 额外的钳制优化A </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#额外的钳制优化b" data-to="额外的钳制优化b" data-astro-cid-6t6zfk7k> 额外的钳制优化B </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#两种邻域钳制效果对比" data-to="两种邻域钳制效果对比" data-astro-cid-6t6zfk7k> 两种邻域钳制效果对比 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#处理动态物体motion-vector" data-to="处理动态物体motion-vector" data-astro-cid-6t6zfk7k> 处理动态物体（Motion Vector） </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#开启motion-vector" data-to="开启motion-vector" data-astro-cid-6t6zfk7k> 开启Motion Vector </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#替换手动jitter" data-to="替换手动jitter" data-astro-cid-6t6zfk7k> 替换手动jitter </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#最终效果" data-to="最终效果" data-astro-cid-6t6zfk7k> 最终效果 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#完整代码" data-to="完整代码" data-astro-cid-6t6zfk7k> 完整代码 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#c代码" data-to="c代码" data-astro-cid-6t6zfk7k> C#代码 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#shader代码" data-to="shader代码" data-astro-cid-6t6zfk7k> Shader代码 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>阅读进度</span><span data-reading-percent data-astro-cid-q7kxohas>0%</span></div></details> <div class="article-column" data-astro-cid-q7kxohas> <article class="prose body article-body" data-pagefind-body data-pagefind-filter="栏目:手记" data-astro-cid-q7kxohas><span aria-hidden="true" data-pagefind-index-attrs="data-tags" data-tags data-astro-cid-q7kxohas></span><h2 id="参考资源">参考资源</h2>
+<p><a href="https://de45xmedrsdbp.cloudfront.net/Resources/files/TemporalAA_small-59732822.pdf">https://de45xmedrsdbp.cloudfront.net/Resources/files/TemporalAA_small-59732822.pdf</a></p>
+<p><a href="https://developer.download.nvidia.com/gameworks/events/GDC2016/msalvi_temporal_supersampling.pdf">https://developer.download.nvidia.com/gameworks/events/GDC2016/msalvi_temporal_supersampling.pdf</a></p>
+<p><a href="https://www.gdcvault.com/play/1022970/Temporal-Reprojection-Anti-Aliasing-in">https://www.gdcvault.com/play/1022970/Temporal-Reprojection-Anti-Aliasing-in</a></p>
+<h2 id="采样算法">采样算法</h2>
+<p><strong>对于一般的采样偏移处理有两种，一种是采样平均使用不同的位移多次采样一张RT(一帧），这样的话处理多帧的话就需要每帧做多次处理。另一种指数平均则只需要一张历史帧，就是可以得到所有帧的累计，其实就是lerp，当前帧和历史帧进行lerp处理，α则是权重，因为不断累积，越旧的帧随指数衰减，所以叫指数平均</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/134a24d2878db9ea30382eb850da71f2e3028a3c532fa354b5bf8f29d4fb57f6.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1427" height="746"></span></figure>
+<h3 id="抖动采样">抖动采样</h3>
+<p><strong>因为成像都在相机，所以偏移可以直接对投影矩阵处理就行，针对这里的采样偏移计算则使用Halton序列</strong>
+<strong>另外说明的是这里矩阵是在ndc空间下计算，如果对应重映射到-1~1的范围，这里的偏移量大概是一个像素</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/cfdf6ec9f22d466d52766d6605f14adebc65246ae0fee98c3c659f31edc9d9ea.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1451" height="786"></span></figure><p>
+<strong>对应unity代码如下，使用sampleCount来控制采样混合的历史帧数量，经我测试这里的jitter还是偏大，可能会导致严重较为抖动问题</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/35cae6ccd69d77afe636cdbcb48217e933b39b2d3d31f35e925a7295be199925.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="816" height="230"></span></figure><p>
+<strong>所以还是将其缩小一半，还是在亚像素范围抖动，这样可以解决抖动过强，同时将jitter值传入Shader</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/014e30fccf8a14849fe49736cea3ab9e2e6f3a42e97347a4574088b90099b1b6.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="758" height="247"></span></figure>
+<h3 id="halton哈尔顿序列">Halton（哈尔顿）序列</h3>
+<p><strong>这个序列是一种低差异序列，理解成一种撒点尽量均匀的散布算法就行</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/fff599df9b904d4db3f9f244a9853c6f5421681a5cf90c75acc7337208b23a0b.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1406" height="704"></span></figure><p>
+<strong>具体算法是使用镜像翻转后的不同进制转换</strong>
+<em><strong>比如输入是十进制整数 —> 转成对应进制 —> 镜像翻转放到小数点后面（对应进制的小数）—> 转回十进制小数输出</strong></em>
+<strong>代码如下</strong>
+</p><figure class="fig" style="max-width:551px"><span class="fig-box"><img src="/published-assets/cf79c0d4407762234ca60e492a09a51ca9932effc865e4e9646dd98b141dff0a.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="551" height="274"></span></figure>
+<h2 id="总体实现流程">总体实现流程</h2>
+<h3 id="基础混合和重投影">基础混合和重投影</h3>
+<p><strong>处理完上面的jitter后，Shader最基础的操作就是混合前后两帧图像，因为jitter进行了位移，默认UV对应的当前帧，但是历史帧也做了jitter，则需要对齐上一帧的UV，对齐这个操作就是重投影，因为静态物体不会运动，只需要Unjitter，而动态物体则需要使用MotionVector去处理了，代码非常简单，将jitter传给Shader然后重新计算一下UV</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/b3a6087df245c666b5eb59c18520d5c352eb2299ef91997cdef8a7b2b5de9733.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="858" height="243"></span></figure><p>
+<strong>混合输出</strong>
+</p><figure class="fig" style="max-width:712px"><span class="fig-box"><img src="/published-assets/c39cc9e645c287f9b019595ade71ca995c5cb32364a345a1f9b862e514d8d778.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="712" height="40"></span></figure><p>
+<strong>因为最终混合是lerp，如果随着历史帧的混合权重增加，就会出现鬼影</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/930123275662eba292c49244d1fa861cf788d1d1f4a37335f283fbf5f5c74864.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1420" height="790"></span></figure><p>
+<strong>具体影响的效果是这样</strong>
+</p><figure class="fig fig--video"><div class="vbox"><video src="/published-assets/1674662e32df5ccf93925dd0b9e044a044d14b6d2956d50d276ce1dfa2b76a54.mp4" controls muted loop playsinline preload="none" data-inview=""></video></div></figure>
+<h3 id="处理静态物体">处理静态物体</h3>
+<h4 id="neighborhood-clamp">Neighborhood Clamp</h4>
+<p><strong>具体处理就是从当前帧的3x3邻域找到max和min来进行钳制历史帧混合，防止越界</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/1ea54e05993a3f2ec9f3b8386fbfd598a9d26dc103fa3ec9c4c18efc2eab747e.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1372" height="676"></span></figure>
+<h4 id="ycocg-box">YCoCg Box</h4>
+<p><strong>虽然可以直接拿RGB计算Neighborhood Clamp，但是RGB是不区分亮度和色度的，包围盒太粗糙，针对亮度需要转换到YCoCg色彩空间，把亮度单独拿出来，让包围盒的形状更符合人眼感知，Clamp 更精确，既不会放过鬼影，也不会过度裁剪导致闪烁</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/16fe7258e56fae234c9b090a1cb5a6eb3c53309e6b5f98f84bc5a0d04d39f759.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1421" height="717"></span></figure><p>
+<strong>RGB 转换为 YCoCg 的标准公式如下：</strong></p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mi>Y</mi></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo stretchy="false">(</mo><mi>R</mi><mo>+</mo><mn>2</mn><mi>G</mi><mo>+</mo><mi>B</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi>C</mi><mi>o</mi></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo stretchy="false">(</mo><mi>R</mi><mo>−</mo><mi>B</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi>C</mi><mi>g</mi></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mfrac><mn>1</mn><mn>4</mn></mfrac><mo stretchy="false">(</mo><mo>−</mo><mi>R</mi><mo>+</mo><mn>2</mn><mi>G</mi><mo>−</mo><mi>B</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned} Y &#x26;= \frac{1}{4}(R + 2G + B) \\ Co &#x26;= \frac{1}{2}(R - B) \\ Cg &#x26;= \frac{1}{4}(-R + 2G - B) \end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:6.6223em;vertical-align:-3.0612em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.5612em;"><span style="top:-5.5612em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span></span></span><span style="top:-3.2537em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord mathnormal">o</span></span></span><span style="top:-0.9463em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord mathnormal" style="margin-right:0.0359em;">g</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:3.0612em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.5612em;"><span style="top:-5.5612em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">4</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">2</span><span class="mord mathnormal">G</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose">)</span></span></span><span style="top:-3.2537em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose">)</span></span></span><span style="top:-0.9463em;"><span class="pstrut" style="height:3.3214em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">4</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mopen">(</span><span class="mord">−</span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">2</span><span class="mord mathnormal">G</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:3.0612em;"><span></span></span></span></span></span></span></span></span></span></span></span>
+<ul>
+<li>
+<p><strong>Y (Luminance)：</strong> 亮度分量，代表图像的明暗。</p>
+</li>
+<li>
+<p><strong>Co (Chrominance orange)：</strong> 偏橙色度分量。</p>
+</li>
+<li>
+<p><strong>Cg (Chrominance green)：</strong> 偏绿色度分量。
+<strong>参考代码：</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/b5361a87eb073e3040f5bd335a8837dc6c002c8164dbd08a536df6c8ba3e3043.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1121" height="746"></span></figure>
+</li>
+</ul>
+<h4 id="提前色彩处理tone-map">提前色彩处理（Tone map）</h4>
+<p><strong>对于高光特别丰富，亮度极高的情况，可以先对颜色进行Tone map然后在进行TAA混合</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/a952e542652fd71c67bd3cd359546ef58f748059ac38301292c8775c28a98d97.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1442" height="820"></span></figure><p>
+<strong>文档给出的参考对比</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/448720481335927b44c3d25c13e54561bbe336fadd912d3cee7ac9f33f9e4658.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1458" height="830"></span></figure><p>
+<strong>我测试场景对比</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/5e4f1c3feaf40f330b19bdff76ec3b7707cb41b3a3e1b9607e62e8ef46bce37a.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="625"></span></figure><p>
+<strong>参考代码：</strong>
+</p><figure class="fig" style="max-width:649px"><span class="fig-box"><img src="/published-assets/854624677e3e45221b34e4000234ee0bbe933330a806475dfd7bf0df6b1fa1f9.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="649" height="229"></span></figure><p>
+<strong>输出</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/a7a65d3f1041927ab9a7de0159a80571e8a9f0da3eb67c01d1922d0a3b669afb.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="846" height="144"></span></figure>
+<h4 id="额外的钳制优化a">额外的钳制优化A</h4>
+<p><strong>使用YCoCg Box 进行 Neighborhood Clamp 的问题是这个范围可能很宽，一个异常亮的邻域像素会把 maxC 拉得很大，很多本该被裁掉的历史帧颜色都能通过，不是很准确。英伟达的文档中提到使用Variance Clipping（方差裁剪）进行包围盒的钳制</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/09f48d6c280a8dd960032575b64d7a2048be5ca40cff19454a3fee6ffd2e14b1.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1729" height="1401"></span></figure><p>
+<strong>平均标准差是变化程度，因为是平均变化程度，虽然不能完全准确控制范围，但是可以自适应变化的快慢防止有的像素差异很大，这里乘上一个gamma控制具体变化程度，和平均值相加得到一个大最小范围</strong>
+<strong>参考代码：</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/141bbc57c52c53e7f55be2e0c5634ed640c65e59e4f54a9afef690e53d32d32b.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="875" height="603"></span></figure><p>
+<strong>此外还需要对颜色压制，保留了被原本包围盒外的颜色，不过进行了压制到包围盒边缘</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/7635b3e45a12721d44a185de4f5274c557aceb3a5504ee1b678b3b565d7a5275.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1666" height="926"></span></figure><p>
+<strong>设计逻辑就是，将颜色压制到边缘，所以计算history + r * scale = maxC 或者 history + r * scale = minC，求scale是多少就行</strong>
+<strong>参考代码：</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/074adaeeed0ea8c523afe6a0d0fd013e3f3928d016e15b864bbf6529301672f1.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="789" height="332"></span></figure>
+<h4 id="额外的钳制优化b">额外的钳制优化B</h4>
+<p><strong>在Temporal Reprojection Anti-Aliasing in INSIDE文档中使用了另外的采样邻域方法，RoundBox3x3</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/e6b52adc20c4b4dfcbe587ae57e219716b78d072d2d0beb57a3db91bdc6d9800.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1506" height="803"></span></figure><p>
+<strong>实现参考代码</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/fbc9e7cdbd8547f2c042a55c93fc76b50f6785a5ef23f4824d03dd2c1ed86c61.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="874" height="726"></span></figure><p>
+<strong>同时也使用了另外的clip方法，相对中心进行clip</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/8f2cb7d0cde0dd078fd67414b2ce4949f8ea576c9b3beb74d00c103f36b1f939.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1515" height="836"></span></figure><p>
+<strong>参考代码：</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/4430ce328537dc4151d41be98ec07b4b85fe13c98620130d6c37dfb664bdaf23.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="771" height="313"></span></figure>
+<h4 id="两种邻域钳制效果对比">两种邻域钳制效果对比</h4>
+<p><strong>同等参数下效果如下。效果差异还是比较明显的，中心压缩可以更好的抗模糊，方差的话则是抗锯齿更加平滑，个人感觉还是方差更好，更加平滑，反正TAA后面还需要加个锐化来抗模糊</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/f1d20fb1bf8b5a30428060a2611f572b9c963634a3b06dce1b6cf245ba522ed0.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="663"></span></figure><p>
+<strong>重影效果因为邻域钳制也会减少</strong>
+</p><figure class="fig fig--video"><div class="vbox"><video src="/published-assets/660cb7d392acbe078d0ad2cd7411246c6f16ca8ee99519d4bdbcd544a9550c0d.mp4" controls muted loop playsinline preload="none" data-inview=""></video></div></figure>
+<h3 id="处理动态物体motion-vector">处理动态物体（Motion Vector）</h3>
+<p><strong>为了解决动态物体鬼影的问题，需要计算对应运动方向，来控制这个混合程度，运动越快，当前帧权重更大，历史帧权重更小</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/5f2694887cf8f68e47740f112abee6c706e727ea7d54c2a3c8712c047d3af5ef.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1446" height="661"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/05c6a0d99d76addeb51661bd9b7047e2b2507a39495d61266ba480de19a18c6f.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1843" height="980"></span></figure>
+<p><strong>关于Motion Vector我直接偷懒使用的unity内置的，自己写太麻烦了，而且内置的肯定比我写的准确，它能处理蒙皮动画、粒子等复杂情况，手动矩阵重投影只能处理相机运动，覆盖不了运动物体。</strong></p>
+<h4 id="开启motion-vector">开启Motion Vector</h4>
+<p><strong>AddRenderPasses中设置</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/d32491b23872641c0f295e9d227a6dd6ebd61e7b3b3f3ea9afbcabc873cbbd46.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="920" height="52"></span></figure><p>
+<strong>OnCameraSetup设置</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/be99f4f38008fcf130292016fb100b6e3e690d24b1bedd0f58291280caf7470f.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="767" height="137"></span></figure><p>
+<strong>shader添加参数</strong>
+</p><figure class="fig fig--sm" style="max-width:400px"><span class="fig-box"><img src="/published-assets/ca10f07c488e70d3f5c5ca9d6a2fdddcef8b80cf3406f44fa31685fd86ce5a9f.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="400" height="82"></span></figure>
+<h4 id="替换手动jitter">替换手动jitter</h4>
+<p><strong>因为Motion Vector包含了jitter的运动，所以直接替换掉</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/d23c02efdc8cddda5f77e8f4b434f065d59d085143e74cdd8b70383c38165628.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="817" height="254"></span></figure>
+<h2 id="最终效果">最终效果</h2>
+<p><strong>方差模式效果如下，我把分辨率调的很低720x480，因为算法问题，画面轻微模糊是必然的，不过在高分辨率下模糊就不是很明显了，后续需要可以加锐化进行调整</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/032a469282eb65a1d0cf7b038e437264f746f7f23b0bb6eef9f1decf02d7501b.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="526"></span></figure><p>
+<strong>如果是中心压缩模式，那么模糊感没那么强</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/fac361ebd67178305a1bb2a0099d8ce12af8ae02bd7a7b5410aa51f8042a8b78.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="503"></span></figure>
+<h2 id="完整代码">完整代码</h2>
+<h3 id="c代码">C#代码</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using UnityEngine;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using UnityEngine.Rendering;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using UnityEngine.Rendering.Universal;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">public class CustomTAA : ScriptableRendererFeature</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    [System.Serializable]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public class TAASettings</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public Shader taaShader;   </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        [</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Tooltip</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"历史帧混合程度"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        [</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)]public </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8">  BlendFactor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        [</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Tooltip</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"历史帧混合数量"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        [</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">24</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)] public </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleCount </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> // Halton 序列长度</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public </span><span style="color:#D73A49;--shiki-dark:#F97583">enum</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> AABBClipMode</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Variance,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Center</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        };</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        [</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Tooltip</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"历史帧颜色AABB包围盒钳制模式: 方差、中心"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public AABBClipMode aabbClipMode </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">  AABBClipMode.Variance;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        [</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Tooltip</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"历史帧颜色AABB包围盒大小缩放: 仅方差模式生效"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        [</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">10</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)] public </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> VarianceScale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public TAASettings settings </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">TAASettings</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    CustomTAAPass pass;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private Material material;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> frameIndex </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private Camera camera;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private Matrix4x4 originalProjMatrix;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private Vector2 currentJitter;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Create</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    { </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (settings.taaShader </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null) </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (material </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            material </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CoreUtils.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">CreateEngineMaterial</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings.taaShader);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        pass </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">CustomTAAPass</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings, material);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        pass.renderPassEvent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> RenderPassEvent.BeforeRenderingPostProcessing;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Halton 序列生成</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> HaltonSequence</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> value, </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> baseNumberSystem)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> n </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#D73A49;--shiki-dark:#F97583"> /</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> baseNumberSystem;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> value;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        while</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i </span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            result </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> n </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (i </span><span style="color:#D73A49;--shiki-dark:#F97583">%</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> baseNumberSystem);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            i </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Mathf.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">FloorToInt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> baseNumberSystem);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            n </span><span style="color:#D73A49;--shiki-dark:#F97583">/=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> baseNumberSystem;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> AddRenderPasses</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ScriptableRenderer renderer, ref RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (material </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null </span><span style="color:#D73A49;--shiki-dark:#F97583">||</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> settings.taaShader </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null) </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (renderingData.cameraData.cameraType </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CameraType.Game) </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> // ← 加这行</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        camera </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> renderingData.cameraData.camera;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        camera.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ResetProjectionMatrix</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 保存原始投影矩阵</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        originalProjMatrix </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> camera.projectionMatrix;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> index </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> frameIndex </span><span style="color:#D73A49;--shiki-dark:#F97583">%</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> settings.sampleCount;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> jitterX </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">HaltonSequence</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(index </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.5</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> camera.pixelWidth;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> jitterY </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">HaltonSequence</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(index </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.5</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> camera.pixelHeight;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        currentJitter </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Vector2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(jitterX, jitterY);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 偏移投影矩阵</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Matrix4x4 jitteredProj </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> originalProjMatrix;</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">        jitteredProj</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> jitterX;</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">        jitteredProj</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> jitterY;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        camera.projectionMatrix </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> jitteredProj;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //Debug.Log($"jitterX: {jitterX}, jitterY: {jitterY}");</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        frameIndex</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        renderingData.cameraData.camera.depthTextureMode </span><span style="color:#D73A49;--shiki-dark:#F97583">|=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> DepthTextureMode.MotionVectors </span><span style="color:#D73A49;--shiki-dark:#F97583">|</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> DepthTextureMode.Depth;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        pass.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Setup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(renderer.cameraColorTarget,currentJitter);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        renderer.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">EnqueuePass</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pass);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    protected override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Dispose</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> disposing)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        CoreUtils.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Destroy</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(material);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        pass</span><span style="color:#D73A49;--shiki-dark:#F97583">?</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Dispose</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">public class CustomTAAPass </span><span style="color:#D73A49;--shiki-dark:#F97583">:</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ScriptableRenderPass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private CustomTAA.TAASettings settings;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private Material material;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private RenderTargetIdentifier cameraColorTarget;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _tempRTID </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Shader.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">PropertyToID</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_TAATemp"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private RenderTargetIdentifier _tempRT;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private RenderTexture  _historyRT;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">static</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> readonly </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _HistoryTexID </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Shader.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">PropertyToID</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_HistoryTex"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _historyRTInitialized </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private Vector2 currentJitter;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">static</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> readonly </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> JitterID  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Shader.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">PropertyToID</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_Jitter"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">static</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> readonly </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> VarianceScaleID </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Shader.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">PropertyToID</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_VarianceScale"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#6F42C1;--shiki-dark:#B392F0">CustomTAAPass</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CustomTAA.TAASettings settings, Material material)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        this.settings </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> settings;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        this.material </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> material;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    } </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Setup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(RenderTargetIdentifier cameraColorTarget, Vector2 currentJitter)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        this.cameraColorTarget </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cameraColorTarget;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        this.currentJitter </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> currentJitter;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> UpdateMaterialValue</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">DisableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_AABB_CLIP_MODE_CENTER"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings.aabbClipMode </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomTAA.TAASettings.AABBClipMode.Center)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">EnableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_AABB_CLIP_MODE_CENTER"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetFloat</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_BlendFactor"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, settings.BlendFactor);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetFloat</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(VarianceScaleID, settings.VarianceScale);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetVector</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(JitterID, currentJitter);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">       </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> OnCameraSetup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CommandBuffer cmd, ref RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        var desc </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> renderingData.cameraData.cameraTargetDescriptor;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        desc.depthBufferBits </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //内置MotionVector</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        ConfigureInput</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ScriptableRenderPassInput.Motion);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 分辨率变化重建</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (_historyRT </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null </span><span style="color:#D73A49;--shiki-dark:#F97583">||</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _historyRT.width </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> desc.width </span><span style="color:#D73A49;--shiki-dark:#F97583">||</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _historyRT.height </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> desc.height)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (_historyRT </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null) _historyRT.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Release</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">RenderTexture</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(desc);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRT.name </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "_TAAHistory"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRT.filterMode </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> FilterMode.Bilinear;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRT.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Create</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRTInitialized </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 临时 RT</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">GetTemporaryRT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_tempRTID, desc, FilterMode.Bilinear);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        _tempRT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">RenderTargetIdentifier</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_tempRTID);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">       </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Execute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ScriptableRenderContext context, ref RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        var cmd </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CommandBufferPool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Custom TAA"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 第一帧历史帧为空，先用当前帧初始化</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">!</span><span style="color:#24292E;--shiki-dark:#E1E4E8">_historyRTInitialized)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cameraColorTarget, _historyRT);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRTInitialized </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> true</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //更新材质参数</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        UpdateMaterialValue</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(renderingData);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">       </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetGlobalTexture</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_HistoryTexID, _historyRT);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cameraColorTarget, _tempRT, material, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 把 resolve 结果写回 cameraColorTarget</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_tempRT, cameraColorTarget);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 把 resolve 结果存入历史帧，供下一帧使用</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_tempRT, _historyRT);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        context.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ExecuteCommandBuffer</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        CommandBufferPool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Release</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        renderingData.cameraData.camera.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ResetProjectionMatrix</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // Cleanup any allocated resources that were created during the execution of this render pass.</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> OnCameraCleanup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CommandBuffer cmd)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ReleaseTemporaryRT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_tempRTID);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Dispose</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (_historyRT </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRT.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Release</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            _historyRT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"></span></code></pre>
+<h3 id="shader代码">Shader代码</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Shader </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Hidden/TAA"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Properties</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _MainTex</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Source"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "white"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    SubShader</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Tags { </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RenderType"</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Opaque"</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "RenderPipeline"</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"UniversalPipeline"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Cull Off ZWrite Off ZTest Always</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Name </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"TAA"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            HLSLPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> shader_feature_local</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _AABB_CLIP_MODE_CENTER</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex);    </span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            SAMPLER</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampler_MainTex);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_HistoryTex); </span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            SAMPLER</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampler_HistoryTex);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MotionVectorTexture); </span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">            SAMPLER</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampler_MotionVectorTexture);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 _MainTex_TexelSize;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _BlendFactor;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float2 _Jitter;      </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _VarianceScale;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Attributes </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            { </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 positionOS : POSITION; </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 uv : TEXCOORD0; </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            };</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Varyings   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            { </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 positionCS : SV_POSITION; </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 uv : TEXCOORD0; </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Varyings </span><span style="color:#6F42C1;--shiki-dark:#B392F0">vert</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Attributes v)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                Varyings o;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.positionCS </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> TransformObjectToHClip</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v.positionOS.xyz);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                o.uv </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v.uv;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> o;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // RGB → 亮度（感知亮度公式）</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Luma</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float3 rgb)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //return dot(rgb, float3(0.299, 0.587, 0.114));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rgb, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.2126</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.7152</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0722</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // 压缩函数</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">ToneMap</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float4 color)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> color </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> +</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Luma</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(color.rgb));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // 还原函数</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">ToneMapInverse</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float4 color)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> color </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#6F42C1;--shiki-dark:#B392F0">  max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Luma</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(color.rgb), </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0001</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // RGB → YCoCg</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float3 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">RGBToYCoCg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float3 rgb)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> y  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.25</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.r </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.g </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.25</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.b;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> co </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.5</span><span style="color:#D73A49;--shiki-dark:#F97583">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.r </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583">  *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.b;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cg </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.25</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.r </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.g </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.25</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rgb.b;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(y, co, cg);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // YCoCg → RGB</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float3 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">YCoCgToRGB</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float3 ycocg)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.y </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.z;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> g </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.z;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> b </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.x </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.y </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ycocg.z;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(r, g, b);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            //https://developer.download.nvidia.com/gameworks/events/GDC2016/msalvi_temporal_supersampling.pdf</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // AABB边界压制</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float3 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">ClipToAABB</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float3 history, float3 mu, float3 minC, float3 maxC)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 r </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> mu </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> history;</span><span style="color:#6A737D;--shiki-dark:#6A737D">        //距离中心的方向和距离</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 rmax </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> maxC </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> history;</span><span style="color:#6A737D;--shiki-dark:#6A737D">   //距离外边缘的距离</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 rmin </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> minC </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> history;</span><span style="color:#6A737D;--shiki-dark:#6A737D">   //距离最近边缘的距离</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (r.x </span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rmax.x) scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scale, rmax.x </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r.x);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (r.y </span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rmax.y) scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scale, rmax.y </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r.y);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (r.z </span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rmax.z) scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scale, rmax.z </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r.z);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (r.x </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rmin.x) scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scale, rmin.x </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r.x);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (r.y </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rmin.y) scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scale, rmin.y </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r.y);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (r.z </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rmin.z) scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(scale, rmin.z </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r.z);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> history </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> r </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scale;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // AABB 中心缩放 Clip（Pedersen_LasseJonFuglsang_TemporalReprojectionAntiAliasing）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float3 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">ClipToAABB_Center</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float3 history, float3 minC, float3 maxC)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 AABBCenter </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (maxC </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> minC);</span><span style="color:#6A737D;--shiki-dark:#6A737D">        // AABB 中心</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 AABBHalf </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (maxC </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> minC) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0001</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // AABB 半尺寸</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 offset </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> history </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> AABBCenter;</span><span style="color:#6A737D;--shiki-dark:#6A737D">       // history 相对中心的偏移</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 proportion </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> offset </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> AABBHalf;</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // 偏移占比</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                proportion </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> abs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(proportion);               </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> maxP </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(proportion.x, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(proportion.y, proportion.z));</span><span style="color:#6A737D;--shiki-dark:#6A737D"> // 最大分量</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (maxP </span><span style="color:#D73A49;--shiki-dark:#F97583">></span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> AABBCenter </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> offset </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> maxP;</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // 压缩到边界</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                else</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> history;</span><span style="color:#6A737D;--shiki-dark:#6A737D">                         // 已在 AABB 内</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">NeighborhoodClamp_Round3x3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float2 uv, float4 historyColor)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 d </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _MainTex_TexelSize.xy;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 9-tap (3x3)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 min9 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 10000.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 max9 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">10000.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 5-tap (十字)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 min5 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 10000.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 max5 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">10000.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 3x3 邻域</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; x </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; x</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> y </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; y </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; y</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float3 s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex, sampler_MainTex, uv </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x, y) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> d).rgb;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    min9 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(min9, s);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    max9 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(max9, s);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                  </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">abs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> abs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(y) </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                        min5 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> min</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(min5, s);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                        max5 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(max5, s);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                }</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 取平均值实现 "Rounding"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 minC </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (min9 </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> min5) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 maxC </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (max9 </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> max5) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">              </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">           </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 historyRGB </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> historyColor.rgb;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                historyRGB </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ClipToAABB_Center</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(historyRGB, minC, maxC);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">              </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(historyRGB, historyColor.a);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">NeighborhoodClamp_Variance3x3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float2 uv, float4 historyColor)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 d </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _MainTex_TexelSize.xy;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 m1 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 m2 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 3x3 邻域累积一阶矩和二阶矩</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; x </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; x</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> y </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; y </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; y</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float3 s </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> RGBToYCoCg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex, sampler_MainTex, uv </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x, y) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> d).rgb);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    m1 </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    m2 </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> s;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 均值和标准差</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 mu </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> m1 </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 9.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 sigma </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> sqrt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(m2 </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 9.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> mu </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> mu, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // Variance Clipping 的 AABB</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> varianceScale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _VarianceScale;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 minC </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> mu </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> varianceScale </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sigma;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 maxC </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> mu </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> varianceScale </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sigma;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 historyYCoCg </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> RGBToYCoCg</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(historyColor.rgb);  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                historyYCoCg </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ClipToAABB</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(historyYCoCg, mu, minC, maxC);    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">YCoCgToRGB</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(historyYCoCg), historyColor.a);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Varyings input) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 uv </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> input.uv;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //ndc -> uv</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 jitterUV </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8">  _Jitter </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 当前帧颜色</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 currentUV </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> uv;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 currentColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex, sampler_MainTex, currentUV);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                           </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 motionVector </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MotionVectorTexture, sampler_MotionVectorTexture, uv).xy;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //float2 historyUV = uv - jitterUV;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 historyUV </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> uv </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> motionVector;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 historyColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_HistoryTex, sampler_HistoryTex, historyUV);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">       </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //约束历史帧颜色</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                #if</span><span style="color:#D73A49;--shiki-dark:#F97583"> defined</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_AABB_CLIP_MODE_CENTER</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    historyColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> NeighborhoodClamp_Round3x3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(currentUV, historyColor);          </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                #else</span><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    historyColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> NeighborhoodClamp_Variance3x3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(currentUV, historyColor); </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                #endif</span><span style="color:#24292E;--shiki-dark:#E1E4E8">   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">               </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //混合前压缩</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 compressedCurrent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ToneMap</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(currentColor);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 compressedHistory </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ToneMap</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(historyColor);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // 混合</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(compressedCurrent, compressedHistory, _BlendFactor);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> ToneMapInverse</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(result);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">               </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ENDHLSL</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></article> <div class="article-end" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><p data-astro-cid-q7kxohas>记录于此，探索继续。</p><a href="#main" data-astro-cid-q7kxohas>回到开篇</a></div>  <nav class="article-pager" aria-label="相邻文章" data-astro-cid-q7kxohas><a href="/notes/n-2df53d18-975/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas> 上一篇</small><span data-astro-cid-q7kxohas>URP - RendererFeature ：全局体积雾</span></a><a href="/notes/n-e8744839-cb9/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas>下一篇 </small><span data-astro-cid-q7kxohas>atmull-Rom 双三次插值</span></a></nav> </div> </div> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.BL71vAIn.js"></script> </body></html> <script type="module">const n=document.querySelector(".article-body"),u=document.querySelector("#reading-progress-bar"),a=document.querySelector(".reading-outline"),o=matchMedia("(max-width: 1149px)");a&&(a.open=!o.matches,o.addEventListener("change",()=>{a.open=!o.matches}));const d=document.querySelector("[data-reading-percent]"),s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

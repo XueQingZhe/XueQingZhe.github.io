@@ -1,0 +1,440 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="work" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>URP - RendererFeature ：Depth of Field（gather） · 吟处雪轻遮</title><meta name="description" content="景深效果"><link rel="canonical" href="https://xueqingzhe.github.io/notes/n-d15f3326-e92/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记与研习" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="URP - RendererFeature ：Depth of Field（gather） · 吟处雪轻遮"><meta property="og:description" content="景深效果"><meta property="og:url" content="https://xueqingzhe.github.io/notes/n-d15f3326-e92/"><meta property="og:image" content="https://xueqingzhe.github.io/published-assets/eee68c42f8e9a748a395862722a2a4b21b32f9f7be8b3abc753391075af428d3.webp"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.DhD71mKu.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/" aria-current="page"><span>作品</span><small>WORK</small></a><a href="/notes/"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-hytayklh><span id="case-reading-progress" data-astro-cid-hytayklh></span></div> <article class="project-case" data-pagefind-body data-pagefind-filter="栏目:作品" data-work-detail="published:n-d15f3326-e92" data-work-type="single" data-astro-cid-hytayklh> <!-- 1 · 头 --> <header class="hd reading-room-header" data-astro-cid-hytayklh> <div class="reading-breadcrumb" data-astro-cid-hytayklh><a class="back tele" href="/work/" data-work-return data-astro-cid-hytayklh><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-hytayklh><path d="M4 4h6v6H4zM13 4h5v6h-5zM4 13h6v5H4zM13 13h5v5h-5z" data-astro-cid-hytayklh></path></svg><span data-astro-cid-hytayklh>返回作品索引</span></a><span class="reading-edition" data-astro-cid-hytayklh>WORK / CASE STUDY</span></div> <span class="eyebrow reading-kicker" data-astro-cid-hytayklh><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-hytayklh><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-hytayklh></path><circle cx="21" cy="9" r="1.5" data-astro-cid-hytayklh></circle></svg><span data-astro-cid-hytayklh>工具</span></span> <h1 data-pagefind-meta="title" data-work-detail-title data-astro-cid-hytayklh>URP - RendererFeature ：Depth of Field（gather）</h1> <p class="sum" data-astro-cid-hytayklh>景深效果</p> <p class="case-kind" data-astro-cid-hytayklh>独立作品</p>    <div class="reading-tools" data-reading-tools data-scope=".case-body" data-canonical-path="/notes/n-d15f3326-e92/" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <!-- 2 · 主视觉 --> <div class="hero case-visual" data-astro-cid-hytayklh> <div class="shot" data-astro-cid-hytayklh> <img src="/published-assets/eee68c42f8e9a748a395862722a2a4b21b32f9f7be8b3abc753391075af428d3.webp" alt="URP - RendererFeature ：Depth of Field（gather）" width="1600" height="900" data-work-cover data-work-key="published:n-d15f3326-e92" fetchpriority="high" data-zoom tabindex="0" data-astro-cid-hytayklh> </div> <div class="case-visual-caption" data-astro-cid-hytayklh><span data-astro-cid-hytayklh>作品主视觉</span><span data-astro-cid-hytayklh>点击画面，查看细节</span></div> </div> <!-- 3 · 规格栏 --> <dl class="specs" data-astro-cid-hytayklh> <div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>ENGINE</dt> <dd data-astro-cid-hytayklh>Unity · URP</dd> </div><div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>TECH</dt> <dd data-astro-cid-hytayklh>RenderFeature · rendering · Shader · 后处理 · Pipeline · URP · unity</dd> </div><div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>ROLE</dt> <dd data-astro-cid-hytayklh>工具</dd> </div><div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>YEAR</dt> <dd data-astro-cid-hytayklh>2026</dd> </div>  </dl> <!-- 4 · 媒体画廊 -->  <!-- 5 · 正文（长文配侧边目录，和笔记页同一套） --> <div class="lower" data-toc="true" data-astro-cid-hytayklh> <details class="reading-outline" open data-astro-cid-hytayklh><summary data-astro-cid-hytayklh><span data-astro-cid-hytayklh>案例目录</span><small data-astro-cid-hytayklh>23 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-hytayklh><path d="M4 6l4 4 4-4" data-astro-cid-hytayklh></path></svg></summary><aside class="toc" data-scope=".case-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 案例目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#效果理解" data-to="效果理解" data-astro-cid-6t6zfk7k> 效果理解 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#参考视频" data-to="参考视频" data-astro-cid-6t6zfk7k> 参考视频 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#相机的物理属性" data-to="相机的物理属性" data-astro-cid-6t6zfk7k> 相机的物理属性 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#焦距和焦点" data-to="焦距和焦点" data-astro-cid-6t6zfk7k> 焦距和焦点 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#景深和焦深" data-to="景深和焦深" data-astro-cid-6t6zfk7k> 景深和焦深 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#相关方案" data-to="相关方案" data-astro-cid-6t6zfk7k> 相关方案 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#accumulation-buffer累积缓冲区" data-to="accumulation-buffer累积缓冲区" data-astro-cid-6t6zfk7k> Accumulation Buffer（累积缓冲区） </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#coc后处理gather" data-to="coc后处理gather" data-astro-cid-6t6zfk7k> CoC后处理（gather） </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#scatter散射" data-to="scatter散射" data-astro-cid-6t6zfk7k> Scatter（散射） </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#分布式光线追踪" data-to="分布式光线追踪" data-astro-cid-6t6zfk7k> 分布式光线追踪 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#dofgather实现" data-to="dofgather实现" data-astro-cid-6t6zfk7k> DoF（gather）实现 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#直觉参数设计" data-to="直觉参数设计" data-astro-cid-6t6zfk7k> 直觉参数设计 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#物理参数的转化" data-to="物理参数的转化" data-astro-cid-6t6zfk7k> 物理参数的转化 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#coc计算" data-to="coc计算" data-astro-cid-6t6zfk7k> CoC计算 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#高斯模糊计算" data-to="高斯模糊计算" data-astro-cid-6t6zfk7k> 高斯模糊计算 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#合成" data-to="合成" data-astro-cid-6t6zfk7k> 合成 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#关于模糊的优化" data-to="关于模糊的优化" data-astro-cid-6t6zfk7k> 关于模糊的优化 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#关于散景bokeh" data-to="关于散景bokeh" data-astro-cid-6t6zfk7k> 关于散景Bokeh </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#bokehcircle圆形" data-to="bokehcircle圆形" data-astro-cid-6t6zfk7k> BokehCircle圆形 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#bokehhexagon-六边形" data-to="bokehhexagon-六边形" data-astro-cid-6t6zfk7k> BokehHexagon 六边形 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#高质量" data-to="高质量" data-astro-cid-6t6zfk7k> 高质量 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#简化版" data-to="简化版" data-astro-cid-6t6zfk7k> 简化版 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#当前效果和缺陷" data-to="当前效果和缺陷" data-astro-cid-6t6zfk7k> 当前效果和缺陷 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-hytayklh><span data-astro-cid-hytayklh>阅读进度</span><span data-reading-percent data-astro-cid-hytayklh>0%</span></div></details> <div class="rcol" data-astro-cid-hytayklh> <div class="prose body case-body" data-astro-cid-hytayklh><h2 id="效果理解">效果理解</h2>
+<p>对于⼀个给定设置的相机镜头，它有⼀个物体聚焦的范围，即它的景深（depth of field）。任何超出这个范围的物体都是模糊的，距离越远越模糊</p>
+<p>DoF本质是：<strong>离焦平面越远的像素，模糊半径（CoC）越大。CoC也可以叫容许弥散圆</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/b6f675e1119016f38d2e0497eb9851b095a489d1ded050342e57d5e35599f9f1.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1083" height="557"></span></figure>
+<h2 id="参考视频">参考视频</h2>
+<p><strong>焦距，光圈</strong></p>
+<p><a href="https://www.bilibili.com/video/BV19W411M7Jx?vd_source=6519de45bf96ecc7dc76d9b36fe3cdcd">https://www.bilibili.com/video/BV19W411M7Jx?vd_source=6519de45bf96ecc7dc76d9b36fe3cdcd</a></p>
+<p><strong>焦点、焦距、主光轴</strong></p>
+<p><a href="https://www.bilibili.com/video/BV1Gu4y127mU?vd_source=6519de45bf96ecc7dc76d9b36fe3cdcd">https://www.bilibili.com/video/BV1Gu4y127mU?vd_source=6519de45bf96ecc7dc76d9b36fe3cdcd</a></p>
+<p><strong>景深光圈等介绍，同时解释了弥散圆概念</strong></p>
+<p><a href="https://www.bilibili.com/video/BV1t24y1k7Ye?vd_source=6519de45bf96ecc7dc76d9b36fe3cdcd">https://www.bilibili.com/video/BV1t24y1k7Ye?vd_source=6519de45bf96ecc7dc76d9b36fe3cdcd</a></p>
+<h2 id="相机的物理属性">相机的物理属性</h2>
+<h3 id="焦距和焦点">焦距和焦点</h3>
+<p><strong>对于现实中的相机，控制视野范是焦距，这个焦距由透镜的本身物理属性决定，人眼对应的焦距是50mm</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/7f828bd37d24d40e21812f72dbd38aaa45444f868984c8c2cea29fd54e96b98d.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1907" height="677"></span></figure><p>
+<strong>焦距短 → 视角宽，能看到很大范围，物体显得小而远<br>
+焦距长 → 视角窄，只能看到一小块，物体显得大而近</strong>
+</p><figure class="fig fig--video"><div class="vbox"><video src="/published-assets/62826a28a66dc974123d8464a942b7b8780430ce2991f1b24d954f8d018a9c2e.mp4" controls muted loop playsinline preload="none" data-inview=""></video></div></figure>
+<h3 id="景深和焦深">景深和焦深</h3>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/3afc306e1b5b8d4bbe23b3bc6202cd83e6d3cc6af3a94fbfb8a6928d434c6199.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="876"></span></figure><p>
+同光圈下，焦距越长，同样距离的物体，背景模糊越强烈。长焦镜头收集光线的方式导致CoC半径更大。大致是长焦拍人像，短焦拍大场景。</p>
+<h2 id="相关方案">相关方案</h2>
+<p><strong>RTR4中提到的以及AI总结的几种方案如下：</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>引擎</th><th>方案</th></tr></thead><tbody><tr><td>URP Gaussian DoF</td><td>可分离高斯，移动端</td></tr><tr><td>URP Bokeh DoF</td><td>Scatter-as-Gather，高质量</td></tr><tr><td>HDRP DoF</td><td>Gather+Scatter混合，物理相机参数</td></tr><tr><td>UE（旧）</td><td>Hexagonal Bokeh</td></tr><tr><td>UE（新）</td><td>Scatter-as-Gather，Circle DoF</td></tr></tbody></table>
+<h3 id="accumulation-buffer累积缓冲区">Accumulation Buffer（累积缓冲区）</h3>
+<p><strong>RTR4中提到可以使用累积缓冲区的方法模拟景深，原理是在相机镜头处取一个圆形区域模拟光圈，对圆盘上的多个位置分别渲染，每次渲染时视线方向都朝向focal plane上的同一个焦点。焦平面上的物体每次位置一致，叠加后清晰；焦平面外的物体每次位置略有偏移，叠加后自然模糊。这种方法物理上更准确，但需要渲染N张图再平均，性能开销极大，不适合实时渲染。</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/dfbf6cd51cce445cae2ad075ad20e46204823c548a5bc1dd7ba008e717e5b1fa.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="1216"></span></figure>
+<h3 id="coc后处理gather">CoC后处理（gather）</h3>
+<p><strong>假设像素周围的局部邻域都具有相同的深度，可以进行聚集（gather）操作。对同一深度区间的像素进行模糊，高斯模糊是圆形的，那么这样可以去模拟弥散圆，缺陷是在背景高光很明显的情况下会向前方物体的边缘溢色，同时不能满足前景向背景溢色</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/962f9ee9caa897dce2c0faba5cd3a33d53865d39f6fd002a47a73c95303a6db0.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1290" height="931"></span></figure>
+<h3 id="scatter散射">Scatter（散射）</h3>
+<p><strong>CoC后处理默认是Gather思路，每个像素去采集周围的贡献。但前景虚化有个问题：前景模糊的像素应该”溢出”覆盖到后面的清晰区域，Gather做不到这点。</strong>
+Scatter反过来，每个大CoC的像素主动把自己”扩散”到周围像素上，用Compute Shader把像素当作小精灵（sprite）渲染出去。质量好但实现复杂。
+实践中常见的是<strong>Scatter-as-Gather</strong>：用Tile预处理找出每个区域最大CoC，再用Gather模拟Scatter的效果，避免真正的Scatter开销。
+</p><figure class="fig" style="max-width:676px"><span class="fig-box"><img src="/published-assets/4b5c20598f03e0ce0078ed55f90a1dc312f0233b8e9fbd28d9703cb28c8a0d72.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1007" height="924"></span></figure>
+<h3 id="分布式光线追踪">分布式光线追踪</h3>
+<p>就是Accumulation Buffer的光追版本，在光圈圆盘上随机采样光线方向，天然支持正确的DoF。离线渲染（电影）的标准方案，实时不适用。</p>
+<h2 id="dofgather实现">DoF（gather）实现</h2>
+<h3 id="直觉参数设计">直觉参数设计</h3>
+<p><strong>最简单的参数就是定一个平面作为焦平面，然后设置一个阈值，在这个差值范围内就是清晰的，其余区域是模糊的，模糊程度再用另一参数控制</strong>
+</p><figure class="fig" style="max-width:629px"><span class="fig-box"><img src="/published-assets/cc7908fcb070bbcfeecb735e8ee1f332a31e97606b6f465225af13a98c67d2fc.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="629" height="316"></span></figure><p>
+<strong>对应参数是这样的</strong>
+</p><figure class="fig" style="max-width:458px"><span class="fig-box"><img src="/published-assets/58424fb99cf3caed795a06b57d0ba52dc4a522c34823b9b6c93d7851d121e165.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="458" height="126"></span></figure>
+<h3 id="物理参数的转化">物理参数的转化</h3>
+<p><strong>因为现实中物理相机的景深与光圈有关，而且景深并非是关于焦平面对称的，如果更符合现实的话就需要转换一下参数</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/f64f5d9f833bd3106e511e60e592acf4882350407e4baecae319c3094ff4a80a.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1054" height="371"></span></figure><p>
+<strong>透镜的成像公式，焦距和物距像距的关系</strong></p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mfrac><mn>1</mn><mi>f</mi></mfrac><mo>=</mo><mfrac><mn>1</mn><msub><mi>d</mi><mi>o</mi></msub></mfrac><mo>+</mo><mfrac><mn>1</mn><msub><mi>d</mi><mi>i</mi></msub></mfrac></mrow><annotation encoding="application/x-tex">\frac{1}{f} = \frac{1}{d_o} + \frac{1}{d_i}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.2019em;vertical-align:-0.8804em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.1574em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">o</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.1574em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span>
+<ul>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span></span></span> = 焦距</li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>o</mi></msub></mrow><annotation encoding="application/x-tex">d_o</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">o</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> ​ = 物距（物体到透镜的距离）</li>
+<li><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">d_i</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> = 像距（透镜到感光元件的距离）</li>
+</ul>
+<p><strong>那么这样可以得到像距的表达式，像距就是对焦距离，也就是物体成像最清晰的位置，也就是感光元件的位置</strong></p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><mi>f</mi><mo>⋅</mo><msub><mi>d</mi><mi>o</mi></msub></mrow><mrow><msub><mi>d</mi><mi>o</mi></msub><mo>−</mo><mi>f</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">d_i = \frac{f \cdot d_o}{d_o - f}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.2519em;vertical-align:-0.8804em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">o</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">o</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span>
+<p><strong>根据感光元件位置，再来对比真正的物体成像位置，可以得到物体成像位置和对焦位置两者的差值，如果两个差值较小，那么就认为是清晰的，反之就需要模糊</strong></p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">Δ</mi><msub><mi>d</mi><mi>i</mi></msub><mo>=</mo><msub><mi>d</mi><mrow><mi>i</mi><mo separator="true">,</mo><mi>d</mi><mi>e</mi><mi>p</mi><mi>t</mi><mi>h</mi></mrow></msub><mo>−</mo><msub><mi>d</mi><mrow><mi>i</mi><mo separator="true">,</mo><mi>f</mi><mi>o</mi><mi>c</mi><mi>u</mi><mi>s</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\Delta d_i = d_{i,depth} - d_{i,focus}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord">Δ</span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9805em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight">pt</span><span class="mord mathnormal mtight">h</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9805em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight" style="margin-right:0.1076em;">f</span><span class="mord mathnormal mtight">oc</span><span class="mord mathnormal mtight">u</span><span class="mord mathnormal mtight">s</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span></span>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/24f10b3e62d3fbb2cd257488d8bfa0af8518dbd32898fd6f8e95a2fea6bb4271.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1036" height="381"></span></figure><p>
+光圈直径 =<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mi mathvariant="normal">/</mi><mi>A</mi><mi>p</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi>u</mi><mi>r</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">f / Aperture</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mord">/</span><span class="mord mathnormal">A</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">t</span><span class="mord mathnormal">u</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mord mathnormal">e</span></span></span></span>，
+从几何关系（相似三角形）推出CoC：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>C</mi><mi>o</mi><mi>C</mi><mo>=</mo><mfrac><mi>f</mi><mrow><mi>A</mi><mi>p</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi>u</mi><mi>r</mi><mi>e</mi></mrow></mfrac><mo>⋅</mo><mfrac><mrow><mi mathvariant="normal">∣</mi><mi mathvariant="normal">Δ</mi><msub><mi>d</mi><mi>i</mi></msub><mi mathvariant="normal">∣</mi></mrow><msub><mi>d</mi><mrow><mi>i</mi><mo separator="true">,</mo><mi>d</mi><mi>e</mi><mi>p</mi><mi>t</mi><mi>h</mi></mrow></msub></mfrac></mrow><annotation encoding="application/x-tex">CoC = \frac{f}{Aperture} \cdot \frac{|\Delta d_i|}{d_{i,depth}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord mathnormal">o</span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.2519em;vertical-align:-0.8804em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">t</span><span class="mord mathnormal">u</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mord mathnormal">e</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.3991em;vertical-align:-0.9721em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mpunct mtight">,</span><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight">pt</span><span class="mord mathnormal mtight">h</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">∣Δ</span><span class="mord"><span class="mord mathnormal">d</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9721em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span>
+<p>最终展开化简后就得到：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>C</mi><mi>o</mi><mi>C</mi><mo>=</mo><mfrac><msup><mi>f</mi><mn>2</mn></msup><mrow><mi>A</mi><mi>p</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi>u</mi><mi>r</mi><mi>e</mi><mo>⋅</mo><mo stretchy="false">(</mo><mi>f</mi><mi>o</mi><mi>c</mi><mi>u</mi><mi>s</mi><mi>D</mi><mi>i</mi><mi>s</mi><mi>t</mi><mi>a</mi><mi>n</mi><mi>c</mi><mi>e</mi><mo>−</mo><mi>f</mi><mo stretchy="false">)</mo></mrow></mfrac><mo>⋅</mo><mrow><mo fence="true">∣</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mi>f</mi><mi>o</mi><mi>c</mi><mi>u</mi><mi>s</mi><mi>D</mi><mi>i</mi><mi>s</mi><mi>t</mi><mi>a</mi><mi>n</mi><mi>c</mi><mi>e</mi></mrow><mrow><mi>d</mi><mi>e</mi><mi>p</mi><mi>t</mi><mi>h</mi></mrow></mfrac><mo fence="true">∣</mo></mrow></mrow><annotation encoding="application/x-tex">CoC = \frac{f^2}{Aperture \cdot (focusDistance - f)} \cdot \left|1 - \frac{focusDistance}{depth}\right|</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord mathnormal">o</span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4271em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4911em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.0278em;">er</span><span class="mord mathnormal">t</span><span class="mord mathnormal">u</span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mord mathnormal">e</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mord mathnormal">oc</span><span class="mord mathnormal">u</span><span class="mord mathnormal" style="margin-right:0.0278em;">sD</span><span class="mord mathnormal">i</span><span class="mord mathnormal">s</span><span class="mord mathnormal">t</span><span class="mord mathnormal">an</span><span class="mord mathnormal">ce</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mclose">)</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.4em;vertical-align:-0.95em;"></span><span class="minner"><span class="mopen"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.45em;"><span style="top:-3.45em;"><span class="pstrut" style="height:4.4em;"></span><span style="width:0.333em;height:2.4em;"><svg xmlns="http://www.w3.org/2000/svg" width="0.333em" height="2.4em" viewBox="0 0 333 2400"><path d="M145 15 v585 v1200 v585 c2.667,10,9.667,15,21,15
+c10,0,16.667,-5,20,-15 v-585 v-1200 v-585 c-2.667,-10,-9.667,-15,-21,-15
+c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"></path></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.95em;"><span></span></span></span></span></span></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">d</span><span class="mord mathnormal">e</span><span class="mord mathnormal">pt</span><span class="mord mathnormal">h</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mord mathnormal">oc</span><span class="mord mathnormal">u</span><span class="mord mathnormal" style="margin-right:0.0278em;">sD</span><span class="mord mathnormal">i</span><span class="mord mathnormal">s</span><span class="mord mathnormal">t</span><span class="mord mathnormal">an</span><span class="mord mathnormal">ce</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.45em;"><span style="top:-3.45em;"><span class="pstrut" style="height:4.4em;"></span><span style="width:0.333em;height:2.4em;"><svg xmlns="http://www.w3.org/2000/svg" width="0.333em" height="2.4em" viewBox="0 0 333 2400"><path d="M145 15 v585 v1200 v585 c2.667,10,9.667,15,21,15
+c10,0,16.667,-5,20,-15 v-585 v-1200 v-585 c-2.667,-10,-9.667,-15,-21,-15
+c-10,0,-16.667,5,-20,15z M188 15 H145 v585 v1200 v585 h43z"></path></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.95em;"><span></span></span></span></span></span></span></span></span></span></span></span>
+<h3 id="coc计算">CoC计算</h3>
+<p><strong>第一个Pass，计算CoC后直接存入RT的A通道中后面备用，场景颜色也存入RGB通道</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/f2041db49ddd06b373545aa1fea7ff85cb6e8c7944cbceaba00c5167a9c2adec.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1222" height="446"></span></figure>
+<h3 id="高斯模糊计算">高斯模糊计算</h3>
+<p><strong>第二个Pass，就是计算模糊了，圆形渐变自然是起手高斯模糊，强度则由CoC控制，这里是水平模糊</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/8920c0cde046bf8314130de3788fb9cfc9ed6f3b60ae9ab1ec12eefc92263243.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="931" height="461"></span></figure>
+<h3 id="合成">合成</h3>
+<p><strong>第三个Pass，还是同样读取CoC然后进行垂直高斯模糊</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/4fbdab15e92bb85e5d440b1aeebb19e9cc6f236aaf8fef2df2210c389a0a6fae.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="818" height="182"></span></figure><p>
+<strong>然后合成，计算CoC的时候保留正负值，这样就可以针对前景背景设置不同强度的模糊</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/ed222afde8e2d7072289570eba05e67619010ecfa0553db43219690e141ddb3d.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="974" height="385"></span></figure><p>
+<strong>最简的景深这三个Pass就足够了，高斯的效果如下，效果其实还是可以的</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/4c444c0177b9ba20e760b0bfbde139d1dde71916661a0df372060f58cc403507.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1425" height="641"></span></figure>
+<h2 id="关于模糊的优化">关于模糊的优化</h2>
+<p><strong>因为模糊不太需要高频信息，为了减少像素的处理量，可以考虑先对RT进行降分辨率在进行模糊，虽然质量会有所下降，但是这样可以少处理很多像素</strong>
+</p><figure class="fig" style="max-width:641px"><span class="fig-box"><img src="/published-assets/03af16b75f729bd2d81f6e872f117551d5abe403d272644ee90a8e7779326bc1.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="641" height="149"></span></figure><p>
+<strong>同样参数下效果如下，因为降分辨率，所以GaussianHalf参数需要降低才能匹配差不多的效果</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/094c14d3641960d99b14981161befc9a346a4e30c119235bc639c711411949ef.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="557"></span></figure>
+<h2 id="关于散景bokeh">关于散景Bokeh</h2>
+<p><strong>在物理相机中，因为光圈数量不同，模糊出现形状也不一样，这种模糊效果被称为Bokeh，如果要实现的话，其实本质上就是用不同的模糊算法</strong></p>
+<h3 id="bokehcircle圆形">BokehCircle圆形</h3>
+<p><strong>关于算法可以去看这个网站，直接让ai帮忙写也可以</strong>
+<a href="https://mini.gmshaders.com/p/phi">https://mini.gmshaders.com/p/phi</a>
+<strong>大致的分布就是这样</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/cfa7f2d5f4e58e39f62595a86481ff7b7ea7208dcdd0bea341fb47b9d9d6e2e1.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1113" height="682"></span></figure><p>
+<strong>代码如下</strong>*
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/9d2aad3f861ad8587b4782b96a81d169bf13805ea2f6c67fe22d8f13af835158.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="939" height="350"></span></figure><p>
+<strong>效果如下，方便观察我把强度设定的很高，高光成圆形，适合较亮的灯光和高光效果</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/6a74c1c97555bf4aeb6ab4bfbdec6ef81d9ce5b7c9cabf17bba0277f34f43012.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1615" height="768"></span></figure>
+<h3 id="bokehhexagon-六边形">BokehHexagon 六边形</h3>
+<p><strong>因为六边形计算其实很费性能，所以有个简化版</strong></p>
+<h4 id="高质量">高质量</h4>
+<p><strong>对于第二中就是六边形的散布，最简单的就是直接在原有基础上剔除掉就行</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/2018535e08db18e4bdd5dee3513e13ae132ef40f203874b2488c8a2b19cf0955.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="934" height="373"></span></figure><p>
+<strong>效果如下</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/ee08614abd90590b2a5cbfb4d4aa8fe6332bb1f8d58ad205d5b5fc61c4ae679e.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1570" height="766"></span></figure>
+<h4 id="简化版">简化版</h4>
+<p><strong>简化版使用3Pass，向三个方向拉伸，然后组合得到六边形，下面是代码，注释内容是借用了高斯的权重，这样会非常平滑，六边形特征有些微弱，我觉得效果不好换成了平均权重</strong>
+<strong>垂直方向</strong>
+</p><figure class="fig" style="max-width:698px"><span class="fig-box"><img src="/published-assets/b8438bf7a9e2c38e77caed54e0566b59cfaf15c49614a7be5015b7db0b8e406a.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="967" height="859"></span></figure><p>
+<strong>30度方向拉伸</strong>
+</p><figure class="fig" style="max-width:687px"><span class="fig-box"><img src="/published-assets/035fd7050d1009bc25ca41cae56d1e56ec0054fef51d76d546029aef71916158.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="990" height="893"></span></figure><p>
+<strong>-30度方向拉伸</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/532ddd08ae36b3eb11ebacece39274c623c88b04d197f572741661e14a4c081a.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="936" height="508"></span></figure>
+<p><strong>效果如下，效果稍差</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/983cff716fffc329c79d1eb6fc539ff1dad2fded1f7b1414abbfe03ba5c54704.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1657" height="736"></span></figure>
+<h2 id="当前效果和缺陷">当前效果和缺陷</h2>
+<p><strong>因为gather算法的问题，在亮度差异比较大的情况下，背景模糊溢色会污染前面物体的边缘</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/e98d33491edde317006bdd1e1f8d8b2dbfb6dc97a92600212cf5cb7f944d9cfb.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1413" height="959"></span></figure><p>
+<strong>同时前景模糊并不能向后晕染，尽管对前景的模糊程度进行了强化，也只是模拟一点效果</strong>
+</p><figure class="fig" style="max-width:456px"><span class="fig-box"><img src="/published-assets/4e60e0fdff43702dbb17400c7d092ec50950fb5b6e918e373c6c9e3bfcc8360a.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="456" height="45"></span></figure><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/7d30b8d9d8b092bcbba29443249b2120b68377570278d6ef4f2680467a91dd3d.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1471" height="984"></span></figure><p>
+<strong>不过这个缺陷其实不是很严重，从效果说来说已经可以使用了，如果需要彻底解决就需要使用Scatter（散射）的方案去解决了，这个后续有时间我再去学习研究研究</strong>
+<strong>DOF加上之前Bloom，FXAA，我觉得还不错</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/6021df31d41d1b5546f610b0936b9a8281c9398327ef45dae82ce69c3143ce0b.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1747" height="1087"></span></figure></div>  <!-- 6 · 关联笔记 —— 跟着正文列走，不然会和正文差出一个目录的宽度 -->  </div> </div> <!-- 7 · 上下篇 -->  <nav class="pn" aria-label="相邻作品" data-astro-cid-hytayklh> <a class="p" href="/notes/n-c62aa2f5-cce/" data-astro-cid-hytayklh> <span class="tele" data-astro-cid-hytayklh> 上一件作品</span> <span class="pt" data-astro-cid-hytayklh>URP - RendererFeature ：FXAA（快速近似抗锯齿）</span> </a> <a class="n" href="/work/collection-65154418-418/" data-astro-cid-hytayklh> <span class="tele" data-astro-cid-hytayklh>下一件作品 </span> <span class="pt" data-astro-cid-hytayklh>URP - RendererFeature ：体积雾</span> </a> </nav> </article> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.BL71vAIn.js"></script> </body></html> <script type="module">const n=document.querySelector(".case-body"),u=document.querySelector("#case-reading-progress"),d=document.querySelector("[data-reading-percent]"),o=document.querySelector(".reading-outline"),a=matchMedia("(max-width: 1149px)");o&&(o.open=!a.matches,a.addEventListener("change",()=>{o.open=!a.matches}));const s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

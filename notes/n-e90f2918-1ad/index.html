@@ -1,0 +1,412 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="notes" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>Perlin 噪声 · 吟处雪轻遮</title><meta name="description" content="柏林噪波生成原理"><link rel="canonical" href="https://xueqingzhe.github.io/notes/n-e90f2918-1ad/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记与研习" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="Perlin 噪声 · 吟处雪轻遮"><meta property="og:description" content="柏林噪波生成原理"><meta property="og:url" content="https://xueqingzhe.github.io/notes/n-e90f2918-1ad/"><meta property="og:image" content="https://xueqingzhe.github.io/og.png"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.DhD71mKu.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/"><span>作品</span><small>WORK</small></a><a href="/notes/" aria-current="page"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-q7kxohas><span id="reading-progress-bar" data-astro-cid-q7kxohas></span></div> <header class="article-header reading-room-header has-outline" data-astro-cid-q7kxohas> <div class="reading-breadcrumb" data-astro-cid-q7kxohas><a class="article-back" href="/notes/" data-astro-cid-q7kxohas><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M7 4H4v14h14v-3M8 4h10v10H8zM11 8h4M11 11h4" data-astro-cid-q7kxohas></path></svg><span data-astro-cid-q7kxohas>返回手记目录</span></a><span class="reading-edition" data-astro-cid-q7kxohas>NOTES / FIELD JOURNAL</span></div> <p class="eyebrow reading-kicker" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><span data-astro-cid-q7kxohas>FROM THE NOTEBOOK</span></p> <h1 data-pagefind-meta="title" data-kinetic data-astro-cid-q7kxohas>Perlin 噪声</h1> <p class="article-summary" data-astro-cid-q7kxohas>柏林噪波生成原理</p> <div class="article-meta" data-astro-cid-q7kxohas><time datetime="2026-09-18T00:00:00.000Z" data-astro-cid-q7kxohas>2026 / 09 / 18</time><span class="reading-time" data-astro-cid-q7kxohas><svg viewBox="0 0 18 18" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><circle cx="9" cy="9" r="6.2" data-astro-cid-q7kxohas></circle><path d="M9 5.2V9l2.6 1.7" data-astro-cid-q7kxohas></path></svg>约 4 分钟阅读</span></div>  <div class="article-topics" data-astro-cid-q7kxohas><a href="/work/collection-urp-volumetric-cloud/" data-parent-topic data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>所属合集</span><strong data-astro-cid-q7kxohas>URP 体积云 · 实践合集</strong><small data-astro-cid-q7kxohas>第 2 / 2 篇</small></a></div> <div class="reading-tools" data-reading-tools data-scope=".article-body" data-canonical-path="/notes/n-e90f2918-1ad/" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <div class="article-grid has-contents" data-astro-cid-q7kxohas> <details class="reading-outline" open data-astro-cid-q7kxohas><summary data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>本篇目录</span><small data-astro-cid-q7kxohas>10 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M4 6l4 4 4-4" data-astro-cid-q7kxohas></path></svg></summary><aside class="toc" data-scope=".article-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 文章目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#历史由来" data-to="历史由来" data-astro-cid-6t6zfk7k> 历史由来 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#perlin-的思路3d" data-to="perlin-的思路3d" data-astro-cid-6t6zfk7k> Perlin 的思路（3D） </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#三个步骤" data-to="三个步骤" data-astro-cid-6t6zfk7k> 三个步骤 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#第一步格子顶点分配梯度向量" data-to="第一步格子顶点分配梯度向量" data-astro-cid-6t6zfk7k> 第一步：格子顶点分配梯度向量 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#第二步计算梯度" data-to="第二步计算梯度" data-astro-cid-6t6zfk7k> 第二步：计算梯度 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#第三步插值" data-to="第三步插值" data-astro-cid-6t6zfk7k> 第三步：插值 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#第四步计算梯度" data-to="第四步计算梯度" data-astro-cid-6t6zfk7k> 第四步：计算梯度 </a> </li><li data-d="4" data-astro-cid-6t6zfk7k> <a href="#和-worley-的对比" data-to="和-worley-的对比" data-astro-cid-6t6zfk7k> 和 Worley 的对比 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#perlin代码" data-to="perlin代码" data-astro-cid-6t6zfk7k> Perlin代码 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#perlin2d" data-to="perlin2d" data-astro-cid-6t6zfk7k> Perlin（2D） </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-q7kxohas><span data-astro-cid-q7kxohas>阅读进度</span><span data-reading-percent data-astro-cid-q7kxohas>0%</span></div></details> <div class="article-column" data-astro-cid-q7kxohas> <article class="prose body article-body" data-pagefind-body data-pagefind-filter="栏目:手记" data-astro-cid-q7kxohas><span aria-hidden="true" data-pagefind-index-attrs="data-tags" data-tags data-astro-cid-q7kxohas></span><h2 id="历史由来">历史由来</h2>
+<p>Perlin 噪声的来源1983 年 Ken Perlin 为电影 TRON 发明，1985 年发表论文 An Image Synthesizer，后来凭此获得奥斯卡技术奖。</p>
+<blockquote>
+<p>核心问题是：怎么生成一个看起来自然、连续、不重复的随机场？</p>
+</blockquote>
+<p>为什么不直接用随机数直接对每个像素生成随机数，因为结果是纯噪点——相邻像素之间没有任何关联，看起来像电视雪花，完全不自然。</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">纯随机：  </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.3</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.9</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.1</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.7</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.2</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.8</span><span style="color:#24292E;--shiki-dark:#E1E4E8">  ...  （相邻值毫无关联）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Perlin：  </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.3</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.4</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.5</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.6</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.5</span><span style="color:#005CC5;--shiki-dark:#79B8FF">  0.4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">  ...  （相邻值平滑过渡）</span></span></code></pre>
+<p>自然界的东西都是<strong>连续变化</strong>的，需要相邻位置之间平滑过渡。</p>
+<h2 id="perlin-的思路3d">Perlin 的思路（3D）</h2>
+<p>把空间分成格子，在每个<strong>格子顶点</strong>上放一个随机<strong>梯度向量</strong>（方向随机的单位向量），然后对格子内部做插值。</p>
+<h3 id="三个步骤">三个步骤</h3>
+<h4 id="第一步格子顶点分配梯度向量">第一步：格子顶点分配梯度向量</h4>
+<p>2D 情况下，每个格子有 4 个顶点，每个顶点一个随机方向的箭头：</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>↗ ─────── ↙</span></span>
+<span class="line"><span>│         │</span></span>
+<span class="line"><span>│    p    │</span></span>
+<span class="line"><span>│         │</span></span>
+<span class="line"><span>↘ ─────── ↑</span></span></code></pre>
+<p>3D 情况下则是立方体，每个格子有 8 个顶点，原理一样。</p>
+<h4 id="第二步计算梯度">第二步：计算梯度</h4>
+<p>对于格子内的查询点 <code>p</code>，计算它到每个顶点的<strong>偏移向量</strong>或者说就是<strong>对角线向量</strong>，然后和该顶点的<strong>随机方向向量</strong>做点积得到<strong>随机的梯度</strong>，因为点积其实这里是在做投影，理解成投影也没问题：
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/a1729f8aeb8528f831856805b6cb74aed4936b7ad9bc298a51893b691e5b6a78.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1031" height="516"></span></figure>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">顶点 A 的梯度向量：gradient_A </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.7</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.7</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">p 到顶点 A 的偏移：offset_A   </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> p </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> A</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">点积：</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(gradient_A, offset_A)</span></span></code></pre>
+<p>点积的结果：</p>
+<ul>
+<li><code>p</code> 在梯度方向上 → 正值</li>
+<li><code>p</code> 在梯度反方向上 → 负值</li>
+<li><code>p</code> 垂直于梯度 → 零</li>
+</ul>
+<h4 id="第三步插值">第三步：插值</h4>
+<p>简单的线性插值权重计算如下，就是0~1，对应就是（A + (B - A) * t ）lerp函数</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">f(t) = t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span></span>
+<p>常规的三次插值权重，也就是SmoothStep，它满足一阶导数相同，也就是两端0和1时一阶导数都为0，这也是为什么平滑，但是二阶导数不相等，所有依旧有瑕疵</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mn>3</mn><msup><mi>t</mi><mn>2</mn></msup><mo>−</mo><mn>2</mn><msup><mi>t</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">f(t) = 3t² - 2t³</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9474em;vertical-align:-0.0833em;"></span><span class="mord">3</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord">2</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span></span></span></span></span>
+<p>所以这里采用了 5 次曲线，这里对应有6个条件刚好对应5次曲线的6个未知数，同时满足二阶导数相同。
+要找一个 5 次多项式 <code>f(t) = at⁵ + bt⁴ + ct³ + dt² + et + f</code>，满足：</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">f</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'(0) = 0   （一阶导数）</span></span>
+<span class="line"><span style="color:#032F62;--shiki-dark:#9ECBFF">f'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">f</span><span style="color:#032F62;--shiki-dark:#9ECBFF">''</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">  （二阶导数）</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">f</span><span style="color:#032F62;--shiki-dark:#9ECBFF">''</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span></span></code></pre>
+<p>这样解方程组得到：</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">a </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 6</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, b </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">15</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, c </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 10</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, d </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, e </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, f </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span></span></code></pre>
+<p>所以：</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(t) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> 6t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">⁵ </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> 15t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">⁴ </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic"> 10t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">³</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">     =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> t³(6t² - 15t + 10)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">     =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> t³(t(6t - 15) + 10)</span></span></code></pre>
+<p>也就是</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msup><mi>t</mi><mn>3</mn></msup><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">(</mo><mn>6</mn><mi>t</mi><mo>−</mo><mn>15</mn><mo stretchy="false">)</mo><mo>+</mo><mn>10</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">f(t) = t³(t(6t - 15) + 10)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mopen">(</span><span class="mord">6</span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">15</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">10</span><span class="mclose">)</span></span></span></span></span>
+<p>所以最fade函数：</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// fade 函数：普通线性插值在边界处有明显棱角</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Ken Perlin 用这个 5次曲线 替代线性插值</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fade</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#E36209;--shiki-dark:#FFAB70"> t</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> t </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> t </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> t </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (t </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (t </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 6.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 15.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 10.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<p>这条曲线在 <code>t=0</code> 和 <code>t=1</code> 处<strong>一阶和二阶导数都是0</strong>，过渡极其平滑。</p>
+<hr>
+<h4 id="第四步计算梯度">第四步：计算梯度</h4>
+<h4 id="和-worley-的对比">和 Worley 的对比</h4>
+<p>|Worley|Perlin|
+|---|---|---|
+|每格存的东西|一个随机<strong>位置</strong>|每个顶点一个随机<strong>方向</strong>|
+|输出|到最近点的<strong>距离</strong>|梯度场的<strong>插值</strong>|
+|值域|<code>[0, 1]</code>|<code>[-1, 1]</code>|
+|视觉|气泡/细胞状|平滑波浪状|</p>
+<h3 id="perlin代码">Perlin代码</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> perlin</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float3 </span><span style="color:#E36209;--shiki-dark:#FFAB70">p</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#E36209;--shiki-dark:#FFAB70"> tileCount</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // 第一步：分格子</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 cell  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> floor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(p);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 local </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frac</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(p);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // 第二步：fade 函数平滑插值权重</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 u </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> local </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> local </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> local </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (local </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (local </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 6.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 15.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 10.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // 8个顶点都取模， 无缝处理</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c000 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c100 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c010 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c110 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c001 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c101 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c011 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float3 c111 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fmod</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cell </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> tileCount, tileCount);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // 第三步：8个顶点各算一个梯度点积</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // 立方体格子的顶点（计算随机反向），拿对角线向量进行投影得到随机梯度</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v000 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c000) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v100 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c100) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v010 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c010) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v110 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c110) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v001 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c001) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v101 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c101) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v011 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c011) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> v111 </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c111) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">), local </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // 第四步：三线性插值，用 fade 后的 u 做权重</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v000, v100, u.x), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v010, v110, u.x), u.y), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v001, v101, u.x), </span><span style="color:#6F42C1;--shiki-dark:#B392F0">lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(v011, v111, u.x), u.y), u.z);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    // 输出范围 [-1, 1] → remap 到 [0, 1]</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> +</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<h2 id="perlin2d">Perlin（2D）</h2>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> PerlinNoise</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float2 </span><span style="color:#E36209;--shiki-dark:#FFAB70">p</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float2 i </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> floor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(p);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float2 f </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frac</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(p);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    float2 u </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> f </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> f </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#005CC5;--shiki-dark:#79B8FF">3.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> *</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> f);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)), f </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)),</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">             dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)), f </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)), u.x),</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)), f </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)),</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">             dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">hash2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(i </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)), f </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)), u.x),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        u.y</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    );</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></article> <div class="article-end" data-astro-cid-q7kxohas><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-q7kxohas><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-q7kxohas></path><circle cx="21" cy="9" r="1.5" data-astro-cid-q7kxohas></circle></svg><p data-astro-cid-q7kxohas>记录于此，探索继续。</p><a href="#main" data-astro-cid-q7kxohas>回到开篇</a></div> <section class="topic-continuation" data-topic-siblings data-astro-cid-q7kxohas><p data-astro-cid-q7kxohas><a href="/work/collection-urp-volumetric-cloud/" data-astro-cid-q7kxohas>URP 体积云 · 实践合集</a><span data-astro-cid-q7kxohas>沿着合集继续阅读</span></p><nav class="article-pager" aria-label="URP 体积云 · 实践合集相邻文章" data-astro-cid-q7kxohas><a href="/notes/n-2f10e824-bda/" data-astro-cid-q7kxohas><small data-astro-cid-q7kxohas>合集上一篇</small><span data-astro-cid-q7kxohas>URP - RendererFeature ：体积云</span></a></nav></section>  </div> </div> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.BL71vAIn.js"></script> </body></html> <script type="module">const n=document.querySelector(".article-body"),u=document.querySelector("#reading-progress-bar"),a=document.querySelector(".reading-outline"),o=matchMedia("(max-width: 1149px)");a&&(a.open=!o.matches,o.addEventListener("change",()=>{a.open=!o.matches}));const d=document.querySelector("[data-reading-percent]"),s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

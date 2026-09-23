@@ -1,0 +1,800 @@
+<!DOCTYPE html><html lang="zh-CN" data-space="work" data-reading="true"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="theme-color" content="#f5f0e7"><style>@view-transition{navigation:auto}</style><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="preload" href="/fonts/expressive-chinese.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin><script>
+    (()=>{let p='light',motion='running';try{p=localStorage.getItem('app-theme')||'light';motion=localStorage.getItem('app-motion')||'running'}catch{}const theme=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p==='dark'?'dark':'light';const r=document.documentElement;r.dataset.theme=theme;r.dataset.preference=p;r.style.colorScheme=theme;r.dataset.motion=motion;})();
+    (()=>{document.documentElement.dataset.sceneTheme='garden';try{localStorage.setItem('app-scene','garden')}catch{}const url=new URL(location.href);if(['garden','blue-hour'].includes(url.searchParams.get('theme')||'')){url.searchParams.delete('theme');history.replaceState(history.state,'',url.pathname+url.search+url.hash)}})();
+    (()=>{try{document.documentElement.dataset.readingFocus=localStorage.getItem('app-reading-focus')==='true'?'true':'false'}catch{document.documentElement.dataset.readingFocus='false'}})();
+  </script><script>/* Inline in <head>: native pagereveal runs before deferred module listeners. */
+(() => {
+  const root = document.documentElement;
+  const key = 'garden:work-navigation';
+  let style;
+  let titleTimer;
+  function incoming() {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+      if (!value || Date.now() - value.startedAt > 30000) return null;
+      const target = new URL(value.to, location.origin);
+      const list = new URL(value.origin.listUrl, location.origin);
+      if (target.origin !== location.origin || list.origin !== location.origin || list.pathname !== '/work/' || typeof value.origin.key !== 'string') return null;
+      return target.pathname + target.search === location.pathname + location.search ? value : null;
+    } catch { return null; }
+  }
+  function moving() { return !matchMedia('(prefers-reduced-motion: reduce)').matches && root.dataset.motion !== 'paused'; }
+  function prepare(value) {
+    style?.remove();
+    if (value) window.__gardenWorkIncoming = value;
+    if (!value || !moving() || !('onpagereveal' in window)) return;
+    root.dataset.workNavigation = value.direction;
+    style = document.createElement('style');
+    style.textContent = `[data-work-cover][data-work-key="${CSS.escape(value.origin.key)}"]{view-transition-name:work-cover}`;
+    document.head.append(style);
+  }
+  function finish(value, animated) {
+    style?.remove(); style = null;
+    delete root.dataset.workNavigation;
+    if (value?.direction === 'enter' && animated && moving()) {
+      root.dataset.workTitle = 'arrive';
+      clearTimeout(titleTimer);
+      titleTimer = setTimeout(() => { delete root.dataset.workTitle; }, 650);
+    }
+    document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'finished', direction: value?.direction, animated } }));
+    try { if (value && JSON.parse(sessionStorage.getItem(key) || 'null')?.startedAt === value.startedAt) sessionStorage.removeItem(key); } catch {}
+  }
+  prepare(incoming());
+  addEventListener('pagereveal', event => {
+    const value = incoming();
+    if (!value) { finish(null, false); return; }
+    prepare(value);
+    if (value.direction === 'return') scrollTo({ left: value.origin.scrollX, top: value.origin.scrollY, behavior: 'instant' });
+    const transition = event.viewTransition;
+    if (!transition || !moving()) { transition?.skipTransition(); finish(value, false); return; }
+    transition.ready.then(() => {
+      document.dispatchEvent(new CustomEvent('work:transition', { detail: { phase: 'ready', direction: value.direction, animated: true } }));
+    }).catch(() => {});
+    transition.finished.then(() => finish(value, true), () => finish(value, false));
+  });
+  addEventListener('pageshow', () => { if (!('onpagereveal' in window)) finish(null, false); });
+})();
+</script><title>URP - RendererFeature ：SSAO · 吟处雪轻遮</title><meta name="description" content="SSAO屏幕空间阴影"><link rel="canonical" href="https://xueqingzhe.github.io/notes/n-6cd2f392-85a/"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="吟处雪轻遮的手记与研习" href="/rss.xml"><meta property="og:type" content="article"><meta property="og:title" content="URP - RendererFeature ：SSAO · 吟处雪轻遮"><meta property="og:description" content="SSAO屏幕空间阴影"><meta property="og:url" content="https://xueqingzhe.github.io/notes/n-6cd2f392-85a/"><meta property="og:image" content="https://xueqingzhe.github.io/published-assets/b7bc1a4b9c6cf6d54fdf91e97a41bf6960a009cb98a49e0516a638e607fa6383.webp"><meta property="og:locale" content="zh_CN"><meta name="twitter:card" content="summary_large_image"><link rel="stylesheet" href="/bundle/_legacy_.C1LdOPTr.css">
+<link rel="stylesheet" href="/bundle/_legacy_.DhD71mKu.css"></head><body> <div class="margin-garden" aria-hidden="true" data-pagefind-ignore data-astro-cid-hxtbevjh> <div class="margin-garden-wing margin-garden-left" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-wing margin-garden-right" data-astro-cid-hxtbevjh><span class="margin-garden-layer margin-garden-day" data-astro-cid-hxtbevjh></span><span class="margin-garden-layer margin-garden-night" data-astro-cid-hxtbevjh></span></div> <div class="margin-garden-light" data-astro-cid-hxtbevjh></div> <svg class="margin-garden-water" viewBox="0 0 340 190" fill="none" data-astro-cid-hxtbevjh> <ellipse cx="131" cy="118" rx="99" ry="23" data-astro-cid-hxtbevjh></ellipse> <ellipse cx="131" cy="118" rx="128" ry="35" data-astro-cid-hxtbevjh></ellipse> <path d="M-6 105c46-60 264-59 307 0M-20 151c68 52 244 39 304-8" data-astro-cid-hxtbevjh></path> <path d="M132 92V57a26 26 0 0 1 52 0v35M140 91V58a18 18 0 0 1 36 0v33" data-astro-cid-hxtbevjh></path> <circle class="margin-water-light" cx="158" cy="75" r="2.5" data-astro-cid-hxtbevjh></circle> </svg> <div class="margin-garden-motes" data-astro-cid-hxtbevjh><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i><i data-astro-cid-hxtbevjh></i></div> <div class="margin-garden-vignette" data-astro-cid-hxtbevjh></div> </div>  <a class="skip-link" href="#main">跳转到正文</a><header class="site-nav" data-pagefind-ignore> <div class="page nav-inner"> <a class="brand" href="/" aria-label="吟处雪轻遮 首页"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>吟处雪轻遮<small>LIGHT, CODE & A LITTLE POETRY</small></span></a> <nav aria-label="主导航"><a href="/work/" aria-current="page"><span>作品</span><small>WORK</small></a><a href="/notes/"><span>手记</span><small>JOURNAL</small></a><a href="/tutorials/"><span>研习</span><small>STUDY</small></a><a href="/about/"><span>关于</span><small>ABOUT</small></a></nav> <div class="nav-extra"> <button class="nav-motion icon-button" type="button" data-motion-toggle aria-label="暂停场景动效" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 9v6M10 5v14M15 8v8M20 10v4"></path></svg></button> <a class="search-link icon-button" href="/search/" aria-label="搜索全站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 5 5"></path></svg></a> <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到夜间模式" aria-pressed="false"><span class="theme-orbit" aria-hidden="true"></span><span class="theme-label">日间</span></button> </div> </div> </header> <main class="page" id="main" tabindex="-1"> <div class="reading-progress" aria-hidden="true" data-astro-cid-hytayklh><span id="case-reading-progress" data-astro-cid-hytayklh></span></div> <article class="project-case" data-pagefind-body data-pagefind-filter="栏目:作品" data-work-detail="published:n-6cd2f392-85a" data-work-type="single" data-astro-cid-hytayklh> <!-- 1 · 头 --> <header class="hd reading-room-header" data-astro-cid-hytayklh> <div class="reading-breadcrumb" data-astro-cid-hytayklh><a class="back tele" href="/work/" data-work-return data-astro-cid-hytayklh><svg viewBox="0 0 22 22" fill="none" aria-hidden="true" data-astro-cid-hytayklh><path d="M4 4h6v6H4zM13 4h5v6h-5zM4 13h6v5H4zM13 13h5v5h-5z" data-astro-cid-hytayklh></path></svg><span data-astro-cid-hytayklh>返回作品索引</span></a><span class="reading-edition" data-astro-cid-hytayklh>WORK / CASE STUDY</span></div> <span class="eyebrow reading-kicker" data-astro-cid-hytayklh><svg class="reading-emblem" viewBox="0 0 32 32" fill="none" aria-hidden="true" data-astro-cid-hytayklh><path d="M6 23V13a10 10 0 0 1 20 0v10M11 23V13a5 5 0 0 1 10 0v10M3 27c5-3 8 3 13 0s8-3 13 0" data-astro-cid-hytayklh></path><circle cx="21" cy="9" r="1.5" data-astro-cid-hytayklh></circle></svg><span data-astro-cid-hytayklh>工具 / Shader</span></span> <h1 data-pagefind-meta="title" data-work-detail-title data-astro-cid-hytayklh>URP - RendererFeature ：SSAO</h1> <p class="sum" data-astro-cid-hytayklh>SSAO屏幕空间阴影</p> <p class="case-kind" data-astro-cid-hytayklh>独立作品</p>    <div class="reading-tools" data-reading-tools data-scope=".case-body" data-canonical-path="/notes/n-6cd2f392-85a/" data-pagefind-ignore> <div class="reading-tools-line"> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M7 13h2M15 10h2M15 13h2"></path></svg> <span data-reading-focus-label>静读</span> </button> <span class="reading-focus-note" data-reading-focus-note>让周围轻一点，文字近一点。</span> </div> <div class="reading-resume" data-reading-resume hidden> <button class="reading-resume-action" type="button" data-reading-resume-action> <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6 3.5h8v13l-4-3-4 3z"></path></svg> <span>继续上次阅读 · <span data-reading-saved-percent></span>%</span> </button> <button class="reading-resume-dismiss" type="button" data-reading-resume-dismiss aria-label="清除上次阅读位置，从头阅读" title="从头阅读"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"></path></svg></button> </div> <div class="reading-dock" data-reading-dock hidden> <button class="reading-focus-button" type="button" data-reading-focus-toggle aria-pressed="false" aria-label="开启静读模式"> <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.8-.3 8 1.5 2.2-1.8 4.9-2.3 8-1.5V19c-3.1-.8-5.8-.3-8 1.5C9.8 18.7 7.1 18.2 4 19zM12 7v13.5M7 10h2M15 10h2"></path></svg> <span data-reading-focus-label>静读</span> </button> </div> <span class="sr-only" role="status" aria-live="polite" data-reading-status></span> </div> <script type="module" src="/bundle/ReadingTools.astro_astro_type_script_index_0_lang.Di2V2BXh.js"></script> </header> <!-- 2 · 主视觉 --> <div class="hero case-visual" data-astro-cid-hytayklh> <div class="shot" data-astro-cid-hytayklh> <img src="/published-assets/b7bc1a4b9c6cf6d54fdf91e97a41bf6960a009cb98a49e0516a638e607fa6383.webp" alt="URP - RendererFeature ：SSAO" width="1600" height="900" data-work-cover data-work-key="published:n-6cd2f392-85a" fetchpriority="high" data-zoom tabindex="0" data-astro-cid-hytayklh> </div> <div class="case-visual-caption" data-astro-cid-hytayklh><span data-astro-cid-hytayklh>作品主视觉</span><span data-astro-cid-hytayklh>点击画面，查看细节</span></div> </div> <!-- 3 · 规格栏 --> <dl class="specs" data-astro-cid-hytayklh> <div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>ENGINE</dt> <dd data-astro-cid-hytayklh>Unity · URP</dd> </div><div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>TECH</dt> <dd data-astro-cid-hytayklh>rendering · 后处理 · Shader · unity · URP · Raymarching · Compute Shader · RenderFeature</dd> </div><div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>ROLE</dt> <dd data-astro-cid-hytayklh>工具 · Shader</dd> </div><div class="sp" data-astro-cid-hytayklh> <dt class="tele" data-astro-cid-hytayklh>YEAR</dt> <dd data-astro-cid-hytayklh>2026</dd> </div>  </dl> <!-- 4 · 媒体画廊 -->  <!-- 5 · 正文（长文配侧边目录，和笔记页同一套） --> <div class="lower" data-toc="true" data-astro-cid-hytayklh> <details class="reading-outline" open data-astro-cid-hytayklh><summary data-astro-cid-hytayklh><span data-astro-cid-hytayklh>案例目录</span><small data-astro-cid-hytayklh>12 小节</small><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" data-astro-cid-hytayklh><path d="M4 6l4 4 4-4" data-astro-cid-hytayklh></path></svg></summary><aside class="toc" data-scope=".case-body" data-astro-cid-6t6zfk7k> <p class="tele-label" data-astro-cid-6t6zfk7k>[ 案例目录 ]</p> <ul data-astro-cid-6t6zfk7k> <li data-d="2" data-astro-cid-6t6zfk7k> <a href="#ssao原理" data-to="ssao原理" data-astro-cid-6t6zfk7k> SSAO原理 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#球形采样" data-to="球形采样" data-astro-cid-6t6zfk7k> 球形采样 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#半球采样" data-to="半球采样" data-astro-cid-6t6zfk7k> 半球采样 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#部分实现步骤" data-to="部分实现步骤" data-astro-cid-6t6zfk7k> 部分实现步骤 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#传递矩阵" data-to="传递矩阵" data-astro-cid-6t6zfk7k> 传递矩阵 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#重建坐标" data-to="重建坐标" data-astro-cid-6t6zfk7k> 重建坐标 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#采样方向翻转" data-to="采样方向翻转" data-astro-cid-6t6zfk7k> 采样方向翻转 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#遮蔽权重" data-to="遮蔽权重" data-astro-cid-6t6zfk7k> 遮蔽权重 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#最终效果" data-to="最终效果" data-astro-cid-6t6zfk7k> 最终效果 </a> </li><li data-d="2" data-astro-cid-6t6zfk7k> <a href="#完整代码" data-to="完整代码" data-astro-cid-6t6zfk7k> 完整代码 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#c代码" data-to="c代码" data-astro-cid-6t6zfk7k> C#代码 </a> </li><li data-d="3" data-astro-cid-6t6zfk7k> <a href="#shader代码" data-to="shader代码" data-astro-cid-6t6zfk7k> Shader代码 </a> </li> </ul> </aside> <script>
+  /* 这个脚本随组件就地输出，而组件排在正文前面 ——
+     直接跑的话 .body 里的标题还没解析出来，一个都观察不到。
+     所以等 DOM 解析完再接管。 */
+  /* DOM 解析完再接管。跨文档转场是整页重载，脚本本来就会重跑，
+     不需要框架的生命周期事件。 */
+  document.addEventListener("DOMContentLoaded", function () {
+    const boot = () => init();
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+
+    function init() {
+    const box = document.querySelector(".toc[data-scope]");
+    if (!box) return;
+    const links = [...box.querySelectorAll("a[data-to]")];
+    if (!links.length) return;
+
+    const map = new Map(links.map((a) => [a.dataset.to, a]));
+    const sel = box.dataset.scope || ".body";
+    const heads = [...document.querySelectorAll(`${sel} h2[id], ${sel} h3[id], ${sel} h4[id]`)].filter((h) =>
+      map.has(h.id)
+    );
+    if (!heads.length) return;
+
+    let active = null;
+    const set = (id) => {
+      if (active === id) return;
+      links.forEach((a) => (a.dataset.on = String(a.dataset.to === id)));
+      active = id;
+      // 目录很长时，把当前项滚进可视范围 —— 不然高亮跑到看不见的地方
+      const cur = map.get(id);
+      if (cur && box.scrollHeight > box.clientHeight + 8) {
+        const r = cur.getBoundingClientRect();
+        const b = box.getBoundingClientRect();
+        if (r.top < b.top + 20 || r.bottom > b.bottom - 20) {
+          box.scrollTop += r.top - b.top - b.height / 2;
+        }
+      }
+    };
+
+    const seen = new Set();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) seen.add(e.target.id);
+          else seen.delete(e.target.id);
+        }
+        // 取当前可见里最靠上的那个；都不可见就保持上一个
+        const first = heads.find((h) => seen.has(h.id));
+        if (first) set(first.id);
+      },
+      { rootMargin: "-80px 0px -66% 0px", threshold: 0 }
+    );
+    heads.forEach((h) => io.observe(h));
+    set(heads[0].id);
+    }
+  });
+</script> <div class="reading-place" aria-hidden="true" data-astro-cid-hytayklh><span data-astro-cid-hytayklh>阅读进度</span><span data-reading-percent data-astro-cid-hytayklh>0%</span></div></details> <div class="rcol" data-astro-cid-hytayklh> <div class="prose body case-body" data-astro-cid-hytayklh><h2 id="ssao原理">SSAO原理</h2>
+<p>相关网站：
+<a href="https://learnopengl-cn.github.io/05%20Advanced%20Lighting/09%20SSAO/">https://learnopengl-cn.github.io/05%20Advanced%20Lighting/09%20SSAO/</a>
+<strong>实现方法和代码参考上述网站。主要计算原理其实就是对采样点都半圆区域进行随机采样。采样的点是可以理解为虚拟点计算虚拟点的深度，然后和深度图中真正几何的表面深度进行比较，如果虚拟点深度值更大，就表示被遮蔽</strong></p>
+<h3 id="球形采样">球形采样</h3>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/4dc9db5b17f2f854d2e5d21b7c19fc37bd0d828d3b130800568608b3351a3a70.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1427" height="580"></span></figure>
+<h3 id="半球采样">半球采样</h3>
+<p><strong>因为球形采样的原因，球形采样有一半的点在地面以下，或者理解为会计算到模型内侧，有一半被埋进几何体里，但那是模型内部，根本不应该参与遮蔽计算。结果就是平坦物体也显示出很强的遮蔽，变暗，不符合物理直觉，所以解决这个问题就是需要使用半球采样，根据模型法线走</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/30d774ade3ce8fb7ae1337939177c11f3693d03e2c8eb14af7f19844aeb1130d.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1440" height="1131"></span></figure>
+<h2 id="部分实现步骤">部分实现步骤</h2>
+<p><strong>基本步骤都是和openGL上是一样的，下面只写关键部分</strong></p>
+<h3 id="传递矩阵">传递矩阵</h3>
+<figure class="fig" style="max-width:685px"><span class="fig-box"><img src="/published-assets/626af410f61830ec27500d8293c595dbf5246e826739454b5ad341678a5a7fc6.png" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="685" height="155"></span></figure>
+<h3 id="重建坐标">重建坐标</h3>
+<p><strong>ndc空间是-1~1，所以对UV进行重映射，然后根据深度和逆投影矩阵进行计算还原观察空间的坐标，因为有透视除法所以需要除去w分量</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/6c6bb6aac7999792e128615f75e942fa9dec63a600e0cdb8cee5d15dc9bf5808.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="792" height="342"></span></figure>
+<h3 id="采样方向翻转">采样方向翻转</h3>
+<p><strong>防止采样点落到模型内部，所以进行方向判断，然后对采样方向进行翻转，可以防止过黑</strong>
+<em><strong>注意事项是这里的采样方向转换到法线空间，是先向量在乘矩阵，这和OpenGL上是不一样的</strong></em>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/18e0c4109e9e376d0236c994f5520c1fa535e12e5a0dc0a0ee419c840725a3f7.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="816" height="391"></span></figure>
+<p><strong>对比如下</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/2bd0feae06ec252444beb00e299ef7fbc818c8865c691fcb3da817b7f38d645b.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="598"></span></figure>
+<h3 id="遮蔽权重">遮蔽权重</h3>
+<p><strong>DX的SSAO实现中加了针对夹角大小或者说前后距离的遮蔽值权重</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/699ce0aef5564f4f2fd4054b28ba6664ef507932e1617acec522d60f2240aeda.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1917" height="1144"></span></figure><p>
+<strong>我将这个权重引入到了代码中</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/fe7ac7bce03dec4eea845733c4c19d6678620d9c09b9356549d527ba07d20d3b.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="919" height="200"></span></figure><p>
+<strong>对比来说我觉得加上权重会更好</strong>
+</p><figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/1c8b9a13dfcaa1488afdfc2ba6dad9e2d4a43cbae0726c0eabd84810ff84ed7f.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="589"></span></figure>
+<h2 id="最终效果">最终效果</h2>
+<figure class="fig" style="max-width:720px"><span class="fig-box"><img src="/published-assets/b7bc1a4b9c6cf6d54fdf91e97a41bf6960a009cb98a49e0516a638e607fa6383.webp" alt="" loading="lazy" decoding="async" data-zoom="" tabindex="0" width="1920" height="706"></span></figure>
+<h2 id="完整代码">完整代码</h2>
+<h3 id="c代码">C#代码</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using UnityEngine;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using UnityEngine.Rendering;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">using UnityEngine.Rendering.Universal;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">public class CustomSSAO : ScriptableRendererFeature</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">    //==========参数============</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    [System.Serializable]</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public class Settings</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public Shader CustomSSAOShader;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Intensity </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Radius </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public </span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Bias </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.25</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public </span><span style="color:#D73A49;--shiki-dark:#F97583">enum</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Quality</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Low,</span><span style="color:#6A737D;--shiki-dark:#6A737D">        //16</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Medium,</span><span style="color:#6A737D;--shiki-dark:#6A737D">     //32</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            High,</span><span style="color:#6A737D;--shiki-dark:#6A737D">       //64</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Most</span><span style="color:#6A737D;--shiki-dark:#6A737D">        //128</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        };</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        public Quality quality </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Quality.Medium;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public Settings settings </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Settings</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    CustomSSAOPass pass;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Material material;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Create</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">       if</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings.CustomSSAOShader </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null) </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(material </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null </span><span style="color:#D73A49;--shiki-dark:#F97583">||</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> material.shader </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> settings.CustomSSAOShader)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            CoreUtils.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Destroy</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(material);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            material </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CoreUtils.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">CreateEngineMaterial</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings.CustomSSAOShader);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        pass </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">CustomSSAOPass</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings, material);     </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        pass.renderPassEvent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> RenderPassEvent.BeforeRenderingPostProcessing;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> AddRenderPasses</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ScriptableRenderer renderer, ref RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 过滤相机，只对主相机生效：</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // if (renderingData.cameraData.cameraType != CameraType.Game) return;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings.CustomSSAOShader </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null </span><span style="color:#D73A49;--shiki-dark:#F97583">||</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pass </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null </span><span style="color:#D73A49;--shiki-dark:#F97583">||</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> material </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null) </span><span style="color:#D73A49;--shiki-dark:#F97583">return</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        pass.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Setup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(renderer.cameraColorTarget);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        renderer.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">EnqueuePass</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pass);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    protected override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Dispose</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">bool</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> disposing)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        CoreUtils.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Destroy</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(material);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (pass </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x26;&#x26;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> pass.noiseTexture </span><span style="color:#D73A49;--shiki-dark:#F97583">!=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Object.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">DestroyImmediate</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pass.noiseTexture);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">public class CustomSSAOPass : ScriptableRenderPass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    CustomSSAO.Settings settings;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Material material;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    RenderTargetIdentifier cameraColorTarget;</span><span style="color:#6A737D;--shiki-dark:#6A737D">      // 相机颜色 RT</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public Texture2D noiseTexture;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Vector4</span><span style="color:#D73A49;--shiki-dark:#F97583">[]</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> samples;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _SSAORTID;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private RenderTargetIdentifier _SSAORT;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private </span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _BlurRTID;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    private RenderTargetIdentifier _BlurRT;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#6F42C1;--shiki-dark:#B392F0">CustomSSAOPass</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CustomSSAO.Settings settings, Material material)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        this.settings </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> settings;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        this.material </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> material;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        _SSAORTID </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Shader.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">PropertyToID</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAORT"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        _BlurRTID </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Shader.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">PropertyToID</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_BlurRT"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        ConfigureInput</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ScriptableRenderPassInput.Normal);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        InitSSAOData</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Setup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(RenderTargetIdentifier cameraColorTarget)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        this.cameraColorTarget </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> cameraColorTarget;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> OnCameraSetup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CommandBuffer cmd, ref RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 不需要临时 RT 时可以删掉整个函数</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        var desc </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> renderingData.cameraData.cameraTargetDescriptor;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        desc.depthBufferBits </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // 后处理 RT 不需要深度</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">GetTemporaryRT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_SSAORTID, desc);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">GetTemporaryRT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BlurRTID, desc);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        _SSAORT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">RenderTargetIdentifier</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_SSAORTID); </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        _BlurRT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">RenderTargetIdentifier</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BlurRTID); </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> InitSSAOData</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleCount </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        const</span><span style="color:#D73A49;--shiki-dark:#F97583"> int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> MAX_SAMPLE_COUNT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 128</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        samples </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#E36209;--shiki-dark:#FFAB70">Vector4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[MAX_SAMPLE_COUNT];</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        switch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings.quality)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.Low:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                sampleCount </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 16</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.Medium:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                sampleCount </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 32</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.High:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                sampleCount </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 64</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.Most:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                sampleCount </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 128</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 1. 生成64个随机采样向量</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //samples = new Vector4[sampleCount];</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; i </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleCount; i</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Vector4 sample </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Vector4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                Random.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                Random.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                Random.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span><span style="color:#6A737D;--shiki-dark:#6A737D">   // Z只取正，保证在半球内</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">                0</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            );</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> length </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Mathf.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Sqrt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sample.x </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sample.x </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sample.y </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sample.y </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sample.z </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sample.z);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sample.x </span><span style="color:#D73A49;--shiki-dark:#F97583">/=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> length;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sample.y </span><span style="color:#D73A49;--shiki-dark:#F97583">/=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> length;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sample.z </span><span style="color:#D73A49;--shiki-dark:#F97583">/=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> length;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            // 让采样点集中在靠近原点的地方</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)i </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleCount;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            scale </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Mathf.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Lerp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, scale </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scale);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            sample </span><span style="color:#D73A49;--shiki-dark:#F97583">*=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> scale;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            </span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            samples</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[i] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sample;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">       // 2. 生成4x4随机旋转纹理（用来打破采样规律性）</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (noiseTexture </span><span style="color:#D73A49;--shiki-dark:#F97583">==</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> null)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            noiseTexture </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Texture2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, TextureFormat.RGBAFloat, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            noiseTexture.wrapMode </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> TextureWrapMode.Repeat;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            noiseTexture.filterMode </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> FilterMode.Point;</span><span style="color:#6A737D;--shiki-dark:#6A737D"> // SSAO 噪声不需要线性过滤</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Color</span><span style="color:#D73A49;--shiki-dark:#F97583">[]</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noiseColors </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#E36209;--shiki-dark:#FFAB70">Color</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#005CC5;--shiki-dark:#79B8FF">16</span><span style="color:#24292E;--shiki-dark:#E1E4E8">];</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; i </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 16</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; i</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#E36209;--shiki-dark:#FFAB70">            noiseColors</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[i] </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> new </span><span style="color:#6F42C1;--shiki-dark:#B392F0">Color</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                Random.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                Random.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Range</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">                0</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">                0</span><span style="color:#D73A49;--shiki-dark:#F97583">f</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            );</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        noiseTexture.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetPixels</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(noiseColors);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        noiseTexture.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Apply</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetVectorArray</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_Samples"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, samples);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetTexture</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_NoiseTex"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, noiseTexture);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">DisableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_LOW"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">DisableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_MEDIUM"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">DisableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_HIGH"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">DisableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_MOST"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> UpdateMaterialProperties</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //float noiseScale = (float)(Mathf.Sqrt(Screen.width * Screen.height) / (4.0 * (Screen.width + Screen.height)));</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noiseScaleX </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)(Screen.width </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 4.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noiseScaleY </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">float</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)(Screen.height  </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 4.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //material.SetFloat("_NoiseScaleX", settings.NoiseScale);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetFloat</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_NoiseScaleX"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, noiseScaleX);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetFloat</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_NoiseScaleY"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, noiseScaleY);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetFloat</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_Intensity"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, settings.Intensity);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetFloat</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_Radius"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, settings.Radius);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetFloat</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_Bias"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, settings.Bias);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        switch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(settings.quality)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.Low:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">EnableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_LOW"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.Medium:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">EnableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_MEDIUM"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.High:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">EnableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_HIGH"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            case</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CustomSSAO.Settings.Quality.Most:</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">EnableKeyword</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SSAO_QUALITY_MOST"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                break</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 传矩阵</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Camera camera </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> renderingData.cameraData.camera;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Matrix4x4 proj </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> GL.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">GetGPUProjectionMatrix</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(camera.projectionMatrix, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">false</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Matrix4x4 viewMatrix </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> camera.worldToCameraMatrix;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetMatrix</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_ProjectionMatrix"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, proj);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetMatrix</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_CameraViewMatrix"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, viewMatrix);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        material.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetMatrix</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_InverseProjection"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, proj.inverse);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Execute</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ScriptableRenderContext context, ref RenderingData renderingData)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        var cmd </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> CommandBufferPool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"CustomSSAOPass"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);  </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        UpdateMaterialProperties</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(renderingData);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //执行SSAO Pass</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd, cameraColorTarget, _SSAORT, material, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //模糊</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd, _SSAORT, _BlurRT, material, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        //合成</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd, cameraColorTarget, _SSAORT, material, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">SetGlobalTexture</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"_SceneColor"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, _SSAORT);</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        Blit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd, _BlurRT, cameraColorTarget, material, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        context.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ExecuteCommandBuffer</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        CommandBufferPool.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Release</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(cmd);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    public override </span><span style="color:#D73A49;--shiki-dark:#F97583">void</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> OnCameraCleanup</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(CommandBuffer cmd)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ReleaseTemporaryRT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_SSAORTID);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        cmd.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">ReleaseTemporaryRT</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_BlurRTID);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<h3 id="shader代码">Shader代码</h3>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">Shader </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Hidden/CustomSSAO"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    Properties</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        _MainTex</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Texture"</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#B31D28;--shiki-light-font-style:italic;--shiki-dark:#FDAEB7;--shiki-dark-font-style:italic">2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "white"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    SubShader</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Tags { </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"RenderType"</span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Opaque"</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Cull Off </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        ZWrite Off </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        ZTest Always</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        HLSLINCLUDE</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #include</span><span style="color:#032F62;--shiki-dark:#9ECBFF"> "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareNormalsTexture.hlsl"</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> shader_feature_local</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _SSAO_QUALITY_LOW</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> shader_feature_local</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _SSAO_QUALITY_MEDIUM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> shader_feature_local</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _SSAO_QUALITY_HIGH</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> shader_feature_local</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> _SSAO_QUALITY_MOST</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        float4 </span><span style="color:#E36209;--shiki-dark:#FFAB70">_Samples</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[</span><span style="color:#005CC5;--shiki-dark:#79B8FF">128</span><span style="color:#24292E;--shiki-dark:#E1E4E8">];  </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _Radius;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _Bias;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _NoiseScaleX;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _NoiseScaleY;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _Intensity;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        float4x4 _InverseProjection;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        float4x4 _ProjectionMatrix;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        float4x4 _CameraViewMatrix;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        float4 _MainTex_ST;</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex); </span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        SAMPLER</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampler_MainTex);</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_NoiseTex); </span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        SAMPLER</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampler_NoiseTex);</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_SceneColor); </span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">        SAMPLER</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampler_SceneColor);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // 采样深度并线性化</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        float</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SampleDepth</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(float2 uv)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rawDepth </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SampleSceneDepth</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(uv);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> LinearEyeDepth</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rawDepth, _ZBufferParams);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Attributes</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 positionOS : POSITION;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float2 uv : TEXCOORD0;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            //UNITY_VERTEX_INPUT_INSTANCE_ID  //VR兼容 </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        struct</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Varyings</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 positionCS : SV_POSITION;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float2 uv : TEXCOORD0;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            //UNITY_VERTEX_OUTPUT_STEREO      //VR兼容 </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Varyings </span><span style="color:#6F42C1;--shiki-dark:#B392F0">vert</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Attributes input)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Varyings output;</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            //UNITY_SETUP_INSTANCE_ID(input);     //VR兼容         </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">            //UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output); </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            output.positionCS </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> TransformObjectToHClip</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(input.positionOS.xyz);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            output.uv </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> input.uv;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> output;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #if</span><span style="color:#D73A49;--shiki-dark:#F97583"> defined</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_SSAO_QUALITY_MOST</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            static</span><span style="color:#D73A49;--shiki-dark:#F97583"> const</span><span style="color:#D73A49;--shiki-dark:#F97583"> float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> SAMPLE_COUNT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 128</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #elif</span><span style="color:#D73A49;--shiki-dark:#F97583"> defined</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_SSAO_QUALITY_HIGH</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            static</span><span style="color:#D73A49;--shiki-dark:#F97583"> const</span><span style="color:#D73A49;--shiki-dark:#F97583"> float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> SAMPLE_COUNT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 64</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #elif</span><span style="color:#D73A49;--shiki-dark:#F97583"> defined</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">_SSAO_QUALITY_MEDIUM</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            static</span><span style="color:#D73A49;--shiki-dark:#F97583"> const</span><span style="color:#D73A49;--shiki-dark:#F97583"> float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> SAMPLE_COUNT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 32</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #else</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            static</span><span style="color:#D73A49;--shiki-dark:#F97583"> const</span><span style="color:#D73A49;--shiki-dark:#F97583"> float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> SAMPLE_COUNT </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 16</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">        #endif</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        ENDHLSL</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // Pass 0</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Name </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"SSAO"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            HLSLPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag_ssao</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag_ssao</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Varyings input) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 uv </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> input.uv;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rawDepth </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SampleSceneDepth</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(uv);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> depth </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> LinearEyeDepth</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(rawDepth, _ZBufferParams);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //方法1：利用从 C# 传过来的 _InverseProjection 重建观察空间坐标</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 ndc </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(uv </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, rawDepth, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 viewPos </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_InverseProjection, ndc);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                viewPos </span><span style="color:#D73A49;--shiki-dark:#F97583">/=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> viewPos.w;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 fragPos </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> viewPos.xyz;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //方法2：内置矩阵 重建观察空间坐标</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // float rawDepth = SampleSceneDepth(uv);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // float3 posWS = ComputeWorldSpacePosition(uv, rawDepth, UNITY_MATRIX_I_VP);</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                // float3 fragPos = mul(_CameraViewMatrix, float4(posWS, 1.0)).xyz;</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 normalWS </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SampleSceneNormals</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(uv);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 normalVS </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">((float3x3)_CameraViewMatrix, normalWS));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 randomVec </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">                    SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_NoiseTex, sampler_NoiseTex, uv </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_NoiseScaleX, _NoiseScaleY)).xyz</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                );</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 tangent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(randomVec </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> normalVS </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(randomVec, normalVS));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3 bitangent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">cross</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalVS, tangent));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float3x3 TBN </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float3x3</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(tangent, bitangent, normalVS);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> occlusion </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> i </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; i </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> SAMPLE_COUNT; i</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float3 sampleVec  </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">_Samples</span><span style="color:#24292E;--shiki-dark:#E1E4E8">[i].xyz, TBN);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                    //方向翻转</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                    // float flip = sign(dot(normalVS, sampleVec)); </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                    // sampleVec *= flip;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float3 samplePos </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> fragPos </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleVec </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _Radius;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float4 offset </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> mul</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_ProjectionMatrix, </span><span style="color:#6F42C1;--shiki-dark:#B392F0">float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(samplePos, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    offset.xy </span><span style="color:#D73A49;--shiki-dark:#F97583">/=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> offset.w;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    offset.xy </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> offset.xy </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#D73A49;--shiki-dark:#F97583"> +</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                   </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float2 sampleUV </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> clamp</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(offset.xy, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleDepth </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SampleDepth</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampleUV);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleDist </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#24292E;--shiki-dark:#E1E4E8">samplePos.z;</span><span style="color:#6A737D;--shiki-dark:#6A737D">  // 采样点自身的深度</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                    // 前后遮蔽权重</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float3 sampleDir </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> normalize</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(samplePos </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> fragPos);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8">  posOcclusionWeight </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> max</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">dot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(normalVS, sampleDir), </span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                    float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rangeCheck </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> smoothstep</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, _Radius </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#6F42C1;--shiki-dark:#B392F0">abs</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sampleDist </span><span style="color:#D73A49;--shiki-dark:#F97583">-</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleDepth) </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1</span><span style="color:#D73A49;--shiki-dark:#F97583">e-</span><span style="color:#005CC5;--shiki-dark:#79B8FF">5</span><span style="color:#24292E;--shiki-dark:#E1E4E8">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    occlusion </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (sampleDist </span><span style="color:#D73A49;--shiki-dark:#F97583">>=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sampleDepth </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _Bias </span><span style="color:#D73A49;--shiki-dark:#F97583">?</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> :</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rangeCheck </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> posOcclusionWeight;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ao </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> occlusion </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> SAMPLE_COUNT;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                ao </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> pow</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ao, _Intensity);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ao.xxx, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ENDHLSL</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // Pass 1</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Name </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Blur"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            HLSLPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag_blur</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag_blur</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Varyings input) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float2 texelSize </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 1.0</span><span style="color:#D73A49;--shiki-dark:#F97583"> /</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> _ScreenParams.xy ;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                float</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 0.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                   </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> x </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; x </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; x</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">int</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> y </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> -</span><span style="color:#005CC5;--shiki-dark:#79B8FF">2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; y </span><span style="color:#D73A49;--shiki-dark:#F97583">&#x3C;</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">; y</span><span style="color:#D73A49;--shiki-dark:#F97583">++</span><span style="color:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    float2 offset </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(x, y) </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> texelSize;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                    result </span><span style="color:#D73A49;--shiki-dark:#F97583">+=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex, sampler_MainTex, input.uv </span><span style="color:#D73A49;--shiki-dark:#F97583">+</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> offset).r;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                result </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> result </span><span style="color:#D73A49;--shiki-dark:#F97583">/</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> 16.0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> float4</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(result.xxx, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">1</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ENDHLSL</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // Pass 2 合成</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Name </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Combine"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            HLSLPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Varyings input) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 sceneColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_SceneColor, sampler_SceneColor, input.uv);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 SSAOColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex, sampler_MainTex, input.uv);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">               </span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">                //return SSAOColor;</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sceneColor </span><span style="color:#D73A49;--shiki-dark:#F97583">*</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> SSAOColor;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ENDHLSL</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">        // Pass 3</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        Pass</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            Name </span><span style="color:#032F62;--shiki-dark:#9ECBFF">"Copy"</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            HLSLPROGRAM</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vertex</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> vert</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">            #pragma</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> fragment</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> frag</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">          </span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            float4 </span><span style="color:#6F42C1;--shiki-dark:#B392F0">frag</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(Varyings input) : SV_Target</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">                float4 sceneColor </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> SAMPLE_TEXTURE2D</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(_MainTex, sampler_MainTex, input.uv);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            </span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">                return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> sceneColor;</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">            ENDHLSL</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></div>  <!-- 6 · 关联笔记 —— 跟着正文列走，不然会和正文差出一个目录的宽度 -->  </div> </div> <!-- 7 · 上下篇 -->  <nav class="pn" aria-label="相邻作品" data-astro-cid-hytayklh> <a class="p" href="/notes/n-4b6b8d07-d72/" data-astro-cid-hytayklh> <span class="tele" data-astro-cid-hytayklh> 上一件作品</span> <span class="pt" data-astro-cid-hytayklh>URP - RendererFeature ：Screen Space Outline</span> </a> <a class="n" href="/notes/n-a1903d6c-c71/" data-astro-cid-hytayklh> <span class="tele" data-astro-cid-hytayklh>下一件作品 </span> <span class="pt" data-astro-cid-hytayklh>URP - RendererFeature ：局部体积雾(可交互)</span> </a> </nav> </article> </main> <footer class="site-footer page" data-pagefind-ignore> <div class="footer-top"><a class="footer-brand" href="/"><svg class="site-mark" viewBox="0 0 44 52" fill="none" aria-hidden="true"><path d="M6 35V20a16 16 0 0 1 32 0v15M14 34V20a8 8 0 0 1 16 0v14M22 4v31M6 24h32" stroke="currentColor" stroke-width="1.25"></path><path d="M2 40c8-5 12 5 20 0s12 5 20 0M9 46c5-3 9 3 14 0s9 3 14 0" stroke="currentColor" stroke-width="1.25"></path><circle cx="31" cy="13" r="2.3" fill="currentColor"></circle></svg><span>光影会流动，记录会留下。<small>愿每一次探索，都离心中的画面更近一点。</small></span></a><div class="footer-links"><a href="https://github.com/XueQingZhe" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:1215422936@qq.com">写封信</a><a href="/rss.xml">RSS</a></div></div> <div class="footer-bottom"><small>© 2026 吟处雪轻遮</small><span>A QUIET PLACE, ALWAYS GROWING.</span><a href="#main">回到开篇</a></div> </footer><div class="lb" id="lb" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="图片查看" data-astro-cid-gixpweiw> <div class="lb-stage" id="lb-stage" data-astro-cid-gixpweiw> <img id="lb-img" alt="" draggable="false" data-astro-cid-gixpweiw> </div> <div class="lb-top" data-astro-cid-gixpweiw> <span class="lb-idx tele" id="lb-idx" data-astro-cid-gixpweiw></span> <button class="lb-btn" id="lb-zoom-out" aria-label="缩小" data-astro-cid-gixpweiw>−</button> <span class="lb-pct tnum" id="lb-pct" data-astro-cid-gixpweiw>100%</span> <button class="lb-btn" id="lb-zoom-in" aria-label="放大" data-astro-cid-gixpweiw>+</button> <button class="lb-btn" id="lb-close" aria-label="关闭" data-astro-cid-gixpweiw>✕</button> </div> <button class="lb-nav lb-prev" id="lb-prev" aria-label="上一张" data-astro-cid-gixpweiw>‹</button> <button class="lb-nav lb-next" id="lb-next" aria-label="下一张" data-astro-cid-gixpweiw>›</button> <p class="lb-cap" id="lb-cap" data-astro-cid-gixpweiw></p> <span class="lb-hint tele" data-astro-cid-gixpweiw>滚轮缩放 · 拖动平移 · ESC 关闭</span> </div> <script>
+  (function () {
+    const root = document.getElementById("lb");
+    if (!root) return;
+    const img = document.getElementById("lb-img");
+    const stage = document.getElementById("lb-stage");
+    const cap = document.getElementById("lb-cap");
+    const idxEl = document.getElementById("lb-idx");
+    const pctEl = document.getElementById("lb-pct");
+
+    let list = [];      // 当前页所有可放大的图
+    let cur = -1;
+    let scale = 1, tx = 0, ty = 0;
+    let drag = null;
+    let opener = null, closeTimer = null;
+    let inertElements = [];
+
+    const MIN = 1, MAX = 6;
+
+    function paint() {
+      img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+      img.style.cursor = scale > 1 ? (drag ? "grabbing" : "grab") : "zoom-in";
+      pctEl.textContent = Math.round(scale * 100) + "%";
+    }
+
+    function reset() {
+      scale = 1; tx = 0; ty = 0; paint();
+    }
+
+    function collect() {
+      list = [...document.querySelectorAll("img[data-zoom]")].filter(
+        (el) => el.offsetParent !== null || el.getClientRects().length
+      );
+    }
+
+    function show(i) {
+      if (i < 0 || i >= list.length) return;
+      cur = i;
+      const src = list[i];
+      // 优先用 data-full（缩略图旁边挂原图），没有就用它自己
+      img.src = src.dataset.full || src.currentSrc || src.src;
+      img.alt = src.alt || "";
+      const fig = src.closest("figure");
+      const fc = fig && fig.querySelector("figcaption");
+      const text = (fc && fc.textContent.trim()) || src.alt || "";
+      cap.textContent = text;
+      cap.hidden = !text;
+      idxEl.textContent = list.length > 1 ? `${i + 1} / ${list.length}` : "";
+      root.querySelector(".lb-prev").hidden = list.length < 2;
+      root.querySelector(".lb-next").hidden = list.length < 2;
+      reset();
+    }
+
+    function open(el) {
+      collect();
+      const i = list.indexOf(el);
+      if (i < 0) return;
+      clearTimeout(closeTimer);
+      opener = el;
+      root.hidden = false;
+      root.setAttribute("aria-hidden", "false");
+      document.documentElement.style.overflow = "hidden";
+      show(i);
+      document.getElementById('lb-close').focus();
+      inertElements = [...document.body.children].filter(el => el !== root && !el.contains(root) && !el.inert);
+      inertElements.forEach(el => el.inert = true);
+      requestAnimationFrame(() => root.classList.add("on"));
+    }
+
+    function close() {
+      root.classList.remove("on");
+      document.documentElement.style.overflow = "";
+      inertElements.forEach(el => el.inert = false);
+      inertElements = [];
+      opener?.focus({ preventScroll: true });
+      closeTimer = setTimeout(() => {
+        root.hidden = true;
+        root.setAttribute("aria-hidden", "true");
+        img.removeAttribute("src");
+      }, 160);
+    }
+
+    const step = (d) => show((cur + d + list.length) % list.length);
+
+    /* 缩放：以光标位置为锚点，不然放大之后总是跑偏 */
+    function zoomAt(factor, cx, cy) {
+      const next = Math.max(MIN, Math.min(MAX, scale * factor));
+      if (next === scale) return;
+      const r = stage.getBoundingClientRect();
+      const ox = (cx ?? r.left + r.width / 2) - r.left - r.width / 2;
+      const oy = (cy ?? r.top + r.height / 2) - r.top - r.height / 2;
+      const k = next / scale;
+      tx = ox - (ox - tx) * k;
+      ty = oy - (oy - ty) * k;
+      scale = next;
+      if (scale === 1) { tx = 0; ty = 0; }
+      paint();
+    }
+
+    /* 触发：事件委托，页面上新加的图也自动生效 */
+    document.addEventListener("click", (e) => {
+      const t = e.target.closest("img[data-zoom]");
+      if (!t || root.contains(t)) return;
+      // 图片外面套了链接就让给链接
+      if (t.closest("a")) return;
+      e.preventDefault();
+      open(t);
+    });
+
+    root.addEventListener("click", (e) => {
+      const id = e.target.id;
+      if (id === "lb-close" || e.target === root || e.target === stage) return close();
+      if (id === "lb-prev") return step(-1);
+      if (id === "lb-next") return step(1);
+      if (id === "lb-zoom-in") return zoomAt(1.4);
+      if (id === "lb-zoom-out") return zoomAt(1 / 1.4);
+      if (e.target === img && scale === 1) return zoomAt(2, e.clientX, e.clientY);
+    });
+
+    img.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      scale > 1 ? reset() : zoomAt(2.4, e.clientX, e.clientY);
+    });
+
+    stage.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX, e.clientY);
+      },
+      { passive: false }
+    );
+
+    img.addEventListener("pointerdown", (e) => {
+      if (scale <= 1) return;
+      drag = { x: e.clientX - tx, y: e.clientY - ty };
+      img.setPointerCapture(e.pointerId);
+      paint();
+    });
+    img.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      tx = e.clientX - drag.x;
+      ty = e.clientY - drag.y;
+      paint();
+    });
+    const endDrag = () => { if (drag) { drag = null; paint(); } };
+    img.addEventListener("pointerup", endDrag);
+    img.addEventListener("pointercancel", endDrag);
+
+    addEventListener("keydown", (e) => {
+      if (root.hidden) return;
+      if (e.key === 'Tab') {
+        const buttons = [...root.querySelectorAll('button')].filter(el => !el.hidden);
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        return;
+      }
+      if (e.key === "Escape") return close();
+      if (e.key === "ArrowLeft") return step(-1);
+      if (e.key === "ArrowRight") return step(1);
+      if (e.key === "+" || e.key === "=") return zoomAt(1.4);
+      if (e.key === "-") return zoomAt(1 / 1.4);
+      if (e.key === "0") return reset();
+    });
+
+    /* 键盘可达：图片本身可聚焦，Enter 打开 */
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || !root.hidden) return;
+      const a = document.activeElement;
+      if (a && a.matches && a.matches("img[data-zoom]")) { e.preventDefault(); open(a); }
+    });
+  })();
+</script>  <script type="module" src="/bundle/Base.astro_astro_type_script_index_0_lang.BL71vAIn.js"></script> </body></html> <script type="module">const n=document.querySelector(".case-body"),u=document.querySelector("#case-reading-progress"),d=document.querySelector("[data-reading-percent]"),o=document.querySelector(".reading-outline"),a=matchMedia("(max-width: 1149px)");o&&(o.open=!a.matches,a.addEventListener("change",()=>{o.open=!a.matches}));const s=document.querySelector(".toc"),l=()=>s?.querySelectorAll("a[data-to]").forEach(e=>{e.dataset.on==="true"?e.setAttribute("aria-current","location"):e.removeAttribute("aria-current")});s&&(new MutationObserver(l).observe(s,{subtree:!0,attributes:!0,attributeFilter:["data-on"]}),l());if(n&&u){let e=function(){r=!1;const c=n.getBoundingClientRect(),m=Math.max(1,c.height-innerHeight*.75),i=Math.max(0,Math.min(1,(innerHeight*.15-c.top)/m));u.style.transform=`scaleX(${i})`,d&&(d.textContent=`${Math.round(i*100)}%`)},t=function(){r||(r=!0,requestAnimationFrame(e))},r=!1;addEventListener("scroll",t,{passive:!0}),addEventListener("resize",t,{passive:!0}),new ResizeObserver(t).observe(n),e()}</script> 

@@ -12,7 +12,7 @@ import remarkStringify from 'remark-stringify';
 import GithubSlugger from 'github-slugger';
 import { parseFragment } from 'parse5';
 import { normalizeDisplayMath } from '../markdown-utils.mjs';
-import { collectCatalog, catalogPreset } from './catalog.mjs';
+import { collectCatalog, catalogPreset, termIdentity } from './catalog.mjs';
 import { readSiteContent, siteCandidates, publicSiteEntry, boundedSite, reconciliationMatches } from './site-content.mjs';
 import { TopicStore } from './topics.mjs';
 import { ContentSettingsStore, contentKey } from './content-settings.mjs';
@@ -46,7 +46,9 @@ function metadataValue(key, value) {
   if (['tags', 'engine', 'role'].includes(key)) {
     const list = typeof value === 'string' ? value.split(/[,，]/) : value;
     if (!Array.isArray(list) || list.length > 50 || list.some(item => typeof item !== 'string' || item.length > 100)) throw Error(`${key} 必须是最多 50 项的文字列表`);
-    return [...new Set(list.map(item => item.trim()).filter(Boolean))];
+    const values = list.map(item => item.trim()).filter(Boolean), spellings = new Map();
+    for (const item of [...values].sort()) if (!spellings.has(termIdentity(item))) spellings.set(termIdentity(item), item);
+    return [...new Set(values.map(termIdentity))].map(key => spellings.get(key));
   }
   if (key === 'featured') { if (typeof value !== 'boolean') throw Error('featured 必须为 true 或 false'); return value; }
   if (key === 'order' || key === 'year') {
@@ -73,9 +75,10 @@ function metadataValue(key, value) {
   return text;
 }
 function normalizeOverride(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !metadataFields.includes(key) && key !== 'coverVideo')) throw Error('元数据包含无效字段');
+  if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !metadataFields.includes(key) && !['coverVideo', 'withdrawn'].includes(key))) throw Error('元数据包含无效字段');
+  if (Object.hasOwn(value, 'withdrawn') && typeof value.withdrawn !== 'boolean') throw Error('网站移除状态必须为 true 或 false');
   if (Object.hasOwn(value, 'coverVideo') && (typeof value.coverVideo !== 'string' || value.coverVideo.length > 2048 || value.coverVideo && (!/^\/(?!\/)/.test(value.coverVideo) || !/\.(mp4|webm|mov|m4v)$/i.test(value.coverVideo) || /[\u0000-\u001f?#\\]/.test(value.coverVideo)))) throw Error('视频封面必须使用网站内视频地址');
-  return {...Object.fromEntries(metadataFields.filter(key => Object.hasOwn(value, key)).map(key => [key, metadataValue(key, value[key])])), ...(Object.hasOwn(value,'coverVideo')?{coverVideo:value.coverVideo}:{})};
+  return {...Object.fromEntries(metadataFields.filter(key => Object.hasOwn(value, key)).map(key => [key, metadataValue(key, value[key])])), ...(Object.hasOwn(value,'coverVideo')?{coverVideo:value.coverVideo}:{}), ...(Object.hasOwn(value,'withdrawn')?{withdrawn:value.withdrawn}:{})};
 }
 function effectiveMetadata(data, entry, rel, override = entry.metadata ?? {}, errors = null) {
   const defaults = { section: 'notes', category: '', title: path.basename(rel, '.md'), date: entry.firstSeen, summary: '', tags: [], series: '', order: 100, cover: '', engine: [], role: [], year: Number(entry.firstSeen.slice(0, 4)), featured: false, work: '', notes: [], workType: '' };
@@ -228,22 +231,39 @@ export class Publisher {
     for (const item of entries) if (item.replacedBy && !entries.some(replacement => replacement.key === item.replacedBy)) { delete item.replacedBy; item.active = true; }
     for (const note of this.notes ?? []) if (selected.has(note.path) && !note.blocked) {
       const metadata = effectiveMetadata(this.sourceMetadata.get(note.path), this.db.entries[note.path], note.path, this.db.entries[note.path].metadata ?? {}, []);
+      // The topic directory links to website assets. A selected vault source can
+      // still use its original MP4/image path while its public copy has an
+      // exported poster/video pair; keep that pair until the next copy exists.
+      const { cover: sourceCover, coverVideo: sourceVideo, ...pendingMetadata } = metadata;
       const linked = this.db.entries[note.path].siteLink, current = entries.find(item => item.collection === 'published' && item.contentId === note.id);
-      if (current) { current.metadata = { ...current.metadata, ...metadata }; current.title = metadata.title; current.section = metadata.section; current.notes = metadata.notes; current.work = metadata.work; continue; }
-      if (linked) { const source = entries.find(item => item.key === linked); if (source) { source.metadata = { ...source.metadata, ...metadata }; source.title = metadata.title; source.section = metadata.section; source.notes = metadata.notes; source.work = metadata.work; } continue; }
-      entries.push({ key: 'published:' + note.slug, collection: 'published', id: note.slug, title: metadata.title, section: metadata.section, metadata, notes: metadata.notes, work: metadata.work, pending: true, url: `/notes/${note.slug}/` });
+      if (current) { current.metadata = { ...current.metadata, ...pendingMetadata }; current.title = metadata.title; current.section = metadata.section; current.notes = metadata.notes; current.work = metadata.work; continue; }
+      if (linked) { const source = entries.find(item => item.key === linked); if (source) { source.metadata = { ...source.metadata, ...pendingMetadata }; source.title = metadata.title; source.section = metadata.section; source.notes = metadata.notes; source.work = metadata.work; } continue; }
+      const externalImage = /^https:\/\//i.test(sourceCover) && !videoExts.has(path.posix.extname(new URL(sourceCover).pathname).toLowerCase());
+      entries.push({ key: 'published:' + note.slug, collection: 'published', id: note.slug, title: metadata.title, section: metadata.section, metadata: { ...pendingMetadata, cover: externalImage ? sourceCover : '' }, notes: metadata.notes, work: metadata.work, pending: true, url: `/notes/${note.slug}/` });
     }
     return entries;
   }
   metadataOverrides() { return Object.fromEntries(this.notes.map(note => [note.path, this.db.entries[note.path]?.metadata ?? {}])); }
+  async saveVisibility(input) {
+    // External editors can change source publishing flags after the inventory loads.
+    await this.scan();
+    const blockedKeys = new Set();
+    for (const note of this.notes ?? []) {
+      const raw = this.vaultMetadata?.get(note.path);
+      if (raw?.draft !== true && raw?.publish !== false) continue;
+      const linked = this.db.entries[note.path]?.siteLink;
+      for (const entry of this.siteContent ?? []) if (entry.key === linked || entry.contentId === note.id) blockedKeys.add(contentKey(entry));
+    }
+    return this.contentSettings.saveVisibility(input, this.siteContent ?? [], { blockedKeys });
+  }
   async catalog() {
-    const local = (this.notes ?? []).map(note => ({ id: note.id, metadata: effectiveMetadata(this.sourceMetadata.get(note.path), this.db.entries[note.path], note.path, this.db.entries[note.path].metadata ?? {}, []) }));
+    const local = (this.notes ?? []).filter(note => !this.siteContent?.some(entry => entry.metadata?.withdrawn === true && (entry.key === this.db.entries[note.path]?.siteLink || entry.contentId === note.id))).map(note => ({ id: note.id, metadata: effectiveMetadata(this.sourceMetadata.get(note.path), this.db.entries[note.path], note.path, this.db.entries[note.path].metadata ?? {}, []) }));
     return collectCatalog({ site: this.site, local, presets: this.db.catalogPresets ?? [], parse: frontmatter, siteEntries: this.siteContent });
   }
   async addCatalog(input) {
     const preset = catalogPreset(input), existing = this.db.catalogPresets ?? [];
     const current = await this.catalog(), bucket = { tag: 'tags', series: 'series', category: 'categories' }[preset.kind];
-    if (current[bucket].some(item => item.value === preset.value && item.section === preset.section)) return current;
+    if (current[bucket].some(item => (preset.kind === 'tag' ? termIdentity(item.value) === termIdentity(preset.value) : item.value === preset.value) && item.section === preset.section)) return current;
     if (existing.length >= 500) throw Error('自定义词库最多保存 500 个词条');
     const next = structuredClone(this.db); next.catalogPresets = [...existing, preset];
     await this.save(next); this.db = next; return this.catalog();
@@ -257,6 +277,7 @@ export class Publisher {
     const next = structuredClone(this.db);
     for (const [rel, override] of Object.entries(metadata)) {
       if (!this.notes.some(note => note.path === rel)) throw Error('只能设置扫描结果中的笔记元数据');
+      if (override && Object.hasOwn(override, 'withdrawn')) throw Error('请使用网站移除或恢复操作调整公开状态');
       if (override === null) delete next.entries[rel].metadata;
       else next.entries[rel].metadata = normalizeOverride(override);
     }
@@ -471,6 +492,17 @@ export class Publisher {
     let topicSnapshot = null, settingsSnapshot = null;
     try { topicSnapshot = await this.topics.snapshot(this.topicSources()); } catch (error) { errors.push({ path: '作品专题', message: error.message }); }
     try { settingsSnapshot = await this.contentSettings.snapshot(this.siteContent); } catch (error) { errors.push({ path: '发布设置', message: error.message }); }
+    const restoringKeys = new Set((settingsSnapshot?.changes ?? []).filter(change => change.visibilityAction === 'restore').map(change => change.key));
+    for (const note of this.notes) {
+      if (!this.siteContent.some(entry => restoringKeys.has(contentKey(entry)) && (entry.key === this.db.entries[note.path]?.siteLink || entry.contentId === note.id))) continue;
+      try {
+        const raw = await fs.readFile(await this.bounded(note.path), 'utf8'), data = frontmatter(raw).data;
+        if (data.draft === true || data.publish === false) throw Error('源笔记为草稿或禁止发布，不能恢复网站内容');
+        // Review must also protect an unselected source whose existing website
+        // article is being restored solely through its public settings.
+        sources.set(note.path, raw);
+      } catch (error) { errors.push({ path: note.path, message: error.message }); }
+    }
     const withdrawals = Object.entries(previous.notes).filter(([id]) => !output.some(n => n.id === id)).map(([id, item]) => {
       const replaces = item.replaces || this.siteContent.find(entry => entry.collection === 'published' && entry.contentId === id)?.replaces;
       const original = replaces && this.siteContent.find(entry => entry.key === replaces && !entry.draft);

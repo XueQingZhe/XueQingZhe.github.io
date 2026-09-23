@@ -1,6 +1,10 @@
 {
   "checkedLegacyUrls": 60,
   "missingLegacyUrls": [],
+  "withdrawnLegacyUrls": [],
+  "unexpectedWithdrawnLegacyUrls": [],
+  "withdrawnReferences": [],
+  "unexpectedWithdrawnUrls": [],
   "missingLocalResources": [],
   "problems": [],
   "mathErrors": []

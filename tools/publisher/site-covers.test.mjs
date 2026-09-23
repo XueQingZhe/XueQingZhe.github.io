@@ -79,6 +79,16 @@ test('signed thumbnails decode real pixels, bind one image and reject malformed 
   await write('public/icon.svg', svg); const svgOutput = await serve((await service.item('/icon.svg')).thumbnailUrl); assert.equal((await sharp(svgOutput.body).metadata()).width, 40);
 });
 
+test('one video may legitimately have different poster choices in different articles', async t => {
+  const {site,write}=await fixture(t);
+  for(const name of ['first.jpg','second.jpg','unrelated.jpg'])await write('public/'+name);
+  await write('public/demo.mp4','video');
+  const entries=['first','second'].map(id=>({key:'notes:'+id,url:'/notes/'+id+'/',metadata:{cover:'/'+id+'.jpg',coverVideo:'/demo.mp4'}}));
+  const service=new SiteCovers({site,publisher:{siteContent:entries}});
+  for(const entry of entries)await service.validateSelection(entry.metadata);
+  await assert.rejects(service.validateSelection({cover:'/unrelated.jpg',coverVideo:'/demo.mp4'}),/不匹配/);
+});
+
 test('website video previews keep signed media URLs and expose byte lengths without treating video as an image', async t => {
   const {service,write,serve}=await fixture(t);
   await write('public/movie.mp4','video-bytes');

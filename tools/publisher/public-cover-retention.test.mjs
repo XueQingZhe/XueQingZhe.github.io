@@ -76,3 +76,52 @@ test('a generated cover-only video and poster survive canonical selection withou
   assert.equal((await meta()).coverVideo, coverVideo); assert.deepEqual(await fs.readFile(publicFile(cover)), posterBytes); assert.deepEqual(await fs.readFile(publicFile(coverVideo)), videoBytes);
   assert.equal((await p.manifest()).assets.length, 2); await p.assertApplied();
 });
+
+test('selected vault videos keep the resolved website poster pair in collection and member directories', async t => {
+  const exe = process.env.PUBLISHER_TEST_FFMPEG;
+  if (!exe) { t.skip('Set PUBLISHER_TEST_FFMPEG to generate a real MP4'); return; }
+  const { p, site, vault, write, apply, meta } = await fixture(t); p.ffmpeg = async () => exe;
+  await promisify(execFile)(exe, ['-nostdin', '-y', '-f', 'lavfi', '-i', 'color=c=blue:s=160x90:r=5', '-t', '0.4', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', path.join(vault, 'clip.mp4')], { windowsHide: true });
+  await p.scan(); await p.select(['A.md'], {}, { 'A.md': { section: 'work', summary: 'Video cover only', cover: '/clip.mp4' } });
+  const articleKey = 'published:' + p.db.entries['A.md'].slug;
+  assert.equal((await p.topics.scan(p.topicSources())).articles.find(article => article.key === articleKey).cover, '', 'unbuilt vault media must not be offered as a public collection poster');
+  await apply(); const { cover, coverVideo } = await meta();
+  assert.match(cover, /^\/published-assets\/.+-poster\.jpg$/); assert.match(coverVideo, /^\/published-assets\/.+\.mp4$/);
+  await write(site, 'src/content/work/legacy-cloud.md', `---\ntitle: Legacy cloud collection\nsummary: Only the exported poster was saved\nyear: 2025\nworkType: collection\ncover: ${cover}\nnotes: ["${articleKey}"]\n---\nLegacy collection body`);
+  await p.scan(); assert.equal(p.notes.find(note => note.path === 'A.md').metadata.cover, '/clip.mp4');
+  let catalog = await p.topics.scan(p.topicSources()), member = catalog.articles.find(article => article.key === articleKey);
+  assert.equal(member.cover, cover); assert.equal(member.coverVideo, coverVideo);
+  assert.equal(catalog.topics.find(topic => topic.key === 'legacy-cloud').coverVideo, coverVideo, 'legacy collections must infer the selected member public pair, not the source-vault path');
+  await p.contentSettings.save({ key: articleKey, metadata: { cover: '/covers/pending-static.svg', coverVideo: '' } }, p.siteContent);
+  await p.scan(); catalog = await p.topics.scan(p.topicSources()); member = catalog.articles.find(article => article.key === articleKey);
+  assert.equal(member.cover, '/covers/pending-static.svg'); assert.equal(member.coverVideo, '', 'explicit pending website pairing takes priority');
+  assert.equal(catalog.topics.find(topic => topic.key === 'legacy-cloud').coverVideo, undefined);
+
+  await write(vault, 'B.md', 'A separate local source awaiting its first synchronized public copy.');
+  await write(site, 'src/content/notes/linked-video.md', `---\ntitle: Existing linked video\ndate: 2025-01-01\ncover: ${cover}\ncoverVideo: ${coverVideo}\n---\nOriginal linked website article`);
+  await p.scan(); await p.linkSite('B.md', 'notes:linked-video');
+  await p.select(['A.md', 'B.md'], {}, { 'B.md': { title: 'Next synchronized title', cover: '/clip.mp4' } });
+  catalog = await p.topics.scan(p.topicSources()); member = catalog.articles.find(article => article.key === 'notes:linked-video');
+  assert.equal(member.cover, cover); assert.equal(member.coverVideo, coverVideo);
+  assert.equal(member.title, 'Next synchronized title', 'other pending source attributes still belong in the directory');
+});
+
+test('unbuilt directory members expose neither vault video fields nor HTTPS movies as static covers', async t => {
+  const { p, vault, write } = await fixture(t);
+  await write(vault, 'A.md', '---\ncoverVideo: /private-source.mp4\n---\nA source whose video has not been exported yet.');
+  await p.scan();
+  for (const [cover, expected] of [
+    ['/original.png', ''],
+    ['https://media.example.invalid/movie.MP4?download=1#t=2', ''],
+    ['https://media.example.invalid/movie.webm', ''],
+    ['https://media.example.invalid/cover.jpg?width=800', 'https://media.example.invalid/cover.jpg?width=800'],
+    ['https://media.example.invalid/image?id=poster', 'https://media.example.invalid/image?id=poster'],
+  ]) {
+    await p.select(['A.md'], {}, { 'A.md': { cover } });
+    const source = p.topicSources().find(entry => entry.pending);
+    assert.equal(source.metadata.cover, expected);
+    assert.equal(Object.hasOwn(source.metadata, 'coverVideo'), false);
+    const member = (await p.topics.scan(p.topicSources())).articles[0];
+    assert.equal(member.cover, expected); assert.equal(Object.hasOwn(member, 'coverVideo'), false);
+  }
+});

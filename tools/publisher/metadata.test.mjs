@@ -207,3 +207,24 @@ test('source year provenance distinguishes inherited publication years from expl
   assert.equal(scan.notes.find(n => n.path === 'A.md').sourceMetadata.year, 2024);
   assert.equal(scan.notes.find(n => n.path === 'B.md').metadata.year, 2023);
 });
+
+test('tag engine and role metadata trim and deduplicate case variants without altering source files', async t => {
+  const { p, write, vault } = await fixture(t);
+  const raw = '---\ntags: [shader, " Shader ", SHADER]\nengine: [ue5, UE5]\nrole: [tooling, " Tooling "]\n---\nOriginal body';
+  await write('A.md', raw);
+  let scan = await p.scan();
+  assert.deepEqual(scan.notes[0].metadata.tags, ['SHADER']);
+  assert.deepEqual(scan.notes[0].metadata.engine, ['UE5']);
+  assert.deepEqual(scan.notes[0].metadata.role, ['Tooling']);
+  await p.select(['A.md'], {}, { 'A.md': { section: 'work', summary: 'Work summary', cover: 'https://example.invalid/cover.png', year: 2025, tags: [' shader ', 'Shader', 'Custom Tag', 'custom tag'], engine: ' ue5, UE5 ', role: [' tooling ', 'Tooling'], series: 'Case Series', category: 'Case Category' } });
+  assert.deepEqual(p.metadataOverrides()['A.md'].tags, ['Shader', 'Custom Tag']);
+  assert.deepEqual(p.metadataOverrides()['A.md'].engine, ['UE5']);
+  assert.deepEqual(p.metadataOverrides()['A.md'].role, ['Tooling']);
+  const plan = await p.analyze(); assert.deepEqual(plan.errors, []);
+  const metadata = frontmatter(plan.output[0].markdown).data;
+  assert.deepEqual(metadata.tech, ['Shader', 'Custom Tag']);
+  assert.deepEqual(metadata.engine, ['UE5']);
+  assert.deepEqual(metadata.role, ['Tooling']);
+  assert.equal(metadata.series, 'Case Series'); assert.equal(metadata.category, 'Case Category');
+  assert.equal(await fs.readFile(path.join(vault, 'A.md'), 'utf8'), raw);
+});

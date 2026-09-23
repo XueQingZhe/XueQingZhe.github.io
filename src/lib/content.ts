@@ -1,12 +1,14 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import topicSettings from '../data/publisher-topics.json';
 import contentSettings from '../data/publisher-content.json';
+import { normalizeFacetValues } from '../data/taxonomy';
+import { studyDirectionLabel } from './study';
 
 export type ContentSection = 'notes' | 'tutorials' | 'work';
 type SourceEntry = CollectionEntry<'notes'> | CollectionEntry<'published'> | CollectionEntry<'legacy'> | CollectionEntry<'work'>;
 type SectionEntry = { collection: string; data: { section?: ContentSection; kind?: string; series?:string; draft?: boolean } };
 type IdentityEntry = { collection: string; id: string; data: { legacyUrl?: string; replaces?: string; title?: string } };
-type ContentData = CollectionEntry<'published'>['data'] & { date:Date; summary:string; cover:string; year:number };
+type ContentData = CollectionEntry<'published'>['data'] & { date:Date; summary:string; cover:string; year:number; withdrawn?:boolean };
 type ContentOverride = Partial<ContentData> & {tags?:string[]};
 export type ArticleEntry = Omit<SourceEntry,'collection'|'data'> & {collection:SourceEntry['collection']|'collections';data:ContentData;topicNotesExplicit:boolean};
 export type TopicEntry = ArticleEntry;
@@ -89,7 +91,20 @@ async function visibleContent() {
     const inferred=!entry.topicNotesExplicit&&visible.some(child=>child.data.work&&matchesReference(entry,child.data.work));
     entry.data.workType=entry.topicNotesExplicit||explicit.length||inferred?'collection':'single';
   }
-  return visible;
+  // Keep replacement identities resolved before hiding content: withdrawing a
+  // synced article must not make its older source version public again.
+  const publicEntries=visible.filter(entry=>!entry.data.withdrawn);
+  // Older collections copied only a member's poster. Recover that exact pair;
+  // an explicit empty video keeps an intentionally static cover static.
+  for(const entry of publicEntries)if(entry.data.workType==='collection'&&entry.data.coverVideo===undefined&&entry.data.cover!=='/covers/placeholder.svg'){
+    const videos=new Set(topicArticles(entry,publicEntries).filter(member=>member.data.cover===entry.data.cover&&member.data.coverVideo).map(member=>member.data.coverVideo!));
+    if(videos.size===1)entry.data.coverVideo=[...videos][0];
+  }
+  for(const facet of ['tech','engine','role'] as const){
+    const vocabulary=publicEntries.flatMap(entry=>entry.data[facet]);
+    for(const entry of publicEntries)entry.data[facet]=normalizeFacetValues(facet,entry.data[facet],vocabulary);
+  }
+  return publicEntries;
 }
 
 /** The journal is the complete public index, with one item per canonical address. */
@@ -103,11 +118,11 @@ export async function portfolioWork() {
   const grouped=new Set(works.filter(entry=>entry.data.workType==='collection').flatMap(topic=>topicArticles(topic,articles).map(articleKey)));
   return works.filter(entry=>entry.data.workType==='collection'||!grouped.has(articleKey(entry)));
 }
-export async function tutorials() { return (await allArticles()).filter(entry=>sectionOf(entry)==='tutorials').sort((a,b)=>articleOrder(a)-articleOrder(b)||a.data.date.valueOf()-b.data.date.valueOf()); }
+export async function tutorials() { return (await allArticles()).filter(entry=>sectionOf(entry)!=='work').sort((a,b)=>articleOrder(a)-articleOrder(b)||a.data.date.valueOf()-b.data.date.valueOf()); }
 export function articleOrder(entry:ArticleEntry) { return entry.data.order??100; }
 export function articleSeries(entry:ArticleEntry) { return entry.data.series?.trim()||''; }
 export function articleKind(entry:ArticleEntry) { return sectionOf(entry)==='work'?(entry.data.workType==='collection'?'collection':'work'):sectionOf(entry)==='tutorials'?'tutorial':'article'; }
-export function articleKindLabel(entry:ArticleEntry) { return {article:'普通文章',work:'独立作品',collection:'作品合集',tutorial:'研习系列文章'}[articleKind(entry)]; }
+export function articleKindLabel(entry:ArticleEntry) { return studyDirectionLabel(entry) ?? (entry.data.workType==='collection'?'作品合集':'独立作品'); }
 export function categoryCounts(entries:{data:{category?:string}}[]) {
   const counts=new Map<string,number>();for(const entry of entries){const category=entry.data.category?.trim();if(category)counts.set(category,(counts.get(category)??0)+1);}
   return [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0],'zh-CN'));

@@ -147,3 +147,52 @@ test('series-bearing legacy content inherits tutorial type unless a primary sect
   for (const value of ['草稿分类', '作品分类', '新笔记分类']) assert.equal(item(catalog, 'categories', value, 'tutorials'), undefined);
   assert.equal(item(catalog, 'tags', '草稿标签'), undefined);
 });
+
+test('facet catalog merges case variants, prefers vocabulary spellings, and counts each document once', async t => {
+  const { p, write, site, vault } = await fixture(t), originals = new Map();
+  for (const [root, name, body] of [
+    [site, 'src/data/taxonomy.ts', 'export const TAXONOMY = {\n  tech: [{ key: "Shader", label: "着色器" }],\n  engine: [{ key: "UE5", label: "Unreal 5" }],\n  role: [{ key: "Tooling", label: "工具" }],\n};'],
+    [site, 'src/content/notes/a.md', '---\ntags: [shader, " SHADER ", "custom tag"]\ntech: [Shader]\nengine: [ue5, " UE5 "]\nrole: [tooling, TOOLING]\nseries: Series\ncategory: Category\n---\nFirst document'],
+    [site, 'src/content/notes/b.md', '---\ntags: [Shader, "Custom Tag"]\nengine: [UE5]\nrole: [Tooling]\nseries: series\ncategory: category\n---\nSecond document'],
+    [vault, 'local.md', '---\ntags: [" Shader ", shader, "CUSTOM TAG"]\nengine: [ue5, UE5]\nrole: [tooling, Tooling]\n---\nPrivate source'],
+  ]) originals.set(await write(root, name, body), body);
+  const catalog = (await p.scan()).catalog;
+  assert.deepEqual(catalog.tags.filter(term => term.value.toLowerCase() === 'shader'), [{ value: 'Shader', label: '着色器', count: 3 }]);
+  assert.deepEqual(catalog.tags.filter(term => term.value.toLowerCase() === 'custom tag'), [{ value: 'CUSTOM TAG', label: 'CUSTOM TAG', count: 3 }]);
+  assert.deepEqual(catalog.engine, [{ value: 'UE5', label: 'Unreal 5', count: 3 }]);
+  assert.deepEqual(catalog.role, [{ value: 'Tooling', label: '工具', count: 3 }]);
+  assert.equal(item(catalog, 'series', 'Series', 'tutorials').count, 1);
+  assert.equal(item(catalog, 'series', 'series', 'tutorials').count, 1);
+  assert.equal(item(catalog, 'categories', 'Category', 'tutorials').count, 1);
+  assert.equal(item(catalog, 'categories', 'category', 'tutorials').count, 1);
+  for (const [file, raw] of originals) assert.equal(await fs.readFile(file, 'utf8'), raw);
+});
+
+test('case-only tag additions reuse existing terms without changing private settings', async t => {
+  const { p, write, site, state } = await fixture(t);
+  await write(site, 'src/content/notes/a.md', '---\ntags: [Shader]\n---\nExisting site document');
+  await p.scan();
+  const before = await fs.readFile(path.join(state, 'selection.json'), 'utf8');
+  const catalog = await p.addCatalog({ kind: 'tag', value: ' SHADER ' });
+  assert.equal(item(catalog, 'tags', 'Shader').count, 1);
+  assert.equal(await fs.readFile(path.join(state, 'selection.json'), 'utf8'), before);
+  await p.addCatalog({ kind: 'tag', value: 'My Tag' });
+  const preset = await fs.readFile(path.join(state, 'selection.json'), 'utf8');
+  await p.addCatalog({ kind: 'tag', value: ' my tag ' });
+  assert.equal(await fs.readFile(path.join(state, 'selection.json'), 'utf8'), preset);
+  await p.addCatalog({ kind: 'series', value: 'Series', section: 'tutorials' });
+  await p.addCatalog({ kind: 'series', value: 'series', section: 'tutorials' });
+  assert.equal((await p.catalog()).series.filter(term => term.value.toLowerCase() === 'series').length, 2);
+});
+
+test('saved tag replacement overrides old tech fields and withdrawn entries stop contributing to the catalog', async t => {
+  const { p, write, site } = await fixture(t);
+  await write(site, 'src/content/notes/a.md', '---\ntitle: Article\ntech: [OldTag]\n---\nArticle body');
+  await p.scan(); await p.contentSettings.save({ key: 'notes:a', metadata: { tags: ['NewTag'] } }, p.siteContent);
+  let catalog = (await p.scan()).catalog;
+  assert.equal(item(catalog, 'tags', 'OldTag'), undefined); assert.equal(item(catalog, 'tags', 'NewTag').count, 1);
+  await p.saveVisibility({ key: 'notes:a', withdrawn: true }); catalog = (await p.scan()).catalog;
+  assert.equal(item(catalog, 'tags', 'NewTag'), undefined);
+  await p.saveVisibility({ key: 'notes:a', withdrawn: false }); catalog = (await p.scan()).catalog;
+  assert.equal(item(catalog, 'tags', 'OldTag'), undefined); assert.equal(item(catalog, 'tags', 'NewTag').count, 1);
+});

@@ -60,10 +60,21 @@ test('video work covers load on desktop intent, stop with visibility and motion,
     ['video-second',{title:'Second Video Work',coverVideo:clip+'?second',order:2}],
     ['video-failure',{title:'Unavailable Video Work',coverVideo:'/published-assets/unavailable-video.webm',order:3}],
     ['image-fixture',{title:'Synthetic Image Work',category:'静态测试',order:4}],
+    ['video-member',{title:'Collection Video Member',coverVideo:clip,order:5}],
+    ['video-member-conflict',{title:'Conflicting Video Member',coverVideo:clip+'?different',order:6}],
   ]){
-    const metadata={section:'work',kind:'work',category:'动态测试',title:id,date:'2026-09-22',summary:'A synthetic work fixture',cover,year:2099,tech:['Video Test'],...extra};
+    const metadata={section:'work',kind:'work',category:'动态测试',title:id,date:'2026-09-22',summary:'A synthetic work fixture',cover,year:2099,tech:['Video Test','shader','SHADER','Custom Tag','custom tag'],engine:['unity','UNITY'],role:['shader','SHADER'],...extra};
     await fs.writeFile(path.join(site,'content/published/notes',id+'.md'),'---\n'+YAML.stringify(metadata)+'---\n\n## Implementation\n\nSynthetic work body.');
   }
+  const collections={};
+  for(const [id,extra] of [
+    ['legacy-video-collection',{}],
+    ['explicit-video-collection',{coverVideo:clip}],
+    ['static-collection',{coverVideo:''}],
+    ['unrelated-collection',{cover:'/covers/placeholder.svg'}],
+    ['ambiguous-collection',{notes:['published:video-member','published:video-member-conflict']}],
+  ])collections[id]={title:id,summary:'Video collection regression',section:'work',workType:'collection',year:2099,cover,notes:['published:video-member'],...extra};
+  await fs.writeFile(path.join(site,'src/data/publisher-content.json'),JSON.stringify({version:1,entries:{},collections}));
   try{await run(process.execPath,[path.join(project,'node_modules/astro/astro.js'),'build','--force'],{cwd:site,env:{...process.env,ASTRO_TELEMETRY_DISABLED:'1'},windowsHide:true,timeout:180000,maxBuffer:8*1024*1024});}
   catch(e){throw new Error('Isolated video-site build failed:\n'+(e.stdout??'')+'\n'+(e.stderr??''),{cause:e});}
   const dist=path.join(site,'dist');
@@ -90,8 +101,19 @@ test('video work covers load on desktop intent, stop with visibility and motion,
   const preview=tile.locator('video[data-work-preview]');
   const playing=async()=>{await page.waitForFunction(()=>{const tile=document.querySelector('[data-work-key="published:video-fixture"][data-artwork]'),video=tile?.querySelector('video');return tile?.hasAttribute('data-video-playing')&&!video.paused&&video.currentTime>.05;});};
   const stopped=async()=>{await page.waitForFunction(()=>{const tile=document.querySelector('[data-work-key="published:video-fixture"][data-artwork]'),video=tile?.querySelector('video');return !tile?.hasAttribute('data-video-playing')&&video.paused&&!video.hasAttribute('src');});};
-  assert.equal(await page.locator('video[data-work-preview]').count(),3);
+  assert.equal(await page.locator('video[data-work-preview]').count(),5);
   assert.equal(await page.locator('video[data-work-preview][src]').count(),0);
+  assert.equal(await page.locator('[data-artwork][data-work-key="published:video-member"]').count(),0,'A collection member is accessed through its collection');
+  for(const id of ['static-collection','unrelated-collection','ambiguous-collection'])assert.equal(await page.locator(`[data-work-key="collections:${id}"] video`).count(),0,`${id} must remain static`);
+  // Case-only variants must produce one facet and one count per card.
+  const shaders=page.locator('button[data-facet="tech"][data-term="Shader"]');
+  assert.equal(await shaders.count(),1);
+  assert.equal(await page.locator('button[data-facet="tech"][data-term="shader"]').count(),0);
+  assert.equal(await page.locator('button[data-facet="tech"][data-term="Custom Tag"]').count(),1);
+  assert.equal(await page.locator('button[data-facet="tech"][data-term="custom tag"]').count(),0);
+  const shaderCount=await page.locator('.work-cell').evaluateAll(cells=>cells.filter(cell=>JSON.parse(cell.dataset.tech).includes('Shader')).length);
+  assert.equal(Number(await shaders.locator('b').innerText()),shaderCount);
+  for(const facet of ['tech','engine','role'])assert.equal(await tile.evaluate((el,facet)=>{const values=JSON.parse(el.closest('.work-cell').dataset[facet]);return values.length===new Set(values.map(value=>value.toLowerCase())).size;},facet),true);
   await tile.scrollIntoViewIfNeeded();assert.deepEqual(requests,[],'Scrolling a cover into view must not fetch its video');
   assert.equal(await tile.locator('img[data-work-cover]').getAttribute('src'),cover);
   await tile.hover();await playing();
@@ -122,6 +144,22 @@ test('video work covers load on desktop intent, stop with visibility and motion,
   assert.equal(await failure.locator('img[data-work-cover]').isVisible(),true);
   assert.ok(requests.some(u=>u.includes('unavailable-video')),'Fallback test must attempt the unavailable preview');
   await page.mouse.move(0,0);
+  for(const id of ['legacy-video-collection','explicit-video-collection']){
+    const key='collections:'+id,collectionTile=page.locator(`[data-artwork][data-work-key="${key}"]`);
+    await collectionTile.hover();
+    await page.waitForFunction(key=>{const tile=document.querySelector(`[data-artwork][data-work-key="${key}"]`),video=tile?.querySelector('video');return tile?.hasAttribute('data-video-playing')&&video&&!video.paused&&video.currentTime>.05;},key);
+    await page.mouse.move(0,0);
+    await page.waitForFunction(key=>{const tile=document.querySelector(`[data-artwork][data-work-key="${key}"]`),video=tile?.querySelector('video');return !tile?.hasAttribute('data-video-playing')&&video?.paused&&!video.hasAttribute('src');},key);
+  }
+  await page.goto(base+'/work/legacy-video-collection/');
+  const collectionPlayer=page.locator('video[data-collection-cover]');
+  assert.equal(await collectionPlayer.getAttribute('poster'),cover);
+  assert.equal(await collectionPlayer.getAttribute('src'),clip);
+  assert.equal(await collectionPlayer.evaluate(v=>v.controls&&v.playsInline&&v.preload==='none'&&!v.autoplay&&v.paused),true);
+  await collectionPlayer.evaluate(v=>v.play());await page.waitForFunction(()=>document.querySelector('video[data-collection-cover]').currentTime>.05);
+  await page.goto(base+'/work/?tech=shader');
+  assert.equal(await shaders.getAttribute('aria-pressed'),'true','Old lowercase filter links select the canonical tag');
+  assert.equal(await page.locator('.work-cell:not([hidden])').count(),shaderCount);
   await page.goto(base+'/work/?category='+encodeURIComponent('动态测试'));
   await tile.hover();await playing();await tile.click();
   await page.waitForURL(base+'/notes/video-fixture/');
@@ -158,5 +196,5 @@ test('video work covers load on desktop intent, stop with visibility and motion,
   await mobilePage.waitForFunction(()=>getComputedStyle(document.querySelector('[data-work-video]')).maxWidth==='100%');
   const mobileLayout=await mobilePage.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
   assert.ok(mobileLayout.scroll<=mobileLayout.width,JSON.stringify(mobileLayout));
-  t.diagnostic('Verified real generated WebM playback, no eager downloads, hover/keyboard lifecycle, motion/visibility/filter stops, static fallback, canonical detail controls, image lightbox, filtered return and mobile static covers.');
+  t.diagnostic('Verified real WebM standalone/collection hover playback, exact-poster legacy recovery, explicit static and ambiguous-poster fallbacks, case-insensitive tag facets/counts/old links, no eager downloads, keyboard/motion/visibility/filter lifecycle, detail controls, image lightbox, filtered return and mobile covers.');
 });

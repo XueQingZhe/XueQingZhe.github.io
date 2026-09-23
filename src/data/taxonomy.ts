@@ -50,5 +50,16 @@ export const FACET_LABEL: Record<Facet, string> = {
 
 /** frontmatter 里写的 key → 显示用的 label；词表里没有就原样显示。 */
 export function labelOf(facet: Facet, key: string): string {
-  return TAXONOMY[facet].find((t) => t.key === key)?.label ?? key;
+  return TAXONOMY[facet].find((t) => termIdentity(t.key) === termIdentity(key))?.label ?? key;
+}
+
+export function termIdentity(value:string) { return value.trim().toLowerCase(); }
+
+/** One spelling and one count per document, including terms outside the vocabulary. */
+export function normalizeFacetValues(facet:Facet, values:string[], vocabulary:string[]=[]):string[] {
+  const spellings=new Map(TAXONOMY[facet].map(term=>[termIdentity(term.key),term.key]));
+  for(const value of [...vocabulary,...values].map(value=>value.trim()).filter(Boolean).sort()){
+    const key=termIdentity(value);if(!spellings.has(key))spellings.set(key,value);
+  }
+  return [...new Set(values.map(termIdentity).filter(Boolean))].map(key=>spellings.get(key)!);
 }

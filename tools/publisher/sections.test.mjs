@@ -41,6 +41,9 @@ test('published sections build into real lists, stable detail pages, exact tags 
   });
   await fs.mkdir(site); await fs.mkdir(vault); await fs.mkdir(path.join(site, 'public'));
   await fs.cp(path.join(project, 'src'), path.join(site, 'src'), { recursive: true });
+  // Local publisher choices can reference untracked user media; this fixture owns its settings.
+  await fs.writeFile(path.join(site,'src/data/publisher-content.json'),JSON.stringify({version:1,entries:{},collections:{}}));
+  await fs.writeFile(path.join(site,'src/data/publisher-topics.json'),JSON.stringify({version:1,topics:{}}));
   for (const name of ['astro.config.mjs', 'package.json']) await fs.copyFile(path.join(project, name), path.join(site, name));
   // Never copy or enumerate the real content/ or public/published-assets/. Only established static asset folders are shared.
   for (const name of ['node_modules', 'public/art', 'public/assets', 'public/covers', 'public/fonts']) {
@@ -151,7 +154,9 @@ test('published sections build into real lists, stable detail pages, exact tags 
   for(const href of [...studyLinks,...workLinks])assert.ok(noteLinks.includes(href),'Complete index is missing '+href);
   for (const name of ['Lessons/Custom/First.md', 'Lessons/Custom/Second.md', 'Lessons/Standalone.md', 'Moving.md']) assert.ok(studyLinks.includes(url(name)), name + ' missing from study');
   assert.ok(!studyLinks.includes(url('Portfolio/Project.md')));
-  assert.ok(!studyLinks.includes(url('Journal/Deep/Journal.md')),'A journal series must not move its category into study');
+  assert.ok(studyLinks.includes(url('Journal/Deep/Journal.md')),'Unclassified writing belongs to the default study direction');
+  assert.ok(elements(study,a=>a['data-study-direction']==='solo').some(node=>text(node).includes('Configured Journal')));
+  assert.ok(!journal.includes('普通文章'),'The index uses the same study directions as the study page');
   assert.ok(studyLinks.includes('/blog/2022/historical-series/'),'Legacy series without an explicit section remain grouped in study');
   assert.ok(workLinks.includes(url('Portfolio/Project.md'))); assert.ok(!workLinks.includes(url('Journal/Deep/Journal.md')));
   assert.ok(studyLinks.indexOf(url('Lessons/Custom/First.md')) < studyLinks.indexOf(url('Lessons/Custom/Second.md')));
@@ -271,7 +276,7 @@ test('published sections build into real lists, stable detail pages, exact tags 
   assert.deepEqual((await visibleNotes()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md'),url('Portfolio/Project.md')].sort());
   await page.goto(base+'/tutorials/?'+new URLSearchParams({category:'图形学基础',tag:'算法笔记'}));
   await page.waitForFunction(()=>document.querySelector('button[data-category="图形学基础"]')?.getAttribute('aria-pressed')==='true');
-  assert.deepEqual(await visibleStudy(),[url('Lessons/Custom/First.md')]);
+  assert.deepEqual((await visibleStudy()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md')].sort());
   await page.locator('button[data-category="渲染 实验"]').click();
   assert.deepEqual(await visibleStudy(),[url('Lessons/Custom/Second.md')]);
   assert.equal(new URL(page.url()).searchParams.get('category'),'渲染 实验');
@@ -283,15 +288,16 @@ test('published sections build into real lists, stable detail pages, exact tags 
   await page.locator('[data-study-reset]').click();
   assert.equal(new URL(page.url()).searchParams.has('category'),false); assert.equal(new URL(page.url()).searchParams.has('tag'),false);
   assert.ok((await visibleStudy()).includes(url('Lessons/Standalone.md')),'Uncategorized entries remain visible');
-  await page.goto(base + '/notes/?tag=Technical%20Art');
+  await page.goto(base + '/notes/?tag=technical%20art');
   await page.waitForFunction(() => document.querySelector('button[data-tag="Technical Art"]')?.getAttribute('aria-pressed') === 'true');
   assert.deepEqual((await visibleNotes()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md'),url('Portfolio/Project.md')].sort());
-  await page.locator('button[data-kind="tutorial"]').click();assert.deepEqual(await visibleNotes(),[url('Lessons/Custom/First.md')]);
-  assert.equal(new URL(page.url()).searchParams.get('kind'),'tutorial');
-  await page.reload();await page.waitForFunction(()=>document.querySelector('button[data-kind="tutorial"]')?.getAttribute('aria-pressed')==='true');assert.deepEqual(await visibleNotes(),[url('Lessons/Custom/First.md')]);
-  await page.goto(base + '/tutorials/?tag=Technical%20Art');
+  await page.locator('button[data-kind="solo"]').click();assert.deepEqual((await visibleNotes()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md')].sort());
+  assert.equal(new URL(page.url()).searchParams.get('kind'),'solo');
+  await page.reload();await page.waitForFunction(()=>document.querySelector('button[data-kind="solo"]')?.getAttribute('aria-pressed')==='true');assert.deepEqual((await visibleNotes()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md')].sort());
+  await page.goto(base + '/notes/?kind=tutorial&tag=technical%20art');await page.waitForFunction(()=>document.querySelector('#note-results')?.textContent?.includes('全部研习'));assert.deepEqual((await visibleNotes()).sort(),[url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md')].sort());assert.ok(await page.locator('#note-reset').isVisible(),'Old all-study bookmarks remain clearable without adding another filter');
+  await page.goto(base + '/tutorials/?tag=technical%20art');
   await page.waitForFunction(() => document.querySelector('[data-study-tag="Technical Art"]')?.getAttribute('aria-pressed') === 'true');
-  assert.deepEqual(await page.locator('[data-study-entry]:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href'))), [url('Lessons/Custom/First.md')]);
+  assert.deepEqual((await page.locator('[data-study-entry]:not([hidden]) a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')))).sort(), [url('Journal/Deep/Journal.md'),url('Lessons/Custom/First.md')].sort());
   await page.goto(base + '/work/?engine=Unreal%20Engine&tech='+encodeURIComponent('算法笔记')+'&role=Technical%20Artist&category='+encodeURIComponent('图形学基础'));
   await page.waitForFunction(() => document.querySelector('button[data-term="Technical Artist"]')?.getAttribute('aria-pressed') === 'true');
   assert.deepEqual(await page.locator('.work-cell:not([hidden]) [data-artwork]').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href'))), [url('Portfolio/Project.md')]);

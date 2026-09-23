@@ -85,3 +85,27 @@ test('reordering alone does not freeze future work title and summary changes',as
   entries[0].title='UE新标题';entries[0].metadata.summary='新的摘要';
   const topic=(await store.scan(entries)).topics[0];assert.equal(topic.title,'UE新标题');assert.equal(topic.summary,'新的摘要');
 });
+
+test('collection catalog infers only one exact member poster/video match and respects explicit still covers',async t=>{
+  const {store,entries}=await fixture(t),collection=entries[0],sort=entries[1],stencil=entries[2],outside=entries[4];
+  collection.metadata.cover='/assets/poster.jpg';
+  sort.metadata.cover='/assets/poster.jpg';sort.metadata.coverVideo='/assets/sort.mp4';
+  outside.metadata.cover='/assets/poster.jpg';outside.metadata.coverVideo='/assets/unrelated.mp4';
+  let scan=await store.scan(entries);
+  assert.equal(scan.topics[0].coverVideo,'/assets/sort.mp4','unrelated nonmembers must not affect inference');
+  assert.equal(scan.articles.find(article=>article.key===sort.key).coverVideo,'/assets/sort.mp4');
+  collection.metadata.coverVideo='';
+  assert.equal((await store.scan(entries)).topics[0].coverVideo,'','explicit still-image choice must survive matching members');
+  collection.metadata.coverVideo='/assets/own.mp4';
+  assert.equal((await store.scan(entries)).topics[0].coverVideo,'/assets/own.mp4','explicit independent collection video wins');
+  delete collection.metadata.coverVideo;
+  collection.metadata.cover='/assets/independent.jpg';
+  assert.equal((await store.scan(entries)).topics[0].coverVideo,undefined,'independent images must not inherit member videos');
+  collection.metadata.cover='/assets/poster.jpg';
+  stencil.metadata.cover='/assets/poster.jpg';stencil.metadata.coverVideo='/assets/stencil.mp4';
+  assert.equal((await store.scan(entries)).topics[0].coverVideo,undefined,'multiple distinct matching videos are ambiguous');
+  stencil.metadata.coverVideo='/assets/sort.mp4';
+  assert.equal((await store.scan(entries)).topics[0].coverVideo,'/assets/sort.mp4','duplicate references to one video are unambiguous');
+  await store.save({key:'ue',title:'UE专题',summary:'三篇引擎笔记',notes:['notes:overlay']},entries);
+  assert.equal((await store.scan(entries)).topics[0].coverVideo,undefined,'removed members must stop participating in inference');
+});

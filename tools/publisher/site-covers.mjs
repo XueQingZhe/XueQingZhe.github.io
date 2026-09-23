@@ -76,9 +76,13 @@ export class SiteCovers {
   }
   async validateSelection(metadata){
     if(!metadata?.coverVideo)return;
-    const all=await this.scan(),posters=new Map();
-    for(const entry of this.publisher?.siteContent??[]){if(entry.draft||entry.replacedBy)continue;const refs=await this.references(entry,all);for(const [video,poster] of refs.posters)posters.set(video,poster)}
-    if(posters.get(metadata.coverVideo)!==metadata.cover)throw fail('视频与静态封面不匹配，请从文章素材中重新选择');
+    const all=await this.scan();
+    for(const entry of this.publisher?.siteContent??[]){
+      if(entry.draft||entry.replacedBy)continue;
+      const refs=await this.references(entry,all);
+      if(refs.posters.get(metadata.coverVideo)===metadata.cover)return;
+    }
+    throw fail('视频与静态封面不匹配，请从文章素材中重新选择');
   }
   async serve(req,res,url){
     const value=url.searchParams.get('file'),kind=url.searchParams.get('kind')||'thumbnail',ticket=url.searchParams.get('ticket')||'',expected=this.signature(value||'',kind);

@@ -52,8 +52,8 @@ async function setup(t, { viewport, linked = false } = {}) {
   };
   const topics = () => ({ topics: mock.topics.map(topic => {
     const entry = siteEntries().find(entry => entry.url === topic.url);
-    return { ...topic, title: entry?.metadata.title || topic.title, summary: entry?.metadata.summary || topic.summary, cover: entry?.metadata.cover || topic.cover };
-  }), articles: siteEntries().filter(entry => entry.metadata.workType !== 'collection').map(entry => ({ key: entry.key, title: entry.title, url: entry.url, section: entry.section, cover: entry.metadata.cover })), pending: mock.topics.some(topic => topic.pending) });
+    return { ...topic, title: entry?.metadata.title || topic.title, summary: entry?.metadata.summary || topic.summary, cover: entry?.metadata.cover || topic.cover, coverVideo: entry?.metadata.coverVideo ?? topic.coverVideo ?? '' };
+  }), articles: siteEntries().filter(entry => entry.metadata.workType !== 'collection').map(entry => ({ key: entry.key, title: entry.title, url: entry.url, section: entry.section, cover: entry.metadata.cover, coverVideo: entry.metadata.coverVideo ?? '' })), pending: mock.topics.some(topic => topic.pending) });
   const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     const send = (value, status = 200) => { res.writeHead(status); res.end(JSON.stringify(value)); };
@@ -68,9 +68,25 @@ async function setup(t, { viewport, linked = false } = {}) {
     if (url.pathname === '/api/scan') return send(scan());
     if (url.pathname === '/api/topics' && req.method === 'GET') return send(topics());
     if (url.pathname === '/api/publication-status') {
+      if(mock.publicationWait)await mock.publicationWait;
       if (mock.remoteFailure) return send({ error: 'Synthetic GitHub unavailable' }, 503);
       return send({ entries: mock.publication, remoteCommit: 'a'.repeat(40), checkedAt: '2026-09-22T01:00:00Z', stale: false });
     }
+    if(url.pathname==='/api/content-visibility'){
+      if(mock.visibilityFailure)return send({error:'Synthetic visibility save failure'},500);
+      const keys=data.keys??[data.key];for(const key of keys){if(!mock.site.some(entry=>entry.key===key))return send({error:'Unknown content'},400)}
+      for(const key of keys){
+        const entry=siteEntries().find(entry=>entry.key===key),pending={...mock.pending[key]};
+        if((entry.currentMetadata?.withdrawn===true)===data.withdrawn)delete pending.withdrawn;else pending.withdrawn=data.withdrawn;
+        if(Object.keys(pending).length)mock.pending[key]=pending;else delete mock.pending[key];
+      }return send(scan());
+    }
+    if(url.pathname==='/api/analyze'){
+      const changes={added:[],updated:[],removed:[],restored:[],topics:[],contentSettings:siteEntries().filter(entry=>mock.pending[entry.key]).map(entry=>({key:entry.key,title:entry.title,metadata:entry.metadata,visibilityAction:entry.metadata.withdrawn===true&&entry.currentMetadata?.withdrawn!==true?'withdraw':entry.metadata.withdrawn!==true&&entry.currentMetadata?.withdrawn===true?'restore':undefined}))};
+      mock.plan={id:'plan',notes:[],assets:mock.reviewAssets||[],errors:[],warnings:[],changes};return send(mock.plan);
+    }
+    if(url.pathname==='/api/prepare')return send({id:'stage',notes:[],assets:[],changes:mock.plan.changes});
+    if(url.pathname==='/api/apply'){for(const [key,value]of Object.entries(mock.pending))mock.appliedSettings[key]={...mock.appliedSettings[key],...value};mock.pending={};return send({message:'网站副本与搜索索引已更新。'});}
     if (url.pathname === '/api/content-settings') {
       if (mock.saveFailure) return send({ error: 'Synthetic settings save failure' }, 500);
       mock.pending[data.key] = { ...mock.pending[data.key], ...structuredClone(data.metadata) };
@@ -98,6 +114,11 @@ async function setup(t, { viewport, linked = false } = {}) {
       return send({ ok: true });
     }
     if (url.pathname === '/api/select') return send({ ok: true });
+    if(url.pathname==='/api/site-covers'&&mock.collectionVideos&&url.searchParams.get('scope')!=='note'){
+      const image={value:'/article/poster.jpg',path:'/article/poster.jpg',name:'poster.jpg',type:'image',bytes:1000,selectable:true,thumbnailUrl:'/mock-cover',previewUrl:'/mock-cover'};
+      const video={...image,path:'/article/demo.mp4',name:'demo.mp4',type:'video',coverVideo:'/article/demo.mp4'};
+      return send({items:[video,image],total:2,hasMore:false,current:url.searchParams.get('cover')?.endsWith('.mp4')?video:image,ffmpeg:true});
+    }
     if (url.pathname === '/api/site-covers' && url.searchParams.get('scope')==='note') {
       const image={value:'/article/body.png',path:'/article/body.png',name:'body.png',type:'image',bytes:1000,selectable:true,referenced:true,thumbnailUrl:'/mock-cover',previewUrl:'/mock-cover'};
       const video={...image,value:'/article/poster.jpg',path:'/article/demo.mp4',name:'demo.mp4',type:'video',coverVideo:'/article/demo.mp4'};
@@ -224,7 +245,7 @@ test('a collection saves its independent cover, identity and ordered members in 
   await page.locator('#topicArticle').selectOption('notes:learning'); await page.locator('#topicAdd').click();
   await page.getByRole('button', { name: '移除 Graphics lesson', exact: true }).click();
   await page.locator('#topicSave').click(); await settled(page); await publicationSettled(page);
-  assert.deepEqual(calls(mock, 'collection-editor').map(call => call.data), [{ metadata: { title: 'UE source modifications', summary: 'A group of engine modification articles', cover: '/collection-cover.png', tags: ['Site Only Tag'], engine: [], role: [], category: '', year: new Date().getFullYear(), featured: false }, notes: ['notes:shader', 'work:water'] }]);
+  assert.deepEqual(calls(mock, 'collection-editor').map(call => call.data), [{ metadata: { title: 'UE source modifications', summary: 'A group of engine modification articles', cover: '/collection-cover.png', coverVideo: '', tags: ['Site Only Tag'], engine: [], role: [], category: '', year: new Date().getFullYear(), featured: false }, notes: ['notes:shader', 'work:water'] }]);
   assert.equal(calls(mock, 'collections').length, 0); assert.equal(calls(mock, 'topics').filter(call => call.method === 'POST').length, 0);
   assert.equal(mock.site.find(entry => entry.key === 'work:water').metadata.workType, 'single');
   assert.equal(mock.site.find(entry => entry.key === 'work:water').metadata.cover, '/covers/water.png');
@@ -258,7 +279,7 @@ test('a cancelled new collection creates no orphan and a failed combined save pr
   assert.equal(await page.locator('#rescan').isDisabled(), true);
   assert.deepEqual(mock.pending, {}); assert.deepEqual(mock.topics[0].notes, ['notes:shader', 'notes:learning']);
   mock.saveFailure = false; await page.locator('#topicSave').click(); await settled(page);
-  assert.deepEqual(calls(mock, 'collection-editor').at(-1).data, { key: 'engine', metadata: { title: 'Recoverable collection title', summary: 'Recoverable collection summary', cover: '/second-cover.png', tags: ['UE'], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:learning', 'notes:shader'] });
+  assert.deepEqual(calls(mock, 'collection-editor').at(-1).data, { key: 'engine', metadata: { title: 'Recoverable collection title', summary: 'Recoverable collection summary', cover: '/second-cover.png', coverVideo: '', tags: ['UE'], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:learning', 'notes:shader'] });
   await page.locator('#topicCancel').click(); await page.locator('[data-edit-topic=engine]').click();
   assert.equal(await page.locator('#topicTitle').inputValue(), 'Recoverable collection title');
   assert.equal(await page.locator('#topicCover').inputValue(), '/second-cover.png');
@@ -355,9 +376,21 @@ test('an unavailable remote becomes unknown instead of retaining a misleading up
   assert.equal(await page.locator('.publication-badge[data-state="uploaded"]').count(), 0);
   assert.equal(await page.locator('.publication-badge[data-state="unknown"]').count(), 4);
   assert.match(await page.locator('#publicationHint').innerText(), /无法核对/);
+  assert.deepEqual(await page.locator('#inventoryStats strong').allTextContents(),['4','—','—','0']);
   assert.equal(calls(mock, 'publication-status').at(-1).query, '?refresh=1');
   assert.equal(await page.locator('#analyze').isEnabled(), true, 'remote failure does not prevent local work');
   assert.deepEqual(errors, []);
+});
+
+test('inventory totals exclude drafts consistently and upload totals wait for Git verification', async t => {
+  const {page,mock,errors}=await setup(t);let release;
+  mock.publicationWait=new Promise(resolve=>release=resolve);t.after(()=>release());
+  mock.site.push({...structuredClone(mock.site[0]),key:'notes:draft',draft:true},{...structuredClone(mock.site[0]),key:'notes:replaced',replacedBy:'notes:shader'});
+  await page.reload();await settled(page);await page.waitForFunction(()=>document.querySelector('#publicationHint').textContent.includes('正在读取'));
+  assert.match(await page.locator('#message').textContent(),/核对完成：网站 4 项/);
+  assert.deepEqual(await page.locator('#inventoryStats strong').allTextContents(),['4','核对中','核对中','0']);
+  release();await publicationSettled(page);
+  assert.deepEqual(await page.locator('#inventoryStats strong').allTextContents(),['4','4','0','0']);assert.deepEqual(errors,[]);
 });
 
 test('the dark workbench and collection editor fit a 390px viewport', async t => {
@@ -430,4 +463,133 @@ test('a slow collection-cover response cannot restore images from a removed memb
   releaseOld();await page.waitForTimeout(100);
   assert.equal(await page.locator('[data-topic-cover="/old-member.png"]').count(),0);
   assert.equal(await page.locator('[data-topic-cover="/remaining-member.png"]').count(),1);
+});
+
+
+test('collection video selection saves and restores its pair, while selecting the same poster explicitly returns to static', async t => {
+  const {page,mock,errors}=await setup(t);mock.collectionVideos=true;
+  await page.locator('[data-edit-topic="engine"]').click();await page.locator('#topicCoverBrowse').click();
+  await page.locator('[data-topic-media="/article/demo.mp4"]').click();
+  await page.locator('#topicCoverPreview video').waitFor();
+  assert.equal(await page.locator('#topicCoverPreview video').getAttribute('controls'),'');
+  assert.match(await page.locator('#topicCoverKind').textContent(),/动态封面/);
+  await page.locator('#topicSave').click();await settled(page);
+  let metadata=calls(mock,'collection-editor').at(-1).data.metadata;
+  assert.equal(metadata.cover,'/article/poster.jpg');assert.equal(metadata.coverVideo,'/article/demo.mp4');
+  await page.locator('#topicCancel').click();await page.reload();await settled(page);await publicationSettled(page);
+  await page.locator('[data-edit-topic="engine"]').click();assert.match(await page.locator('#topicCoverKind').textContent(),/动态封面/);
+  await page.locator('#topicCoverBrowse').click();assert.equal(await page.locator('[data-topic-media="/article/demo.mp4"]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('[data-topic-media="/article/poster.jpg"]').getAttribute('aria-pressed'),'false');
+  await page.locator('[data-topic-media="/article/poster.jpg"]').click();await page.locator('#topicSave').click();await settled(page);
+  metadata=calls(mock,'collection-editor').at(-1).data.metadata;assert.equal(metadata.cover,'/article/poster.jpg');assert.equal(metadata.coverVideo,'');assert.deepEqual(errors,[]);
+});
+
+test('copying the first member keeps its video pair stable when reordered and manual replacement clears it', async t => {
+  const {page,mock}=await setup(t);mock.collectionVideos=true;mock.site.find(entry=>entry.key==='work:water').metadata.coverVideo='/media/water.mp4';
+  await page.reload();await settled(page);await publicationSettled(page);
+  await page.locator('#newCollection').click();await page.locator('#topicTitle').fill('Video collection');await page.locator('#topicSummary').fill('Independent dynamic cover');
+  await page.locator('#topicArticle').selectOption('work:water');await page.locator('#topicAdd').click();await page.locator('#topicCoverFromMember').click();
+  await page.locator('#topicArticle').selectOption('notes:shader');await page.locator('#topicAdd').click();await page.getByRole('button',{name:'上移 Shader article',exact:true}).click();
+  await page.locator('#topicSave').click();await settled(page);
+  let metadata=calls(mock,'collection-editor').at(-1).data.metadata;assert.equal(metadata.cover,'/covers/water.png');assert.equal(metadata.coverVideo,'/media/water.mp4');
+  await page.locator('#topicCover').fill('/second-cover.png');await page.locator('#topicSave').click();await settled(page);
+  metadata=calls(mock,'collection-editor').at(-1).data.metadata;assert.equal(metadata.coverVideo,'');assert.match(await page.locator('#topicCoverKind').textContent(),/静态封面/);
+});
+
+
+test('notes remain notes internally while the UI calls them 随记 and explains the default study direction', async t => {
+  const {page,mock}=await setup(t);
+  assert.equal(await page.locator('#siteSection option[value="notes"]').textContent(),'随记');
+  assert.equal(await page.locator('#noteSection option[value="notes"]').textContent(),'随记');
+  assert.equal(await page.locator('#batchSection option[value="notes"]').textContent(),'随记');
+  await edit(page,'notes:shader');
+  assert.equal(await page.locator('#editSection').inputValue(),'notes');
+  assert.equal(await page.locator('#editSection option[value="notes"]').textContent(),'随记');
+  assert.match(await page.locator('#noteEditor').innerText(),/未设置明确方向时，会归入“我独自升级”/);
+  assert.equal(calls(mock,'content-settings').length,0);
+});
+
+test('the site inventory displays one canonical chip for case-only tag variants', async t => {
+  const {page,mock}=await setup(t);
+  mock.site.find(entry=>entry.key==='notes:shader').metadata.tags=['Shader',' shader ','SHADER'];
+  await page.reload();await settled(page);await publicationSettled(page);
+  assert.deepEqual(await row(page,'notes:shader').locator('.inventory-tags .note-tag').allTextContents(),['Shader']);
+});
+
+test('explicitly cleared tags stay empty when reopening legacy content with tech metadata', async t => {
+  const {page,mock,errors}=await setup(t);mock.site.find(entry=>entry.key==='notes:shader').metadata.tech=['Shader'];
+  await page.reload();await settled(page);await publicationSettled(page);await edit(page,'notes:shader');
+  await page.locator('#editTagsPicker').getByRole('button',{name:'移除 Tag Shader',exact:true}).click();await save(page);
+  assert.deepEqual(calls(mock,'content-settings').at(-1).data.metadata.tags,[]);
+  await page.locator('#noteMetaClose').click();await edit(page,'notes:shader');assert.equal(await page.locator('#editTags').inputValue(),'');
+  assert.equal(await page.locator('#editTagsPicker [aria-label^="移除 Tag "]').count(),0);
+  await page.locator('#editTitle').fill('An article without tags');await save(page);assert.deepEqual(mock.pending['notes:shader'].tags,[]);
+  await page.reload();await settled(page);await publicationSettled(page);await edit(page,'notes:shader');assert.equal(await page.locator('#editTags').inputValue(),'');assert.deepEqual(errors,[]);
+});
+
+
+test('website withdrawal can be cancelled, reports failures inline, stays undoable pending, and restores from removed items', async t => {
+  const {page,mock,errors}=await setup(t);
+  await row(page,'notes:shader').getByRole('button',{name:'从网站移除',exact:true}).click();
+  assert.match(await page.locator('#visibilityTitles').innerText(),/Shader article/);assert.match(await page.locator('#visibilityConsequence').innerText(),/原笔记及素材保留/);
+  assert.equal(await page.locator('#analyze').isDisabled(),true);await page.locator('#visibilityCancel').click();assert.equal(calls(mock,'content-visibility').length,0);
+  await row(page,'notes:shader').getByRole('button',{name:'从网站移除',exact:true}).click();mock.visibilityFailure=true;
+  await page.locator('#visibilityConfirm').click();await settled(page);assert.match(await page.locator('#visibilityStatus').innerText(),/Synthetic visibility save failure/);assert.equal(mock.pending['notes:shader'],undefined);assert.equal(await page.locator('#visibilityConfirm').isEnabled(),true);
+  mock.visibilityFailure=false;await page.locator('#visibilityConfirm').click();await settled(page);
+  assert.deepEqual(calls(mock,'content-visibility').at(-1).data,{key:'notes:shader',withdrawn:true});assert.match(await row(page,'notes:shader').innerText(),/待移除/);assert.equal(await row(page,'notes:shader').getByRole('button',{name:'撤销移除',exact:true}).isVisible(),true);
+  await row(page,'notes:shader').getByRole('button',{name:'撤销移除',exact:true}).click();await page.locator('#visibilityConfirm').click();await settled(page);assert.equal(mock.pending['notes:shader'],undefined);assert.equal(await page.locator('#message').textContent(),'已撤销待移除。');
+  mock.appliedSettings['notes:shader']={withdrawn:true};mock.pending={};await page.locator('#rescan').click();await settled(page);assert.equal(await row(page,'notes:shader').count(),0);
+  await page.locator('#siteStatus').selectOption('withdrawn');assert.equal(await row(page,'notes:shader').count(),1);await row(page,'notes:shader').getByRole('button',{name:'恢复到网站',exact:true}).click();await page.locator('#visibilityConfirm').click();await settled(page);
+  assert.equal(mock.pending['notes:shader'].withdrawn,false);assert.match(await row(page,'notes:shader').innerText(),/待恢复/);assert.deepEqual(errors,[]);
+  await row(page,'notes:shader').getByRole('button',{name:'撤销恢复',exact:true}).click();await page.locator('#visibilityConfirm').click();await settled(page);assert.equal(mock.pending['notes:shader'],undefined);assert.equal(await page.locator('#message').textContent(),'已撤销待恢复。');
+});
+
+test('an unapplied collection withdrawal stays visible and undoable until local apply', async t => {
+  const {page,mock,errors}=await setup(t);
+  await page.locator('#newCollection').click();await page.locator('#topicTitle').fill('Unapplied collection');await page.locator('#topicSummary').fill('Saved before first local apply');await page.locator('#topicCover').fill('/collection-cover.png');await page.locator('#topicSave').click();await settled(page);
+  const key='collections:collection-fixture';assert.equal(await row(page,key).count(),1);
+  await row(page,key).getByRole('button',{name:'从网站移除',exact:true}).click();await page.locator('#visibilityConfirm').click();await settled(page);
+  assert.match(await row(page,key).innerText(),/待移除 · 尚未写入/);assert.equal(await row(page,key).locator('[data-edit-topic]').isDisabled(),true);
+  await row(page,key).getByRole('button',{name:'撤销移除',exact:true}).click();await page.locator('#visibilityConfirm').click();await settled(page);
+  assert.equal(mock.pending[key].withdrawn,undefined);assert.equal(await row(page,key).getByRole('button',{name:'从网站移除',exact:true}).isVisible(),true);assert.equal(await page.locator('#message').textContent(),'已撤销待移除。');assert.deepEqual(errors,[]);
+});
+
+test('batch website withdrawal confirms only explicitly selected items and a collection keeps its members', async t => {
+  const {page,mock}=await setup(t);
+  await page.locator('#siteSearch').fill('Shader');await page.locator('#siteSelectVisible').click();
+  await page.locator('#siteSearch').fill('UE engine');await page.locator('#siteSelectVisible').click();await page.locator('#siteWithdrawSelected').click();
+  assert.deepEqual(await page.locator('#visibilityTitles li').allTextContents(),['Shader article','UE engine collection']);assert.match(await page.locator('#visibilityConsequence').innerText(),/成员文章保留/);
+  await page.locator('#visibilityConfirm').click();await settled(page);
+  assert.deepEqual(calls(mock,'content-visibility').at(-1).data,{keys:['notes:shader','work:engine'],withdrawn:true});assert.equal(mock.pending['notes:learning'],undefined);assert.deepEqual(mock.topics[0].notes,['notes:shader','notes:learning']);
+  assert.equal(await page.locator('#siteSelectionCount').textContent(),'未勾选内容');
+});
+
+test('withdrawal actions lock while article or collection settings are unsaved', async t => {
+  const {page}=await setup(t);await edit(page,'notes:shader');await page.locator('#editTitle').fill('Unsaved title');
+  assert.equal(await row(page,'work:water').locator('[data-content-visibility]').isDisabled(),true);assert.equal(await page.locator('#siteSelectVisible').isDisabled(),true);assert.equal(await page.locator('#nextActionButton').textContent(),'保存当前文章设置');
+  await page.locator('#noteMetaClose').click();await page.locator('[data-edit-topic="engine"]').click();await page.locator('#topicTitle').fill('Unsaved collection');
+  assert.equal(await row(page,'notes:shader').locator('[data-content-visibility]').isDisabled(),true);assert.equal(await page.locator('#nextActionButton').textContent(),'保存当前合集');
+});
+
+test('the next-action dock follows reviewed withdrawal through local confirmation without bypassing it', async t => {
+  const {page,mock}=await setup(t);
+  await row(page,'notes:shader').getByRole('button',{name:'从网站移除',exact:true}).click();await page.locator('#visibilityConfirm').click();await settled(page);
+  assert.equal(await page.locator('#nextActionButton').textContent(),'检查待发布变更');await page.locator('#nextActionButton').click();await settled(page);
+  assert.match(await page.locator('#review').innerText(),/从网站移除：Shader article/);assert.equal(calls(mock,'apply').length,0);
+  assert.equal(await page.locator('#nextActionButton').textContent(),'生成预览副本');await page.locator('#nextActionButton').click();await settled(page);
+  assert.equal(await page.locator('#nextActionButton').textContent(),'查看写入确认');await page.locator('#nextActionButton').click();
+  assert.equal(await page.locator('#applyReview').isVisible(),true);assert.match(await page.locator('#applySummary').textContent(),/从网站移除 1 项/);assert.equal(calls(mock,'apply').length,0);
+  await page.locator('#nextActionButton').click();await settled(page);assert.equal(calls(mock,'apply').length,1);assert.equal(await row(page,'notes:shader').count(),0);assert.equal(await page.locator('#nextActionButton').textContent(),'检查并发布');
+});
+
+
+test('the next-action dock cannot skip unapproved media and remains clear of mobile confirmation buttons', async t => {
+  const {page,mock,errors}=await setup(t,{viewport:{width:390,height:844}});
+  mock.reviewAssets=[{key:'image:original',path:'image.png',sources:['image.png'],referencedBy:['Shader article'],mode:'original',ext:'.png',bytes:1000,digest:'image'}];
+  await row(page,'notes:shader').getByRole('button',{name:'从网站移除',exact:true}).click();
+  await page.locator('#visibilityConfirm').scrollIntoViewIfNeeded();
+  const bounds=await page.evaluate(()=>({button:document.querySelector('#visibilityConfirm').getBoundingClientRect().bottom,dock:document.querySelector('#nextActionDock').getBoundingClientRect().top,width:document.documentElement.scrollWidth,viewport:innerWidth}));
+  assert.ok(bounds.button<=bounds.dock,'confirmation must sit above the dock');assert.ok(bounds.width<=bounds.viewport+1);
+  await page.locator('#visibilityConfirm').click();await settled(page);await page.locator('#nextActionButton').click();await settled(page);
+  assert.equal(await page.locator('#nextActionButton').textContent(),'审核本次附件');await page.locator('#nextActionButton').click();assert.equal(calls(mock,'prepare').length,0);assert.equal(calls(mock,'apply').length,0);
+  await page.getByLabel('确认附件 image.png',{exact:true}).check();assert.equal(await page.locator('#nextActionButton').textContent(),'生成预览副本');assert.deepEqual(errors,[]);
 });

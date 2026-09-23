@@ -15,7 +15,7 @@ const articleFixtures = [
   { key: 'notes:ue-lighting', id: 'ue-lighting', title: 'UE lighting study', url: '/blog/ue-lighting/', section: 'notes', metadata: { ...sourceMetadata, title: 'UE lighting study', tags: ['UE'] }, notes: [], work: [] },
   { key: 'tutorials:shader-basics', id: 'shader-basics', title: 'Shader learning series', url: '/tutorials/shader-basics/', section: 'tutorials', metadata: { ...sourceMetadata, title: 'Shader learning series', section: 'tutorials', tags: ['Learning'] }, notes: [], work: [] },
   { key: 'work:water-study', id: 'water-study', title: 'Water study', url: '/work/water-study/', section: 'work', metadata: { ...sourceMetadata, title: 'Water study', section: 'work', summary: 'Synthetic water project', cover: 'https://example.invalid/water.png' }, notes: ['notes:shader-basics'], work: [] },
-  { key: 'work:ue5-per-material', id: 'ue5-per-material', title: 'UE 材质专题', url: '/work/ue5-per-material/', section: 'work', metadata: { ...sourceMetadata, title: 'UE 材质专题', section: 'work', summary: 'Three existing site articles', cover: 'https://example.invalid/ue.png', tags: [], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting'], work: [] },
+  { key: 'work:ue5-per-material', id: 'ue5-per-material', title: 'UE 材质专题', url: '/work/ue5-per-material/', section: 'work', metadata: { ...sourceMetadata, title: 'UE 材质专题', section: 'work', summary: 'Three existing site articles', cover: 'https://example.invalid/ue.png', coverVideo: '', tags: [], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting'], work: [] },
 ].map(item => ({ ...item, collection: item.key.split(':')[0], linkable: true, active: true }));
 const topicFixtures = [{ key: 'ue5-per-material', title: 'UE 材质专题', summary: 'Three existing site articles', notes: ['notes:shader-basics', 'notes:ue-materials', 'notes:ue-lighting'], url: '/work/ue5-per-material/' }];
 
@@ -139,7 +139,7 @@ test('existing topic relationships can be removed, reordered and extended withou
   assert.equal(calls(mock, 'collection-editor', 'POST').length, 0);
   assert.deepEqual(mock.appliedTopics, topicFixtures);
   await page.locator('#topicSave').click(); await settled(page);
-  assert.deepEqual(calls(mock, 'collection-editor', 'POST').at(-1).data, { key: 'ue5-per-material', metadata: { title: 'UE 材质专题', summary: 'Three existing site articles', cover: 'https://example.invalid/ue.png', tags: [], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics'] });
+  assert.deepEqual(calls(mock, 'collection-editor', 'POST').at(-1).data, { key: 'ue5-per-material', metadata: { title: 'UE 材质专题', summary: 'Three existing site articles', cover: 'https://example.invalid/ue.png', coverVideo: '', tags: [], engine: [], role: [], category: '', year: 2026, featured: false }, notes: ['notes:ue-materials', 'notes:shader-basics', 'tutorials:shader-basics'] });
   assert.equal(mock.pending, true);
   assert.deepEqual(mock.appliedTopics, topicFixtures, 'saving a topic draft must not update website content immediately');
   assert.match(await page.locator('#topicStatus').innerText(), /草稿|待|尚未|未写入|已暂存|已保存/);

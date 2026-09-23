@@ -67,11 +67,37 @@ export class ContentSettingsStore {
     const { pending } = await this.state();
     return { entries: entries.filter(entry => entry.active && !entry.draft).map(entry => ({ key: contentKey(entry), title: entry.title, metadata: entry.metadata, currentMetadata: entry.currentMetadata ?? null, pending: !!entry.settingsPending, linkedPath: entry.linkedPath ?? null })), pending: Object.keys(pending.data.entries).length > 0 || Object.keys(pending.data.collections).length > 0 };
   }
+  async saveVisibility(input, entries, { blockedKeys = new Set() } = {}) {
+    if (!object(input) || Object.keys(input).some(key => !['key', 'keys', 'withdrawn'].includes(key)) || typeof input.withdrawn !== 'boolean' || Object.hasOwn(input, 'key') === Object.hasOwn(input, 'keys')) throw Error('请指定要移除或恢复的网站条目及有效状态');
+    const requested = Object.hasOwn(input, 'key') ? [input.key] : input.keys;
+    if (!Array.isArray(requested) || !requested.length || requested.length > 500 || requested.some(key => typeof key !== 'string' || !key.trim() || key.length > 300)) throw Error('每次请选择 1 至 500 个有效网站条目');
+    const selected = new Map();
+    for (const requestedKey of requested) {
+      const entry = entries.find(entry => entry.active && !entry.draft && (contentKey(entry) === requestedKey || entry.key === requestedKey));
+      if (!entry) throw Error('网站中找不到这篇内容，或源文章禁止发布，请重新核对');
+      const key = contentKey(entry);
+      if (!input.withdrawn && entry.currentMetadata?.withdrawn === true && blockedKeys.has(key)) throw Error(`“${entry.title}”的源笔记为草稿或禁止发布，不能从发布器恢复`);
+      selected.set(key, entry);
+    }
+    const { pending } = await this.state(), before = serialize(pending.data);
+    for (const [key, entry] of selected) {
+      if (input.withdrawn === (entry.currentMetadata?.withdrawn === true)) {
+        if (pending.data.entries[key]) { delete pending.data.entries[key].withdrawn; if (!Object.keys(pending.data.entries[key]).length) delete pending.data.entries[key]; }
+      } else pending.data.entries[key] = { ...pending.data.entries[key], withdrawn: input.withdrawn };
+    }
+    const hasPending = Object.keys(pending.data.entries).length > 0 || Object.keys(pending.data.collections).length > 0;
+    if (serialize(pending.data) !== before) {
+      if (hasPending) await this.writePending(pending.data);
+      else await fs.rm(this.pendingFile, { force: true });
+    }
+    return { keys: [...selected.keys()], withdrawn: input.withdrawn, pending: hasPending };
+  }
   async save(input, entries) {
     if (!object(input) || Object.keys(input).some(key => !['key', 'metadata'].includes(key))) throw Error('内容设置包含无效字段');
     const entry = entries.find(entry => entry.active && !entry.draft && contentKey(entry) === input.key);
     if (!entry) throw Error('网站中找不到这篇内容，请重新核对');
     const metadata = this.normalize(input.metadata);
+    if (Object.hasOwn(metadata, 'withdrawn')) throw Error('请使用网站移除或恢复操作调整公开状态');
     // A cover replacement must explicitly clear an earlier saved video pairing;
     // omitting the field would resurrect it when current and pending patches merge.
     if (Object.hasOwn(metadata, 'cover') && !Object.hasOwn(metadata, 'coverVideo') && metadata.cover !== entry.metadata.cover) metadata.coverVideo = '';
@@ -99,7 +125,8 @@ export class ContentSettingsStore {
     const changes = [...Object.keys(pending.data.entries), ...Object.keys(pending.data.collections).map(id => `collections:${id}`)].filter((key, i, keys) => keys.indexOf(key) === i).map(key => {
       const entry = entries.find(entry => entry.active && !entry.draft && contentKey(entry) === key);
       if (!entry) throw Error('待写入内容已不存在，请重新核对');
-      return { key, title: entry.title, metadata: entry.metadata, added: entry.pending === true };
+      const wasWithdrawn = entry.currentMetadata?.withdrawn === true, withdrawn = entry.metadata.withdrawn === true;
+      return { key, title: entry.title, metadata: entry.metadata, added: entry.pending === true, ...(wasWithdrawn !== withdrawn ? { visibilityAction: withdrawn ? 'withdraw' : 'restore' } : {}) };
     });
     const sources = entries.filter(entry => changes.some(change => change.key === contentKey(entry)) && entry.collection !== 'collections' && entry.collection !== 'published').map(({ path, digest }) => ({ path, digest }));
     return { document, changes, sources, digest: hash(current.raw), pendingDigest: hash(pending.raw) };

@@ -3,37 +3,28 @@ import Base from '../../layouts/Base.astro';
 import LivingScene from '../../components/LivingScene.astro';
 import CategoryFilter from '../../components/CategoryFilter.astro';
 import '../../styles/editorial-pages.css';
-import { tutorials,noteUrl,articleSeries,articleOrder,categoryCounts,type ArticleEntry } from '../../lib/content';
+import { allArticles,noteUrl,articleOrder,categoryCounts } from '../../lib/content';
+import { STUDY_DIRECTIONS,studyDirection,studyGroups } from '../../lib/study';
 import { labelOf } from '../../data/taxonomy';
-const chapters=await tutorials();
-const grouped=new Map<string,ArticleEntry[]>();
-for(const entry of chapters){const name=articleSeries(entry);if(!grouped.has(name))grouped.set(name,[]);grouped.get(name)!.push(entry);}
-const groups=[...grouped].map(([name,items])=>{
+const chapters=(await allArticles()).filter(entry=>studyDirection(entry)!==null);
+const groups=studyGroups(chapters).map((group)=>{
+  const {items}=group;
   items.sort((a,b)=>articleOrder(a)-articleOrder(b)||a.data.date.valueOf()-b.data.date.valueOf()||a.data.title.localeCompare(b.data.title,'zh-CN'));
   const engines=[...new Set(items.flatMap(entry=>entry.data.engine))].map(engine=>labelOf('engine',engine));
   const tech=[...new Set(items.flatMap(entry=>entry.data.tech))].map(tag=>labelOf('tech',tag));
-  return {id:name?`series-${name}`:'independent-study',name:name||'独立研习',items,engine:engines.join(' / ')||'STUDY SERIES',tech,order:Math.min(...items.map(articleOrder))};
+  return {...group,engine:engines.join(' / ')||'STUDY SERIES',tech,order:Math.min(...items.map(articleOrder))};
 }).sort((a,b)=>a.order-b.order||a.name.localeCompare(b.name,'zh-CN'));
 // The atlas is a stable set of four broad disciplines.  Series remain data-driven
 // below, so adding a new Unity/UE/Blender series only changes its own entry and
 // automatically rolls its count into the matching discipline card.
 type StudyGroup=typeof groups[number];
 type StudyMajor={key:string;name:string;eyebrow:string;groups:StudyGroup[];items:number;target:string};
-const majorDefinitions=[
-  {key:'solo',name:'我独自升级',eyebrow:'SOLO LEVELING',namePattern:/^我独自升级(?:$|[\s·/_-])/i,enginePattern:null},
-  {key:'unity',name:'Unity',eyebrow:'REALTIME / UNITY',namePattern:/^unity(?:$|[\s·/_-])/i,enginePattern:/unity/i},
-  {key:'ue',name:'UE',eyebrow:'REALTIME / UNREAL',namePattern:/^(?:ue(?:\d+(?:\.\d+)?)?|unreal(?:\s+engine)?)(?:$|[\s·/_-])/i,enginePattern:/^(?:ue|unreal)/i},
-  {key:'blender',name:'Blender',eyebrow:'DCC / BLENDER',namePattern:/^blender(?:$|[\s·/_-])/i,enginePattern:/blender/i},
-] as const;
-const majorFor=(group:StudyGroup)=>majorDefinitions.find(major=>major.namePattern.test(group.name))?.key
-  ??majorDefinitions.find(major=>major.enginePattern&&group.items.some(entry=>entry.data.engine.some(engine=>major.enginePattern?.test(engine))))?.key
-  ??'other';
-const majorPortals:StudyMajor[]=majorDefinitions.map(definition=>{
-  const matching=groups.filter(group=>majorFor(group)===definition.key);
+const majorPortals:StudyMajor[]=STUDY_DIRECTIONS.map(definition=>{
+  const matching=groups.filter(group=>group.direction===definition.key);
   return {...definition,groups:matching,items:matching.reduce((total,group)=>total+group.items.length,0),target:`study-${definition.key}`};
 });
-const otherGroups=groups.filter(group=>majorFor(group)==='other');
-const directions=[...majorPortals,{key:'other',name:'其它研习',eyebrow:'OPEN EXPLORATION',groups:otherGroups,items:otherGroups.reduce((total,group)=>total+group.items.length,0),target:'study-other'}];
+const directions=majorPortals;
+const namedSeriesCount=groups.filter(group=>!group.loose).length;
 const categories=categoryCounts(groups.flatMap(group=>group.items));
 const tags=[...new Set(groups.flatMap(group=>group.items.flatMap(n=>n.data.tech)))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
 // Retain the previously published bookmark without assigning special layout or grouping rules.
@@ -43,21 +34,21 @@ const legacySeriesAnchors:Record<string,string>={'我独自升级':'solo'};
   <header class="page-stage orbit-stage">
     <LivingScene variant="study"/><div class="stage-scrim" aria-hidden="true"></div>
     <svg class="orbit-art" viewBox="0 0 540 460" aria-hidden="true"><circle class="orbit-ring" cx="270" cy="230" r="70"/><ellipse class="orbit-ring" cx="270" cy="230" rx="205" ry="140" transform="rotate(-24 270 230)"/><ellipse class="orbit-ring orbit-faint" cx="270" cy="230" rx="210" ry="190" transform="rotate(35 270 230)"/><g class="orbit-satellite"><circle cx="270" cy="160" r="4"/></g><g class="orbit-satellite orbit-satellite-slow"><circle cx="270" cy="42" r="3"/></g><circle class="orbit-core" cx="270" cy="230" r="8"/></svg>
-    <div class="orbit-copy"><span class="stage-index">03 / KNOWLEDGE IN MOTION</span><h1 data-kinetic data-kinetic-style="wide">ORBIT</h1><p class="stage-subtitle" data-kinetic data-kinetic-style="ink">学习轨道</p><p class="orbit-description">知识不是一条直线。<br/>从任意一个好奇的起点，开始环行。</p><div class="orbit-totals" data-series-totals><span><strong>{String(groups.length).padStart(2,'0')}</strong> 个系列</span><span><strong>{String(chapters.length).padStart(2,'0')}</strong> 篇记录</span></div></div>
+    <div class="orbit-copy"><span class="stage-index">03 / KNOWLEDGE IN MOTION</span><h1 data-kinetic data-kinetic-style="wide">ORBIT</h1><p class="stage-subtitle" data-kinetic data-kinetic-style="ink">学习轨道</p><p class="orbit-description">知识不是一条直线。<br/>从任意一个好奇的起点，开始环行。</p><div class="orbit-totals" data-series-totals><span><strong>{String(namedSeriesCount).padStart(2,'0')}</strong> 个系列</span><span><strong>{String(chapters.length).padStart(2,'0')}</strong> 篇记录</span></div></div>
     <nav class="series-atlas" aria-label="选择学习方向" data-series-atlas>
       <div class="atlas-heading"><span>选择一个方向</span><small>FOUR STUDY DIRECTIONS</small></div>
-      <ol>{majorPortals.map((major,index)=><li><a class="series-portal" href={`#${major.target}`} data-series-portal={major.key} data-study-major={major.key} data-empty={major.groups.length===0?'true':'false'}><span class="portal-order">{String(index+1).padStart(2,'0')}</span><div><h2>{major.name}</h2><p>{major.groups.length?`${major.groups.length} 个细分系列`:'尚未建立系列'}</p></div><span class="portal-count">{major.items}<small>篇</small></span></a></li>)}</ol>
+      <ol>{majorPortals.map((major,index)=><li><a class="series-portal" href={`#${major.target}`} data-series-portal={major.key} data-study-major={major.key} data-empty={major.groups.length===0?'true':'false'}><span class="portal-order">{String(index+1).padStart(2,'0')}</span><div><h2>{major.name}</h2><p>{major.groups.length?major.groups.some(group=>!group.loose)?`${major.groups.filter(group=>!group.loose).length} 个细分系列`:'随记与探索':'尚未建立系列'}</p></div><span class="portal-count">{major.items}<small>篇</small></span></a></li>)}</ol>
     </nav>
   </header>
   <div data-study-index id="study-index">
-    <div class="study-subseries-heading"><span>细分系列</span><small>ALL SERIES · {groups.length}</small></div>
-    <nav class="series-navigation" aria-label="细分系列快捷目录"><span>选择一条细分轨道 · {groups.length} 个系列</span>{groups.map(group=><a href={`#${group.id}`} data-series-link={group.id}>{group.name}</a>)}</nav>
+    <div class="study-subseries-heading"><span>细分系列</span><small>ALL SERIES · {namedSeriesCount}</small></div>
+    <nav class="series-navigation" aria-label="细分系列快捷目录"><span>全部研习目录 · {namedSeriesCount} 个系列</span>{groups.map(group=><a href={`#${group.id}`} data-series-link={group.id}>{group.name}</a>)}</nav>
     <CategoryFilter categories={categories} total={groups.reduce((sum,g)=>sum+g.items.length,0)}/>
     {tags.length>0&&<div class="editorial-filter study-tags" role="group" aria-label="按标签筛选研习"><button type="button" data-study-tag="" aria-pressed="true">全部标签</button>{tags.map(tag=><button type="button" data-study-tag={tag} aria-pressed="false">{labelOf('tech',tag)}</button>)}</div>}
     <div class="editorial-result"><p class="study-result" role="status" aria-live="polite">共 {groups.reduce((sum,g)=>sum+g.items.length,0)} 篇研习记录</p><button type="button" class="editorial-reset" data-study-reset hidden>清除筛选</button></div>
     <p class="editorial-empty" data-study-empty hidden>这组内容分类与标签下还没有研习记录。可以清除筛选后再看看。</p>
-    {directions.filter(direction=>direction.key!=='other'||direction.groups.length>0).map(direction=><section class="study-direction" id={direction.target} data-study-direction={direction.key} aria-labelledby={`direction-${direction.key}`}>
-      <header class="direction-heading"><div><span class="eyebrow">{direction.eyebrow}</span><h2 id={`direction-${direction.key}`}>{direction.name}</h2></div><span>{direction.groups.length} 个系列 · {direction.items} 篇记录</span></header>
+    {directions.map(direction=><section class="study-direction" id={direction.target} data-study-direction={direction.key} aria-labelledby={`direction-${direction.key}`}>
+      <header class="direction-heading"><div><span class="eyebrow">{direction.eyebrow}</span><h2 id={`direction-${direction.key}`}>{direction.name}</h2></div><span>{direction.groups.filter(group=>!group.loose).length} 个系列 · {direction.items} 篇记录</span></header>
       {direction.groups.length===0&&<p class="direction-empty">这个方向还没有公开系列，新的研习会在这里展开。</p>}
       {direction.groups.map((group)=>{const index=groups.indexOf(group);return <section class="series" id={group.id} data-study-series aria-labelledby={`series-heading-${index}`}>
       {legacySeriesAnchors[group.name]&&<span class="legacy-series-anchor" id={legacySeriesAnchors[group.name]} aria-hidden="true"></span>}
@@ -76,7 +67,7 @@ const legacySeriesAnchors:Record<string,string>={'我独自升级':'solo'};
     const results=index.querySelector<HTMLElement>('.study-result')!;
     const empty=index.querySelector<HTMLElement>('[data-study-empty]')!;
     let tag='',category='';
-    function read(){const params=new URLSearchParams(location.search);const requested=params.get('tag')||'';tag=buttons.some(button=>button.dataset.studyTag===requested)?requested:'';const requestedCategory=params.get('category')||'';category=categoryButtons.some(button=>button.dataset.category===requestedCategory)?requestedCategory:'';}
+    function read(){const params=new URLSearchParams(location.search);const requested=(params.get('tag')||'').trim().toLocaleLowerCase();tag=buttons.find(button=>(button.dataset.studyTag||'').toLocaleLowerCase()===requested)?.dataset.studyTag||'';const requestedCategory=params.get('category')||'';category=categoryButtons.some(button=>button.dataset.category===requestedCategory)?requestedCategory:'';}
     function apply(sync=false){
       let shown=0;
       for(const entry of entries){entry.hidden=(!!category&&entry.dataset.category!==category)||(!!tag&&!JSON.parse(entry.dataset.tech||'[]').includes(tag));if(!entry.hidden)shown++;}

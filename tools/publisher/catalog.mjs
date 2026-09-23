@@ -5,6 +5,7 @@ const sectionValues = new Set(['notes', 'tutorials', 'work']);
 const presetKinds = new Map([['tag', 'tags'], ['series', 'series'], ['category', 'categories']]);
 const inside = (root, file) => { const relative = path.relative(root, file); return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative); };
 const term = (value, limit = 100) => typeof value === 'string' && value.length <= limit && !/[\u0000-\u001f\u007f]/.test(value) ? value.trim() : '';
+export const termIdentity = value => value.trim().toLowerCase();
 const terms = value => [...new Set((Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[,，]/) : []).map(v => term(v)).filter(Boolean))];
 
 export function catalogPreset(input) {
@@ -54,13 +55,18 @@ async function labelsFromTaxonomy(site) {
 export async function collectCatalog({ site, local = [], presets = [], parse, siteEntries = null }) {
   site = await fs.realpath(site);
   const labels = await labelsFromTaxonomy(site);
+  const canonical = Object.fromEntries(Object.entries(labels).map(([kind, values]) => [kind, new Map([...values].map(([value, label]) => [termIdentity(value), { value, label }]))]));
   const buckets = Object.fromEntries(['tags', 'series', 'categories', 'engine', 'role'].map(kind => [kind, new Map()]));
   const add = (kind, value, document = null, section = null) => {
     value = term(value, kind === 'series' || kind === 'categories' ? 200 : 100); if (!value) return;
     const scoped = kind === 'series' || kind === 'categories';
     if (scoped && !sectionValues.has(section)) return;
-    const key = JSON.stringify(scoped ? [section, value] : [value]);
-    if (!buckets[kind].has(key)) buckets[kind].set(key, { value, label: labels[kind]?.get(value) ?? value, ...(scoped ? { section } : {}), documents: new Set() });
+    const key = JSON.stringify(scoped ? [section, value] : [termIdentity(value)]);
+    const known = scoped ? null : canonical[kind]?.get(termIdentity(value));
+    if (!buckets[kind].has(key)) buckets[kind].set(key, { value: known?.value ?? value, label: known?.label ?? value, ...(scoped ? { section } : {}), documents: new Set() });
+    // Prefer the vocabulary spelling. Custom variants choose a stable spelling
+    // independent of the order in which website and local notes are scanned.
+    else if (!scoped && !known && value < buckets[kind].get(key).value) Object.assign(buckets[kind].get(key), { value, label: value });
     if (document) buckets[kind].get(key).documents.add(document);
   };
   const consume = (metadata, document, section) => {
@@ -72,7 +78,7 @@ export async function collectCatalog({ site, local = [], presets = [], parse, si
     for (const file of await publicFiles(site, relative)) {
       try {
         const metadata = parse(await fs.readFile(file, 'utf8')).data;
-        if (metadata.draft === true || metadata.publish === false) continue;
+        if (metadata.draft === true || metadata.publish === false || metadata.withdrawn === true) continue;
         const section = metadata.section ?? ({ article: 'notes', tutorial: 'tutorials', work: 'work' }[metadata.kind] ?? defaultSection);
         const document = term(metadata.contentId, 200) ? 'id:' + metadata.contentId : 'site:' + file;
         consume(metadata, document, section);
@@ -81,8 +87,8 @@ export async function collectCatalog({ site, local = [], presets = [], parse, si
       } catch { /* Malformed public sources cannot add catalog entries. */ }
     }
   }
-  for (const entry of siteEntries ?? []) if (entry.active && !entry.draft) consume(entry.metadata, entry.contentId ? 'id:' + entry.contentId : 'site:' + entry.key, entry.metadata.section);
-  for (const note of local) consume(note.metadata, 'id:' + note.id, note.metadata.section);
+  for (const entry of siteEntries ?? []) if (entry.active && !entry.draft && entry.metadata.withdrawn !== true) consume(Object.hasOwn(entry.settings ?? {}, 'tags') ? { ...entry.metadata, tech: [] } : entry.metadata, entry.contentId ? 'id:' + entry.contentId : 'site:' + entry.key, entry.metadata.section);
+  for (const note of local) if (note.metadata.withdrawn !== true) consume(note.metadata, 'id:' + note.id, note.metadata.section);
   for (const preset of presets) {
     try { const normalized = catalogPreset(preset); add(presetKinds.get(normalized.kind), normalized.value, null, normalized.section); } catch { /* Ignore invalid private entries without rewriting them. */ }
   }

@@ -46,7 +46,7 @@ const groups=facets.map(f=>{const count=new Map<string,number>();for(const w of 
     const reset=index.querySelector<HTMLButtonElement>('#work-reset')!;
     const facets=['type','category','engine','tech','role'];
     const selected:Record<string,string>={type:'',category:'',engine:'',tech:'',role:''};
-    function read(){const params=new URLSearchParams(location.search);for(const facet of facets){const term=params.get(facet)||'';selected[facet]=buttons.some(b=>b.dataset.facet===facet&&b.dataset.term===term)?term:'';}}
+    function read(){const params=new URLSearchParams(location.search);for(const facet of facets){const term=params.get(facet)||'';const match=buttons.find(b=>b.dataset.facet===facet&&(['category','type'].includes(facet)?b.dataset.term===term:b.dataset.term?.trim().toLowerCase()===term.trim().toLowerCase()));selected[facet]=match?.dataset.term||'';}}
     function apply(sync=false){
       let shown=0;for(const cell of cells){const visible=facets.every(f=>!selected[f]||(['category','type'].includes(f)?cell.dataset[f]===selected[f]:JSON.parse(cell.dataset[f]||'[]').includes(selected[f])));cell.hidden=!visible;if(visible)shown++;}
       for(const button of buttons)button.setAttribute('aria-pressed',String(selected[button.dataset.facet!]===button.dataset.term));

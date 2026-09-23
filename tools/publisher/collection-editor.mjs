@@ -7,7 +7,7 @@ import { contentKey } from './content-settings.mjs';
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 const serialize = value => JSON.stringify(value, null, 2) + '\n';
 const imageTypes = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.svg']);
-const fields = new Set(['title', 'summary', 'cover', 'tags', 'engine', 'role', 'year', 'featured', 'order', 'category', 'date']);
+const fields = new Set(['title', 'summary', 'cover', 'coverVideo', 'tags', 'engine', 'role', 'year', 'featured', 'order', 'category', 'date']);
 
 export class CollectionEditor {
   constructor({ publisher, normalize }) {
@@ -63,7 +63,9 @@ export class CollectionEditor {
     const original = topic ? entries.find(entry => entry.section === 'work' && entry.url === topic.url) : null;
     const id = original?.id ?? `collection-${crypto.randomUUID().slice(0, 12)}`, key = topic?.key ?? `collections:${id}`;
     const patch = this.normalize(input.metadata);
-    const metadata = this.normalize({ ...(original ? Object.fromEntries([...fields].filter(field => original.metadata?.[field] != null).map(field => [field, original.metadata[field]])) : { year: new Date().getFullYear(), tags: [], order: 100 }), ...patch, title: patch.title ?? topic?.title, summary: patch.summary ?? topic?.summary, section: 'work', workType: 'collection' });
+    // Persist an explicit empty pairing so merging drafts cannot revive an old video.
+    if (Object.hasOwn(patch, 'cover') && !Object.hasOwn(patch, 'coverVideo') && patch.cover !== original?.metadata.cover) patch.coverVideo = '';
+    const metadata = this.normalize({ ...(original ? Object.fromEntries([...fields].filter(field => original.metadata?.[field] != null).map(field => [field, original.metadata[field]])) : { year: new Date().getFullYear(), tags: [], order: 100 }), ...(topic?.coverVideo !== undefined ? { coverVideo: topic.coverVideo } : {}), ...patch, title: patch.title ?? topic?.title, summary: patch.summary ?? topic?.summary, section: 'work', workType: 'collection' });
     if (!metadata.summary?.trim()) throw Error('请填写作品合集摘要');
     const cover = metadata.cover ?? '', unchangedCover = !!original && (!Object.hasOwn(patch, 'cover') || cover === (original.metadata.cover ?? ''));
     const creating = !original || original.collection === 'collections' && original.pending;
@@ -81,7 +83,8 @@ export class CollectionEditor {
       }
     }
     const aliases = original ? [original.key, original.id, original.replaces, original.metadata?.replaces].filter(Boolean) : [key, id];
-    if (!Array.isArray(input.notes) || input.notes.length > 500 || new Set(input.notes).size !== input.notes.length || input.notes.some(ref => typeof ref !== 'string' || aliases.includes(ref) || !catalog.articles.some(article => article.key === ref))) throw Error('合集成员无效、重复或不再公开，请重新选择；合集不能包含自身或其他合集');
+    const memberAllowed = ref => catalog.articles.some(article => article.key === ref) || topic?.notes.includes(ref) && catalog.withdrawnArticles.some(article => article.key === ref);
+    if (!Array.isArray(input.notes) || input.notes.length > 500 || new Set(input.notes).size !== input.notes.length || input.notes.some(ref => typeof ref !== 'string' || aliases.includes(ref) || !memberAllowed(ref))) throw Error('合集成员无效、重复或不再公开，请重新选择；合集不能包含自身或其他合集');
     const content = (await p.contentSettings.state()).pending.data, topics = (await p.topics.state()).pending.data;
     // Explicit membership stays equal in both stores, including after older overrides.
     metadata.notes = [...input.notes];

@@ -342,3 +342,35 @@ test('picker controls fit a 390px viewport and retain the dark theme', async t =
   }
   assert.deepEqual(errors, []);
 });
+
+
+test('Tag, engine and role pickers share canonical casing across options, Enter, removal and saved values', async t => {
+  const {page,mock,errors}=await setup(t);
+  mock.notes[0].sourceMetadata.tags=['Inherited',' inherited ','Computer Graphics'];
+  mock.catalog.tags.push({value:'inherited',label:'inherited',count:1});
+  await page.reload();await settled(page);await page.locator('#vaultPanel > summary').click();await edit(page);
+  assert.equal(await page.locator('#editTagOptions button').evaluateAll(buttons=>buttons.filter(button=>button.getAttribute('aria-label').toLowerCase()==='添加 tag inherited').length),1);
+  assert.equal(await page.locator('#editTagSelected button').count(),2);
+  await page.locator('#editTagSearch').fill(' inherited ');assert.equal(await page.locator('#editTagCreate').isEnabled(),false);await page.locator('#editTagSearch').press('Enter');
+  assert.deepEqual(await chosenTags(page),['Inherited','Computer Graphics']);
+  await page.getByRole('button',{name:'移除 Tag Inherited',exact:true}).click();assert.deepEqual(await chosenTags(page),['Computer Graphics']);
+  await page.locator('#editTagSearch').press('Enter');assert.deepEqual(await chosenTags(page),['Computer Graphics','Inherited']);
+  await page.locator('#editSection').selectOption('work');await page.locator('#editCover').fill('https://example.invalid/cover.png');
+  for(const [field,value,canonical]of [['Engine','unreal engine','Unreal Engine'],['Role','technical art','Technical Art']]){
+    await page.locator('#edit'+field+'Search').fill(value);assert.equal(await page.locator('#edit'+field+'Create').isEnabled(),false);await page.locator('#edit'+field+'Search').press('Enter');await page.locator('#edit'+field+'Search').press('Enter');assert.equal(await page.locator('#edit'+field).inputValue(),canonical);
+  }
+  await applyAndSave(page);assert.deepEqual(mock.metadata['Root.md'].tags,['Computer Graphics','Inherited']);assert.deepEqual(mock.metadata['Root.md'].engine,['Unreal Engine']);assert.deepEqual(mock.metadata['Root.md'].role,['Technical Art']);
+  assert.equal(apiCalls(mock,'catalog').length,0);assert.deepEqual(errors,[]);
+});
+
+
+test('bulk removal removes every casing of a selected Tag and note chips never duplicate it', async t => {
+  const {page,mock}=await setup(t,{selected:['Root.md']});
+  mock.notes[0].sourceMetadata.tags=['inherited','INHERITED','Computer Graphics'];
+  await page.reload();await settled(page);await page.locator('#vaultPanel > summary').click();
+  assert.deepEqual(await page.locator('[data-path="Root.md"] .note-tag').allTextContents(),['#Inherited','#Computer Graphics']);
+  await openBatch(page);await page.locator('#batchTagMode').selectOption('remove');
+  await page.locator('#batchTagsPicker').getByRole('button',{name:'添加 Tag Inherited',exact:true}).click();
+  await page.locator('#batchMetadataApply').click();await settled(page);
+  assert.deepEqual(mock.metadata['Root.md'].tags,['Computer Graphics']);
+});

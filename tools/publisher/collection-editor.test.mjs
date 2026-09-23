@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import net from 'node:net';
+import { once } from 'node:events';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { Publisher } from './core.mjs';
 
 async function fixture(t) {
@@ -47,6 +51,8 @@ test('invalid cover or members never save part of a collection or mutate an exis
     { metadata: { title: 'Changed title', cover: '/%2e%2e/secret.png' } },
     { metadata: { title: 'Changed title', cover: '/covers/clip.mp4' } },
     { metadata: { title: 'Changed title', cover: '/covers/placeholder.svg' } },
+    { metadata: { coverVideo: 'https://example.invalid/clip.mp4' } },
+    { metadata: { coverVideo: 42 } },
   ]) {
     await assert.rejects(p.saveCollection({ ...input(), key: created.key, ...changes }));
     assert.deepEqual(await drafts(), before);
@@ -100,6 +106,73 @@ test('choosing an independent image clears inherited hero video without changing
   await write('src/content/work/video-collection.md', raw); await p.scan();
   await p.saveCollection({ key: 'video-collection', metadata: { cover: '/covers/collection.svg' }, notes: ['notes:perlin'] });
   const scan = await p.scan(), collection = scan.siteContent.find(entry => entry.key === 'work:video-collection');
-  assert.equal(collection.metadata.coverVideo, undefined); assert.equal(collection.currentMetadata.coverVideo, '/assets/cloud.mp4');
+  assert.equal(collection.metadata.coverVideo, ''); assert.equal(collection.currentMetadata.coverVideo, '/assets/cloud.mp4');
   assert.equal(await fs.readFile(path.join(site, 'src/content/work/video-collection.md'), 'utf8'), raw);
+});
+
+test('collection video pairing survives draft edits and apply, and the same poster can become static', async t => {
+  const { p, write } = await fixture(t);
+  await write('public/assets/cloud.mp4', 'synthetic video');
+  await write('src/content/work/cloud.md', '---\ntitle: Cloud article\nyear: 2025\nsummary: Cloud implementation\nworkType: single\ncover: /covers/collection.svg\ncoverVideo: /assets/cloud.mp4\n---\nOriginal complete cloud body');
+  await p.scan();
+  const request = input(); request.metadata.coverVideo = '/assets/cloud.mp4';
+  const created = await p.saveCollection(request); await p.scan();
+  let catalog = await p.topics.scan(p.topicSources());
+  assert.equal(catalog.topics.find(topic => topic.key === created.key).coverVideo, '/assets/cloud.mp4');
+  assert.equal(catalog.articles.find(article => article.key === 'work:cloud').coverVideo, '/assets/cloud.mp4');
+  const renamed = await p.saveCollection({ key: created.key, metadata: { title: 'Renamed clouds' }, notes: ['work:cloud'] });
+  assert.equal(renamed.metadata.coverVideo, '/assets/cloud.mp4');
+  const plan = await p.analyze(); assert.deepEqual(plan.errors, []); await p.apply((await p.prepare(plan.id, [])).id);
+  const current = JSON.parse(await fs.readFile(p.contentSettings.file, 'utf8'));
+  assert.equal(current.collections[created.id].coverVideo, '/assets/cloud.mp4');
+  assert.equal(current.entries[created.key].coverVideo, '/assets/cloud.mp4');
+  await p.scan();
+  await p.saveCollection({ key: created.key, metadata: { cover: request.metadata.cover, coverVideo: '' }, notes: ['work:cloud'] });
+  await p.scan();
+  catalog = await p.topics.scan(p.topicSources());
+  assert.equal(catalog.topics.find(topic => topic.key === created.key).coverVideo, '', 'explicit static selection suppresses member-video inference');
+  assert.equal(catalog.articles.find(article => article.key === 'work:cloud').coverVideo, '/assets/cloud.mp4', 'choosing a still collection cover must preserve the child video');
+});
+
+test('legacy inferred collection video survives metadata-only edits and clears after a cover replacement', async t => {
+  const { p, write } = await fixture(t);
+  await write('public/assets/cloud.mp4', 'synthetic video');
+  await write('src/content/work/cloud.md', '---\ntitle: Cloud article\nyear: 2025\nsummary: Cloud implementation\nworkType: single\ncover: /covers/collection.svg\ncoverVideo: /assets/cloud.mp4\n---\nOriginal complete cloud body');
+  await write('src/content/work/legacy-video.md', '---\ntitle: Legacy video collection\nsummary: Collection summary\nyear: 2025\nworkType: collection\ncover: /covers/collection.svg\nnotes: ["work:cloud"]\n---\nOriginal collection');
+  await p.scan();
+  const saved = await p.saveCollection({ key: 'legacy-video', metadata: { title: 'New title' }, notes: ['work:cloud'] });
+  assert.equal(saved.metadata.coverVideo, '/assets/cloud.mp4');
+  await p.scan();
+  const staticCover = await p.saveCollection({ key: 'legacy-video', metadata: { cover: '/covers/alternate.svg' }, notes: ['work:cloud'] });
+  assert.equal(staticCover.metadata.coverVideo, '');
+  await p.scan();
+  assert.equal((await p.topics.scan(p.topicSources())).topics.find(topic => topic.key === 'legacy-video').coverVideo, '');
+});
+
+test('collection HTTP save validates poster/video pairs before writing either private draft', { timeout: 15000 }, async t => {
+  const { p, site, vault, state, write, drafts } = await fixture(t);
+  await write('public/assets/cloud.mp4', 'synthetic video');
+  await write('src/content/work/cloud.md', '---\ntitle: Cloud article\nyear: 2025\nsummary: Cloud implementation\nworkType: single\ncover: /covers/collection.svg\ncoverVideo: /assets/cloud.mp4\n---\nOriginal complete cloud body');
+  const probe = net.createServer(); probe.listen(0, '127.0.0.1'); await once(probe, 'listening');
+  const port = probe.address().port; await new Promise(resolve => probe.close(resolve));
+  const child = spawn(process.execPath, [fileURLToPath(new URL('./server.mjs', import.meta.url))], { windowsHide: true, env: { ...process.env, PUBLISHER_SITE: site, PUBLISHER_VAULT: vault, PUBLISHER_STATE: state, PUBLISHER_PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] });
+  let logs = ''; child.stderr.on('data', data => { logs += data; });
+  t.after(async () => { if (child.exitCode === null) { const stopped = once(child, 'exit'); child.kill(); await stopped; } });
+  await Promise.race([once(child.stdout, 'data'), once(child, 'exit').then(() => { throw Error(logs); })]);
+  const base = `http://127.0.0.1:${port}`, html = await fetch(base).then(response => response.text()), token = html.match(/const token='([a-f0-9]+)'/)[1];
+  const headers = { 'X-Publisher-Token': token, Origin: base, 'Content-Type': 'application/json' };
+  assert.equal((await fetch(base + '/api/scan', { headers })).status, 200);
+  const post = value => fetch(base + '/api/collection-editor', { method: 'POST', headers, body: JSON.stringify(value) });
+  const before = await drafts(), invalid = input(); invalid.metadata.cover = '/covers/alternate.svg'; invalid.metadata.coverVideo = '/assets/cloud.mp4';
+  const rejected = await post(invalid); assert.equal(rejected.status, 400); assert.match((await rejected.json()).error, /不匹配/);
+  assert.deepEqual(await drafts(), before);
+  const valid = input(); valid.metadata.coverVideo = '/assets/cloud.mp4';
+  const response = await post(valid); assert.equal(response.status, 200); const saved = await response.json();
+  assert.equal(saved.metadata.coverVideo, '/assets/cloud.mp4');
+  assert.equal(JSON.parse((await drafts()).content).collections[saved.id].coverVideo, '/assets/cloud.mp4');
+  const catalog = await fetch(base + '/api/topics', { headers }).then(response => response.json());
+  assert.equal(catalog.topics.find(topic => topic.key === saved.key).coverVideo, '/assets/cloud.mp4');
+  const cleared = await post({ key: saved.key, metadata: { cover: valid.metadata.cover, coverVideo: '' }, notes: valid.notes });
+  assert.equal(cleared.status, 200); assert.equal((await cleared.json()).metadata.coverVideo, '');
+  assert.equal(JSON.parse((await drafts()).content).entries[saved.key].coverVideo, '');
 });
